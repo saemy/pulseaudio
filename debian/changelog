@@ -1,3 +1,9 @@
+pulseaudio (0.9.5-4ubuntu2) feisty; urgency=low
+
+  * disable libasyncns to fix ftbfs 
+
+ -- Oliver Grawert <ogra@ubuntu.com>  Sat, 20 Jan 2007 11:10:59 +0100
+
 pulseaudio (0.9.5-4ubuntu1) feisty; urgency=low
 
   * merge from debian unstable
