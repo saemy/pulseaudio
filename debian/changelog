@@ -1,3 +1,11 @@
+pulseaudio (0.9.5-5ubuntu2) feisty; urgency=low
+
+  * added 06_fix_suspend.dpatch from http://pulseaudio.org/ticket/26
+  * added 07_fix_esdcompat_bashism.dpatch to avoid esdcompat trying to 
+    shift an empty $1 on POSIX shells
+
+ -- Oliver Grawert <ogra@ubuntu.com>  Tue, 30 Jan 2007 23:50:57 +0100
+
 pulseaudio (0.9.5-5ubuntu1) feisty; urgency=low
 
   * Merge from Debian unstable, remaining change:
