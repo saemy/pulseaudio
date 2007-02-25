@@ -1,3 +1,14 @@
+pulseaudio (0.9.5-5ubuntu3) feisty; urgency=low
+
+  * debian/control:
+    - Add lsb-base (>= 3) to pulseaudio's dependencies,
+    - Adhere to DebianMaintainerField policy,
+    - Pull in fix from Debian's 0.9.5-7 adding hal to
+      pulseaudio-module-hal's dependencies,
+  * debian/pulseaudio.init: LSB-ify.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Sun, 25 Feb 2007 02:30:31 -0500
+
 pulseaudio (0.9.5-5ubuntu2) feisty; urgency=low
 
   * added 06_fix_suspend.dpatch from http://pulseaudio.org/ticket/26
