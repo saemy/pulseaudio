@@ -1,0 +1,19 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 09_fix_esd_max_samplesize.dpatch by  <ogra@edubuntu>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: No description.
+
+@DPATCH@
+diff -urNad pulseaudio-0.9.5~/src/pulsecore/protocol-esound.c pulseaudio-0.9.5/src/pulsecore/protocol-esound.c
+--- pulseaudio-0.9.5~/src/pulsecore/protocol-esound.c	2006-08-20 01:06:45.000000000 +0200
++++ pulseaudio-0.9.5/src/pulsecore/protocol-esound.c	2007-03-06 14:13:17.000000000 +0100
+@@ -68,7 +68,7 @@
+ #define RECORD_BUFFER_SECONDS (5)
+ #define RECORD_BUFFER_FRAGMENTS (100)
+ 
+-#define MAX_CACHE_SAMPLE_SIZE (1024000)
++#define MAX_CACHE_SAMPLE_SIZE (2048000)
+ 
+ #define SCACHE_PREFIX "esound."
+ 

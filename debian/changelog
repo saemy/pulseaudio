@@ -1,3 +1,10 @@
+pulseaudio (0.9.5-5ubuntu4) feisty; urgency=low
+
+  * add 09_fix_esd_max_samplesize.dpatch to make sure the login and logout
+    gnome sounds can be processed on remote connections. 
+
+ -- Oliver Grawert <ogra@ubuntu.com>  Tue,  6 Mar 2007 14:14:08 +0100
+
 pulseaudio (0.9.5-5ubuntu3) feisty; urgency=low
 
   * debian/control:
