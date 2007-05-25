@@ -1,3 +1,35 @@
+pulseaudio (0.9.5-7ubuntu1) gutsy; urgency=low
+
+  * Merge from Debian unstable, remaining changes:
+    - debian/control:
+      + Add lsb-base (>= 3) to pulseaudio's dependencies,
+      + Adhere to DebianMaintainerField policy,
+    - debian/patches/:
+      + Add 10_fix_DoS_vulns.dpatch (pA ticket 67) and
+        11_disallow_excessively_high_sampling_rates.dpatch,
+      + Drop 06_fix_suspend.dpatch in favour of
+        06_pulseaudio-0.9.5-suspend.dpatch,
+      + Retain 07_fix_esdcompat_bashism.dpatch and
+        09_fix_esd_max_samplesize.dpatch.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Fri, 25 May 2007 01:32:39 -0400
+
+pulseaudio (0.9.5-7) unstable; urgency=low
+
+  * debian/control: Make pulseaudio-module-hal depend on hal, not just
+    libhal. (Closes: #411501)
+
+ -- CJ van den Berg <cj@vdbonline.com>  Mon, 19 Feb 2007 22:11:48 +0100
+
+pulseaudio (0.9.5-6) unstable; urgency=low
+
+  * debian/patches/06_pulseaudio-0.9.5-suspend.dpatch:
+    + Added. Handle -ESTRPIPE correctly.  Allows pulseaudio to survive suspend
+      operations on ALSA devices (e.g. s2disk). Thanks to Tobias Diedrich.
+      (Closes: #406768)
+
+ -- CJ van den Berg <cj@vdbonline.com>  Mon, 12 Feb 2007 11:24:50 +0100
+
 pulseaudio (0.9.5-5ubuntu4) feisty; urgency=low
 
   * add 09_fix_esd_max_samplesize.dpatch to make sure the login and logout

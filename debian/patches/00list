@@ -3,6 +3,8 @@
 03_r1352_firefox_workaround.dpatch
 04_r1373_JavaSound_support.dpatch
 05_t28_wrong-endian-convert.dpatch
-06_fix_suspend.dpatch
+06_pulseaudio-0.9.5-suspend.dpatch
 07_fix_esdcompat_bashism.dpatch
 09_fix_esd_max_samplesize.dpatch
+10_fix_DoS_vulns.dpatch
+11_disallow_excessively_high_sampling_rates.dpatch
