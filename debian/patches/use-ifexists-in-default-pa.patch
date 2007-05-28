@@ -1,14 +1,17 @@
-#! /bin/sh /usr/share/dpatch/dpatch-run
-## 01_use_ifexists_in_default_pa.dpatch by CJ van den Berg <cj@vdbonline.com>
-##
-## All lines beginning with `## DP:' are a description of the patch.
-## DP: use .ifexists meta command to load optional modules only if available
+Use .ifexists meta command to load optional modules only if available
 
-@DPATCH@
+From: CJ van den Berg <cj@vdbonline.com>
 
-diff -Nru pulseaudio-0.9.5-orig/src/daemon/default.pa.in pulseaudio-0.9.5/src/daemon/default.pa.in
---- pulseaudio-0.9.5-orig/src/daemon/default.pa.in	2006-08-25 14:08:11.000000000 +0200
-+++ pulseaudio-0.9.5/src/daemon/default.pa.in	2006-10-06 02:32:56.761435138 +0200
+
+---
+
+ src/daemon/default.pa.in |   18 +++++++++++++++---
+ 1 files changed, 15 insertions(+), 3 deletions(-)
+
+diff --git a/src/daemon/default.pa.in b/src/daemon/default.pa.in
+index af2a678..b769e3f 100755
+--- a/src/daemon/default.pa.in
++++ b/src/daemon/default.pa.in
 @@ -26,12 +26,18 @@
  #load-module module-null-sink
  #load-module module-pipe-sink
@@ -16,13 +19,14 @@ diff -Nru pulseaudio-0.9.5-orig/src/daemon/default.pa.in pulseaudio-0.9.5/src/da
 +.ifexists /usr/lib/pulse-0.9/modules/module-hal-detect.so
 +
  ### Automatically load driver modules depending on the hardware available
- load-module module-hal-detect
- 
-+.else
+-@HAVE_HAL_TRUE@load-module module-hal-detect
++load-module module-hal-detect
 +
++.else
+ 
  ### Alternatively use the static hardware detection module (for systems that
  ### lack HAL support
--#load-module module-detect
+-@HAVE_HAL_FALSE@load-module module-detect
 +load-module module-detect
 +
 +.endif
