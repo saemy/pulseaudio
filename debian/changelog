@@ -1,3 +1,10 @@
+pulseaudio (0.9.6-1ubuntu2) gutsy; urgency=low
+
+  * fix esound max samplesize again to make sure teh login sound is playable
+    on networked connections. 
+
+ -- Oliver Grawert <ogra@ubuntu.com>  Thu, 28 Jun 2007 15:31:28 +0200
+
 pulseaudio (0.9.6-1ubuntu1) gutsy; urgency=low
 
   * Merge from Debian unstable, remaining changes:
