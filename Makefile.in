@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-# $Id: Makefile.am 1432 2007-03-01 17:15:43Z ossman $
+# $Id: Makefile.am 2001 2007-10-30 15:23:56Z lennart $
 #
 # This file is part of PulseAudio.
 #
@@ -67,8 +67,8 @@ DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/libpulse-mainloop-glib.pc.in \
 	$(srcdir)/libpulse-simple.pc.in $(srcdir)/libpulse.pc.in \
 	$(top_srcdir)/configure $(top_srcdir)/src/pulse/version.h.in \
-	compile config.guess config.sub depcomp install-sh ltmain.sh \
-	missing mkinstalldirs
+	compile config.guess config.rpath config.sub depcomp \
+	install-sh ltmain.sh missing
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
@@ -77,7 +77,7 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno configure.status.lineno
-mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES = libpulse.pc libpulse-simple.pc libpulse-browse.pc \
 	libpulse-mainloop-glib.pc src/pulse/version.h
@@ -138,6 +138,8 @@ CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
+DBUS_CFLAGS = @DBUS_CFLAGS@
+DBUS_LIBS = @DBUS_LIBS@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
@@ -166,6 +168,9 @@ HAVE_ALSA_TRUE = @HAVE_ALSA_TRUE@
 HAVE_AVAHI = @HAVE_AVAHI@
 HAVE_AVAHI_FALSE = @HAVE_AVAHI_FALSE@
 HAVE_AVAHI_TRUE = @HAVE_AVAHI_TRUE@
+HAVE_DBUS = @HAVE_DBUS@
+HAVE_DBUS_FALSE = @HAVE_DBUS_FALSE@
+HAVE_DBUS_TRUE = @HAVE_DBUS_TRUE@
 HAVE_EVDEV_FALSE = @HAVE_EVDEV_FALSE@
 HAVE_EVDEV_TRUE = @HAVE_EVDEV_TRUE@
 HAVE_GCONF = @HAVE_GCONF@
@@ -183,6 +188,9 @@ HAVE_JACK_TRUE = @HAVE_JACK_TRUE@
 HAVE_LIBASYNCNS = @HAVE_LIBASYNCNS@
 HAVE_LIBASYNCNS_FALSE = @HAVE_LIBASYNCNS_FALSE@
 HAVE_LIBASYNCNS_TRUE = @HAVE_LIBASYNCNS_TRUE@
+HAVE_LIBSAMPLERATE = @HAVE_LIBSAMPLERATE@
+HAVE_LIBSAMPLERATE_FALSE = @HAVE_LIBSAMPLERATE_FALSE@
+HAVE_LIBSAMPLERATE_TRUE = @HAVE_LIBSAMPLERATE_TRUE@
 HAVE_LIRC_FALSE = @HAVE_LIRC_FALSE@
 HAVE_LIRC_TRUE = @HAVE_LIRC_TRUE@
 HAVE_MKFIFO_FALSE = @HAVE_MKFIFO_FALSE@
@@ -264,6 +272,7 @@ PTHREAD_CC = @PTHREAD_CC@
 PTHREAD_CFLAGS = @PTHREAD_CFLAGS@
 PTHREAD_LIBS = @PTHREAD_LIBS@
 RANLIB = @RANLIB@
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STATIC_BINS_FALSE = @STATIC_BINS_FALSE@
@@ -327,7 +336,7 @@ subdirs = @subdirs@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 EXTRA_DIST = bootstrap.sh LICENSE GPL LGPL doxygen/Makefile.am doxygen/Makefile.in doxygen/doxygen.conf.in README todo
-SUBDIRS = libltdl src doxygen
+SUBDIRS = src doxygen
 MAINTAINERCLEANFILES = 
 noinst_DATA = 
 pkgconfigdir = $(libdir)/pkgconfig
@@ -602,6 +611,9 @@ distdir: $(DISTFILES)
 	      || exit 1; \
 	  fi; \
 	done
+	$(MAKE) $(AM_MAKEFLAGS) \
+	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
+	  dist-hook
 	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
@@ -787,7 +799,7 @@ uninstall-info: uninstall-info-recursive
 .PHONY: $(RECURSIVE_TARGETS) CTAGS GTAGS all all-am am--refresh check \
 	check-am clean clean-generic clean-libtool clean-recursive \
 	ctags ctags-recursive dist dist-all dist-bzip2 dist-gzip \
-	dist-shar dist-tarZ dist-zip distcheck distclean \
+	dist-hook dist-shar dist-tarZ dist-zip distcheck distclean \
 	distclean-generic distclean-hdr distclean-libtool \
 	distclean-recursive distclean-tags distcleancheck distdir \
 	distuninstallcheck dvi dvi-am html html-am info info-am \
@@ -810,6 +822,22 @@ homepage: all dist doxygen
 
 doxygen:
 	$(MAKE) -C doxygen doxygen
+
+eolspace:
+	find \( -name '*.c' -o -name '*.h' -o -name 'Makefile.am' \) -exec perl -i -pe 's/\s+\n$$/\1\n/;' \{\} \;
+
+untabify:
+	find \( -name '*.c' -o -name '*.h' \) -exec perl -i -pe 's/\t/        /g;' \{\} \;
+
+fedora-snapshot: dist
+	cp $(distdir).tar.gz $$HOME/cvs.fedora/pulseaudio/devel/$(distdir).svn`date +%Y%m%d`.tar.gz
+
+dist-hook:
+	if test -d .svn ; then \
+		svn update ; \
+		chmod u+w ${distdir}/ChangeLog || true ; \
+		svn2cl -o ${distdir}/ChangeLog ; \
+	fi
 
 .PHONY: homepage distcleancheck doxygen
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

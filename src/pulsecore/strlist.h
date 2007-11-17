@@ -1,7 +1,7 @@
 #ifndef foostrlisthfoo
 #define foostrlisthfoo
 
-/* $Id: strlist.h 1426 2007-02-13 15:35:19Z ossman $ */
+/* $Id: strlist.h 1984 2007-10-29 20:30:15Z lennart $ */
 
 /***
   This file is part of PulseAudio.
@@ -45,5 +45,8 @@ pa_strlist* pa_strlist_pop(pa_strlist *l, char **s);
 
 /* Parse a whitespace separated server list */
 pa_strlist* pa_strlist_parse(const char *s);
+
+/* Reverse string list */
+pa_strlist *pa_strlist_reverse(pa_strlist *l);
 
 #endif

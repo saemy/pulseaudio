@@ -1,3 +1,104 @@
+pulseaudio (0.9.7-3ubuntu1) hardy; urgency=low
+
+  "Hail our new PulseAudio overlords (part one)."
+
+  * Merge from Debian unstable.
+  * Apply Ubuntu-specific changes:
+    - debian/control:
+      + drop libasyncns-dev and libjack0.100.0-dev build-dependencies
+        since we don't build the jack plugin [yet];
+      + add versioned lsb-base dependency to pulseaudio;
+      + keep pulseaudio installable by demoting some recommended
+        packages to suggested [retain libasound2-plugins,
+        libgstreamer-plugins-pulse0.10-0, and
+        pulseaudio-esound-compat.  pulseaudio-module-hal,
+        pulseaudio-module-x11, libao-pulse, paprefs, and
+        padevchooser are currently in universe];
+      + adhere to DebianMaintainerField spec;
+    - debian/rules:
+      + use multiuser instead of defaults in DEB_UPDATE_RCD_PARAMS.
+  * Drop obsolete Ubuntu-specific change:
+    - src/pulsecore/protocol-esound.c: applied upstream.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Sat, 17 Nov 2007 00:10:48 +0000
+
+pulseaudio (0.9.7-3) unstable; urgency=low
+
+  [ CJ van den Berg ]
+  * debian/control: Add depends on -utils to -module-x11. (Closes: #450840)
+
+  [ Sjoerd Simons ]
+  * Set pulseaudio setuid in postinst if the permissions aren't overriden by
+    dpkg-statoverride, instead of having the binary with suid perms in the deb
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Fri, 16 Nov 2007 18:41:28 +0100
+
+pulseaudio (0.9.7-2) unstable; urgency=low
+
+  * Use pulseaudio (<< 0.9.7) instead of pulseaudio (< 0.9.7) in
+    -esound-compat
+  * debian/patches/0002-Fix-pa_readlink-to-put-a-0-in-the-right-location.patch:
+    + Added. Fix pa_readlink to put a \0 directly after the link string. Fixes
+    issues with clients using the alsa compatibility layer
+  * deb/patches/0003-Define-__NR_eventfd-on-arm-if-it-wasn-t-defined-yet.patch:
+    + Added. Define __NR_eventfd. Fixes FTBS on arm, because libc6-dev does
+    define SYS_eventfd but older versions of linux-libc-dev don't define
+    __NR_eventfd yet.
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Sun, 04 Nov 2007 13:53:09 +0100
+
+pulseaudio (0.9.7-1) unstable; urgency=low
+
+  * New Upstream Version. (Closes: #446026, #436409)
+  * Drop all patches. All patches are merged upstream.
+  * debian/control:
+    + Replace ${Source-Version} with ${binary:Version}.
+    + Add XS-Vcs-* tags.
+    + Conflict pulseaudio < 0.9.7 in -esound-compat due to moved manpage.
+  * debian/rules:
+    + Add list-missing to catch new modules
+    + Remove all .la files.
+  * debian/overrides/pulseaudio: Update libpulsecore so version.
+  * debian/pulseaudio.install:
+    + Add new module-default-device-restore.so.
+    + Add new module-suspend-on-idle.so.
+    + Add new module-remap-sink.so.
+    + Add new module-ladspa-sink.so.
+    - Remove module-oss-mmap.so, removed upstream.
+  * debian/pulseaudio-module-x11.install: Add new module-x11-xsmp.so.
+  * debian/pulseaudio-module-zeroconf.install: Add new module-zeroconf-
+      discover.so.
+  * debian/pulseaudio-utils.install: Add pasuspender utility.
+  * debian/pulseaudio-esound-compat.links: Move esd link to pulseaudio-
+      esound-compat.
+  * debian/pulseaudio-esound-compat.manpages: Move esdcompat manpage to
+      pulseaudio-esound-compat.
+  * debian/libpulse0.shlibs: Add minimum version of 0.9.7 to libpulse0 shlibs.
+  * debian/patches:
+    + Added 0001-Set-ESD-socket-to-tmp-.esd-socket-to- match-up-with.patch
+
+ -- CJ van den Berg <cj@vdbonline.com>  Wed, 31 Oct 2007 15:31:44 +0100
+
+pulseaudio (0.9.6-2) unstable; urgency=low
+
+  * debian/control:
+    - Add -dbg packages.
+    - Make libcap-dev and libasound-dev arch specific build deps.
+    - Add recommends gnome-audio to pulseaudio-module-x11. (Closes: #437393)
+    - Make pulseaudio-module-zeroconf recommend avahi-daemon.
+    - Make pulseaudio-utils suggest avahi-daemon. (for pabrowse)
+  * debian/rules:
+    - Generate arch specific install files. (Closes: #430366)
+    - Install init script to start at 25 and stop at 15. (Closes: #428046)
+  * debian/overrides/pulseaudio: Update libpulsecore override to new
+      soversion.
+  * debian/copyright: Update e-mail address for Lennart Poettering.
+  * debian/patches: Reformat patch series. Add two new patches.
+    + 0003-Backported-padsp-improvements-from-upstream-trunk.patch
+    + 0004-New-realtime-safe-and-transport-free-JACK-module.patch
+
+ -- CJ van den Berg <cj@vdbonline.com>  Sun, 02 Sep 2007 20:22:19 +0200
+
 pulseaudio (0.9.6-1ubuntu2) gutsy; urgency=low
 
   * fix esound max samplesize again to make sure teh login sound is playable
