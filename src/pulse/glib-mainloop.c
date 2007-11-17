@@ -1,4 +1,4 @@
-/* $Id: glib-mainloop.c 1426 2007-02-13 15:35:19Z ossman $ */
+/* $Id: glib-mainloop.c 1971 2007-10-28 19:13:50Z lennart $ */
 
 /***
   This file is part of PulseAudio.
@@ -24,8 +24,6 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-
-#include <assert.h>
 
 #include <pulse/xmalloc.h>
 #include <pulse/timeval.h>
