@@ -1,3 +1,13 @@
+pulseaudio (0.9.7-3ubuntu2) hardy; urgency=low
+
+  * Disable 0001-Set-ESD-socket-to-tmp-.esd-socket-to-match-up-with.patch. We
+    do want per-user esd sockets in Ubuntu. This unbreaks multiuser support
+    and matches the patch that we did to esound for the very same reason:
+    every user needs its own esd socket path to have them not conflict to each
+    other.
+
+ -- Martin Pitt <martin.pitt@ubuntu.com>  Tue, 20 Nov 2007 22:30:35 +0100
+
 pulseaudio (0.9.7-3ubuntu1) hardy; urgency=low
 
   "Hail our new PulseAudio overlords (part one)."
