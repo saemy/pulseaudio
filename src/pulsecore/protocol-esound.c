@@ -1,4 +1,4 @@
-/* $Id: protocol-esound.c 1971 2007-10-28 19:13:50Z lennart $ */
+/* $Id: protocol-esound.c 2050 2007-11-13 17:37:44Z lennart $ */
 
 /***
   This file is part of PulseAudio.
@@ -72,7 +72,7 @@
 #define RECORD_BUFFER_SECONDS (5)
 #define RECORD_BUFFER_FRAGMENTS (100)
 
-#define MAX_CACHE_SAMPLE_SIZE (2048000)
+#define MAX_CACHE_SAMPLE_SIZE (1024000)
 
 #define SCACHE_PREFIX "esound."
 
@@ -1406,7 +1406,7 @@ static void on_connection(pa_socket_server*s, pa_iochannel *io, void *userdata) 
 
 pa_protocol_esound* pa_protocol_esound_new(pa_core*core, pa_socket_server *server, pa_module *m, pa_modargs *ma) {
     pa_protocol_esound *p = NULL;
-    int public = 0;
+    pa_bool_t public = FALSE;
     const char *acl;
 
     pa_assert(core);

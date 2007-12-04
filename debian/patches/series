@@ -1,3 +1,5 @@
 #0001-Set-ESD-socket-to-tmp-.esd-socket-to-match-up-with.patch # not for Ubuntu
-0002-Fix-pa_readlink-to-put-a-0-in-the-right-location.patch
-0003-Define-__NR_eventfd-on-arm-if-it-wasn-t-defined-yet.patch
+0002-Double-esound-maximum-sample-size.patch
+0003-fix-uploading-of-samples-into-PA.-Problem-discovered.patch
+0004-Force-module-tunnel-to-use-protocol-version-11.patch
+0005-make-sure-to-create-.pulse-before-using-any-config.patch

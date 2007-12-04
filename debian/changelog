@@ -1,3 +1,67 @@
+pulseaudio (0.9.8-1ubuntu1) hardy; urgency=low
+
+  "Hail our new PulseAudio overlords (part two)."
+
+  * Merge from Debian unstable.
+  * Ubuntu-specific changes:
+    - debian/control:
+      + Don't build-depend on libjack0.100.0-dev or build jack module
+        packages,
+      + Update pulseaudio's Recommends and Suggests to accomodate
+        existing promoted main packages,
+      + Explicitly mention pasuspender in pulseaudio-utils's long
+        description,
+      + Add Vcs-Bzr URI,
+      + Adhere to DebianMaintainerField;
+    - debian/rules: Use multiuser for update-rc.d;
+    - debian/patches/series: Retain the exclusion of
+      0001-Set-ESD-socket-to-tmp-.esd-socket-to-match-up-with.patch.
+  * Dropped Ubuntu-specific change (absorbed into Debian source):
+    debian/patches/0002-Double-esound-maximum-sample-size.patch.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Tue, 04 Dec 2007 00:56:08 +0000
+
+pulseaudio (0.9.8-1) unstable; urgency=low
+
+  [ CJ van den Berg ]
+  * New upstream version.
+  * debian/overrides/pulseaudio: Remove override for setuid-binary.
+  * debian/control:
+    + Change the priority of all -dbg packages to extra.
+    + Stop recommending libao-pulse. libao2 has built-in pulseaudio support.
+    + Make pulseaudio conflict libltdl3 < 1.5.24-1 (Closes: #451638)
+    + Change XS-Vcs-* tags to Vcs-*.
+    + Add libpulsecore5-dbg package.
+    + Rename gstreamer plugin package in recommends.
+    + Add Homepage field.
+    + Bump libpulsecore so version number to 5.
+    + Conflict with all pre libpulsecore split packages.
+  * debian/patches/0002-Fix-pa_readlink-to-put-a-0-in-the-right-location.patch:
+    - Dropped, merged upstream.
+  * debian/p..s/0003-Define-__NR_eventfd-on-arm-if-it-wasn-t-defined-yet.patch:
+    - Dropped, merged upstream.
+  * debian/patches/0002-Double-esound-maximum-sample-size.patch:
+    + Added, from Ubuntu.
+  * debian/p..s/0003-fix-uploading-of-samples-into-PA.-Problem-discovered.patch:
+    + Added, svn commit r2074 from upstream.
+  * debian/patches/0004-Force-module-tunnel-to-use-protocol-version-11.patch:
+    + Added, fixes protocol errors in module-tunnel.
+  * debian/pa..es/0005-make-sure-to-create-.pulse-before-using-any-config.patch:
+    + Added, fixes module-volume-restore so that volumes are restored across
+      daemon restarts.
+  * debian/pulseaudio.manpages: Add manpages default.pa.5, pulse-client.conf.5
+      and pulse-daemon.conf.5
+  * debian/pulseaudio-utils.manpages: Add manpages pabrowse.1, pacat.1,
+      pacmd.1, pactl.1, padsp.1, paplay.1, pasuspender.1 and pax11publish.1
+  * debian/pulseaudio.default: Add a description of the preferred method of
+      running the daemon.
+
+  [Daniel T Chen]
+  * debian/control: Add lsb-base (>= 3) to pulseaudio's dependencies.
+  * debian/pulseaudio.init: LSB-ify.
+
+ -- CJ van den Berg <cj@vdbonline.com>  Thu, 22 Nov 2007 02:33:51 +0100
+
 pulseaudio (0.9.7-3ubuntu2) hardy; urgency=low
 
   * Disable 0001-Set-ESD-socket-to-tmp-.esd-socket-to-match-up-with.patch. We
