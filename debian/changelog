@@ -1,3 +1,10 @@
+pulseaudio (0.9.8-1ubuntu2) hardy; urgency=low
+
+  * debian/control: Make pulseaudio-module-x11 recommend ubuntu-sounds,
+    not gnome-audio.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Thu, 06 Dec 2007 07:12:07 -0500
+
 pulseaudio (0.9.8-1ubuntu1) hardy; urgency=low
 
   "Hail our new PulseAudio overlords (part two)."
