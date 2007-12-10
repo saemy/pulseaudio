@@ -1,3 +1,11 @@
+pulseaudio (0.9.8-1ubuntu3) hardy; urgency=low
+
+  * debian/control: Drop Recommendation of ubuntu-sounds entirely; it's wrong
+    for derivatives, and theming should be done with seeds and derivative
+    specific meta packages.
+
+ -- Martin Pitt <martin.pitt@ubuntu.com>  Mon, 10 Dec 2007 14:37:37 +0100
+
 pulseaudio (0.9.8-1ubuntu2) hardy; urgency=low
 
   * debian/control: Make pulseaudio-module-x11 recommend ubuntu-sounds,
