@@ -1,0 +1,16 @@
+diff -Nur -x '*.orig' -x '*~' pulseaudio-0.9.8/src/daemon/main.c pulseaudio-0.9.8.new/src/daemon/main.c
+--- pulseaudio-0.9.8/src/daemon/main.c	2007-11-20 20:30:42.000000000 -0500
++++ pulseaudio-0.9.8.new/src/daemon/main.c	2008-01-07 20:30:00.000000000 -0500
+@@ -447,9 +447,10 @@
+             suid_root = real_root = FALSE;
+ 
+             if (conf->high_priority || conf->realtime_scheduling)
+-                pa_log_notice("Called SUID root and real-time/high-priority scheduling was requested in the configuration. However, we lack the necessary priviliges:\n"
++                pa_log_info("Called SUID root and real-time/high-priority scheduling was requested in the configuration. However, we lack the necessary priviliges:\n"
+                               "We are not in group '"PA_REALTIME_GROUP"' and PolicyKit refuse to grant us priviliges. Dropping SUID again.\n"
+-                              "For enabling real-time scheduling please acquire the appropriate PolicyKit priviliges, or become a member of '"PA_REALTIME_GROUP"', or increase the RLIMIT_NICE/RLIMIT_RTPRIO resource limits for this user.");
++                              "For enabling real-time scheduling please acquire the appropriate PolicyKit priviliges, or become a member of '"PA_REALTIME_GROUP"', or increase the RLIMIT_NICE/RLIMIT_RTPRIO resource limits for this user.\n"
++                              "Note that real-time/high-priority scheduling is NOT normally required. If you experience crackling or other sound anomalies, consider one or more of the above solutions.");
+         }
+ 
+     } else {
