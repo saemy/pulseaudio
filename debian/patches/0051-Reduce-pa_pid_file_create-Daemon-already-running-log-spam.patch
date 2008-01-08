@@ -1,0 +1,33 @@
+diff -Nur -x '*.orig' -x '*~' pulseaudio-0.9.8/src/daemon/main.c pulseaudio-0.9.8.new/src/daemon/main.c
+--- pulseaudio-0.9.8/src/daemon/main.c	2008-01-08 06:33:34.000000000 -0500
++++ pulseaudio-0.9.8.new/src/daemon/main.c	2008-01-08 06:35:14.000000000 -0500
+@@ -292,7 +292,7 @@
+     rl.rlim_cur = rl.rlim_max = r->value;
+ 
+     if (setrlimit(resource, &rl) < 0) {
+-        pa_log_warn("setrlimit(%s, (%u, %u)) failed: %s", name, (unsigned) r->value, (unsigned) r->value, pa_cstrerror(errno));
++        pa_log_info("setrlimit(%s, (%u, %u)) failed: %s", name, (unsigned) r->value, (unsigned) r->value, pa_cstrerror(errno));
+         return -1;
+     }
+ 
+@@ -686,7 +686,7 @@
+ 
+     if (conf->use_pid_file) {
+         if (pa_pid_file_create() < 0) {
+-            pa_log("pa_pid_file_create() failed.");
++            pa_log_info("pa_pid_file_create() failed.");
+ #ifdef HAVE_FORK
+             if (conf->daemonize)
+                 pa_loop_write(daemon_pipe[1], &retval, sizeof(retval), NULL);
+diff -Nur -x '*.orig' -x '*~' pulseaudio-0.9.8/src/pulsecore/pid.c pulseaudio-0.9.8.new/src/pulsecore/pid.c
+--- pulseaudio-0.9.8/src/pulsecore/pid.c	2007-11-20 20:30:43.000000000 -0500
++++ pulseaudio-0.9.8.new/src/pulsecore/pid.c	2008-01-08 06:34:33.000000000 -0500
+@@ -167,7 +167,7 @@
+ #else
+         if (kill(pid, 0) >= 0 || errno != ESRCH) {
+ #endif
+-            pa_log("Daemon already running.");
++            pa_log_info("Daemon already running.");
+             goto fail;
+         }
+ 

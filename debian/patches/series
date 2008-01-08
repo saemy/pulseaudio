@@ -7,3 +7,4 @@
 0007-Change-config-to-not-fail-if-loading-of-esd-gconf-o.patch
 0008-Fix-compilation-on-non-linux-platforms.patch
 0050-Reduce-RT-highprio-log-to-info.patch
+0051-Reduce-pa_pid_file_create-Daemon-already-running-log-spam.patch

@@ -1,3 +1,16 @@
+pulseaudio (0.9.8-2ubuntu2) hardy; urgency=low
+
+  * Apply (new) 0051-Reduce-pa_pid_file_create.. patch that lowers the
+    "Daemon already running", "pa_pid_file_create() failed", and
+    "setrlimit(..Operation not permitted" levels to prevent spamming
+    /var/log/syslog.  Normal users not in the pulse-rt group don't need
+    this level of verbosity, and the "errors" are innocuous given per-
+    user session invocation.  (These changes really close LP #83137 and
+    duplicates.)
+  * Thanks to Sjoerd Simons for the insight.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Tue, 08 Jan 2008 06:36:42 -0500
+
 pulseaudio (0.9.8-2ubuntu1) hardy; urgency=low
 
   * Merge from Debian unstable, remaining changes:
