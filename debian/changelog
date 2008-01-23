@@ -1,3 +1,14 @@
+pulseaudio (0.9.8-2ubuntu3) hardy; urgency=low
+
+  * [SECURITY] Apply (new) patch fixing unchecked setuid() return
+    values.  Patch backported from upstream 0.9.9.
+  * References:
+    CVE-2008-0008
+    https://bugzilla.novell.com/show_bug.cgi?id=347822
+    https://bugzilla.redhat.com/show_bug.cgi?id=425481
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Wed, 23 Jan 2008 20:11:25 -0500
+
 pulseaudio (0.9.8-2ubuntu2) hardy; urgency=low
 
   * Apply (new) 0051-Reduce-pa_pid_file_create.. patch that lowers the
