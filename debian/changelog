@@ -1,3 +1,29 @@
+pulseaudio (0.9.9-1ubuntu1) hardy; urgency=low
+
+  * Merge from Debian unstable, remaining changes:
+    - Packaging:
+      + pulseaudio-module-x11 does not recommend an audio theme,
+      + no jack packages,
+      + pulseaudio-utils long description clarification,
+      + multiuser initscript semantics (Teardown spec),
+      + Vcs-Bzr entry and DebianMaintainerField mangling;
+    - Patches:
+      + omit 0001-Set-ESD-socket-to-tmp-..,
+      + omit socket parameter in 0007-Change-config-.. to apply
+        cleanly given above 0001-Set-ESD-socket omission,
+      + lower verboseness of some log messages,
+      + drop backported CVE-2008-008 fix (already in 0.9.9).
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Fri, 25 Jan 2008 16:04:34 -0500
+
+pulseaudio (0.9.9-1) unstable; urgency=high
+
+  * New Upstream Version.
+  * Fixes CVE-2008-008: Assert that dropping permissions succeeds.
+  * Priority high because it fixes a security issue.
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Thu, 24 Jan 2008 12:44:55 +0100
+
 pulseaudio (0.9.8-2ubuntu3) hardy; urgency=low
 
   * [SECURITY] Apply (new) patch fixing unchecked setuid() return
