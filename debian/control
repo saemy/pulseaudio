@@ -21,7 +21,7 @@ Homepage: http://www.pulseaudio.org
 
 Package: pulseaudio
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, adduser, lsb-base (>= 3)
+Depends: ${shlibs:Depends}, ${misc:Depends}, adduser, lsb-base (>= 3), sysv-rc (>= 2.86.ds1-14.1ubuntu2)
 Conflicts: libltdl3 (<< 1.5.24-1)
 Recommends: pulseaudio-module-hal, pulseaudio-module-x11,
     libasound2-plugins, gstreamer0.10-pulseaudio,

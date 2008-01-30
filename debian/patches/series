@@ -8,3 +8,4 @@
 0008-Fix-compilation-on-non-linux-platforms.patch
 0050-Reduce-RT-highprio-log-to-info.patch
 0051-Reduce-pa_pid_file_create-Daemon-already-running-log-spam.patch
+0052-Add-extra-checks-to-padsp-debug-calls.patch
