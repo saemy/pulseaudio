@@ -1,3 +1,20 @@
+pulseaudio (0.9.9-1ubuntu4) hardy; urgency=low
+
+  * Patch from Thorvald Natvig to fix protocol error when moving source outputs.
+    (LP: #194756)
+
+ -- Luke Yelavich <luke.yelavich@canonical.com>  Fri, 28 Mar 2008 15:58:55 +1100
+
+pulseaudio (0.9.9-1ubuntu3) hardy; urgency=low
+
+  * Patches:
+    - Apply (new) patch to handle channel mapping failure.  From
+      upstream SVN changeset 2105.  (LP: #178442)
+    - Apply (new) patch to invoke pa_ltdl_done() conditionally.
+      From upstream SVN changeset 2111.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Mon, 18 Feb 2008 18:40:28 -0500
+
 pulseaudio (0.9.9-1ubuntu2) hardy; urgency=low
 
   * Packaging:

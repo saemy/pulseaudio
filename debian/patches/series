@@ -9,3 +9,6 @@
 0050-Reduce-RT-highprio-log-to-info.patch
 0051-Reduce-pa_pid_file_create-Daemon-already-running-log-spam.patch
 0052-Add-extra-checks-to-padsp-debug-calls.patch
+0053-Handle-channel-map-failure.patch
+0054-Invoke-pa_ltdl_done-conditionally.patch
+0055-fix_record_stream_moved.patch
