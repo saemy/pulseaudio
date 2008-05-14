@@ -1,4 +1,5 @@
 #0001-Set-ESD-socket-to-tmp-.esd-socket-to-match-up-with.patch
 0002-Fix-library-search-path-to-include-lib-and-usr-lib.patch
-0050-Reduce-RT-highprio-log-to-info.patch
-0051-Reduce-pa_pid_file_create-Daemon-already-running-log-spam.patch
+0003-Define-PULSE_INTERNAL.patch
+0004-load-module-gconf-earlier.patch
+0005-Reduce-RT-prio-logging-severity.patch

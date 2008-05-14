@@ -1,3 +1,36 @@
+pulseaudio (0.9.10-2ubuntu1) intrepid; urgency=low
+
+  * Merge from Debian unstable.
+  * Patches
+    + 0001-Set-ESD-socket-to-tmp-.esd-socket-to-match-up-with.patch:
+      continue to disable this patch, as we want user sockets to be
+      the default in the conffile;
+    - 0050-Reduce-RT-highprio-log-to-info: absorbed into Debian unstable;
+    - 0051-Reduce-pa_pid_file_create-Daemon-already-running-log-spam:
+      removed as per discussion with Sjoerd, as it can confuse human
+      debugging;
+  * Packaging
+    + MaintainerField and Vcs munging;
+    + Don't generate or install the jackd module;
+    + Use multiuser semantics.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Wed, 14 May 2008 15:47:31 -0400
+
+pulseaudio (0.9.10-2) unstable; urgency=low
+
+  * debian/patches/0003-Define-PULSE_INTERNAL.patch
+    - Added. Let the daemon put PULSE_INTERNAL in its environment so things
+    can detect when called from within pulseaudio
+  * debian/patches/0004-load-module-gconf-earlier.patch
+    - Added. Load module-gconf before module-volume-restore and
+    module-device-restore. Otherwise setting virtual sinks/sources as default
+    won't be persistent
+  * debian/patches/0005-Reduce-RT-prio-logging-severity.patch
+    - Added. Reduce the priority of the RT warnings. Not running with RT
+    priorities is the default.
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Sat, 10 May 2008 22:16:12 +0200
+
 pulseaudio (0.9.10-1ubuntu1) hardy; urgency=low
 
   [ Daniel T Chen ]

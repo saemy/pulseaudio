@@ -14,8 +14,8 @@ Build-Depends: debhelper (>= 5), cdbs, quilt, m4, libltdl3-dev,
     liblircclient-dev, libgconf2-dev, libhal-dev,
     libatomic-ops-dev
 Standards-Version: 3.7.3
-Vcs-Git: git://git.debian.org/git/pkg-pulseaudio/pulseaudio.git
-Vcs-Browser: http://git.debian.org/?p=pkg-pulseaudio/pulseaudio.git
+XS-Debian-Vcs-Git: git://git.debian.org/git/pkg-pulseaudio/pulseaudio.git
+XS-Debian-Vcs-Browser: http://git.debian.org/?p=pkg-pulseaudio/pulseaudio.git
 Vcs-Bzr: http://bazaar.launchpad.net/~ubuntu-core-dev/pulseaudio/ubuntu
 Homepage: http://www.pulseaudio.org
 

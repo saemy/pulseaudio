@@ -1,7 +1,17 @@
-diff -Nur -x '*.orig' -x '*~' pulseaudio-0.9.8/src/daemon/main.c pulseaudio-0.9.8.new/src/daemon/main.c
---- pulseaudio-0.9.8/src/daemon/main.c	2007-11-20 20:30:42.000000000 -0500
-+++ pulseaudio-0.9.8.new/src/daemon/main.c	2008-01-07 20:30:00.000000000 -0500
-@@ -447,9 +447,10 @@
+From 44a4f2b01915544994bdff805d4b0a163f3454d0 Mon Sep 17 00:00:00 2001
+From: Sjoerd Simons <sjoerd@luon.net>
+Date: Sat, 10 May 2008 21:59:57 +0200
+Subject: [PATCH] Reduce RT prio logging severity
+
+---
+ src/daemon/main.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/src/daemon/main.c b/src/daemon/main.c
+index 1b6fe3f..74d1350 100644
+--- a/src/daemon/main.c
++++ b/src/daemon/main.c
+@@ -449,9 +449,10 @@ int main(int argc, char *argv[]) {
              suid_root = real_root = FALSE;
  
              if (conf->high_priority || conf->realtime_scheduling)
