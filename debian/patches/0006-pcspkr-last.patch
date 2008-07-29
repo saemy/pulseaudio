@@ -1,0 +1,40 @@
+diff -Nur -x '*.orig' -x '*~' pulseaudio-0.9.10/src/modules/module-hal-detect.c pulseaudio-0.9.10.new/src/modules/module-hal-detect.c
+--- pulseaudio-0.9.10/src/modules/module-hal-detect.c	2008-07-24 13:47:34.000000000 +1000
++++ pulseaudio-0.9.10.new/src/modules/module-hal-detect.c	2008-07-28 12:53:07.000000000 +1000
+@@ -343,7 +343,7 @@
+ 
+ static int hal_device_add_all(struct userdata *u, const char *capability) {
+     DBusError error;
+-    int i, n, count = 0;
++    int i, n, count = 0, pcspkr = 0, pcspkr_index;
+     char** udis;
+ 
+     pa_assert(u);
+@@ -368,8 +368,25 @@
+         for (i = 0; i < n; i++) {
+             struct device *d;
+ 
+-            if (!(d = hal_device_add(u, udis[i])))
+-                pa_log_debug("Not loaded device %s", udis[i]);
++            if (strcmp(udis[i], "/org/freedesktop/Hal/devices/platform_pcspkr_alsa_playback_0") == 0) {
++                pcspkr = 1;
++                pcspkr_index = i;
++            } else {
++                if (!(d = hal_device_add(u, udis[i])))
++                    pa_log_debug("Not loaded device %s", udis[i]);
++                else {
++                    if (d->sink_name)
++                        pa_scache_play_item_by_name(u->core, "pulse-coldplug", d->sink_name, PA_VOLUME_NORM, 0);
++                    count++;
++                }
++            }
++        }
++
++        if (pcspkr && pcspkr_index) {
++            struct device *d;
++
++            if (!(d = hal_device_add(u, udis[pcspkr_index])))
++                pa_log_debug("Not loaded device %s", udis[pcspkr_index]);
+             else {
+                 if (d->sink_name)
+                     pa_scache_play_item_by_name(u->core, "pulse-coldplug", d->sink_name, PA_VOLUME_NORM, 0);

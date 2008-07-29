@@ -1,3 +1,13 @@
+pulseaudio (0.9.10-2ubuntu2) intrepid; urgency=low
+
+  * debian/patches/0006-pcspkr-last.patch: Load the PC speaker as a sink
+    after all other sound card sinks have been loaded. (LP: #242966)
+  * debian/patches/0007-relibtoolize.patch: Regenerate relevant libtool
+    bits, because even though libltdl7 is supposed to be API-compatible
+    with libltdl3, the package FTBFs without regeneration.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Tue, 29 Jul 2008 16:07:18 +1000
+
 pulseaudio (0.9.10-2ubuntu1) intrepid; urgency=low
 
   * Merge from Debian unstable.
