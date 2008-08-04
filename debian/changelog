@@ -1,3 +1,11 @@
+pulseaudio (0.9.10-2ubuntu3) intrepid; urgency=low
+
+  * Remove stop links from rc0 and rc6 (LP: #254254):
+    - debian/rules: change DEB_UPDATE_RCD_PARAMS to
+      start 25 2 3 4 5 . stop 15 1 .
+
+ -- Cesare Tirabassi <norsetto@ubuntu.com>  Mon, 04 Aug 2008 19:22:43 +0200
+
 pulseaudio (0.9.10-2ubuntu2) intrepid; urgency=low
 
   * debian/patches/0006-pcspkr-last.patch: Load the PC speaker as a sink
