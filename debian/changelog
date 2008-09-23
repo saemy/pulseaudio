@@ -1,3 +1,23 @@
+pulseaudio (0.9.10-2ubuntu4) intrepid; urgency=low
+
+  * debian/pulse.conf, debian/pulse-alsa.conf. Asoundrc configuration files
+    to allow the use of pulseaudio as the default output for applications
+    using alsa, when pulseaudio is running.
+  * debian/patches/0015-Change-resampler-and-buffering.patch: Change the
+    resample method used as well as the buffer size.
+  * Some patches taken from Mandriva's pulseaudio package. See comments in
+    patch headers for more details:
+    - 0007-Perfer-client.conf-over-X11-property-variables.patch
+    - 0008-Also-link-libpulsecore.la-to-some-libraries-needed.patch
+    - 0009-Rejig-r2495-slightly-and-directly-compile-the-necess.patch
+    - 0010-Do-not-invalidate-the-cookie-if-no-file-was-specifie.patch
+    - 0011-fix-error-path-spotted-by-Coling-Guthrie.patch
+    - 0012-Change-policykit-policy-to-allow-high-priority-and-d.patch
+    - 0013-More-robust-pid-file-handling.patch
+    - 0014-Disable-hotplug-sound-as-it-interferes-with-too-many.patch
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Tue, 23 Sep 2008 16:02:48 +1000
+
 pulseaudio (0.9.10-2ubuntu3) intrepid; urgency=low
 
   * Remove stop links from rc0 and rc6 (LP: #254254):

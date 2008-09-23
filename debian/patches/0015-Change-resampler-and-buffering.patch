@@ -1,0 +1,20 @@
+diff -urN pulseaudio-0.9.10/src/daemon/daemon.conf.in pulseaudio-0.9.10.new/src/daemon/daemon.conf.in
+--- pulseaudio-0.9.10/src/daemon/daemon.conf.in	2008-03-28 10:39:03.000000000 +1100
++++ pulseaudio-0.9.10.new/src/daemon/daemon.conf.in	2008-09-23 14:56:13.000000000 +1000
+@@ -45,7 +45,7 @@
+ ; log-target = auto
+ ; log-level = notice
+ 
+-; resample-method = speex-float-3
++resample-method = speex-float-1
+ ; disable-remixing = no
+ 
+ ; no-cpu-limit = no
+@@ -65,5 +65,5 @@
+ ; default-sample-rate = 44100
+ ; default-sample-channels = 2
+ 
+-; default-fragments = 4
+-; default-fragment-size-msec = 25
++default-fragments = 8
++default-fragment-size-msec = 10

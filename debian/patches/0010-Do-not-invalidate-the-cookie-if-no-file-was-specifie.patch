@@ -1,0 +1,33 @@
+From 7f841ccece9a8b18525479e01d4a7f11f8ebaf27 Mon Sep 17 00:00:00 2001
+From: Colin Guthrie <pulse@colin.guthr.ie>
+Date: Mon, 9 Jun 2008 18:21:56 +0000
+Subject: [PATCH] Do not invalidate the cookie if no file was specified.
+ Only invalidate it when a cookie-file is specified and it is not loaded/parsed correctly.
+ This fixes a bug introduced in r2494
+
+git-svn-id: file:///home/lennart/svn/public/pulseaudio/trunk@2498 fefdeb5f-60dc-0310-8127-8f9354f1896f
+---
+ src/pulse/client-conf.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/pulse/client-conf.c b/src/pulse/client-conf.c
+index c054f66..86bb470 100644
+--- a/src/pulse/client-conf.c
++++ b/src/pulse/client-conf.c
+@@ -172,11 +172,11 @@ int pa_client_conf_env(pa_client_conf *c) {
+ int pa_client_conf_load_cookie(pa_client_conf* c) {
+     pa_assert(c);
+ 
+-    c->cookie_valid = FALSE;
+-
+     if (!c->cookie_file)
+         return -1;
+ 
++    c->cookie_valid = FALSE;
++
+     if (pa_authkey_load_auto(c->cookie_file, c->cookie, sizeof(c->cookie)) < 0)
+         return -1;
+ 
+-- 
+1.5.6.4
+

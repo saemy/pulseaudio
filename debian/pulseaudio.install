@@ -42,6 +42,8 @@ usr/lib/pulse-*/modules/module-native-protocol-fd.so
 usr/lib/pulse-*/modules/module-native-protocol-tcp.so
 usr/lib/pulse-*/modules/module-native-protocol-unix.so
 usr/share/lintian/overrides/pulseaudio
+usr/share/alsa/pulse.conf
+usr/share/alsa/pulse-alsa.conf
 usr/lib/pulse-*/modules/module-null-sink.so
 usr/lib/pulse-*/modules/module-oss.so
 usr/lib/pulse-*/modules/module-pipe-sink.so

@@ -1,0 +1,34 @@
+From 4e891b39a9cc420221ec34622627776f48479f6f Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 5 Aug 2008 16:31:17 +0200
+Subject: [PATCH] fix error path (spotted by Coling Guthrie)
+
+---
+ src/utils/padsp.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
+
+diff --git a/src/utils/padsp.c b/src/utils/padsp.c
+index d3f034d..495c853 100644
+--- a/src/utils/padsp.c
++++ b/src/utils/padsp.c
+@@ -2253,7 +2253,7 @@ static int dsp_ioctl(fd_info *i, unsigned long request, void*argp, int *_errno)
+             for (;;) {
+                 pa_usec_t usec;
+ 
+-                PLAYBACK_STREAM_CHECK_DEAD_GOTO(i, exit_loop);
++                PLAYBACK_STREAM_CHECK_DEAD_GOTO(i, exit_loop2);
+ 
+                 if (pa_stream_get_time(i->play_stream, &usec) >= 0) {
+                     size_t k = pa_usec_to_bytes(usec, &i->sample_spec);
+@@ -2275,6 +2275,8 @@ static int dsp_ioctl(fd_info *i, unsigned long request, void*argp, int *_errno)
+                 pa_threaded_mainloop_wait(i->mainloop);
+             }
+ 
++        exit_loop2:
++
+             pa_threaded_mainloop_unlock(i->mainloop);
+ 
+             debug(DEBUG_LEVEL_NORMAL, __FILE__": GETOPTR bytes=%i, blocks=%i, ptr=%i\n", info->bytes, info->blocks, info->ptr);
+-- 
+1.5.6.4
+

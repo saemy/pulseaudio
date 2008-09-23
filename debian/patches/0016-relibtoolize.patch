@@ -1,6 +1,6 @@
 diff -urN pulseaudio-0.9.10/aclocal.m4 pulseaudio-0.9.10.new/aclocal.m4
---- pulseaudio-0.9.10/aclocal.m4	2008-07-29 14:02:21.000000000 +1000
-+++ pulseaudio-0.9.10.new/aclocal.m4	2008-07-29 14:01:30.000000000 +1000
+--- pulseaudio-0.9.10/aclocal.m4	2008-09-23 14:47:04.000000000 +1000
++++ pulseaudio-0.9.10.new/aclocal.m4	2008-09-23 14:39:49.000000000 +1000
 @@ -1208,102 +1208,187 @@
  ])
  
@@ -14700,9 +14700,111 @@ diff -urN pulseaudio-0.9.10/aclocal.m4 pulseaudio-0.9.10.new/aclocal.m4
          fi
  	# Put the nasty error message in config.log where it belongs
  	echo "$$1[]_PKG_ERRORS" >&AS_MESSAGE_LOG_FD
+diff -urN pulseaudio-0.9.10/config.guess pulseaudio-0.9.10.new/config.guess
+--- pulseaudio-0.9.10/config.guess	2008-09-23 14:47:04.000000000 +1000
++++ pulseaudio-0.9.10.new/config.guess	2008-09-23 14:44:19.000000000 +1000
+@@ -1,10 +1,10 @@
+ #! /bin/sh
+ # Attempt to guess a canonical system name.
+ #   Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
+-#   2000, 2001, 2002, 2003, 2004, 2005, 2006 Free Software Foundation,
+-#   Inc.
++#   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
++#   Free Software Foundation, Inc.
+ 
+-timestamp='2007-05-17'
++timestamp='2008-01-23'
+ 
+ # This file is free software; you can redistribute it and/or modify it
+ # under the terms of the GNU General Public License as published by
+@@ -56,8 +56,8 @@
+ GNU config.guess ($timestamp)
+ 
+ Originally written by Per Bothner.
+-Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005
+-Free Software Foundation, Inc.
++Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001,
++2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+ 
+ This is free software; see the source for copying conditions.  There is NO
+ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."
+@@ -330,7 +330,7 @@
+     sun4*:SunOS:5.*:* | tadpole*:SunOS:5.*:*)
+ 	echo sparc-sun-solaris2`echo ${UNAME_RELEASE}|sed -e 's/[^.]*//'`
+ 	exit ;;
+-    i86pc:SunOS:5.*:* | ix86xen:SunOS:5.*:*)
++    i86pc:SunOS:5.*:* | i86xen:SunOS:5.*:*)
+ 	echo i386-pc-solaris2`echo ${UNAME_RELEASE}|sed -e 's/[^.]*//'`
+ 	exit ;;
+     sun4*:SunOS:6*:*)
+@@ -532,7 +532,7 @@
+ 		echo rs6000-ibm-aix3.2
+ 	fi
+ 	exit ;;
+-    *:AIX:*:[45])
++    *:AIX:*:[456])
+ 	IBM_CPU_ID=`/usr/sbin/lsdev -C -c processor -S available | sed 1q | awk '{ print $1 }'`
+ 	if /usr/sbin/lsattr -El ${IBM_CPU_ID} | grep ' POWER' >/dev/null 2>&1; then
+ 		IBM_ARCH=rs6000
+@@ -793,12 +793,15 @@
+ 	exit ;;
+     *:Interix*:[3456]*)
+     	case ${UNAME_MACHINE} in
+-	    x86) 
++	    x86)
+ 		echo i586-pc-interix${UNAME_RELEASE}
+ 		exit ;;
+ 	    EM64T | authenticamd)
+ 		echo x86_64-unknown-interix${UNAME_RELEASE}
+ 		exit ;;
++	    IA64)
++		echo ia64-unknown-interix${UNAME_RELEASE}
++		exit ;;
+ 	esac ;;
+     [345]86:Windows_95:* | [345]86:Windows_98:* | [345]86:Windows_NT:*)
+ 	echo i${UNAME_MACHINE}-pc-mks
+@@ -833,7 +836,14 @@
+ 	echo ${UNAME_MACHINE}-pc-minix
+ 	exit ;;
+     arm*:Linux:*:*)
+-	echo ${UNAME_MACHINE}-unknown-linux-gnu
++	eval $set_cc_for_build
++	if echo __ARM_EABI__ | $CC_FOR_BUILD -E - 2>/dev/null \
++	    | grep -q __ARM_EABI__
++	then
++	    echo ${UNAME_MACHINE}-unknown-linux-gnu
++	else
++	    echo ${UNAME_MACHINE}-unknown-linux-gnueabi
++	fi
+ 	exit ;;
+     avr32*:Linux:*:*)
+ 	echo ${UNAME_MACHINE}-unknown-linux-gnu
+@@ -954,8 +964,8 @@
+     x86_64:Linux:*:*)
+ 	echo x86_64-unknown-linux-gnu
+ 	exit ;;
+-    xtensa:Linux:*:*)
+-    	echo xtensa-unknown-linux-gnu
++    xtensa*:Linux:*:*)
++    	echo ${UNAME_MACHINE}-unknown-linux-gnu
+ 	exit ;;
+     i*86:Linux:*:*)
+ 	# The BFD linker knows what the default object file format is, so
+@@ -1474,9 +1484,9 @@
+ the operating system you are using. It is advised that you
+ download the most up to date version of the config scripts from
+ 
+-  http://savannah.gnu.org/cgi-bin/viewcvs/*checkout*/config/config/config.guess
++  http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=HEAD
+ and
+-  http://savannah.gnu.org/cgi-bin/viewcvs/*checkout*/config/config/config.sub
++  http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub;hb=HEAD
+ 
+ If the version you run ($0) is already up to date, please
+ send the following data and any information you think might be
 diff -urN pulseaudio-0.9.10/config.h.in pulseaudio-0.9.10.new/config.h.in
---- pulseaudio-0.9.10/config.h.in	2008-03-30 12:45:33.000000000 +1100
-+++ pulseaudio-0.9.10.new/config.h.in	2008-07-29 14:01:30.000000000 +1000
+--- pulseaudio-0.9.10/config.h.in	2008-09-23 14:47:04.000000000 +1000
++++ pulseaudio-0.9.10.new/config.h.in	2008-09-23 14:39:49.000000000 +1000
 @@ -361,6 +361,10 @@
  /* Define INADDR_NONE if not found in <netinet/in.h> */
  #undef INADDR_NONE
@@ -14714,9 +14816,120 @@ diff -urN pulseaudio-0.9.10/config.h.in pulseaudio-0.9.10.new/config.h.in
  /* Define to 1 if your C compiler doesn't accept -c and -o together. */
  #undef NO_MINUS_C_MINUS_O
  
+diff -urN pulseaudio-0.9.10/config.sub pulseaudio-0.9.10.new/config.sub
+--- pulseaudio-0.9.10/config.sub	2008-09-23 14:47:04.000000000 +1000
++++ pulseaudio-0.9.10.new/config.sub	2008-09-23 14:44:19.000000000 +1000
+@@ -1,10 +1,10 @@
+ #! /bin/sh
+ # Configuration validation subroutine script.
+ #   Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
+-#   2000, 2001, 2002, 2003, 2004, 2005, 2006 Free Software Foundation,
+-#   Inc.
++#   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
++#   Free Software Foundation, Inc.
+ 
+-timestamp='2007-04-29'
++timestamp='2008-01-16'
+ 
+ # This file is (in principle) common to ALL GNU software.
+ # The presence of a machine in this file suggests that SOME GNU software
+@@ -72,8 +72,8 @@
+ version="\
+ GNU config.sub ($timestamp)
+ 
+-Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005
+-Free Software Foundation, Inc.
++Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001,
++2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+ 
+ This is free software; see the source for copying conditions.  There is NO
+ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."
+@@ -369,10 +369,14 @@
+ 	| v850-* | v850e-* | vax-* \
+ 	| we32k-* \
+ 	| x86-* | x86_64-* | xc16x-* | xps100-* | xscale-* | xscalee[bl]-* \
+-	| xstormy16-* | xtensa-* \
++	| xstormy16-* | xtensa*-* \
+ 	| ymp-* \
+ 	| z8k-*)
+ 		;;
++	# Recognize the basic CPU types without company name, with glob match.
++	xtensa*)
++		basic_machine=$basic_machine-unknown
++		;;
+ 	# Recognize the various machine names and aliases which stand
+ 	# for a CPU type and a company and sometimes even an OS.
+ 	386bsd)
+@@ -443,6 +447,14 @@
+ 		basic_machine=ns32k-sequent
+ 		os=-dynix
+ 		;;
++	blackfin)
++		basic_machine=bfin-unknown
++		os=-linux
++		;;
++	blackfin-*)
++		basic_machine=bfin-`echo $basic_machine | sed 's/^[^-]*-//'`
++		os=-linux
++		;;
+ 	c90)
+ 		basic_machine=c90-cray
+ 		os=-unicos
+@@ -475,8 +487,8 @@
+ 		basic_machine=craynv-cray
+ 		os=-unicosmp
+ 		;;
+-	cr16c)
+-		basic_machine=cr16c-unknown
++	cr16)
++		basic_machine=cr16-unknown
+ 		os=-elf
+ 		;;
+ 	crds | unos)
+@@ -668,6 +680,14 @@
+ 		basic_machine=m68k-isi
+ 		os=-sysv
+ 		;;
++	m68knommu)
++		basic_machine=m68k-unknown
++		os=-linux
++		;;
++	m68knommu-*)
++		basic_machine=m68k-`echo $basic_machine | sed 's/^[^-]*-//'`
++		os=-linux
++		;;
+ 	m88k-omron*)
+ 		basic_machine=m88k-omron
+ 		;;
+@@ -813,6 +833,14 @@
+ 		basic_machine=i860-intel
+ 		os=-osf
+ 		;;
++	parisc)
++		basic_machine=hppa-unknown
++		os=-linux
++		;;
++	parisc-*)
++		basic_machine=hppa-`echo $basic_machine | sed 's/^[^-]*-//'`
++		os=-linux
++		;;
+ 	pbd)
+ 		basic_machine=sparc-tti
+ 		;;
+@@ -1021,6 +1049,10 @@
+ 		basic_machine=tic6x-unknown
+ 		os=-coff
+ 		;;
++	tile*)
++		basic_machine=tile-unknown
++		os=-linux-gnu
++		;;
+ 	tx39)
+ 		basic_machine=mipstx39-unknown
+ 		;;
 diff -urN pulseaudio-0.9.10/configure pulseaudio-0.9.10.new/configure
---- pulseaudio-0.9.10/configure	2008-03-30 12:44:04.000000000 +1100
-+++ pulseaudio-0.9.10.new/configure	2008-07-29 14:01:30.000000000 +1000
+--- pulseaudio-0.9.10/configure	2008-09-23 14:47:04.000000000 +1000
++++ pulseaudio-0.9.10.new/configure	2008-09-23 14:44:18.000000000 +1000
 @@ -551,26 +551,28 @@
  
  
@@ -59671,8 +59884,8 @@ diff -urN pulseaudio-0.9.10/configure pulseaudio-0.9.10.new/configure
  
    esac
 diff -urN pulseaudio-0.9.10/doxygen/Makefile.in pulseaudio-0.9.10.new/doxygen/Makefile.in
---- pulseaudio-0.9.10/doxygen/Makefile.in	2008-03-30 12:44:06.000000000 +1100
-+++ pulseaudio-0.9.10.new/doxygen/Makefile.in	2008-07-29 14:01:30.000000000 +1000
+--- pulseaudio-0.9.10/doxygen/Makefile.in	2008-09-23 14:47:04.000000000 +1000
++++ pulseaudio-0.9.10.new/doxygen/Makefile.in	2008-09-23 14:44:19.000000000 +1000
 @@ -83,24 +83,20 @@
  CFLAGS = @CFLAGS@
  CPP = @CPP@
@@ -59760,8 +59973,8 @@ diff -urN pulseaudio-0.9.10/doxygen/Makefile.in pulseaudio-0.9.10.new/doxygen/Ma
  mkdir_p = @mkdir_p@
  modlibexecdir = @modlibexecdir@
 diff -urN pulseaudio-0.9.10/ltmain.sh pulseaudio-0.9.10.new/ltmain.sh
---- pulseaudio-0.9.10/ltmain.sh	2008-01-31 07:27:02.000000000 +1100
-+++ pulseaudio-0.9.10.new/ltmain.sh	2008-07-29 14:01:31.000000000 +1000
+--- pulseaudio-0.9.10/ltmain.sh	2008-09-23 14:47:04.000000000 +1000
++++ pulseaudio-0.9.10.new/ltmain.sh	2008-09-23 14:44:10.000000000 +1000
 @@ -1,52 +1,83 @@
 -# ltmain.sh - Provide generalized library-building support services.
 -# NOTE: Changing this file will not affect anything until you rerun configure.
@@ -59862,7 +60075,7 @@ diff -urN pulseaudio-0.9.10/ltmain.sh pulseaudio-0.9.10.new/ltmain.sh
 +#       compiler:		$LTCC
 +#       compiler flags:		$LTCFLAGS
 +#       linker:		$LD (gnu? $with_gnu_ld)
-+#       $progname:		(GNU libtool) 2.2.4 Debian-2.2.4-0ubuntu1
++#       $progname:		(GNU libtool) 2.2.4 Debian-2.2.4-0ubuntu4
 +#       automake:		$automake_version
 +#       autoconf:		$autoconf_version
 +#
@@ -59872,7 +60085,7 @@ diff -urN pulseaudio-0.9.10/ltmain.sh pulseaudio-0.9.10.new/ltmain.sh
  PACKAGE=libtool
 -VERSION=1.5.24
 -TIMESTAMP=" (1.1220.2.456 2007/06/24 02:25:32)"
-+VERSION="2.2.4 Debian-2.2.4-0ubuntu1"
++VERSION="2.2.4 Debian-2.2.4-0ubuntu4"
 +TIMESTAMP=""
 +package_revision=1.2976
  
@@ -73381,8 +73594,8 @@ diff -urN pulseaudio-0.9.10/ltmain.sh pulseaudio-0.9.10.new/ltmain.sh
 +# vi:sw=2
 +
 diff -urN pulseaudio-0.9.10/Makefile.in pulseaudio-0.9.10.new/Makefile.in
---- pulseaudio-0.9.10/Makefile.in	2008-03-30 12:44:08.000000000 +1100
-+++ pulseaudio-0.9.10.new/Makefile.in	2008-07-29 14:01:31.000000000 +1000
+--- pulseaudio-0.9.10/Makefile.in	2008-09-23 14:47:04.000000000 +1000
++++ pulseaudio-0.9.10.new/Makefile.in	2008-09-23 14:44:21.000000000 +1000
 @@ -64,7 +64,7 @@
  	$(srcdir)/libpulse-mainloop-glib.pc.in \
  	$(srcdir)/libpulse-simple.pc.in $(srcdir)/libpulse.pc.in \
@@ -73479,8 +73692,8 @@ diff -urN pulseaudio-0.9.10/Makefile.in pulseaudio-0.9.10.new/Makefile.in
  mkdir_p = @mkdir_p@
  modlibexecdir = @modlibexecdir@
 diff -urN pulseaudio-0.9.10/man/Makefile.in pulseaudio-0.9.10.new/man/Makefile.in
---- pulseaudio-0.9.10/man/Makefile.in	2008-03-30 12:44:06.000000000 +1100
-+++ pulseaudio-0.9.10.new/man/Makefile.in	2008-07-29 14:01:31.000000000 +1000
+--- pulseaudio-0.9.10/man/Makefile.in	2008-09-23 14:47:04.000000000 +1000
++++ pulseaudio-0.9.10.new/man/Makefile.in	2008-09-23 14:44:19.000000000 +1000
 @@ -92,24 +92,20 @@
  CFLAGS = @CFLAGS@
  CPP = @CPP@
@@ -73568,9 +73781,165 @@ diff -urN pulseaudio-0.9.10/man/Makefile.in pulseaudio-0.9.10.new/man/Makefile.i
  mkdir_p = @mkdir_p@
  modlibexecdir = @modlibexecdir@
 diff -urN pulseaudio-0.9.10/src/Makefile.in pulseaudio-0.9.10.new/src/Makefile.in
---- pulseaudio-0.9.10/src/Makefile.in	2008-03-30 12:44:08.000000000 +1100
-+++ pulseaudio-0.9.10.new/src/Makefile.in	2008-07-29 14:01:31.000000000 +1000
-@@ -1870,24 +1870,20 @@
+--- pulseaudio-0.9.10/src/Makefile.in	2008-09-23 14:47:04.000000000 +1000
++++ pulseaudio-0.9.10.new/src/Makefile.in	2008-09-23 14:44:21.000000000 +1000
+@@ -391,7 +391,7 @@
+ 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+ 	$(libprotocol_simple_la_LDFLAGS) $(LDFLAGS) -o $@
+ libpstream_util_la_DEPENDENCIES = $(am__DEPENDENCIES_2) libpacket.la \
+-	libpstream.la libtagstruct.la
++	libpstream.la libtagstruct.la libpulsecore.la
+ am_libpstream_util_la_OBJECTS = pstream-util.lo
+ libpstream_util_la_OBJECTS = $(am_libpstream_util_la_OBJECTS)
+ libpstream_util_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+@@ -700,7 +700,23 @@
+ 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+ 	$(libpulsecore_la_LDFLAGS) $(LDFLAGS) -o $@
+ libpulsedsp_la_DEPENDENCIES = $(am__DEPENDENCIES_2) libpulse.la
+-am_libpulsedsp_la_OBJECTS = libpulsedsp_la-padsp.lo
++am__libpulsedsp_la_SOURCES_DIST = utils/padsp.c pulsecore/core-util.c \
++	pulsecore/core-util.h pulsecore/core-error.c \
++	pulsecore/core-error.h pulsecore/log.c pulsecore/log.h \
++	pulsecore/once.c pulsecore/once.h pulsecore/mutex-posix.c \
++	pulsecore/mutex.h pulsecore/thread-posix.c pulsecore/thread.h \
++	pulsecore/semaphore-posix.c pulsecore/semaphore.h \
++	pulsecore/mutex-win32.c pulsecore/thread-win32.c \
++	pulsecore/semaphore-win32.c
++@OS_IS_WIN32_FALSE@am__objects_9 = libpulsedsp_la-mutex-posix.lo \
++@OS_IS_WIN32_FALSE@	libpulsedsp_la-thread-posix.lo \
++@OS_IS_WIN32_FALSE@	libpulsedsp_la-semaphore-posix.lo
++@OS_IS_WIN32_TRUE@am__objects_9 = libpulsedsp_la-mutex-win32.lo \
++@OS_IS_WIN32_TRUE@	libpulsedsp_la-thread-win32.lo \
++@OS_IS_WIN32_TRUE@	libpulsedsp_la-semaphore-win32.lo
++am_libpulsedsp_la_OBJECTS = libpulsedsp_la-padsp.lo \
++	libpulsedsp_la-core-util.lo libpulsedsp_la-core-error.lo \
++	libpulsedsp_la-log.lo libpulsedsp_la-once.lo $(am__objects_9)
+ libpulsedsp_la_OBJECTS = $(am_libpulsedsp_la_OBJECTS)
+ libpulsedsp_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+ 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(libpulsedsp_la_CFLAGS) \
+@@ -1355,8 +1371,8 @@
+ mainloop_test_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+ 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(mainloop_test_CFLAGS) \
+ 	$(CFLAGS) $(mainloop_test_LDFLAGS) $(LDFLAGS) -o $@
+-am__objects_9 = mainloop_test_glib-mainloop-test.$(OBJEXT)
+-am_mainloop_test_glib_OBJECTS = $(am__objects_9)
++am__objects_10 = mainloop_test_glib-mainloop-test.$(OBJEXT)
++am_mainloop_test_glib_OBJECTS = $(am__objects_10)
+ mainloop_test_glib_OBJECTS = $(am_mainloop_test_glib_OBJECTS)
+ am__DEPENDENCIES_4 = $(am__DEPENDENCIES_2) libpulse.la
+ mainloop_test_glib_DEPENDENCIES = $(am__DEPENDENCIES_4) \
+@@ -1420,15 +1436,15 @@
+ 	pulsecore/semaphore-posix.c pulsecore/semaphore.h \
+ 	pulsecore/mutex-win32.c pulsecore/thread-win32.c \
+ 	pulsecore/semaphore-win32.c
+-@OS_IS_WIN32_FALSE@am__objects_10 = pacmd-mutex-posix.$(OBJEXT) \
++@OS_IS_WIN32_FALSE@am__objects_11 = pacmd-mutex-posix.$(OBJEXT) \
+ @OS_IS_WIN32_FALSE@	pacmd-thread-posix.$(OBJEXT) \
+ @OS_IS_WIN32_FALSE@	pacmd-semaphore-posix.$(OBJEXT)
+-@OS_IS_WIN32_TRUE@am__objects_10 = pacmd-mutex-win32.$(OBJEXT) \
++@OS_IS_WIN32_TRUE@am__objects_11 = pacmd-mutex-win32.$(OBJEXT) \
+ @OS_IS_WIN32_TRUE@	pacmd-thread-win32.$(OBJEXT) \
+ @OS_IS_WIN32_TRUE@	pacmd-semaphore-win32.$(OBJEXT)
+ am_pacmd_OBJECTS = pacmd-pacmd.$(OBJEXT) pacmd-pid.$(OBJEXT) \
+ 	pacmd-core-util.$(OBJEXT) pacmd-core-error.$(OBJEXT) \
+-	pacmd-log.$(OBJEXT) pacmd-once.$(OBJEXT) $(am__objects_10)
++	pacmd-log.$(OBJEXT) pacmd-once.$(OBJEXT) $(am__objects_11)
+ pacmd_OBJECTS = $(am_pacmd_OBJECTS)
+ pacmd_DEPENDENCIES = $(am__DEPENDENCIES_2) libpulse.la
+ pacmd_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
+@@ -1442,15 +1458,15 @@
+ 	pulsecore/semaphore-posix.c pulsecore/semaphore.h \
+ 	pulsecore/mutex-win32.c pulsecore/thread-win32.c \
+ 	pulsecore/semaphore-win32.c
+-@OS_IS_WIN32_FALSE@am__objects_11 = pactl-mutex-posix.$(OBJEXT) \
++@OS_IS_WIN32_FALSE@am__objects_12 = pactl-mutex-posix.$(OBJEXT) \
+ @OS_IS_WIN32_FALSE@	pactl-thread-posix.$(OBJEXT) \
+ @OS_IS_WIN32_FALSE@	pactl-semaphore-posix.$(OBJEXT)
+-@OS_IS_WIN32_TRUE@am__objects_11 = pactl-mutex-win32.$(OBJEXT) \
++@OS_IS_WIN32_TRUE@am__objects_12 = pactl-mutex-win32.$(OBJEXT) \
+ @OS_IS_WIN32_TRUE@	pactl-thread-win32.$(OBJEXT) \
+ @OS_IS_WIN32_TRUE@	pactl-semaphore-win32.$(OBJEXT)
+ am_pactl_OBJECTS = pactl-pactl.$(OBJEXT) pactl-core-util.$(OBJEXT) \
+ 	pactl-core-error.$(OBJEXT) pactl-log.$(OBJEXT) \
+-	pactl-once.$(OBJEXT) $(am__objects_11)
++	pactl-once.$(OBJEXT) $(am__objects_12)
+ pactl_OBJECTS = $(am_pactl_OBJECTS)
+ pactl_DEPENDENCIES = $(am__DEPENDENCIES_2) libpulse.la \
+ 	$(am__DEPENDENCIES_1)
+@@ -1480,16 +1496,16 @@
+ 	pulsecore/semaphore-posix.c pulsecore/semaphore.h \
+ 	pulsecore/mutex-win32.c pulsecore/thread-win32.c \
+ 	pulsecore/semaphore-win32.c
+-@OS_IS_WIN32_FALSE@am__objects_12 = pasuspender-mutex-posix.$(OBJEXT) \
++@OS_IS_WIN32_FALSE@am__objects_13 = pasuspender-mutex-posix.$(OBJEXT) \
+ @OS_IS_WIN32_FALSE@	pasuspender-thread-posix.$(OBJEXT) \
+ @OS_IS_WIN32_FALSE@	pasuspender-semaphore-posix.$(OBJEXT)
+-@OS_IS_WIN32_TRUE@am__objects_12 = pasuspender-mutex-win32.$(OBJEXT) \
++@OS_IS_WIN32_TRUE@am__objects_13 = pasuspender-mutex-win32.$(OBJEXT) \
+ @OS_IS_WIN32_TRUE@	pasuspender-thread-win32.$(OBJEXT) \
+ @OS_IS_WIN32_TRUE@	pasuspender-semaphore-win32.$(OBJEXT)
+ am_pasuspender_OBJECTS = pasuspender-pasuspender.$(OBJEXT) \
+ 	pasuspender-core-util.$(OBJEXT) \
+ 	pasuspender-core-error.$(OBJEXT) pasuspender-log.$(OBJEXT) \
+-	pasuspender-once.$(OBJEXT) $(am__objects_12)
++	pasuspender-once.$(OBJEXT) $(am__objects_13)
+ pasuspender_OBJECTS = $(am_pasuspender_OBJECTS)
+ pasuspender_DEPENDENCIES = $(am__DEPENDENCIES_2) libpulse.la \
+ 	$(am__DEPENDENCIES_1)
+@@ -1508,11 +1524,11 @@
+ 	pulsecore/semaphore-posix.c pulsecore/semaphore.h \
+ 	pulsecore/mutex-win32.c pulsecore/thread-win32.c \
+ 	pulsecore/semaphore-win32.c
+-@OS_IS_WIN32_FALSE@am__objects_13 =  \
++@OS_IS_WIN32_FALSE@am__objects_14 =  \
+ @OS_IS_WIN32_FALSE@	pax11publish-mutex-posix.$(OBJEXT) \
+ @OS_IS_WIN32_FALSE@	pax11publish-thread-posix.$(OBJEXT) \
+ @OS_IS_WIN32_FALSE@	pax11publish-semaphore-posix.$(OBJEXT)
+-@OS_IS_WIN32_TRUE@am__objects_13 = pax11publish-mutex-win32.$(OBJEXT) \
++@OS_IS_WIN32_TRUE@am__objects_14 = pax11publish-mutex-win32.$(OBJEXT) \
+ @OS_IS_WIN32_TRUE@	pax11publish-thread-win32.$(OBJEXT) \
+ @OS_IS_WIN32_TRUE@	pax11publish-semaphore-win32.$(OBJEXT)
+ am_pax11publish_OBJECTS = pax11publish-pax11publish.$(OBJEXT) \
+@@ -1522,7 +1538,7 @@
+ 	pax11publish-conf-parser.$(OBJEXT) \
+ 	pax11publish-core-util.$(OBJEXT) \
+ 	pax11publish-core-error.$(OBJEXT) pax11publish-log.$(OBJEXT) \
+-	pax11publish-once.$(OBJEXT) $(am__objects_13)
++	pax11publish-once.$(OBJEXT) $(am__objects_14)
+ pax11publish_OBJECTS = $(am_pax11publish_OBJECTS)
+ pax11publish_DEPENDENCIES = $(am__DEPENDENCIES_2) libpulse.la \
+ 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+@@ -1536,13 +1552,13 @@
+ 	daemon/dumpmodules.c daemon/dumpmodules.h \
+ 	daemon/ltdl-bind-now.c daemon/ltdl-bind-now.h daemon/main.c \
+ 	pulsecore/gccmacro.h daemon/polkit.c daemon/polkit.h
+-@HAVE_POLKIT_TRUE@am__objects_14 = pulseaudio-polkit.$(OBJEXT)
++@HAVE_POLKIT_TRUE@am__objects_15 = pulseaudio-polkit.$(OBJEXT)
+ am_pulseaudio_OBJECTS = pulseaudio-caps.$(OBJEXT) \
+ 	pulseaudio-cmdline.$(OBJEXT) pulseaudio-cpulimit.$(OBJEXT) \
+ 	pulseaudio-daemon-conf.$(OBJEXT) \
+ 	pulseaudio-dumpmodules.$(OBJEXT) \
+ 	pulseaudio-ltdl-bind-now.$(OBJEXT) pulseaudio-main.$(OBJEXT) \
+-	$(am__objects_14)
++	$(am__objects_15)
+ pulseaudio_OBJECTS = $(am_pulseaudio_OBJECTS)
+ @HAVE_POLKIT_TRUE@am__DEPENDENCIES_5 = $(am__DEPENDENCIES_1)
+ pulseaudio_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+@@ -1735,9 +1751,10 @@
+ 	$(am__libpulse_mainloop_glib_la_SOURCES_DIST) \
+ 	$(am__libpulse_simple_la_SOURCES_DIST) \
+ 	$(am__libpulse_la_SOURCES_DIST) \
+-	$(am__libpulsecore_la_SOURCES_DIST) $(libpulsedsp_la_SOURCES) \
+-	$(librtp_la_SOURCES) $(libsocket_client_la_SOURCES) \
+-	$(libsocket_server_la_SOURCES) $(libsocket_util_la_SOURCES) \
++	$(am__libpulsecore_la_SOURCES_DIST) \
++	$(am__libpulsedsp_la_SOURCES_DIST) $(librtp_la_SOURCES) \
++	$(libsocket_client_la_SOURCES) $(libsocket_server_la_SOURCES) \
++	$(libsocket_util_la_SOURCES) \
+ 	$(libspeex_resampler_fixed_la_SOURCES) \
+ 	$(libspeex_resampler_float_la_SOURCES) \
+ 	$(libstrlist_la_SOURCES) $(libtagstruct_la_SOURCES) \
+@@ -1870,24 +1887,20 @@
  CFLAGS = @CFLAGS@
  CPP = @CPP@
  CPPFLAGS = @CPPFLAGS@
@@ -73598,7 +73967,7 @@ diff -urN pulseaudio-0.9.10/src/Makefile.in pulseaudio-0.9.10.new/src/Makefile.i
  GCONF_CFLAGS = @GCONF_CFLAGS@
  GCONF_LIBS = @GCONF_LIBS@
  GLIB20_CFLAGS = @GLIB20_CFLAGS@
-@@ -1909,6 +1905,7 @@
+@@ -1909,6 +1922,7 @@
  HAVE_POLKIT = @HAVE_POLKIT@
  HAVE_SOLARIS = @HAVE_SOLARIS@
  HAVE_X11 = @HAVE_X11@
@@ -73606,7 +73975,7 @@ diff -urN pulseaudio-0.9.10/src/Makefile.in pulseaudio-0.9.10.new/src/Makefile.i
  INSTALL = @INSTALL@
  INSTALL_DATA = @INSTALL_DATA@
  INSTALL_PROGRAM = @INSTALL_PROGRAM@
-@@ -1916,6 +1913,7 @@
+@@ -1916,6 +1930,7 @@
  INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
  JACK_CFLAGS = @JACK_CFLAGS@
  JACK_LIBS = @JACK_LIBS@
@@ -73614,7 +73983,7 @@ diff -urN pulseaudio-0.9.10/src/Makefile.in pulseaudio-0.9.10.new/src/Makefile.i
  LDFLAGS = @LDFLAGS@
  LIBASYNCNS_CFLAGS = @LIBASYNCNS_CFLAGS@
  LIBASYNCNS_LIBS = @LIBASYNCNS_LIBS@
-@@ -1936,17 +1934,23 @@
+@@ -1936,17 +1951,23 @@
  LIBSNDFILE_LIBS = @LIBSNDFILE_LIBS@
  LIBTOOL = @LIBTOOL@
  LIBWRAP_LIBS = @LIBWRAP_LIBS@
@@ -73638,7 +74007,7 @@ diff -urN pulseaudio-0.9.10/src/Makefile.in pulseaudio-0.9.10.new/src/Makefile.i
  PACKAGE = @PACKAGE@
  PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
  PACKAGE_NAME = @PACKAGE_NAME@
-@@ -1986,8 +1990,7 @@
+@@ -1986,8 +2007,7 @@
  abs_top_builddir = @abs_top_builddir@
  abs_top_srcdir = @abs_top_srcdir@
  ac_ct_CC = @ac_ct_CC@
@@ -73648,7 +74017,7 @@ diff -urN pulseaudio-0.9.10/src/Makefile.in pulseaudio-0.9.10.new/src/Makefile.i
  acx_pthread_config = @acx_pthread_config@
  am__include = @am__include@
  am__leading_dot = @am__leading_dot@
-@@ -2021,6 +2024,7 @@
+@@ -2021,6 +2041,7 @@
  libexecdir = @libexecdir@
  localedir = @localedir@
  localstatedir = @localstatedir@
@@ -73656,3 +74025,117 @@ diff -urN pulseaudio-0.9.10/src/Makefile.in pulseaudio-0.9.10.new/src/Makefile.i
  mandir = @mandir@
  mkdir_p = @mkdir_p@
  modlibexecdir = @modlibexecdir@
+@@ -2365,7 +2386,7 @@
+ libpulse_mainloop_glib_la_CFLAGS = $(AM_CFLAGS) $(GLIB20_CFLAGS)
+ libpulse_mainloop_glib_la_LIBADD = $(AM_LIBADD) libpulse.la $(GLIB20_LIBS)
+ libpulse_mainloop_glib_la_LDFLAGS = -version-info $(LIBPULSE_MAINLOOP_GLIB_VERSION_INFO) -Wl,-version-script=$(srcdir)/map-file
+-libpulsedsp_la_SOURCES = utils/padsp.c
++libpulsedsp_la_SOURCES = utils/padsp.c pulsecore/core-util.c pulsecore/core-util.h pulsecore/core-error.c pulsecore/core-error.h  pulsecore/log.c pulsecore/log.h pulsecore/once.c pulsecore/once.h $(PA_THREAD_OBJS)
+ libpulsedsp_la_CFLAGS = $(AM_CFLAGS)
+ libpulsedsp_la_LIBADD = $(AM_LIBADD) libpulse.la
+ libpulsedsp_la_LDFLAGS = -avoid-version
+@@ -2546,7 +2567,7 @@
+ libpstream_la_LIBADD = $(AM_LIBADD) libpulsecore.la libpacket.la libiochannel.la $(WINSOCK_LIBS)
+ libpstream_util_la_SOURCES = pulsecore/pstream-util.c pulsecore/pstream-util.h
+ libpstream_util_la_LDFLAGS = -avoid-version
+-libpstream_util_la_LIBADD = $(AM_LIBADD) libpacket.la libpstream.la libtagstruct.la
++libpstream_util_la_LIBADD = $(AM_LIBADD) libpacket.la libpstream.la libtagstruct.la libpulsecore.la
+ libpdispatch_la_SOURCES = pulsecore/pdispatch.c pulsecore/pdispatch.h
+ libpdispatch_la_LDFLAGS = -avoid-version
+ libpdispatch_la_LIBADD = $(AM_LIBADD) libtagstruct.la libpulsecore.la
+@@ -3598,7 +3619,17 @@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpulsecore_la-util.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpulsecore_la-volume.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpulsecore_la-xmalloc.Plo@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpulsedsp_la-core-error.Plo@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpulsedsp_la-core-util.Plo@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpulsedsp_la-log.Plo@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpulsedsp_la-mutex-posix.Plo@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpulsedsp_la-mutex-win32.Plo@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpulsedsp_la-once.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpulsedsp_la-padsp.Plo@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpulsedsp_la-semaphore-posix.Plo@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpulsedsp_la-semaphore-win32.Plo@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpulsedsp_la-thread-posix.Plo@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libpulsedsp_la-thread-win32.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libsocket_client_la-socket-client.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libspeex_resampler_fixed_la-resample.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libspeex_resampler_float_la-resample.Plo@am__quote@
+@@ -5152,6 +5183,76 @@
+ @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+ @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpulsedsp_la_CFLAGS) $(CFLAGS) -c -o libpulsedsp_la-padsp.lo `test -f 'utils/padsp.c' || echo '$(srcdir)/'`utils/padsp.c
+ 
++libpulsedsp_la-core-util.lo: pulsecore/core-util.c
++@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpulsedsp_la_CFLAGS) $(CFLAGS) -MT libpulsedsp_la-core-util.lo -MD -MP -MF $(DEPDIR)/libpulsedsp_la-core-util.Tpo -c -o libpulsedsp_la-core-util.lo `test -f 'pulsecore/core-util.c' || echo '$(srcdir)/'`pulsecore/core-util.c
++@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/libpulsedsp_la-core-util.Tpo $(DEPDIR)/libpulsedsp_la-core-util.Plo
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pulsecore/core-util.c' object='libpulsedsp_la-core-util.lo' libtool=yes @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpulsedsp_la_CFLAGS) $(CFLAGS) -c -o libpulsedsp_la-core-util.lo `test -f 'pulsecore/core-util.c' || echo '$(srcdir)/'`pulsecore/core-util.c
++
++libpulsedsp_la-core-error.lo: pulsecore/core-error.c
++@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpulsedsp_la_CFLAGS) $(CFLAGS) -MT libpulsedsp_la-core-error.lo -MD -MP -MF $(DEPDIR)/libpulsedsp_la-core-error.Tpo -c -o libpulsedsp_la-core-error.lo `test -f 'pulsecore/core-error.c' || echo '$(srcdir)/'`pulsecore/core-error.c
++@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/libpulsedsp_la-core-error.Tpo $(DEPDIR)/libpulsedsp_la-core-error.Plo
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pulsecore/core-error.c' object='libpulsedsp_la-core-error.lo' libtool=yes @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpulsedsp_la_CFLAGS) $(CFLAGS) -c -o libpulsedsp_la-core-error.lo `test -f 'pulsecore/core-error.c' || echo '$(srcdir)/'`pulsecore/core-error.c
++
++libpulsedsp_la-log.lo: pulsecore/log.c
++@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpulsedsp_la_CFLAGS) $(CFLAGS) -MT libpulsedsp_la-log.lo -MD -MP -MF $(DEPDIR)/libpulsedsp_la-log.Tpo -c -o libpulsedsp_la-log.lo `test -f 'pulsecore/log.c' || echo '$(srcdir)/'`pulsecore/log.c
++@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/libpulsedsp_la-log.Tpo $(DEPDIR)/libpulsedsp_la-log.Plo
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pulsecore/log.c' object='libpulsedsp_la-log.lo' libtool=yes @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpulsedsp_la_CFLAGS) $(CFLAGS) -c -o libpulsedsp_la-log.lo `test -f 'pulsecore/log.c' || echo '$(srcdir)/'`pulsecore/log.c
++
++libpulsedsp_la-once.lo: pulsecore/once.c
++@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpulsedsp_la_CFLAGS) $(CFLAGS) -MT libpulsedsp_la-once.lo -MD -MP -MF $(DEPDIR)/libpulsedsp_la-once.Tpo -c -o libpulsedsp_la-once.lo `test -f 'pulsecore/once.c' || echo '$(srcdir)/'`pulsecore/once.c
++@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/libpulsedsp_la-once.Tpo $(DEPDIR)/libpulsedsp_la-once.Plo
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pulsecore/once.c' object='libpulsedsp_la-once.lo' libtool=yes @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpulsedsp_la_CFLAGS) $(CFLAGS) -c -o libpulsedsp_la-once.lo `test -f 'pulsecore/once.c' || echo '$(srcdir)/'`pulsecore/once.c
++
++libpulsedsp_la-mutex-posix.lo: pulsecore/mutex-posix.c
++@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpulsedsp_la_CFLAGS) $(CFLAGS) -MT libpulsedsp_la-mutex-posix.lo -MD -MP -MF $(DEPDIR)/libpulsedsp_la-mutex-posix.Tpo -c -o libpulsedsp_la-mutex-posix.lo `test -f 'pulsecore/mutex-posix.c' || echo '$(srcdir)/'`pulsecore/mutex-posix.c
++@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/libpulsedsp_la-mutex-posix.Tpo $(DEPDIR)/libpulsedsp_la-mutex-posix.Plo
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pulsecore/mutex-posix.c' object='libpulsedsp_la-mutex-posix.lo' libtool=yes @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpulsedsp_la_CFLAGS) $(CFLAGS) -c -o libpulsedsp_la-mutex-posix.lo `test -f 'pulsecore/mutex-posix.c' || echo '$(srcdir)/'`pulsecore/mutex-posix.c
++
++libpulsedsp_la-thread-posix.lo: pulsecore/thread-posix.c
++@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpulsedsp_la_CFLAGS) $(CFLAGS) -MT libpulsedsp_la-thread-posix.lo -MD -MP -MF $(DEPDIR)/libpulsedsp_la-thread-posix.Tpo -c -o libpulsedsp_la-thread-posix.lo `test -f 'pulsecore/thread-posix.c' || echo '$(srcdir)/'`pulsecore/thread-posix.c
++@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/libpulsedsp_la-thread-posix.Tpo $(DEPDIR)/libpulsedsp_la-thread-posix.Plo
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pulsecore/thread-posix.c' object='libpulsedsp_la-thread-posix.lo' libtool=yes @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpulsedsp_la_CFLAGS) $(CFLAGS) -c -o libpulsedsp_la-thread-posix.lo `test -f 'pulsecore/thread-posix.c' || echo '$(srcdir)/'`pulsecore/thread-posix.c
++
++libpulsedsp_la-semaphore-posix.lo: pulsecore/semaphore-posix.c
++@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpulsedsp_la_CFLAGS) $(CFLAGS) -MT libpulsedsp_la-semaphore-posix.lo -MD -MP -MF $(DEPDIR)/libpulsedsp_la-semaphore-posix.Tpo -c -o libpulsedsp_la-semaphore-posix.lo `test -f 'pulsecore/semaphore-posix.c' || echo '$(srcdir)/'`pulsecore/semaphore-posix.c
++@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/libpulsedsp_la-semaphore-posix.Tpo $(DEPDIR)/libpulsedsp_la-semaphore-posix.Plo
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pulsecore/semaphore-posix.c' object='libpulsedsp_la-semaphore-posix.lo' libtool=yes @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpulsedsp_la_CFLAGS) $(CFLAGS) -c -o libpulsedsp_la-semaphore-posix.lo `test -f 'pulsecore/semaphore-posix.c' || echo '$(srcdir)/'`pulsecore/semaphore-posix.c
++
++libpulsedsp_la-mutex-win32.lo: pulsecore/mutex-win32.c
++@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpulsedsp_la_CFLAGS) $(CFLAGS) -MT libpulsedsp_la-mutex-win32.lo -MD -MP -MF $(DEPDIR)/libpulsedsp_la-mutex-win32.Tpo -c -o libpulsedsp_la-mutex-win32.lo `test -f 'pulsecore/mutex-win32.c' || echo '$(srcdir)/'`pulsecore/mutex-win32.c
++@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/libpulsedsp_la-mutex-win32.Tpo $(DEPDIR)/libpulsedsp_la-mutex-win32.Plo
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pulsecore/mutex-win32.c' object='libpulsedsp_la-mutex-win32.lo' libtool=yes @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpulsedsp_la_CFLAGS) $(CFLAGS) -c -o libpulsedsp_la-mutex-win32.lo `test -f 'pulsecore/mutex-win32.c' || echo '$(srcdir)/'`pulsecore/mutex-win32.c
++
++libpulsedsp_la-thread-win32.lo: pulsecore/thread-win32.c
++@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpulsedsp_la_CFLAGS) $(CFLAGS) -MT libpulsedsp_la-thread-win32.lo -MD -MP -MF $(DEPDIR)/libpulsedsp_la-thread-win32.Tpo -c -o libpulsedsp_la-thread-win32.lo `test -f 'pulsecore/thread-win32.c' || echo '$(srcdir)/'`pulsecore/thread-win32.c
++@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/libpulsedsp_la-thread-win32.Tpo $(DEPDIR)/libpulsedsp_la-thread-win32.Plo
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pulsecore/thread-win32.c' object='libpulsedsp_la-thread-win32.lo' libtool=yes @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpulsedsp_la_CFLAGS) $(CFLAGS) -c -o libpulsedsp_la-thread-win32.lo `test -f 'pulsecore/thread-win32.c' || echo '$(srcdir)/'`pulsecore/thread-win32.c
++
++libpulsedsp_la-semaphore-win32.lo: pulsecore/semaphore-win32.c
++@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpulsedsp_la_CFLAGS) $(CFLAGS) -MT libpulsedsp_la-semaphore-win32.lo -MD -MP -MF $(DEPDIR)/libpulsedsp_la-semaphore-win32.Tpo -c -o libpulsedsp_la-semaphore-win32.lo `test -f 'pulsecore/semaphore-win32.c' || echo '$(srcdir)/'`pulsecore/semaphore-win32.c
++@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/libpulsedsp_la-semaphore-win32.Tpo $(DEPDIR)/libpulsedsp_la-semaphore-win32.Plo
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='pulsecore/semaphore-win32.c' object='libpulsedsp_la-semaphore-win32.lo' libtool=yes @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpulsedsp_la_CFLAGS) $(CFLAGS) -c -o libpulsedsp_la-semaphore-win32.lo `test -f 'pulsecore/semaphore-win32.c' || echo '$(srcdir)/'`pulsecore/semaphore-win32.c
++
+ rtp.lo: modules/rtp/rtp.c
+ @am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rtp.lo -MD -MP -MF $(DEPDIR)/rtp.Tpo -c -o rtp.lo `test -f 'modules/rtp/rtp.c' || echo '$(srcdir)/'`modules/rtp/rtp.c
+ @am__fastdepCC_TRUE@	mv -f $(DEPDIR)/rtp.Tpo $(DEPDIR)/rtp.Plo
+

@@ -1,7 +1,15 @@
-#0001-Set-ESD-socket-to-tmp-.esd-socket-to-match-up-with.patch
 0002-Fix-library-search-path-to-include-lib-and-usr-lib.patch
 0003-Define-PULSE_INTERNAL.patch
 0004-load-module-gconf-earlier.patch
 0005-Reduce-RT-prio-logging-severity.patch
-0007-relibtoolize.patch
 0006-pcspkr-last.patch
+0007-Perfer-client.conf-over-X11-property-variables.patch
+0008-Also-link-libpulsecore.la-to-some-libraries-needed.patch
+0009-Rejig-r2495-slightly-and-directly-compile-the-necess.patch
+0010-Do-not-invalidate-the-cookie-if-no-file-was-specifie.patch
+0011-fix-error-path-spotted-by-Coling-Guthrie.patch
+0012-Change-policykit-policy-to-allow-high-priority-and-d.patch
+0013-More-robust-pid-file-handling.patch
+0014-Disable-hotplug-sound-as-it-interferes-with-too-many.patch
+0015-Change-resampler-and-buffering.patch
+0016-relibtoolize.patch

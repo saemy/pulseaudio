@@ -1,0 +1,25 @@
+From 063c8e853a793b0620479176c8c0ca85158a90b0 Mon Sep 17 00:00:00 2001
+From: Colin Guthrie <development@colin.guthr.ie>
+Date: Mon, 22 Sep 2008 21:34:33 +0100
+Subject: [PATCH] Disable hotplug sound as it interferes with too many things
+
+---
+ src/daemon/default.pa.in |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/src/daemon/default.pa.in b/src/daemon/default.pa.in
+index 5b31100..6a501de 100755
+--- a/src/daemon/default.pa.in
++++ b/src/daemon/default.pa.in
+@@ -20,7 +20,7 @@
+ 
+ ### Load something into the sample cache
+ #load-sample-lazy x11-bell /usr/share/sounds/gtk-events/activate.wav
+-load-sample-lazy pulse-hotplug /usr/share/sounds/startup3.wav
++#load-sample-lazy pulse-hotplug /usr/share/sounds/startup3.wav
+ #load-sample-lazy pulse-coldplug /usr/share/sounds/startup3.wav
+ #load-sample-lazy pulse-access /usr/share/sounds/generic.wav
+ 
+-- 
+1.6.0.2
+

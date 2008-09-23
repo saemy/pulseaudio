@@ -1,0 +1,166 @@
+From bf9f9951e2e66930a517a65df097f7dc3299cd57 Mon Sep 17 00:00:00 2001
+From: Colin Guthrie <development@colin.guthr.ie>
+Date: Thu, 14 Aug 2008 10:23:08 +0100
+Subject: [PATCH] More robust pid file handling.
+ This is a patch partially backported from 28405e3dcfba8b8b813678a79ca8194cccc7bb76
+ Thanks to Rodrigo Moya who did this work for the OpenSuse build.
+
+---
+ src/daemon/main.c   |    2 +-
+ src/pulsecore/pid.c |   82 ++++++++++++++++++++++++++++++++++++++++----------
+ src/pulsecore/pid.h |    4 +-
+ 3 files changed, 68 insertions(+), 20 deletions(-)
+
+diff --git a/src/daemon/main.c b/src/daemon/main.c
+index 6b0c81d..ade742f 100644
+--- a/src/daemon/main.c
++++ b/src/daemon/main.c
+@@ -687,7 +687,7 @@ int main(int argc, char *argv[]) {
+         goto finish;
+ 
+     if (conf->use_pid_file) {
+-        if (pa_pid_file_create() < 0) {
++        if (pa_pid_file_create("pulseaudio") < 0) {
+             pa_log("pa_pid_file_create() failed.");
+ #ifdef HAVE_FORK
+             if (conf->daemonize)
+diff --git a/src/pulsecore/pid.c b/src/pulsecore/pid.c
+index f3c9faa..a801c6a 100644
+--- a/src/pulsecore/pid.c
++++ b/src/pulsecore/pid.c
+@@ -140,8 +140,51 @@ fail:
+     return -1;
+ }
+ 
++static int proc_name_ours(pid_t pid, const char *procname) {
++#ifdef __linux__
++    char bn[PATH_MAX];
++    FILE *f;
++
++    pa_snprintf(bn, sizeof(bn), "/proc/%lu/stat", (unsigned long) pid);
++
++    if (!(f = fopen(bn, "r"))) {
++        pa_log_info("Failed to open %s: %s", bn, pa_cstrerror(errno));
++        return -1;
++    } else {
++        char *expected;
++        pa_bool_t good;
++        char stored[64];
++
++        if (!(fgets(stored, sizeof(stored), f))) {
++            pa_log_info("Failed to read from %s: %s", bn, feof(f) ? "EOF" : pa_cstrerror(errno));
++            fclose(f);
++            return -1;
++        }
++
++        fclose(f);
++
++        expected = pa_sprintf_malloc("%lu (%s)", (unsigned long) pid, procname);
++        good = pa_startswith(stored, expected);
++        pa_xfree(expected);
++
++#if !defined(__OPTIMIZE__)
++        if (!good) {
++            /* libtool likes to rename our binary names ... */
++            expected = pa_sprintf_malloc("%lu (lt-%s)", (unsigned long) pid, procname);
++            good = pa_startswith(stored, expected);
++            pa_xfree(expected);
++        }
++#endif
++
++        return !!good;
++    }
++#endif
++
++    return 1;
++}
++
+ /* Create a new PID file for the current process. */
+-int pa_pid_file_create(void) {
++int pa_pid_file_create(const char *procname) {
+     int fd = -1;
+     int ret = -1;
+     char fn[PATH_MAX];
+@@ -161,14 +204,24 @@ int pa_pid_file_create(void) {
+     if ((pid = read_pid(fn, fd)) == (pid_t) -1)
+         pa_log_warn("Corrupt PID file, overwriting.");
+     else if (pid > 0) {
++
+ #ifdef OS_IS_WIN32
+         if ((process = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid)) != NULL) {
+             CloseHandle(process);
+ #else
+         if (kill(pid, 0) >= 0 || errno != ESRCH) {
+ #endif
+-            pa_log("Daemon already running.");
+-            goto fail;
++	    int ours = 1;
++
++            if (procname)
++                if ((ours = proc_name_ours(pid, procname)) < 0)
++                    goto fail;
++
++            if (ours) {
++                pa_log("Daemon already running.");
++                ret = 1;
++                goto fail;
++            }
+         }
+ 
+         pa_log_warn("Stale PID file, overwriting.");
+@@ -270,7 +323,7 @@ int pa_pid_file_check_running(pid_t *pid, const char *binary_name) {
+ /* Kill a current running daemon. Return non-zero on success, -1
+  * otherwise. If successful *pid contains the PID of the daemon
+  * process. */
+-int pa_pid_file_kill(int sig, pid_t *pid, const char *binary_name) {
++int pa_pid_file_kill(int sig, pid_t *pid, const char *procname) {
+     int fd = -1;
+     char fn[PATH_MAX];
+     int ret = -1;
+@@ -290,19 +343,14 @@ int pa_pid_file_kill(int sig, pid_t *pid, const char *binary_name) {
+         goto fail;
+ 
+ #ifdef __linux__
+-    if (binary_name) {
+-        pa_snprintf(fn, sizeof(fn), "/proc/%lu/exe", (unsigned long) pid);
+-
+-        if ((e = pa_readlink(fn))) {
+-            char *f = pa_path_get_filename(e);
+-            if (strcmp(f, binary_name)
+-#if defined(__OPTIMIZE__)
+-                /* libtool likes to rename our binary names ... */
+-                && !(pa_startswith(f, "lt-") && strcmp(f+3, binary_name) == 0)
+-#endif
+-            )
+-                goto fail;
+-        }
++    if (procname) {
++        int ours;
++
++	if ((ours = proc_name_ours(*pid, procname)) < 0)
++	    goto fail;
++
++	if (!ours)
++	    goto fail;
+     }
+ #endif
+ 
+diff --git a/src/pulsecore/pid.h b/src/pulsecore/pid.h
+index 1d6de7b..2eacdc9 100644
+--- a/src/pulsecore/pid.h
++++ b/src/pulsecore/pid.h
+@@ -24,9 +24,9 @@
+   USA.
+ ***/
+ 
+-int pa_pid_file_create(void);
++int pa_pid_file_create(const char *progname);
+ int pa_pid_file_remove(void);
+ int pa_pid_file_check_running(pid_t *pid, const char *binary_name);
+-int pa_pid_file_kill(int sig, pid_t *pid, const char *binary_name);
++int pa_pid_file_kill(int sig, pid_t *pid, const char *progname);
+ 
+ #endif
+-- 
+1.5.6.5
+

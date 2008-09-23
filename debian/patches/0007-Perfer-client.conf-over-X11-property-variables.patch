@@ -1,0 +1,33 @@
+From 08cd4f12dfce31abceb617e82caaf76384541d06 Mon Sep 17 00:00:00 2001
+From: Colin Guthrie <pulse@colin.guthr.ie>
+Date: Tue, 3 Jun 2008 19:22:29 +0000
+Subject: [PATCH] Perfer client.conf over X11 property variables.
+ To explain: X11 properties are always set on the root window if pulseaudio is started
+ during X11 login (which is the most likey time to start it). This means that any settings
+ specified in client.conf will almost never be used. As the default client.conf is empty
+ it makes more sense to listen to it if a user cares to bother altering it.
+
+git-svn-id: file:///home/lennart/svn/public/pulseaudio/trunk@2494 fefdeb5f-60dc-0310-8127-8f9354f1896f
+---
+ src/pulse/context.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/src/pulse/context.c b/src/pulse/context.c
+index 7243a29..97432a4 100644
+--- a/src/pulse/context.c
++++ b/src/pulse/context.c
+@@ -151,10 +151,10 @@ pa_context *pa_context_new(pa_mainloop_api *mainloop, const char *name) {
+ #endif
+ 
+     c->conf = pa_client_conf_new();
+-    pa_client_conf_load(c->conf, NULL);
+ #ifdef HAVE_X11
+     pa_client_conf_from_x11(c->conf, NULL);
+ #endif
++    pa_client_conf_load(c->conf, NULL);
+     pa_client_conf_env(c->conf);
+ 
+     if (!(c->mempool = pa_mempool_new(!c->conf->disable_shm))) {
+-- 
+1.5.6.4
+

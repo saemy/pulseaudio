@@ -1,0 +1,29 @@
+From ef6704afb1ebad9fd0fea964f2179240ad12f83b Mon Sep 17 00:00:00 2001
+From: Colin Guthrie <pulse@colin.guthr.ie>
+Date: Tue, 3 Jun 2008 21:10:05 +0000
+Subject: [PATCH] Rejig r2495 slightly and directly compile the necessary source files as libpulsecore.so is not available when libpulsedsp.so is built
+
+git-svn-id: file:///home/lennart/svn/public/pulseaudio/trunk@2496 fefdeb5f-60dc-0310-8127-8f9354f1896f
+---
+ src/Makefile.am |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/Makefile.am b/src/Makefile.am
+index 9981767..8291a0e 100644
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -603,9 +603,9 @@ bin_SCRIPTS += utils/padsp
+ 
+ endif
+ 
+-libpulsedsp_la_SOURCES = utils/padsp.c
++libpulsedsp_la_SOURCES = utils/padsp.c pulsecore/core-util.c pulsecore/core-util.h pulsecore/core-error.c pulsecore/core-error.h  pulsecore/log.c pulsecore/log.h pulsecore/once.c pulsecore/once.h $(PA_THREAD_OBJS)
+ libpulsedsp_la_CFLAGS = $(AM_CFLAGS)
+-libpulsedsp_la_LIBADD = $(AM_LIBADD) libpulse.la libpulsecore.la
++libpulsedsp_la_LIBADD = $(AM_LIBADD) libpulse.la
+ libpulsedsp_la_LDFLAGS = -avoid-version
+ 
+ ###################################
+-- 
+1.5.6.4
+
