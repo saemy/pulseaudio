@@ -1,3 +1,10 @@
+pulseaudio (0.9.10-2ubuntu5) intrepid; urgency=low
+
+  * debian/control: Bump libasound2-plugins from recommends to depends to be
+    sure that nobody's audio set up for alsa applications is broken.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Tue, 23 Sep 2008 23:07:23 +1000
+
 pulseaudio (0.9.10-2ubuntu4) intrepid; urgency=low
 
   * debian/pulse.conf, debian/pulse-alsa.conf. Asoundrc configuration files
