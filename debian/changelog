@@ -1,3 +1,13 @@
+pulseaudio (0.9.10-2ubuntu7) intrepid; urgency=low
+
+  * Fix some errors in the pid file handling patch, thanks to Mandriva.
+  * debian/pulse.conf: Do not use an absolute path when referring to the
+    pulse alsa plugin, as this breaks bi-arch configurations. libasound2
+    and lib32/64asound2 now include ldconfig files to include the alsa-plugins
+    path for the architecture in use.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Wed, 08 Oct 2008 11:20:17 +1100
+
 pulseaudio (0.9.10-2ubuntu6) intrepid; urgency=low
 
   * debian/pulse-alsa.conf: extend configuration to include "pulse"

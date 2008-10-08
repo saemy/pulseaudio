@@ -1,0 +1,59 @@
+From 13d738d9214bbc94fdb16b326ef005f211fe1568 Mon Sep 17 00:00:00 2001
+From: Colin Guthrie <development@colin.guthr.ie>
+Date: Sun, 28 Sep 2008 15:28:39 +0100
+Subject: [PATCH] Fix errors in pid file robustneness patch
+
+---
+ src/pulsecore/pid.c |   15 ++++++++-------
+ 1 files changed, 8 insertions(+), 7 deletions(-)
+
+diff --git a/src/pulsecore/pid.c b/src/pulsecore/pid.c
+index a801c6a..76993e4 100644
+--- a/src/pulsecore/pid.c
++++ b/src/pulsecore/pid.c
+@@ -204,6 +204,7 @@ int pa_pid_file_create(const char *procname) {
+     if ((pid = read_pid(fn, fd)) == (pid_t) -1)
+         pa_log_warn("Corrupt PID file, overwriting.");
+     else if (pid > 0) {
++        int ours = 1;
+ 
+ #ifdef OS_IS_WIN32
+         if ((process = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid)) != NULL) {
+@@ -211,15 +212,15 @@ int pa_pid_file_create(const char *procname) {
+ #else
+         if (kill(pid, 0) >= 0 || errno != ESRCH) {
+ #endif
+-	    int ours = 1;
+ 
+             if (procname)
+-                if ((ours = proc_name_ours(pid, procname)) < 0)
++                if ((ours = proc_name_ours(pid, procname)) < 0) {
++                    pa_log("Could not check to see if pid %d is a pulseaudio process. Asssuming it is and the daemon is already running.", pid);
+                     goto fail;
++                }
+ 
+             if (ours) {
+                 pa_log("Daemon already running.");
+-                ret = 1;
+                 goto fail;
+             }
+         }
+@@ -346,11 +347,11 @@ int pa_pid_file_kill(int sig, pid_t *pid, const char *procname) {
+     if (procname) {
+         int ours;
+ 
+-	if ((ours = proc_name_ours(*pid, procname)) < 0)
+-	    goto fail;
++        if ((ours = proc_name_ours(*pid, procname)) < 0)
++            goto fail;
+ 
+-	if (!ours)
+-	    goto fail;
++        if (!ours)
++            goto fail;
+     }
+ #endif
+ 
+-- 
+1.6.0.2
+

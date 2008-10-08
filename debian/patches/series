@@ -13,3 +13,4 @@
 0014-Disable-hotplug-sound-as-it-interferes-with-too-many.patch
 0015-Change-resampler-and-buffering.patch
 0016-relibtoolize.patch
+0017-fix-errors-in-pidfile-robustness.patch
