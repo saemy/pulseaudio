@@ -1,3 +1,13 @@
+pulseaudio (0.9.10-2ubuntu8) intrepid; urgency=low
+
+  * debian/pulseaudio.desktop: Use a slightly modified version of the
+    pulseaudio desktop file from more recent versions, and place it in
+    /etc/xdg/autostart, to start pulseaudio earlier in the GNOME desktop
+    initialization. This should avoid a race condition between the login
+    sound being played, and pulseaudio being loaded. (LP: #274124)
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Fri, 10 Oct 2008 15:22:51 +1100
+
 pulseaudio (0.9.10-2ubuntu7) intrepid; urgency=low
 
   * Fix some errors in the pid file handling patch, thanks to Mandriva.
