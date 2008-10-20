@@ -1,0 +1,8 @@
+# If we are loading a GNOME session, load pulseaudio.
+
+if [ "$BASESTARTUP" = gnome-session -o \
+	\( "$BASESTARTUP" = x-session-manager -a \
+	"`readlink /etc/alternatives/x-session-manager`" = \
+		/usr/bin/gnome-session \) ]; then
+  STARTUP="/usr/bin/pulse-session $STARTUP"
+fi

@@ -1,3 +1,16 @@
+pulseaudio (0.9.10-2ubuntu9) intrepid; urgency=low
+
+  * debian/70pulseaudio && debian/pulse-session: Use a wrapper script
+    to start pulseaudio at the Xsession.d phase of the login process.
+    The wrapper script is necessary to execute processes that need to
+    be loaded after pulseaudio, such as the X session manager. This
+    works around a race condition involving pulseaudio and canberra-gtk-play
+    and the GNOME login sound. (LP: #274124)
+  * debian/pulseaudio.preinst: Remove /etc/xdg/autostart/pulseaudio.desktop
+    if it exists. We don't want pulseaudio started more than once.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Mon, 20 Oct 2008 13:26:28 +1100
+
 pulseaudio (0.9.10-2ubuntu8) intrepid; urgency=low
 
   * debian/pulseaudio.desktop: Use a slightly modified version of the

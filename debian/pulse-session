@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# Wrapper script to load pulseaudio at X session starttttttttttttt, when GNOME
+# is chosen as the desktop environment.
+
+/usr/bin/pulseaudio -D --log-target=syslog
+
+exec "$@"
