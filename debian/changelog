@@ -1,3 +1,74 @@
+pulseaudio (0.9.13-1ubuntu1) jaunty; urgency=low
+
+  * Merge from Debian unstable, remaining changes:
+    - Don't build against, and create jack package. Jack is not in main.
+    - Remove --disable-per-user-esound-socket from configure flags, as we still
+      want per user esound sockets.
+    - Remove stop links from rc0 and rc6.
+    - Change default resample algorithm and bubffer size.
+    - Add alsa configuration files to route alsa applications via pulseaudio.
+    - Move libasound2-plugins from Recommends to Depends.
+  * debian/pulseaudio.preinst: When upgrading from intrepid, remove
+    /etc/X11/Xsession.d/70pulseaudio, as this was used to minimize a race
+    condition when starting GNOME in intrepid. This race should not exist in
+    jaunty once libcanberra is built to use pulseaudio as a backend.
+  * Do not spawn a pulseaudio server if clients fail to find a running server.
+  * Remove explicit version dependency for libspeex-dev to allow the package
+    to be built for now.
+  * Regenerate autotools files to work with Ubuntu's newer libtool/libltdl.
+  * debian/control: libpulsecore5 -> libpulsecore8 to match the library
+    soname.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Tue, 04 Nov 2008 15:46:00 +1100
+
+pulseaudio (0.9.13-1) experimental; urgency=low
+
+  [ Bas Zoetekouw ]
+  * debian/control: Build-Depend on libasound2-dev (>= 1.0.17)
+  * debian/pulseaudio-module-x11.install: No longer install an xdg autostart
+    file
+  * debian/pulseaudio.install: Install system.pa config file and various new
+    pulseaudio modules
+  * debian/rules: Add --disable-per-user-esound-socket to configure flags
+
+  [ Sjoerd Simons ]
+  * New Upstream Version
+  * Fixes FTBTS on GNU/kFreeBSD (Closes: #497624)
+  * Dropped patches for things that have been fixed upstream:
+    - 0003-Define-PULSE_INTERNAL.patch
+    - 0005-Reduce-RT-prio-logging-severity.patch
+    - 0006-fix-iteration-over-random-devices.patch
+  * rename 0003-load-module-gconf-earlier.patch to
+    0002-load-module-gconf-earlier.patch
+  * rename 0002-Fix-library-search-path-to-include-lib-and-usr-lib.patch
+    to 0001-Fix-library-search-path-to-include-lib-and-usr-lib.patch
+  * rename 0004-load-module-gconf-earlier.patch to
+    0003-load-module-gconf-earlier.patch
+  * 0001-Set-ESD-socket-to-tmp-.esd-socket-to-match-up-with.patch
+    - Dropped, not necessary anymore, the --disable-per-user-esound-socket
+      configure flag now has the same result
+  * debian/control: Add libspeexdsp-dev (>= 1.2~rc1) to Build-Depends
+  * debian/control: Add Build-Depends on libpolkit-dbus-dev and
+    libbluetooth-dev
+  * debian/pulseaudio.install: Install various new modules. Including bluetooth
+    and polkit, which will move into a separate package later.
+  * debian/pulseaudio.install: Install the new pulseaudio xdg autostart file
+  * debian/control: add a depend on consolekit. Might be downgrade to a
+    recommend later
+  * debian/control: Set the maintainer to the pkg-pulseaudio mailinglist
+  * debian/control: Add libgdbm-dev to build-depends
+  * debian/control: Add intltool to build-depends
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Sun, 19 Oct 2008 21:05:13 +0100
+
+pulseaudio (0.9.10-3) unstable; urgency=low
+
+  * debian/patches/0006-fix-iteration-over-random-devices.patch
+    - Added. Iterate over the various random devices if opening fails
+      (Closes: #491270)
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Sat, 30 Aug 2008 14:24:51 +0100
+
 pulseaudio (0.9.10-2ubuntu9) intrepid; urgency=low
 
   * debian/70pulseaudio && debian/pulse-session: Use a wrapper script
