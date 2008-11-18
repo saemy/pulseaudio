@@ -11,7 +11,7 @@ Build-Depends: debhelper (>= 5), cdbs, quilt, m4, libltdl3-dev,
     libcap-dev [!kfreebsd-i386 !kfreebsd-amd64 !hurd-i386],
     libasound2-dev (>= 1.0.17) [!kfreebsd-i386 !kfreebsd-amd64 !hurd-i386],
     libavahi-client-dev, libwrap0-dev,
-    liblircclient-dev, libgconf2-dev, libhal-dev, libasyncns-dev,
+    liblircclient-dev, libgconf2-dev, libhal-dev,
     libatomic-ops-dev, libspeexdsp-dev, libbluetooth-dev (>= 3.0),
     libpolkit-dbus-dev, libgdbm-dev, intltool
 Standards-Version: 3.7.3

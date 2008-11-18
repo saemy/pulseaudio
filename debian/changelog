@@ -1,3 +1,10 @@
+pulseaudio (0.9.13-1ubuntu2) jaunty; urgency=low
+
+  * Drop libasyncns-dev again. Its in universe, and we will worry about
+    whether we really need it again later.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Tue, 18 Nov 2008 15:47:20 +1100
+
 pulseaudio (0.9.13-1ubuntu1) jaunty; urgency=low
 
   * Merge from Debian unstable, remaining changes:
