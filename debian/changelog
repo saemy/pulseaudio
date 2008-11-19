@@ -1,3 +1,9 @@
+pulseaudio (0.9.13-1ubuntu3) jaunty; urgency=low
+
+  * Build-depend on libltdl7-dev to make the armel buildd happy.
+
+ -- Matthias Klose <doko@ubuntu.com>  Wed, 19 Nov 2008 16:26:45 +0000
+
 pulseaudio (0.9.13-1ubuntu2) jaunty; urgency=low
 
   * Drop libasyncns-dev again. Its in universe, and we will worry about
