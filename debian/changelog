@@ -1,3 +1,35 @@
+pulseaudio (0.9.13-2ubuntu1) jaunty; urgency=low
+
+  * Merge from Debian experimental, remaining changes:
+    - Don't build against, and create jack package. Jack is not in main.
+    - Remove --disable-per-user-esound-socket from configure flags, as we still
+      want per user esound sockets.
+    - Remove stop links from rc0 and rc6.
+    - Change default resample algorithm and bubffer size.
+    - Add alsa configuration files to route alsa applications via pulseaudio.
+    - Move libasound2-plugins from Recommends to Depends.
+    - debian/pulseaudio.preinst: When upgrading from intrepid, remove
+      /etc/X11/Xsession.d/70pulseaudio, as this was used to minimize a race
+      condition when starting GNOME in intrepid. This race should not exist in
+      jaunty once libcanberra is built to use pulseaudio as a backend.
+    - Do not spawn a pulseaudio server if clients fail to find a running server.
+    - Regenerate autotools files for ubuntu.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Wed, 19 Nov 2008 10:44:03 +1100
+
+pulseaudio (0.9.13-2) experimental; urgency=low
+
+  * Rename libpulsecore5 to libpulsecore8 to correctly reflect the soname
+    (Closes: #503612)
+  * 0003-make-sure-to-use-64bit-rounding-even-on-32bit-machin.patch
+    - Fix rounding errors on 32 bit machines. From upstream git
+  * 0004-properly-remove-dbus-matches-an-filters-when-unloadi.patch
+    - Properly remove dbus filters when unloading the bluetooth module
+  * 0005-Fix-two-typos-that-broke-tunnels.patch
+    - Fix tunnels. From upstream git
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Sun, 16 Nov 2008 18:13:05 +0000
+
 pulseaudio (0.9.13-1ubuntu3) jaunty; urgency=low
 
   * Build-depend on libltdl7-dev to make the armel buildd happy.

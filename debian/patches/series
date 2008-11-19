@@ -1,5 +1,8 @@
 0001-Fix-library-search-path-to-include-lib-and-usr-lib.patch
 0002-load-module-gconf-earlier.patch
-0003_change_resample_and_buffering.patch
-0004_disable_autospawn.patch
-0005_regen_autotools.patch
+0003-make-sure-to-use-64bit-rounding-even-on-32bit-machin.patch
+0004-properly-remove-dbus-matches-an-filters-when-unloadi.patch
+0005-Fix-two-typos-that-broke-tunnels.patch
+0006_change_resample_and_buffering.patch
+0007_disable_autospawn.patch
+0008_regen_autotools.patch
