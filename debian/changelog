@@ -1,3 +1,10 @@
+pulseaudio (0.9.13-2ubuntu2) jaunty; urgency=low
+
+  * debian/patches/0009_shm-arch-indep.patch:
+    - Make shm marker architecture independant, taken from git.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Mon, 01 Dec 2008 12:06:00 +1100
+
 pulseaudio (0.9.13-2ubuntu1) jaunty; urgency=low
 
   * Merge from Debian experimental, remaining changes:

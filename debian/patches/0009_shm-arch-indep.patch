@@ -1,0 +1,25 @@
+commit f826ded33d079ea7aead78c811f742cee98214e8
+Author: Lennart Poettering <lennart@poettering.net>
+Date:   Sat Nov 1 21:41:07 2008 +0100
+
+    make shm marker architecture independant, patch from michich, closes #401
+
+diff --git a/src/pulsecore/shm.c b/src/pulsecore/shm.c
+index b299757..c59d247 100644
+--- a/src/pulsecore/shm.c
++++ b/src/pulsecore/shm.c
+@@ -73,10 +73,10 @@
+ struct shm_marker PA_GCC_PACKED {
+     pa_atomic_t marker; /* 0xbeefcafe */
+     pa_atomic_t pid;
+-    uint64_t *_reserverd1;
+-    uint64_t *_reserverd2;
+-    uint64_t *_reserverd3;
+-    uint64_t *_reserverd4;
++    uint64_t _reserved1;
++    uint64_t _reserved2;
++    uint64_t _reserved3;
++    uint64_t _reserved4;
+ };
+ 
+ static char *segment_name(char *fn, size_t l, unsigned id) {

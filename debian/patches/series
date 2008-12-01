@@ -6,3 +6,4 @@
 0006_change_resample_and_buffering.patch
 0007_disable_autospawn.patch
 0008_regen_autotools.patch
+0009_shm-arch-indep.patch
