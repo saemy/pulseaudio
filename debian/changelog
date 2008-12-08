@@ -1,3 +1,11 @@
+pulseaudio (0.9.13-2ubuntu3) jaunty; urgency=low
+
+  * Add pm-utils sleep hook to suspend (and resume) users' pulseaudio
+    daemons (LP: #202089). Based on a patch by
+    Chow Loong Jin <hyperair@gmail.com>.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Mon, 08 Dec 2008 22:11:32 -0800
+
 pulseaudio (0.9.13-2ubuntu2) jaunty; urgency=low
 
   * debian/patches/0009_shm-arch-indep.patch:
