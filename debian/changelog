@@ -1,3 +1,15 @@
+pulseaudio (0.9.13-2ubuntu4) jaunty; urgency=low
+
+  * Demote paprefs to suggests (LP: #309422)
+  * Add fixes from git:
+    - 0010_check_before_using_environment.patch,
+    - 0011_load_restore_before_other_modules.patch,
+    - 0012_dont_hit_assert_checking_for_idleness.patch,
+    - 0013_dont_hit_assert_issuing_two_rewinds_in_single_iter.patch,
+    - 0014_retry_without_snd-pcm-no-auto-format.patch.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Sun, 28 Dec 2008 23:43:01 -0500
+
 pulseaudio (0.9.13-2ubuntu3) jaunty; urgency=low
 
   * Add pm-utils sleep hook to suspend (and resume) users' pulseaudio
