@@ -1,0 +1,166 @@
+Index: pulseaudio-0.9.13/src/modules/alsa-util.c
+===================================================================
+--- pulseaudio-0.9.13.orig/src/modules/alsa-util.c	2009-01-03 19:52:45.000000000 -0500
++++ pulseaudio-0.9.13/src/modules/alsa-util.c	2009-01-03 19:55:15.000000000 -0500
+@@ -30,6 +30,7 @@
+ 
+ #include <pulse/sample.h>
+ #include <pulse/xmalloc.h>
++#include <pulse/timeval.h>
+ 
+ #include <pulsecore/log.h>
+ #include <pulsecore/macro.h>
+@@ -1065,14 +1066,14 @@
+     pa_assert(pcm);
+ 
+     if (revents & POLLERR)
+-        pa_log_warn("Got POLLERR from ALSA");
++        pa_log_debug("Got POLLERR from ALSA");
+     if (revents & POLLNVAL)
+         pa_log_warn("Got POLLNVAL from ALSA");
+     if (revents & POLLHUP)
+         pa_log_warn("Got POLLHUP from ALSA");
+ 
+     state = snd_pcm_state(pcm);
+-    pa_log_warn("PCM state is %s", snd_pcm_state_name(state));
++    pa_log_debug("PCM state is %s", snd_pcm_state_name(state));
+ 
+     /* Try to recover from this error */
+ 
+@@ -1129,3 +1130,62 @@
+ 
+     return item;
+ }
++
++snd_pcm_sframes_t pa_alsa_safe_avail_update(snd_pcm_t *pcm, size_t hwbuf_size, const pa_sample_spec *ss) {
++    snd_pcm_sframes_t n;
++    size_t k;
++
++    pa_assert(pcm);
++    pa_assert(hwbuf_size > 0);
++    pa_assert(ss);
++
++    /* Some ALSA driver expose weird bugs, let's inform the user about
++     * what is going on */
++
++    n = snd_pcm_avail_update(pcm);
++
++    if (n <= 0)
++        return n;
++
++    k = (size_t) n * pa_frame_size(ss);
++
++    if (k >= hwbuf_size * 3 ||
++        k >= pa_bytes_per_second(ss)*10)
++        pa_log("snd_pcm_avail_update() returned a value that is exceptionally large: %lu bytes (%lu ms) "
++               "Most likely this is an ALSA driver bug. Please report this issue to the PulseAudio developers.",
++               (unsigned long) k, (unsigned long) (pa_bytes_to_usec(k, ss) / PA_USEC_PER_MSEC));
++
++    return n;
++}
++
++int pa_alsa_safe_mmap_begin(snd_pcm_t *pcm, const snd_pcm_channel_area_t **areas, snd_pcm_uframes_t *offset, snd_pcm_uframes_t *frames, size_t hwbuf_size, const pa_sample_spec *ss) {
++    int r;
++    snd_pcm_uframes_t before;
++    size_t k;
++
++    pa_assert(pcm);
++    pa_assert(areas);
++    pa_assert(offset);
++    pa_assert(frames);
++    pa_assert(hwbuf_size > 0);
++    pa_assert(ss);
++
++    before = *frames;
++
++    r = snd_pcm_mmap_begin(pcm, areas, offset, frames);
++
++    if (r < 0)
++        return r;
++
++    k = (size_t) *frames * pa_frame_size(ss);
++
++    if (*frames > before ||
++        k >= hwbuf_size * 3 ||
++        k >= pa_bytes_per_second(ss)*10)
++
++        pa_log("snd_pcm_mmap_begin() returned a value that is exceptionally large: %lu bytes (%lu ms) "
++               "Most likely this is an ALSA driver bug. Please report this issue to the PulseAudio developers.",
++               (unsigned long) k, (unsigned long) (pa_bytes_to_usec(k, ss) / PA_USEC_PER_MSEC));
++
++    return r;
++}
+Index: pulseaudio-0.9.13/src/modules/alsa-util.h
+===================================================================
+--- pulseaudio-0.9.13.orig/src/modules/alsa-util.h	2009-01-03 19:52:30.000000000 -0500
++++ pulseaudio-0.9.13/src/modules/alsa-util.h	2009-01-03 19:52:45.000000000 -0500
+@@ -92,4 +92,7 @@
+ 
+ pa_rtpoll_item* pa_alsa_build_pollfd(snd_pcm_t *pcm, pa_rtpoll *rtpoll);
+ 
++snd_pcm_sframes_t pa_alsa_safe_avail_update(snd_pcm_t *pcm, size_t hwbuf_size, const pa_sample_spec *ss);
++int pa_alsa_safe_mmap_begin(snd_pcm_t *pcm, const snd_pcm_channel_area_t **areas, snd_pcm_uframes_t *offset, snd_pcm_uframes_t *frames, size_t hwbuf_size, const pa_sample_spec *ss);
++
+ #endif
+Index: pulseaudio-0.9.13/src/modules/module-alsa-sink.c
+===================================================================
+--- pulseaudio-0.9.13.orig/src/modules/module-alsa-sink.c	2009-01-03 19:52:30.000000000 -0500
++++ pulseaudio-0.9.13/src/modules/module-alsa-sink.c	2009-01-03 19:52:45.000000000 -0500
+@@ -261,7 +261,7 @@
+         /* First we determine how many samples are missing to fill the
+          * buffer up to 100% */
+ 
+-        if (PA_UNLIKELY((n = snd_pcm_avail_update(u->pcm_handle)) < 0)) {
++        if (PA_UNLIKELY((n = pa_alsa_safe_avail_update(u->pcm_handle, u->hwbuf_size, &u->sink->sample_spec)) < 0)) {
+ 
+             if ((r = try_recover(u, "snd_pcm_avail_update", (int) n)) == 0)
+                 continue;
+@@ -299,7 +299,7 @@
+ 
+ /*             pa_log_debug("%lu frames to write", (unsigned long) frames); */
+ 
+-            if (PA_UNLIKELY((err = snd_pcm_mmap_begin(u->pcm_handle, &areas, &offset, &frames)) < 0)) {
++            if (PA_UNLIKELY((err = pa_alsa_safe_mmap_begin(u->pcm_handle, &areas, &offset, &frames, u->hwbuf_size, &u->sink->sample_spec)) < 0)) {
+ 
+                 if ((r = try_recover(u, "snd_pcm_mmap_begin", err)) == 0)
+                     continue;
+@@ -374,7 +374,7 @@
+ 
+         snd_pcm_hwsync(u->pcm_handle);
+ 
+-        if (PA_UNLIKELY((n = snd_pcm_avail_update(u->pcm_handle)) < 0)) {
++        if (PA_UNLIKELY((n = pa_alsa_safe_avail_update(u->pcm_handle, u->hwbuf_size, &u->sink->sample_spec)) < 0)) {
+ 
+             if ((r = try_recover(u, "snd_pcm_avail_update", (int) n)) == 0)
+                 continue;
+Index: pulseaudio-0.9.13/src/modules/module-alsa-source.c
+===================================================================
+--- pulseaudio-0.9.13.orig/src/modules/module-alsa-source.c	2009-01-03 19:52:30.000000000 -0500
++++ pulseaudio-0.9.13/src/modules/module-alsa-source.c	2009-01-03 19:52:45.000000000 -0500
+@@ -255,7 +255,7 @@
+ 
+         snd_pcm_hwsync(u->pcm_handle);
+ 
+-        if (PA_UNLIKELY((n = snd_pcm_avail_update(u->pcm_handle)) < 0)) {
++        if (PA_UNLIKELY((n = pa_alsa_safe_avail_update(u->pcm_handle, u->hwbuf_size, &u->source->sample_spec)) < 0)) {
+ 
+             if ((r = try_recover(u, "snd_pcm_avail_update", (int) n)) == 0)
+                 continue;
+@@ -282,7 +282,7 @@
+ 
+ /*             pa_log_debug("%lu frames to read", (unsigned long) frames); */
+ 
+-            if (PA_UNLIKELY((err = snd_pcm_mmap_begin(u->pcm_handle, &areas, &offset, &frames)) < 0)) {
++            if (PA_UNLIKELY((err = pa_alsa_safe_mmap_begin(u->pcm_handle, &areas, &offset, &frames, u->hwbuf_size, &u->source->sample_spec)) < 0)) {
+ 
+                 if ((r = try_recover(u, "snd_pcm_mmap_begin", err)) == 0)
+                     continue;
+@@ -353,7 +353,7 @@
+ 
+         snd_pcm_hwsync(u->pcm_handle);
+ 
+-        if (PA_UNLIKELY((n = snd_pcm_avail_update(u->pcm_handle)) < 0)) {
++        if (PA_UNLIKELY((n = pa_alsa_safe_avail_update(u->pcm_handle, u->hwbuf_size, &u->source->sample_spec)) < 0)) {
+ 
+             if ((r = try_recover(u, "snd_pcm_avail_update", (int) n)) == 0)
+                 continue;

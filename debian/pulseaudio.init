@@ -1,10 +1,10 @@
 #!/bin/sh -e
 ### BEGIN INIT INFO
 # Provides:          pulseaudio esound
-# Required-Start:    $remote_fs $syslog dbus
-# Required-Stop:     $remote_fs $syslog dbus
-# Should-Start:      dbus
-# Should-Stop:       dbus
+# Required-Start:    $remote_fs $syslog hal
+# Required-Stop:     $remote_fs $syslog hal
+# Should-Start:      hal
+# Should-Stop:       hal
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 # Short-Description: Start the PulseAudio sound server
@@ -23,10 +23,13 @@ test -x $DAEMON || exit 0
 PULSEAUDIO_SYSTEM_START=0
 DISALLOW_MODULE_LOADING=1
 test -f /etc/default/pulseaudio && . /etc/default/pulseaudio
-test "$PULSEAUDIO_SYSTEM_START" != "1" && exit 0
+if [ "$PULSEAUDIO_SYSTEM_START" != "1" ]; then
+	log_warning_msg "PulseAudio configured for per-user sessions"
+	exit 0
+fi
 
 pulseaudio_start () {
-	log_begin_msg "Starting PulseAudio Daemon"
+	log_daemon_msg "Starting system PulseAudio Daemon"
 	start-stop-daemon -x $DAEMON -p $PIDFILE --start -- --system --daemonize --high-priority --log-target=syslog --disallow-module-loading=$DISALLOW_MODULE_LOADING
 	if [ -e /var/run/pulse/.esd_auth ]; then
 		chown pulse:pulse-access /var/run/pulse/.esd_auth
@@ -40,9 +43,18 @@ pulseaudio_start () {
 }
 
 pulseaudio_stop () {
-	log_begin_msg "Stopping PulseAudio Daemon"
-	start-stop-daemon -p $PIDFILE --stop || echo -n "... pulseaudio is not running"
-	log_end_msg $?
+	local status
+	log_daemon_msg "Stopping system PulseAudio Daemon"
+	start-stop-daemon -p $PIDFILE --stop --retry TERM/3 || status=$?
+	case "$status" in
+		1)
+			log_warning_msg "PulseAudio Daemon is not running"
+			;;
+		2)
+			log_warning_msg "PulseAudio Daemon is still running..."
+			;;
+	esac
+	log_end_msg $status
 }
 
 case "$1" in

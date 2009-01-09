@@ -1,0 +1,15 @@
+Index: pulseaudio-0.9.13/src/modules/module-pipe-sink.c
+===================================================================
+--- pulseaudio-0.9.13.orig/src/modules/module-pipe-sink.c	2009-01-03 18:23:10.000000000 -0500
++++ pulseaudio-0.9.13/src/modules/module-pipe-sink.c	2009-01-03 18:23:24.000000000 -0500
+@@ -101,8 +101,8 @@
+             size_t n = 0;
+             int l;
+ 
+-#ifdef TIOCINQ
+-            if (ioctl(u->fd, TIOCINQ, &l) >= 0 && l > 0)
++#ifdef FIONREAD
++            if (ioctl(u->fd, FIONREAD, &l) >= 0 && l > 0)
+                 n = (size_t) l;
+ #endif
+ 

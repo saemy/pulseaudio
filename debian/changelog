@@ -1,3 +1,46 @@
+pulseaudio (0.9.13-2ubuntu5) jaunty; urgency=low
+
+  [ Daniel T Chen ]
+  * Add fixes from git:
+    - 0015_use_fionread.patch,
+    - 0016_add_pa-source-message-get-latency.patch,
+    - 0017_allow_dev_dsp_w-ok.patch,
+    - 0018_fix_return_val_pa-frame-aligned.patch,
+    - 0019_fix_macro_pa-unlikely.patch,
+    - 0020_catch_driver_errors.patch (LP: #312373),
+    - 0021_convert_to_pa-bool-t.patch,
+    - 0022_fix_return_val_dump-resample-methods.patch,
+    - 0023_use_gdbm-nolock.patch,
+    - 0024_dont_mix_front-center_into_rear.patch,
+    - 0025_drop_cap-nice_properly.patch,
+    - 0027_handle_multicast_sdp_with_same_ip_ttl_as_rtp.patch,
+    - 0028_prefer_mixer_controls_with_vols.patch (LP: #281605),
+    - 0029_add_minor_fixes.patch
+  * Forward-port workaround from hardy branch for source/sink and
+    suspend-on-idle race (LP: #203654):
+    - 0026_work_around_suspend-on-idle_source_sink_race.patch
+  * debian/control: Drop padevchooser(Recommends) and pavucontrol
+    (Suggests) completely - functionality has been subsumed by
+    jaunty's gnome-volume-control.
+  * debian/pulseaudio.init:
+    - Make initscript more informative in the default case of per-user
+      sessions (LP: #259522),
+    - Make initscript retry (until three-second timeout) if stopping
+      fails when restarting (LP: #244414),
+    - LSB {Required-*,Should-*} should specify hal instead of dbus,
+      since hal is required (and already requires dbus) (LP: #244679)
+  * Previous upload contains patches to close:
+    LP: #193491, #268891, #295164, #298301
+
+  [ Luke Yelavich ]
+  * 0008_regen_autotools.patch: Pull some libtool 2.2 updates from git,
+    and regenerate autotools glue.
+  * debian/rules: Add --enable-static to force creation of libpulse.a,
+    a side-effect of messing with the autotools files. This shouldn't
+    be needed for the 0.9.14 release.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Fri, 09 Jan 2009 17:05:38 +1100
+
 pulseaudio (0.9.13-2ubuntu4) jaunty; urgency=low
 
   * Demote paprefs to suggests (LP: #309422)

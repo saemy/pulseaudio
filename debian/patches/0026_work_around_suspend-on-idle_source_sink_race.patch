@@ -1,0 +1,24 @@
+Index: pulseaudio-0.9.13/src/daemon/default.pa.in
+===================================================================
+--- pulseaudio-0.9.13.orig/src/daemon/default.pa.in	2009-01-06 22:58:47.000000000 -0500
++++ pulseaudio-0.9.13/src/daemon/default.pa.in	2009-01-06 22:59:15.000000000 -0500
+@@ -29,6 +29,9 @@
+ 
+ .fail
+ 
++### Automatically suspend sinks/sources that become idle for too long
++load-module module-suspend-on-idle
++
+ ### Automatically restore the volume of streams and devices
+ load-module module-stream-restore
+ load-module module-device-restore
+@@ -95,9 +98,6 @@
+ ### Make sure we always have a sink around, even if it is a null sink.
+ load-module module-always-sink
+ 
+-### Automatically suspend sinks/sources that become idle for too long
+-load-module module-suspend-on-idle
+-
+ ### If autoexit on idle is enabled we want to make sure we only quit
+ ### when no local session needs us anymore.
+ load-module module-console-kit
