@@ -1,3 +1,10 @@
+pulseaudio (0.9.13-2ubuntu6) jaunty; urgency=low
+
+  * debian/control: Package pulseaudio-module-x11,
+    Recommends: gnome-audio | ubuntu-sounds.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Tue, 13 Jan 2009 16:15:48 +1100
+
 pulseaudio (0.9.13-2ubuntu5) jaunty; urgency=low
 
   [ Daniel T Chen ]
