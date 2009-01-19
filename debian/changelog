@@ -1,3 +1,47 @@
+pulseaudio (0.9.14-0ubuntu1) jaunty; urgency=low
+
+  * New upstream release. (LP: #317502, #317613)
+  * Dropped patches, all in upstream release.
+    - 0003-make-sure-to-use-64bit-rounding-even-on-32bit-machin.patch
+    - 0004-properly-remove-dbus-matches-an-filters-when-unloadi.patch
+    - 0005-Fix-two-typos-that-broke-tunnels.patch
+    - 0008_regen_autotools.patch
+    - 0009_shm-arch-indep.patch
+    - 0010_check_before_using_environment.patch
+    - 0011_load_restore_before_other_modules.patch
+    - 0013_dont_hit_assert_issuing_two_rewinds_in_single_iter.patch
+    - 0014_retry_without_snd-pcm-no-auto-format.patch
+    - 0015_use_fionread.patch
+    - 0016_add_pa-source-message-get-latency.patch
+    - 0017_allow_dev_dsp_w-ok.patch
+    - 0019_fix_macro_pa-unlikely.patch
+    - 0020_catch_driver_errors.patch
+    - 0022_fix_return_val_dump-resample-methods.patch
+    - 0023_use_gdbm-nolock.patch
+    - 0024_dont_mix_front-center_into_rear.patch
+    - 0025_drop_cap-nice_properly.patch
+    - 0027_handle_multicast_sdp_with_same_ip_ttl_as_rtp.patch
+    - 0029_add_minor_fixes.patch
+    - 0030_dont_drop_client_data.patch
+    - 0031_use_fragsize_for_record_stream_latency.patch
+  * Bumped shlibs for libpulse0.
+  * Package libpulsecore8 -> libpulsecore9.
+  * Add libdbus-glib-1-dev to build-depends.
+  * Regression fix:
+    - pulse.conf: Always honour ~/.asoundrc and /etc/asound.conf with highest
+      priority, thanks to Daniel T Chen. (LP: #295832)
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Mon, 19 Jan 2009 14:45:36 +1100
+
+pulseaudio (0.9.13-2ubuntu7) UNRELEASED; urgency=low
+
+  * Add fixes from 0.9.14:
+    - 0030_dont_drop_client_data.patch,
+    - 0031_use_fragsize_for_record_stream_latency.patch,
+    - 0032_fix_suspend_sinks_sources.patch (LP: #317613)
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Thu, 15 Jan 2009 17:26:14 -0500
+
 pulseaudio (0.9.13-2ubuntu6) jaunty; urgency=low
 
   * debian/control: Package pulseaudio-module-x11,

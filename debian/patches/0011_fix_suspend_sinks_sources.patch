@@ -1,0 +1,31 @@
+Index: pulseaudio-0.9.13/src/pulsecore/protocol-native.c
+===================================================================
+--- pulseaudio-0.9.13.orig/src/pulsecore/protocol-native.c	2009-01-15 17:25:43.000000000 -0500
++++ pulseaudio-0.9.13/src/pulsecore/protocol-native.c	2009-01-15 17:25:56.000000000 -0500
+@@ -3933,7 +3933,7 @@
+     }
+ 
+     CHECK_VALIDITY(c->pstream, c->authorized, tag, PA_ERR_ACCESS);
+-    CHECK_VALIDITY(c->pstream, !name || pa_namereg_is_valid_name(name), tag, PA_ERR_INVALID);
++    CHECK_VALIDITY(c->pstream, !name || pa_namereg_is_valid_name(name) || *name == 0, tag, PA_ERR_INVALID);
+     CHECK_VALIDITY(c->pstream, idx != PA_INVALID_INDEX || name, tag, PA_ERR_INVALID);
+     CHECK_VALIDITY(c->pstream, idx == PA_INVALID_INDEX || !name, tag, PA_ERR_INVALID);
+     CHECK_VALIDITY(c->pstream, !name || idx == PA_INVALID_INDEX, tag, PA_ERR_INVALID);
+@@ -3942,6 +3942,8 @@
+ 
+         if (idx == PA_INVALID_INDEX && name && !*name) {
+ 
++            pa_log_debug("%s all sinks", b ? "Suspending" : "Resuming");
++
+             if (pa_sink_suspend_all(c->protocol->core, b) < 0) {
+                 pa_pstream_send_error(c->pstream, tag, PA_ERR_INVALID);
+                 return;
+@@ -3967,6 +3969,8 @@
+ 
+         if (idx == PA_INVALID_INDEX && name && !*name) {
+ 
++            pa_log_debug("%s all sources", b ? "Suspending" : "Resuming");
++
+             if (pa_source_suspend_all(c->protocol->core, b) < 0) {
+                 pa_pstream_send_error(c->pstream, tag, PA_ERR_INVALID);
+                 return;
