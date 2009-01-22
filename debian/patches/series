@@ -9,3 +9,5 @@
 0009_convert_to_pa-bool-t.patch
 0010_prefer_mixer_controls_with_vols.patch
 0011_fix_suspend_sinks_sources.patch
+0012_clarify_driver_error_redirect_to_alsa_devs.patch
+0013_add_padsp_wrapper_check.patch

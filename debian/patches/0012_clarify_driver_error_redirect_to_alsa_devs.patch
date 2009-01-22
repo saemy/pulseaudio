@@ -1,0 +1,48 @@
+Index: pulseaudio-0.9.14/src/modules/module-alsa-sink.c
+===================================================================
+--- pulseaudio-0.9.14.orig/src/modules/module-alsa-sink.c	2009-01-21 17:59:40.000000000 -0500
++++ pulseaudio-0.9.14/src/modules/module-alsa-sink.c	2009-01-21 18:00:01.000000000 -0500
+@@ -287,7 +287,8 @@
+ 
+             if (polled)
+                 pa_log("ALSA woke us up to write new data to the device, but there was actually nothing to write! "
+-                       "Most likely this is an ALSA driver bug. Please report this issue to the PulseAudio developers.");
++                       "Most likely this is an ALSA driver bug. Please report this issue to the ALSA developers. "
++                       "We were woken up with POLLOUT set -- however a subsequent snd_pcm_avail_update() returned 0.");
+ 
+             break;
+         }
+@@ -409,7 +410,8 @@
+ 
+             if (polled)
+                 pa_log("ALSA woke us up to write new data to the device, but there was actually nothing to write! "
+-                       "Most likely this is an ALSA driver bug. Please report this issue to the PulseAudio developers.");
++                       "Most likely this is an ALSA driver bug. Please report this issue to the ALSA developers. "
++                       "We were woken up with POLLOUT set -- however a subsequent snd_pcm_avail_update() returned 0.");
+ 
+             break;
+         }
+Index: pulseaudio-0.9.14/src/modules/module-alsa-source.c
+===================================================================
+--- pulseaudio-0.9.14.orig/src/modules/module-alsa-source.c	2009-01-21 17:59:40.000000000 -0500
++++ pulseaudio-0.9.14/src/modules/module-alsa-source.c	2009-01-21 18:00:01.000000000 -0500
+@@ -274,7 +274,8 @@
+ 
+             if (polled)
+                 pa_log("ALSA woke us up to read new data from the device, but there was actually nothing to read! "
+-                       "Most likely this is an ALSA driver bug. Please report this issue to the PulseAudio device.");
++                       "Most likely this is an ALSA driver bug. Please report this issue to the ALSA developers. "
++                       "We were woken up with POLLIN set -- however a subsequent snd_pcm_avail_update() returned 0.");
+ 
+             break;
+         }
+@@ -381,7 +382,8 @@
+ 
+             if (polled)
+                 pa_log("ALSA woke us up to read new data from the device, but there was actually nothing to read! "
+-                       "Most likely this is an ALSA driver bug. Please report this issue to the PulseAudio developers.");
++                       "Most likely this is an ALSA driver bug. Please report this issue to the ALSA developers. "
++                       "We were woken up with POLLIN set -- however a subsequent snd_pcm_avail_update() returned 0.");
+ 
+             return work_done;
+         }

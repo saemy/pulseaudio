@@ -1,3 +1,16 @@
+pulseaudio (0.9.14-0ubuntu2) jaunty; urgency=low
+
+  * Add fixes from trunk:
+    - 0012_clarify_driver_error_redirect_to_alsa_devs.patch
+  * Add 0013_add_padsp_wrapper_check.patch (LP: #269939)
+  * debian/pulseaudio.manpages:
+    debian/pulseaudio-esound-compat.manpages:
+    debian/pulseaudio-utils.links:
+    - Install upstream man pages (LP: #219669, #318660),
+    - Link to pacat for parec man page (LP: #294628)
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Thu, 22 Jan 2009 02:57:54 -0500
+
 pulseaudio (0.9.14-0ubuntu1) jaunty; urgency=low
 
   * New upstream release. (LP: #317502, #317613)
