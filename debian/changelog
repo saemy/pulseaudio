@@ -1,3 +1,24 @@
+pulseaudio (0.9.14-0ubuntu3) jaunty; urgency=low
+
+  [ Daniel T Chen ]
+  * Add fixes from git HEAD:
+    - 0014_fix_avail-min_calc.patch,
+    - 0015_no_pa-asyncq-push_fail.patch,
+    - 0016_dont_rely_pa-sink-running-idle_for_optim.patch,
+    - 0017_fix_hsp_rate_chan.patch,
+    - 0018_dont_restore_mute_vol_when_already_set.patch,
+    - 0019_fix_mem_leak_in_pa-alsa-open-by-device-string.patch,
+    - 0020_ask_for_same_frag_set_when_resuming_oss_dev.patch,
+    - 0021_add_missing_const.patch,
+    - 0022_dont_hit_assert_in_esound-sink_when_latency_queried.patch
+
+  [ Luke Yelavich ]
+  * Re-instate /etc/X11/Xsession.d/70pulseaudio, to again load pulseaudio
+    earlier in the X session, to aleviate a pulse/login-sound race condition
+    (LP: #322374)
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Mon, 02 Feb 2009 15:27:55 +0100
+
 pulseaudio (0.9.14-0ubuntu2) jaunty; urgency=low
 
   * Add fixes from trunk:

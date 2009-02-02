@@ -17,6 +17,9 @@ common-install-arch::
 	cp -a $(CURDIR)/debian/overrides $(CURDIR)/debian/tmp/usr/share/lintian
 	mkdir -p $(CURDIR)/debian/tmp/usr/share/alsa
 	cp -a $(CURDIR)/debian/*.conf $(CURDIR)/debian/tmp/usr/share/alsa
+	mkdir -p $(CURDIR)/debian/tmp/etc/X11/Xsession.d
+	cp $(CURDIR)/debian/70pulseaudio $(CURDIR)/debian/tmp/etc/X11/Xsession.d
+	cp $(CURDIR)/debian/pulse-session $(CURDIR)/debian/tmp/usr/bin
 	install -D -m755 $(CURDIR)/debian/01PulseAudio $(CURDIR)/debian/tmp/usr/lib/pm-utils/sleep.d/01PulseAudio
 
 common-binary-post-install-arch:: list-missing

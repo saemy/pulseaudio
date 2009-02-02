@@ -2,9 +2,9 @@
 
 case "$1" in
   install|upgrade)
-    if dpkg --compare-versions "$2" lt "0.9.13-1ubuntu1"; then
-      if [ -f /etc/X11/Xsession.d/70pulseaudio ]; then
-        rm /etc/X11/Xsession.d/70pulseaudio
+    if dpkg --compare-versions "$2" lt "0.9.14-0ubuntu3"; then
+      if [ -f /etc/xdg/autostart/pulseaudio.desktop ]; then
+        rm /etc/xdg/autostart/pulseaudio.desktop
       fi
     fi
   ;;
