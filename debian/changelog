@@ -1,3 +1,14 @@
+pulseaudio (0.9.14-0ubuntu4) jaunty; urgency=low
+
+  * Add fixes from git HEAD:
+    - 0023_work_around_dlsym_retval_mistyping.patch,
+    - 0024_fix_sink_source_calls_in_suspended.patch,
+    - 0025_shortcut_pa-sink-process-rewind.patch,
+    - 0026_reset_rewind-requested_when_suspend.patch,
+    - 0027_fix_piped_pacmd.patch
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Wed, 04 Feb 2009 19:36:09 -0500
+
 pulseaudio (0.9.14-0ubuntu3) jaunty; urgency=low
 
   [ Daniel T Chen ]

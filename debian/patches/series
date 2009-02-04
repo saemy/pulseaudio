@@ -20,3 +20,8 @@
 0020_ask_for_same_frag_set_when_resuming_oss_dev.patch
 0021_add_missing_const.patch
 0022_dont_hit_assert_in_esound-sink_when_latency_queried.patch
+0023_work_around_dlsym_retval_mistyping.patch
+0024_fix_sink_source_calls_in_suspended.patch
+0025_shortcut_pa-sink-process-rewind.patch
+0026_reset_rewind-requested_when_suspend.patch
+0027_fix_piped_pacmd.patch
