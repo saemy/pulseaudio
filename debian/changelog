@@ -1,3 +1,11 @@
+pulseaudio (0.9.14-0ubuntu5) jaunty; urgency=low
+
+  * Add fixes from git HEAD:
+    - 0028_fix_uninit_rtp_resamp.patch,
+    - 0029_fix_suspend_on_idle_null_race.patch
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Thu, 12 Feb 2009 18:28:42 -0500
+
 pulseaudio (0.9.14-0ubuntu4) jaunty; urgency=low
 
   * Add fixes from git HEAD:

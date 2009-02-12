@@ -25,3 +25,5 @@
 0025_shortcut_pa-sink-process-rewind.patch
 0026_reset_rewind-requested_when_suspend.patch
 0027_fix_piped_pacmd.patch
+0028_fix_uninit_rtp_resamp.patch
+0029_fix_suspend_on_idle_null_race.patch
