@@ -1,3 +1,36 @@
+pulseaudio (0.9.14-0ubuntu6) jaunty; urgency=low
+
+  * 0004_disable_autospawn.patch: Disable this patch. Doing so
+    allows the daemon to spawn if not already running, which
+    works around LP: #191027, #204272
+  * 0012_clarify_driver_error_redirect_to_alsa_devs.patch:
+    - Only log POLL* being set if tsched is used so that syslog
+      isn't filled with innocuous messages when we set tsched=0
+      (see 0030 below) (LP: #323712),
+    - Hint 'linux' source package instead of 'alsa-driver' for
+      Launchpad bug reports,
+    - The debug-specific portion is only applicable to 0.9.14;
+      0.9.15 enables a rate limiting module by default to work
+      around this (and other) issues
+  * 0029_fix_suspend_on_idle_null_race.patch: Handle sink case,
+    too
+  * 0030_set_tsched0.patch: Work around a shedload of (driver)
+    bugs by falling back to interrupt-based buffer semantics
+    (LP: #190754, #292880, #295519, #298494, #301755, #302964,
+     LP: #319118, #323976, #324103, #326205, #326864)
+  * Backport fixes from git HEAD:
+    - 0031_fix_6chan_map.patch,
+    - 0032_reinit_proplist.patch,
+    - 0033_fix_pa-gcc-packedmalloc.patch,
+    - 0034_bt_fixes.patch
+  * Make invoking the stop target in the initscript not fail an
+    upgrade (LP: #317921)
+  * Previous upload (0.9.14-0ubuntu3) fixed LP: #321357
+  * 01PulseAudio: use sudo -H to ensure that $HOME is, in fact,
+    the user's when invoking pacmd for suspend/resume
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Sun, 15 Feb 2009 02:35:26 -0500
+
 pulseaudio (0.9.14-0ubuntu5) jaunty; urgency=low
 
   * Add fixes from git HEAD:

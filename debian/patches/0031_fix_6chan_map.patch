@@ -1,0 +1,17 @@
+Index: pulseaudio-0.9.14/src/pulse/channelmap.c
+===================================================================
+--- pulseaudio-0.9.14.orig/src/pulse/channelmap.c	2009-02-13 22:55:36.000000000 -0500
++++ pulseaudio-0.9.14/src/pulse/channelmap.c	2009-02-13 22:55:44.000000000 -0500
+@@ -216,10 +216,10 @@
+ 
+                 case 6:
+                     m->map[0] = PA_CHANNEL_POSITION_FRONT_LEFT;
+-                    m->map[1] = PA_CHANNEL_POSITION_SIDE_LEFT;
++                    m->map[1] = PA_CHANNEL_POSITION_REAR_LEFT;
+                     m->map[2] = PA_CHANNEL_POSITION_FRONT_CENTER;
+                     m->map[3] = PA_CHANNEL_POSITION_FRONT_RIGHT;
+-                    m->map[4] = PA_CHANNEL_POSITION_SIDE_RIGHT;
++                    m->map[4] = PA_CHANNEL_POSITION_REAR_RIGHT;
+                     m->map[5] = PA_CHANNEL_POSITION_LFE;
+                     return m;
+ 

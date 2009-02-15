@@ -1,0 +1,79 @@
+Index: pulseaudio-0.9.14/src/modules/bluetooth/module-bluetooth-device.c
+===================================================================
+--- pulseaudio-0.9.14.orig/src/modules/bluetooth/module-bluetooth-device.c	2009-02-14 01:34:40.000000000 -0500
++++ pulseaudio-0.9.14/src/modules/bluetooth/module-bluetooth-device.c	2009-02-14 01:40:19.000000000 -0500
+@@ -145,6 +145,9 @@
+ 
+     length = expected_length ? expected_length : BT_SUGGESTED_BUFFER_SIZE;
+ 
++    if (length < sizeof(bt_audio_error_t))
++        length = sizeof(bt_audio_error_t);
++
+     pa_log_debug("trying to receive msg from audio service...");
+     if (recv(sk, inmsg, length, 0) > 0) {
+         type = bt_audio_strtype(inmsg->type);
+@@ -167,11 +170,11 @@
+     return e;
+ }
+ 
+-static int bt_audioservice_expect(int sk, bt_audio_msg_header_t *rsp, uint8_t expected_name, uint16_t expected_length) {
++static ssize_t bt_audioservice_expect(int sk, bt_audio_msg_header_t *rsp, uint8_t expected_name, uint16_t expected_length) {
+     int e = bt_audioservice_recv(sk, rsp, expected_length);
+ 
+     if (e < 0) {
+-        if (rsp->name != expected_name) {
++        if (rsp->type != BT_RESPONSE || rsp->name != expected_name) {
+             e = -EINVAL;
+             pa_log_error("Bogus message %s received while %s was expected",
+                     bt_audio_strname(rsp->name),
+@@ -179,7 +182,7 @@
+         }
+     }
+ 
+-    if (rsp->type == BT_ERROR) {
++    if (rsp->type == BT_ERROR && rsp->length == sizeof(bt_audio_error_t)) {
+         bt_audio_error_t *error = (void *) rsp;
+         pa_log_error("%s failed : %s(%d)", bt_audio_strname(rsp->name), pa_cstrerror(error->posix_errno), error->posix_errno);
+         return -error->posix_errno;
+@@ -219,6 +222,7 @@
+         bt_audio_msg_header_t rsp;
+         struct bt_get_capabilities_req getcaps_req;
+         struct bt_get_capabilities_rsp getcaps_rsp;
++        bt_audio_error_t error;
+         uint8_t buf[BT_SUGGESTED_BUFFER_SIZE];
+     } msg;
+ 
+@@ -437,6 +441,7 @@
+         bt_audio_msg_header_t rsp;
+         struct bt_set_configuration_req setconf_req;
+         struct bt_set_configuration_rsp setconf_rsp;
++        bt_audio_error_t error;
+         uint8_t buf[BT_SUGGESTED_BUFFER_SIZE];
+     } msg;
+ 
+@@ -506,6 +511,7 @@
+         struct bt_start_stream_req start_req;
+         struct bt_start_stream_rsp start_rsp;
+         struct bt_new_stream_ind streamfd_ind;
++        bt_audio_error_t error;
+         uint8_t buf[BT_SUGGESTED_BUFFER_SIZE];
+     } msg;
+ 
+@@ -841,6 +847,17 @@
+     }
+     u->ss.channels = (uint8_t) channels;
+ 
++    /* shutdown bt */
++    if (u->stream_fd >= 0) {
++        pa_close(u->stream_fd);
++        u->stream_fd = -1;
++    }
++
++    if (u->audioservice_fd >= 0) {
++        pa_close(u->audioservice_fd);
++        u->audioservice_fd = -1;
++    }
++
+     /* connect to the bluez audio service */
+     u->audioservice_fd = bt_audio_service_open();
+     if (u->audioservice_fd <= 0) {

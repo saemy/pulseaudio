@@ -45,13 +45,15 @@ pulseaudio_start () {
 pulseaudio_stop () {
 	local status
 	log_daemon_msg "Stopping system PulseAudio Daemon"
-	start-stop-daemon -p $PIDFILE --stop --retry TERM/3 || status=$?
+	start-stop-daemon -p $PIDFILE --stop --retry TERM/3 --oknodo || status=$?
 	case "$status" in
 		1)
 			log_warning_msg "PulseAudio Daemon is not running"
 			;;
 		2)
 			log_warning_msg "PulseAudio Daemon is still running..."
+			;;
+		*)
 			;;
 	esac
 	log_end_msg $status

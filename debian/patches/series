@@ -1,7 +1,7 @@
 0001-Fix-library-search-path-to-include-lib-and-usr-lib.patch
 0002-load-module-gconf-earlier.patch
 0003_change_resample_and_buffering.patch
-0004_disable_autospawn.patch
+#0004_disable_autospawn.patch
 0005_work_around_suspend-on-idle_source_sink_race.patch
 0006_regen-autotools.patch
 0007_dont_hit_assert_checking_for_idleness.patch
@@ -27,3 +27,8 @@
 0027_fix_piped_pacmd.patch
 0028_fix_uninit_rtp_resamp.patch
 0029_fix_suspend_on_idle_null_race.patch
+0030_set_tsched0.patch
+0031_fix_6chan_map.patch
+0032_reinit_proplist.patch
+0033_fix_pa-gcc-packedmalloc.patch
+0034_bt_fixes.patch

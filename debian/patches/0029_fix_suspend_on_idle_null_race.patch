@@ -1,8 +1,18 @@
 Index: pulseaudio-0.9.14/src/modules/module-suspend-on-idle.c
 ===================================================================
---- pulseaudio-0.9.14.orig/src/modules/module-suspend-on-idle.c	2009-02-12 18:26:45.000000000 -0500
-+++ pulseaudio-0.9.14/src/modules/module-suspend-on-idle.c	2009-02-12 18:28:17.000000000 -0500
-@@ -172,6 +172,9 @@
+--- pulseaudio-0.9.14.orig/src/modules/module-suspend-on-idle.c	2009-02-12 18:28:26.000000000 -0500
++++ pulseaudio-0.9.14/src/modules/module-suspend-on-idle.c	2009-02-13 01:37:53.000000000 -0500
+@@ -158,6 +158,9 @@
+     pa_sink_input_assert_ref(s);
+     pa_assert(u);
+ 
++    if (!s->sink)
++        return PA_HOOK_OK;
++
+     if (pa_sink_used_by(s->sink) <= 0) {
+         struct device_info *d;
+         if ((d = pa_hashmap_get(u->device_infos, s->sink)))
+@@ -172,6 +175,9 @@
      pa_source_output_assert_ref(s);
      pa_assert(u);
  
