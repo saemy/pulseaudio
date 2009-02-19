@@ -1,3 +1,27 @@
+pulseaudio (0.9.14-0ubuntu7) jaunty; urgency=low
+
+  [ Luke Yelavich ]
+  * 0001-Fix-library-search-path-to-include-lib-and-usr-lib.patch: Dropped,
+    no longer applicable, as evident in Debian's pulseaudio git branch.
+
+  [ Daniel T Chen ]
+  * 0004_enable_autospawn.patch: Renamed from .."disable".. for clarity,
+    and actually apply it.
+  * 0012_clarify_driver_error_redirect_to_alsa_devs.patch: Clarify
+    logging message for 'linux' source package and ALSA developers
+    instead of PulseAudio developers in alsa-util.c, too.
+    - This patch can be tweaked, since upstream has now applied it to
+      git HEAD
+  * Backport fixes from git HEAD:
+    - 0035_fix_module-detect_access.patch,
+    - 0036_increase_memblock_imports.patch,
+    - 0037_fill_silence_fail_import_memblock.patch,
+    - 0038_handle_errno_properly.patch,
+    - 0039_add_validity_checks.patch,
+    - 0040_legacy_fixes.patch
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Thu, 19 Feb 2009 19:34:03 -0500
+
 pulseaudio (0.9.14-0ubuntu6) jaunty; urgency=low
 
   * 0004_disable_autospawn.patch: Disable this patch. Doing so

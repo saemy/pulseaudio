@@ -1,0 +1,14 @@
+Index: pulseaudio-0.9.14/src/pulsecore/core-error.c
+===================================================================
+--- pulseaudio-0.9.14.orig/src/pulsecore/core-error.c	2009-02-19 18:44:05.000000000 -0500
++++ pulseaudio-0.9.14/src/pulsecore/core-error.c	2009-02-19 18:44:23.000000000 -0500
+@@ -47,6 +47,9 @@
+     char *translated, *t;
+     char errbuf[128];
+ 
++    if (errnum < 0)
++        errnum = -errnum;
++
+     if ((t = PA_STATIC_TLS_GET(cstrerror)))
+         pa_xfree(t);
+ 

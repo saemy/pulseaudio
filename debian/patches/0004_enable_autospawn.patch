@@ -6,7 +6,7 @@ diff -urN pulseaudio-0.9.13/src/pulse/client.conf.in pulseaudio-0.9.13.orig/src/
  ; default-server =
  
 -; autospawn = yes
-+autospawn = no
++autospawn = yes
  ; daemon-binary = @PA_BINARY@
  ; extra-arguments = --log-target=syslog
  

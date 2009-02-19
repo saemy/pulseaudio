@@ -1,0 +1,233 @@
+Index: pulseaudio-0.9.14/src/utils/paplay.c
+===================================================================
+--- pulseaudio-0.9.14.orig/src/utils/paplay.c	2009-02-19 19:25:01.000000000 -0500
++++ pulseaudio-0.9.14/src/utils/paplay.c	2009-02-19 19:25:10.000000000 -0500
+@@ -400,7 +400,10 @@
+     pa_context_set_state_callback(context, context_state_callback, NULL);
+ 
+     /* Connect the context */
+-    pa_context_connect(context, server, 0, NULL);
++    if (pa_context_connect(context, server, 0, NULL) < 0) {
++        fprintf(stderr, _("pa_context_connect() failed: %s"), pa_strerror(pa_context_errno(context)));
++        goto quit;
++    }
+ 
+     /* Run the main loop */
+     if (pa_mainloop_run(m, &ret) < 0) {
+Index: pulseaudio-0.9.14/src/utils/pactl.c
+===================================================================
+--- pulseaudio-0.9.14.orig/src/utils/pactl.c	2009-02-19 19:25:01.000000000 -0500
++++ pulseaudio-0.9.14/src/utils/pactl.c	2009-02-19 19:25:10.000000000 -0500
+@@ -561,6 +561,7 @@
+         pa_xfree(d);
+         fprintf(stderr, _("Premature end of file\n"));
+         quit(1);
++        return;
+     }
+ 
+     pa_stream_write(s, d, length, pa_xfree, 0, PA_SEEK_RELATIVE);
+@@ -925,7 +926,10 @@
+     }
+ 
+     pa_context_set_state_callback(context, context_state_callback, NULL);
+-    pa_context_connect(context, server, 0, NULL);
++    if (pa_context_connect(context, server, 0, NULL) < 0) {
++        fprintf(stderr, _("pa_context_connect() failed: %s"), pa_strerror(pa_context_errno(context)));
++        goto quit;
++    }
+ 
+     if (pa_mainloop_run(m, &ret) < 0) {
+         fprintf(stderr, _("pa_mainloop_run() failed.\n"));
+Index: pulseaudio-0.9.14/src/pulsecore/protocol-native.c
+===================================================================
+--- pulseaudio-0.9.14.orig/src/pulsecore/protocol-native.c	2009-02-19 19:25:10.000000000 -0500
++++ pulseaudio-0.9.14/src/pulsecore/protocol-native.c	2009-02-19 19:25:11.000000000 -0500
+@@ -2472,7 +2472,10 @@
+         if (!(name = pa_proplist_gets(p, PA_PROP_EVENT_ID)))
+             name = pa_proplist_gets(p, PA_PROP_MEDIA_NAME);
+ 
+-    CHECK_VALIDITY(c->pstream, name && pa_namereg_is_valid_name(name), tag, PA_ERR_INVALID);
++    if (!name || !pa_namereg_is_valid_name(name)) {
++        pa_proplist_free(p);
++        CHECK_VALIDITY(c->pstream, FALSE, tag, PA_ERR_INVALID);
++    }
+ 
+     s = upload_stream_new(c, &ss, &map, name, length, p);
+     pa_proplist_free(p);
+@@ -3426,24 +3429,29 @@
+         }
+     }
+ 
+-    CHECK_VALIDITY(c->pstream, mode == PA_UPDATE_SET || mode == PA_UPDATE_MERGE || mode == PA_UPDATE_REPLACE, tag, PA_ERR_INVALID);
++    if (!(mode == PA_UPDATE_SET || mode == PA_UPDATE_MERGE || mode == PA_UPDATE_REPLACE)) {
++        pa_proplist_free(p);
++        CHECK_VALIDITY(c->pstream, FALSE, tag, PA_ERR_INVALID);
++    }
+ 
+     if (command == PA_COMMAND_UPDATE_PLAYBACK_STREAM_PROPLIST) {
+         playback_stream *s;
+ 
+         s = pa_idxset_get_by_index(c->output_streams, idx);
+-        CHECK_VALIDITY(c->pstream, s, tag, PA_ERR_NOENTITY);
+-        CHECK_VALIDITY(c->pstream, playback_stream_isinstance(s), tag, PA_ERR_NOENTITY);
+-
++        if (!s || !playback_stream_isinstance(s)) {
++            pa_proplist_free(p);
++            CHECK_VALIDITY(c->pstream, FALSE, tag, PA_ERR_NOENTITY);
++        }
+         pa_proplist_update(s->sink_input->proplist, mode, p);
+         pa_subscription_post(c->protocol->core, PA_SUBSCRIPTION_EVENT_SINK_INPUT|PA_SUBSCRIPTION_EVENT_CHANGE, s->sink_input->index);
+ 
+     } else if (command == PA_COMMAND_UPDATE_RECORD_STREAM_PROPLIST) {
+         record_stream *s;
+ 
+-        s = pa_idxset_get_by_index(c->record_streams, idx);
+-        CHECK_VALIDITY(c->pstream, s, tag, PA_ERR_NOENTITY);
+-
++        if (!(s = pa_idxset_get_by_index(c->record_streams, idx))) {
++            pa_proplist_free(p);
++            CHECK_VALIDITY(c->pstream, FALSE, tag, PA_ERR_NOENTITY);
++        }
+         pa_proplist_update(s->source_output->proplist, mode, p);
+         pa_subscription_post(c->protocol->core, PA_SUBSCRIPTION_EVENT_SOURCE_OUTPUT|PA_SUBSCRIPTION_EVENT_CHANGE, s->source_output->index);
+     } else {
+@@ -3454,6 +3462,7 @@
+     }
+ 
+     pa_pstream_send_simple_ack(c->pstream, tag);
++    pa_proplist_free(p);
+ }
+ 
+ static void command_remove_proplist(pa_pdispatch *pd, uint32_t command, uint32_t tag, pa_tagstruct *t, void *userdata) {
+@@ -4034,7 +4043,7 @@
+     CHECK_VALIDITY(c->pstream, m->load_once || idx != PA_INVALID_INDEX, tag, PA_ERR_INVALID);
+ 
+     cb = (pa_native_protocol_ext_cb_t) pa_hashmap_get(c->protocol->extensions, m);
+-    CHECK_VALIDITY(c->pstream, m, tag, PA_ERR_NOEXTENSION);
++    CHECK_VALIDITY(c->pstream, cb, tag, PA_ERR_NOEXTENSION);
+ 
+     if (cb(c->protocol, m, c, tag, t) < 0)
+         protocol_error(c);
+Index: pulseaudio-0.9.14/src/utils/padsp.c
+===================================================================
+--- pulseaudio-0.9.14.orig/src/utils/padsp.c	2009-02-19 19:25:01.000000000 -0500
++++ pulseaudio-0.9.14/src/utils/padsp.c	2009-02-19 19:25:11.000000000 -0500
+@@ -1202,7 +1202,7 @@
+ static void sink_info_cb(pa_context *context, const pa_sink_info *si, int eol, void *userdata) {
+     fd_info *i = userdata;
+ 
+-    if (!si && eol < 0) {
++    if (!si || eol < 0) {
+         i->operation_success = 0;
+         pa_threaded_mainloop_signal(i->mainloop, 0);
+         return;
+@@ -1224,7 +1224,7 @@
+ static void source_info_cb(pa_context *context, const pa_source_info *si, int eol, void *userdata) {
+     fd_info *i = userdata;
+ 
+-    if (!si && eol < 0) {
++    if (!si || eol < 0) {
+         i->operation_success = 0;
+         pa_threaded_mainloop_signal(i->mainloop, 0);
+         return;
+Index: pulseaudio-0.9.14/src/pulsecore/core-util.c
+===================================================================
+--- pulseaudio-0.9.14.orig/src/pulsecore/core-util.c	2009-02-19 19:25:01.000000000 -0500
++++ pulseaudio-0.9.14/src/pulsecore/core-util.c	2009-02-19 19:26:05.000000000 -0500
+@@ -1376,6 +1376,7 @@
+         return -1;
+     }
+ 
++    pa_xfree(p);
+     return 0;
+ }
+ 
+@@ -1408,6 +1409,7 @@
+ 
+     if (pa_make_secure_dir(d, m, (uid_t) -1, (gid_t) -1) < 0)  {
+         pa_log_error("Failed to create secure directory: %s", pa_cstrerror(errno));
++        pa_xfree(d);
+         goto fail;
+     }
+ 
+@@ -2424,7 +2426,7 @@
+ 
+         pa_strip_nl(ln);
+ 
+-        if (ln[0])
++        if (r && ln[0])
+             return pa_xstrdup(ln);
+     }
+ 
+Index: pulseaudio-0.9.14/src/daemon/daemon-conf.c
+===================================================================
+--- pulseaudio-0.9.14.orig/src/daemon/daemon-conf.c	2009-02-19 19:25:01.000000000 -0500
++++ pulseaudio-0.9.14/src/daemon/daemon-conf.c	2009-02-19 19:25:11.000000000 -0500
+@@ -643,7 +643,7 @@
+     if (c->config_file)
+         pa_strbuf_printf(s, _("### Read from configuration file: %s ###\n"), c->config_file);
+ 
+-    pa_assert(c->log_level <= PA_LOG_LEVEL_MAX);
++    pa_assert(c->log_level < PA_LOG_LEVEL_MAX);
+ 
+     pa_strbuf_printf(s, "daemonize = %s\n", pa_yes_no(c->daemonize));
+     pa_strbuf_printf(s, "fail = %s\n", pa_yes_no(c->fail));
+Index: pulseaudio-0.9.14/src/pulsecore/protocol-esound.c
+===================================================================
+--- pulseaudio-0.9.14.orig/src/pulsecore/protocol-esound.c	2009-02-19 19:25:01.000000000 -0500
++++ pulseaudio-0.9.14/src/pulsecore/protocol-esound.c	2009-02-19 19:25:11.000000000 -0500
+@@ -926,7 +926,7 @@
+ 
+             c->request = PA_MAYBE_INT32_SWAP(c->swap_byte_order, c->request);
+ 
+-            if (c->request < ESD_PROTO_CONNECT || c->request > ESD_PROTO_MAX) {
++            if (c->request < ESD_PROTO_CONNECT || c->request >= ESD_PROTO_MAX) {
+                 pa_log("recieved invalid request.");
+                 return -1;
+             }
+Index: pulseaudio-0.9.14/src/modules/module-stream-restore.c
+===================================================================
+--- pulseaudio-0.9.14.orig/src/modules/module-stream-restore.c	2009-02-19 19:25:01.000000000 -0500
++++ pulseaudio-0.9.14/src/modules/module-stream-restore.c	2009-02-19 19:25:11.000000000 -0500
+@@ -429,6 +429,7 @@
+             pa_xfree(n);
+             continue;
+         }
++	pa_xfree(n);
+ 
+         if (u->restore_volume) {
+             pa_cvolume v = e->volume;
+@@ -460,6 +461,7 @@
+             pa_xfree(n);
+             continue;
+         }
++	pa_xfree(n);
+ 
+         if (u->restore_device &&
+             (s = pa_namereg_get(u->core, e->device, PA_NAMEREG_SOURCE, TRUE))) {
+Index: pulseaudio-0.9.14/src/modules/alsa-util.c
+===================================================================
+--- pulseaudio-0.9.14.orig/src/modules/alsa-util.c	2009-02-19 19:28:55.000000000 -0500
++++ pulseaudio-0.9.14/src/modules/alsa-util.c	2009-02-19 19:29:23.000000000 -0500
+@@ -107,7 +107,7 @@
+ static void defer_cb(pa_mainloop_api*a, pa_defer_event* e, void *userdata) {
+     struct pa_alsa_fdlist *fdl = userdata;
+     unsigned num_fds, i;
+-    int err;
++    int err, n;
+     struct pollfd *temp;
+ 
+     pa_assert(a);
+@@ -116,7 +116,11 @@
+ 
+     a->defer_enable(fdl->defer, 0);
+ 
+-    num_fds = (unsigned) snd_mixer_poll_descriptors_count(fdl->mixer);
++    if ((n = snd_mixer_poll_descriptors_count(fdl->mixer)) < 0) {
++        pa_log("snd_mixer_poll_descriptors_count() failed: %s", snd_strerror(n));
++        return;
++    }
++    num_fds = (unsigned) n;
+ 
+     if (num_fds != fdl->num_fds) {
+         if (fdl->fds)

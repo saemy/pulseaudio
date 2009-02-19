@@ -1,0 +1,123 @@
+Index: pulseaudio-0.9.14/src/pulse/context.c
+===================================================================
+--- pulseaudio-0.9.14.orig/src/pulse/context.c	2009-02-18 16:45:34.000000000 -0500
++++ pulseaudio-0.9.14/src/pulse/context.c	2009-02-18 16:46:22.000000000 -0500
+@@ -332,8 +332,7 @@
+ 
+     pa_assert(p);
+     pa_assert(chunk);
+-    pa_assert(chunk->memblock);
+-    pa_assert(chunk->length);
++    pa_assert(chunk->length > 0);
+     pa_assert(c);
+     pa_assert(PA_REFCNT_VALUE(c) >= 1);
+ 
+@@ -341,11 +340,11 @@
+ 
+     if ((s = pa_dynarray_get(c->record_streams, channel))) {
+ 
+-        pa_assert(seek == PA_SEEK_RELATIVE);
+-        pa_assert(offset == 0);
+-
+-        pa_memblockq_seek(s->record_memblockq, offset, seek);
+-        pa_memblockq_push_align(s->record_memblockq, chunk);
++        if (chunk->memblock) {
++            pa_memblockq_seek(s->record_memblockq, offset, seek);
++            pa_memblockq_push_align(s->record_memblockq, chunk);
++        } else
++            pa_memblockq_seek(s->record_memblockq, offset+chunk->length, seek);
+ 
+         if (s->read_callback) {
+             size_t l;
+Index: pulseaudio-0.9.14/src/pulsecore/protocol-native.c
+===================================================================
+--- pulseaudio-0.9.14.orig/src/pulsecore/protocol-native.c	2009-02-18 16:45:34.000000000 -0500
++++ pulseaudio-0.9.14/src/pulsecore/protocol-native.c	2009-02-18 16:46:22.000000000 -0500
+@@ -4075,17 +4075,20 @@
+     if (playback_stream_isinstance(stream)) {
+         playback_stream *ps = PLAYBACK_STREAM(stream);
+ 
+-        if (seek != PA_SEEK_RELATIVE || offset != 0)
+-            pa_asyncmsgq_post(ps->sink_input->sink->asyncmsgq, PA_MSGOBJECT(ps->sink_input), SINK_INPUT_MESSAGE_SEEK, PA_UINT_TO_PTR(seek), offset, NULL, NULL);
+-
+-        pa_asyncmsgq_post(ps->sink_input->sink->asyncmsgq, PA_MSGOBJECT(ps->sink_input), SINK_INPUT_MESSAGE_POST_DATA, NULL, 0, chunk, NULL);
++        if (chunk->memblock) {
++            if (seek != PA_SEEK_RELATIVE || offset != 0)
++                pa_asyncmsgq_post(ps->sink_input->sink->asyncmsgq, PA_MSGOBJECT(ps->sink_input), SINK_INPUT_MESSAGE_SEEK, PA_UINT_TO_PTR(seek), offset, NULL, NULL);
++
++            pa_asyncmsgq_post(ps->sink_input->sink->asyncmsgq, PA_MSGOBJECT(ps->sink_input), SINK_INPUT_MESSAGE_POST_DATA, NULL, 0, chunk, NULL);
++        } else
++            pa_asyncmsgq_post(ps->sink_input->sink->asyncmsgq, PA_MSGOBJECT(ps->sink_input), SINK_INPUT_MESSAGE_SEEK, PA_UINT_TO_PTR(seek), offset+chunk->length, NULL, NULL);
+ 
+     } else {
+         upload_stream *u = UPLOAD_STREAM(stream);
+         size_t l;
+ 
+         if (!u->memchunk.memblock) {
+-            if (u->length == chunk->length) {
++            if (u->length == chunk->length && chunk->memblock) {
+                 u->memchunk = *chunk;
+                 pa_memblock_ref(u->memchunk.memblock);
+                 u->length = 0;
+@@ -4101,17 +4104,22 @@
+         if (l > chunk->length)
+             l = chunk->length;
+ 
+-
+         if (l > 0) {
+-            void *src, *dst;
++            void *dst;
+             dst = pa_memblock_acquire(u->memchunk.memblock);
+-            src = pa_memblock_acquire(chunk->memblock);
+ 
+-            memcpy((uint8_t*) dst + u->memchunk.index + u->memchunk.length,
+-                   (uint8_t*) src+chunk->index, l);
++            if (chunk->memblock) {
++                void *src;
++                src = pa_memblock_acquire(chunk->memblock);
++
++                memcpy((uint8_t*) dst + u->memchunk.index + u->memchunk.length,
++                       (uint8_t*) src + chunk->index, l);
++
++                pa_memblock_release(chunk->memblock);
++            } else
++                pa_silence_memory((uint8_t*) dst + u->memchunk.index + u->memchunk.length, l, &u->sample_spec);
+ 
+             pa_memblock_release(u->memchunk.memblock);
+-            pa_memblock_release(chunk->memblock);
+ 
+             u->memchunk.length += l;
+             u->length -= l;
+Index: pulseaudio-0.9.14/src/pulsecore/pstream.c
+===================================================================
+--- pulseaudio-0.9.14.orig/src/pulsecore/pstream.c	2009-02-18 16:45:34.000000000 -0500
++++ pulseaudio-0.9.14/src/pulsecore/pstream.c	2009-02-18 16:48:15.000000000 -0500
+@@ -832,8 +832,7 @@
+                                           ntohl(p->read.shm_info[PA_PSTREAM_SHM_INDEX]),
+                                           ntohl(p->read.shm_info[PA_PSTREAM_SHM_LENGTH])))) {
+ 
+-                    pa_log_warn("Failed to import memory block.");
+-                    return -1;
++                    pa_log_debug("Failed to import memory block.");
+                 }
+ 
+                 if (p->recieve_memblock_callback) {
+@@ -842,7 +841,7 @@
+ 
+                     chunk.memblock = b;
+                     chunk.index = 0;
+-                    chunk.length = pa_memblock_get_length(b);
++                    chunk.length = b ? pa_memblock_get_length(b) : ntohl(p->read.shm_info[PA_PSTREAM_SHM_LENGTH]);
+ 
+                     offset = (int64_t) (
+                             (((uint64_t) ntohl(p->read.descriptor[PA_PSTREAM_DESCRIPTOR_OFFSET_HI])) << 32) |
+@@ -857,7 +856,8 @@
+                             p->recieve_memblock_callback_userdata);
+                 }
+ 
+-                pa_memblock_unref(b);
++                if (b)
++                    pa_memblock_unref(b);
+             }
+ 
+             goto frame_done;

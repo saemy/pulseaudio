@@ -1680,8 +1680,8 @@ diff -urN pulseaudio-0.9.14/aclocal.m4 pulseaudio-0.9.14.new/aclocal.m4
 -  esac
 -  shlibpath_var=LD_LIBRARY${shlibsuff}_PATH
 -  shlibpath_overrides_runpath=no
--  sys_lib_search_path_spec="/usr/lib /usr/lib${libsuff} /lib /lib${libsuff} /usr/local/lib${libsuff}"
--  sys_lib_dlsearch_path_spec="/usr/lib /usr/lib${libsuff} /lib /lib${libsuff}"
+-  sys_lib_search_path_spec="/usr/lib${libsuff} /lib${libsuff} /usr/local/lib${libsuff}"
+-  sys_lib_dlsearch_path_spec="/usr/lib${libsuff} /lib${libsuff}"
 -  hardcode_into_libs=yes
 -  ;;
 -

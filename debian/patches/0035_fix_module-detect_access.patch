@@ -1,0 +1,13 @@
+Index: pulseaudio-0.9.14/src/modules/module-detect.c
+===================================================================
+--- pulseaudio-0.9.14.orig/src/modules/module-detect.c	2009-02-15 19:39:55.000000000 -0500
++++ pulseaudio-0.9.14/src/modules/module-detect.c	2009-02-15 19:40:07.000000000 -0500
+@@ -100,7 +100,7 @@
+         if (subdevice != 0)
+             continue;
+ 
+-        pa_snprintf(args, sizeof(args), "device=hw:%u", device);
++        pa_snprintf(args, sizeof(args), "device_id=%u", device);
+         if (!pa_module_load(c, is_sink ? "module-alsa-sink" : "module-alsa-source", args))
+             continue;
+ 
