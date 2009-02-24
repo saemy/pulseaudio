@@ -1,0 +1,20 @@
+Index: pulseaudio-0.9.14/src/modules/alsa-util.c
+===================================================================
+--- pulseaudio-0.9.14.orig/src/modules/alsa-util.c	2009-02-22 00:25:29.000000000 -0500
++++ pulseaudio-0.9.14/src/modules/alsa-util.c	2009-02-22 00:26:48.000000000 -0500
+@@ -801,6 +801,7 @@
+     pa_assert(name);
+ 
+     snd_mixer_selem_id_set_name(sid, name);
++    snd_mixer_selem_id_set_index(sid, 0);
+ 
+     if ((elem = snd_mixer_find_selem(mixer, sid))) {
+ 
+@@ -817,6 +818,7 @@
+ 
+     if (fallback) {
+         snd_mixer_selem_id_set_name(sid, fallback);
++        snd_mixer_selem_id_set_index(sid, 0);
+ 
+         if ((fallback_elem = snd_mixer_find_selem(mixer, sid))) {
+ 

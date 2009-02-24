@@ -1,3 +1,19 @@
+pulseaudio (0.9.14-0ubuntu8) jaunty; urgency=low
+
+  [ Daniel T Chen ]
+  * Backport fixes from git HEAD:
+    - 0041_clarify_cmdline_opts.patch,
+    - 0042_fix_selem_init.patch
+
+  [ Luke Yelavich ]
+  * 0001_more_translatable_strings.patch: Make the .desktop file and PolicyKit
+    files translatable, thanks to Gabor Kelemen <kelemeng@gnome.hu for this
+    work (LP: #331831)
+  * 0006_regen-autotools.patch: re-create to take into account changes needed
+    for the above mentioned translation additions
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Tue, 24 Feb 2009 13:46:25 +1100
+
 pulseaudio (0.9.14-0ubuntu7) jaunty; urgency=low
 
   [ Luke Yelavich ]

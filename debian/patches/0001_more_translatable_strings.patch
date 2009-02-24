@@ -1,0 +1,199 @@
+diff -urN pulseaudio-0.9.14/po/POTFILES.in pulseaudio-0.9.14.new/po/POTFILES.in
+--- pulseaudio-0.9.14/po/POTFILES.in	2009-01-13 10:10:34.000000000 +1100
++++ pulseaudio-0.9.14.new/po/POTFILES.in	2009-02-24 12:59:17.000000000 +1100
+@@ -156,6 +156,8 @@
+ src/daemon/dumpmodules.c
+ src/daemon/daemon-conf.c
+ src/daemon/caps.c
++src/daemon/pulseaudio.desktop.in
++src/daemon/org.pulseaudio.policy.in
+ src/pulse/channelmap.c
+ src/pulse/error.c
+ src/pulse/proplist.c
+diff -urN pulseaudio-0.9.14/src/daemon/org.pulseaudio.policy pulseaudio-0.9.14.new/src/daemon/org.pulseaudio.policy
+--- pulseaudio-0.9.14/src/daemon/org.pulseaudio.policy	2009-01-13 10:10:34.000000000 +1100
++++ pulseaudio-0.9.14.new/src/daemon/org.pulseaudio.policy	1970-01-01 10:00:00.000000000 +1000
+@@ -1,50 +0,0 @@
+-<?xml version="1.0" encoding="UTF-8"?><!--*-nxml-*-->
+-<!DOCTYPE policyconfig PUBLIC
+- "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+- "http://www.freedesktop.org/standards/PolicyKit/1.0/policyconfig.dtd">
+-
+-<!--
+-This file is part of PulseAudio.
+-
+-PulseAudio is free software; you can redistribute it and/or modify it
+-under the terms of the GNU Lesser General Public License as
+-published by the Free Software Foundation; either version 2.1 of the
+-License, or (at your option) any later version.
+-
+-PulseAudio is distributed in the hope that it will be useful, but WITHOUT
+-ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+-or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General
+-Public License for more details.
+-
+-You should have received a copy of the GNU Lesser General Public
+-License along with PulseAudio; if not, write to the Free Software
+-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+-USA.
+--->
+-
+-<policyconfig>
+-  <vendor>The PulseAudio Project</vendor>
+-  <vendor_url>http://pulseaudio.org/</vendor_url>
+-  <icon_name>audio-card</icon_name>
+-
+-  <action id="org.pulseaudio.acquire-real-time">
+-    <description>Real-time scheduling for the PulseAudio daemon</description>
+-    <message>System policy prevents PulseAudio from acquiring real-time scheduling.</message>
+-    <defaults>
+-      <allow_any>no</allow_any>
+-      <allow_inactive>no</allow_inactive>
+-      <allow_active>no</allow_active>
+-    </defaults>
+-  </action>
+-
+-  <action id="org.pulseaudio.acquire-high-priority">
+-    <description>High-priority scheduling (negative Unix nice level) for the PulseAudio daemon</description>
+-    <message>System policy prevents PulseAudio from acquiring high-priority scheduling.</message>
+-    <defaults>
+-      <allow_any>no</allow_any>
+-      <allow_inactive>no</allow_inactive>
+-      <allow_active>no</allow_active>
+-    </defaults>
+-  </action>
+-
+-</policyconfig>
+diff -urN pulseaudio-0.9.14/src/daemon/org.pulseaudio.policy.in pulseaudio-0.9.14.new/src/daemon/org.pulseaudio.policy.in
+--- pulseaudio-0.9.14/src/daemon/org.pulseaudio.policy.in	1970-01-01 10:00:00.000000000 +1000
++++ pulseaudio-0.9.14.new/src/daemon/org.pulseaudio.policy.in	2009-02-24 12:59:05.000000000 +1100
+@@ -0,0 +1,50 @@
++<?xml version="1.0" encoding="UTF-8"?><!--*-nxml-*-->
++<!DOCTYPE policyconfig PUBLIC
++ "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
++ "http://www.freedesktop.org/standards/PolicyKit/1.0/policyconfig.dtd">
++
++<!--
++This file is part of PulseAudio.
++
++PulseAudio is free software; you can redistribute it and/or modify it
++under the terms of the GNU Lesser General Public License as
++published by the Free Software Foundation; either version 2.1 of the
++License, or (at your option) any later version.
++
++PulseAudio is distributed in the hope that it will be useful, but WITHOUT
++ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
++or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General
++Public License for more details.
++
++You should have received a copy of the GNU Lesser General Public
++License along with PulseAudio; if not, write to the Free Software
++Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
++USA.
++-->
++
++<policyconfig>
++  <vendor>The PulseAudio Project</vendor>
++  <vendor_url>http://pulseaudio.org/</vendor_url>
++  <icon_name>audio-card</icon_name>
++
++  <action id="org.pulseaudio.acquire-real-time">
++    <_description>Real-time scheduling for the PulseAudio daemon</_description>
++    <_message>System policy prevents PulseAudio from acquiring real-time scheduling.</_message>
++    <defaults>
++      <allow_any>no</allow_any>
++      <allow_inactive>no</allow_inactive>
++      <allow_active>no</allow_active>
++    </defaults>
++  </action>
++
++  <action id="org.pulseaudio.acquire-high-priority">
++    <_description>High-priority scheduling (negative Unix nice level) for the PulseAudio daemon</_description>
++    <_message>System policy prevents PulseAudio from acquiring high-priority scheduling.</_message>
++    <defaults>
++      <allow_any>no</allow_any>
++      <allow_inactive>no</allow_inactive>
++      <allow_active>no</allow_active>
++    </defaults>
++  </action>
++
++</policyconfig>
+diff -urN pulseaudio-0.9.14/src/daemon/pulseaudio.desktop pulseaudio-0.9.14.new/src/daemon/pulseaudio.desktop
+--- pulseaudio-0.9.14/src/daemon/pulseaudio.desktop	2009-01-13 10:10:34.000000000 +1100
++++ pulseaudio-0.9.14.new/src/daemon/pulseaudio.desktop	1970-01-01 10:00:00.000000000 +1000
+@@ -1,10 +0,0 @@
+-[Desktop Entry]
+-Version=1.0
+-Encoding=UTF-8
+-Name=PulseAudio Sound System
+-Comment=Start the PulseAudio Sound System
+-Exec=start-pulseaudio-x11
+-Terminal=false
+-Type=Application
+-Categories=
+-GenericName=
+diff -urN pulseaudio-0.9.14/src/daemon/pulseaudio.desktop.in pulseaudio-0.9.14.new/src/daemon/pulseaudio.desktop.in
+--- pulseaudio-0.9.14/src/daemon/pulseaudio.desktop.in	1970-01-01 10:00:00.000000000 +1000
++++ pulseaudio-0.9.14.new/src/daemon/pulseaudio.desktop.in	2009-02-24 12:59:27.000000000 +1100
+@@ -0,0 +1,11 @@
++[Desktop Entry]
++Version=1.0
++Encoding=UTF-8
++_Name=PulseAudio Sound System
++_Comment=Start the PulseAudio Sound System
++Exec=start-pulseaudio-x11
++Terminal=false
++Type=Application
++Categories=
++GenericName=
++X-Ubuntu-Gettext-Domain=pulseaudio
+diff -urN pulseaudio-0.9.14/src/Makefile.am pulseaudio-0.9.14.new/src/Makefile.am
+--- pulseaudio-0.9.14/src/Makefile.am	2009-01-13 10:11:38.000000000 +1100
++++ pulseaudio-0.9.14.new/src/Makefile.am	2009-02-24 12:59:17.000000000 +1100
+@@ -105,9 +105,9 @@
+ 		daemon/start-pulseaudio-x11.in \
+ 		utils/padsp \
+ 		modules/module-defs.h.m4 \
+-		daemon/pulseaudio.desktop \
++		daemon/pulseaudio.desktop.in \
+ 		map-file \
+-		daemon/org.pulseaudio.policy
++		daemon/org.pulseaudio.policy.in
+ 
+ pulseconf_DATA = \
+ 		default.pa \
+@@ -116,9 +116,12 @@
+ 		client.conf
+ 
+ if HAVE_X11
+-xdgautostart_DATA = \
+-		daemon/pulseaudio.desktop
++xdgautostart_in_files = \
++		daemon/pulseaudio.desktop.in
+ endif
++xdgautostart_DATA = $(xdgautostart_in_files:.desktop.in=.desktop)
++@INTLTOOL_DESKTOP_RULE@
++
+ 
+ BUILT_SOURCES = \
+ 		pulse/version.h
+@@ -158,7 +161,9 @@
+ 
+ if HAVE_POLKIT
+ 
+-policy_DATA = daemon/org.pulseaudio.policy
++policy_in_files = daemon/org.pulseaudio.policy.in
++policy_DATA = $(policy_in_files:.policy.in=.policy)
++@INTLTOOL_POLICY_RULE@
+ 
+ pulseaudio_SOURCES += daemon/polkit.c daemon/polkit.h
+ pulseaudio_CFLAGS += $(POLKIT_CFLAGS)
+@@ -1603,7 +1608,7 @@
+ 	chown root $^
+ 	chmod u+s $^
+ 
+-CLEANFILES = esdcompat client.conf default.pa system.pa daemon.conf start-pulseaudio-x11
++CLEANFILES = esdcompat client.conf default.pa system.pa daemon.conf start-pulseaudio-x11 daemon/pulseaudio.desktop daemon/org.pulseaudio.policy
+ 
+ esdcompat: daemon/esdcompat.in Makefile
+ 	sed -e 's,@PACKAGE_VERSION\@,$(PACKAGE_VERSION),g' \

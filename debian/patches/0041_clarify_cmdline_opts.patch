@@ -1,0 +1,13 @@
+Index: pulseaudio-0.9.14/src/daemon/cmdline.c
+===================================================================
+--- pulseaudio-0.9.14.orig/src/daemon/cmdline.c	2009-02-22 00:19:36.000000000 -0500
++++ pulseaudio-0.9.14/src/daemon/cmdline.c	2009-02-22 00:21:01.000000000 -0500
+@@ -292,7 +292,7 @@
+ 
+             case ARG_DISALLOW_EXIT:
+                 if ((conf->disallow_exit = optarg ? pa_parse_boolean(optarg) : TRUE) < 0) {
+-                    pa_log(_("--disallow-exit boolean argument"));
++                    pa_log(_("--disallow-exit expects boolean argument"));
+                     goto fail;
+                 }
+                 break;

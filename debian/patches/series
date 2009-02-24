@@ -1,3 +1,4 @@
+0001_more_translatable_strings.patch
 0002-load-module-gconf-earlier.patch
 0003_change_resample_and_buffering.patch
 0004_enable_autospawn.patch
@@ -37,3 +38,5 @@
 0038_handle_errno_properly.patch
 0039_add_validity_checks.patch
 0040_legacy_fixes.patch
+0041_clarify_cmdline_opts.patch
+0042_fix_selem_init.patch
