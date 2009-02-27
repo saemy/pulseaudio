@@ -1,3 +1,10 @@
+pulseaudio (0.9.14-0ubuntu9) jaunty; urgency=low
+
+  * PulseAudio does not need to be started before gdm, especially since we use
+    user sessions by default.
+
+ -- Scott James Remnant <scott@ubuntu.com>  Fri, 27 Feb 2009 01:27:20 +0000
+
 pulseaudio (0.9.14-0ubuntu8) jaunty; urgency=low
 
   [ Daniel T Chen ]
