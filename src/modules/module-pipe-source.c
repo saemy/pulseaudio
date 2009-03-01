@@ -1,5 +1,3 @@
-/* $Id: module-pipe-source.c 2043 2007-11-09 18:25:40Z lennart $ */
-
 /***
   This file is part of PulseAudio.
 
@@ -33,6 +31,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <limits.h>
+#include <sys/ioctl.h>
 #include <sys/poll.h>
 
 #include <pulse/xmalloc.h>
@@ -91,6 +90,34 @@ static const char* const valid_modargs[] = {
     NULL
 };
 
+static int source_process_msg(
+        pa_msgobject *o,
+        int code,
+        void *data,
+        int64_t offset,
+        pa_memchunk *chunk) {
+
+    struct userdata *u = PA_SOURCE(o)->userdata;
+
+    switch (code) {
+
+        case PA_SOURCE_MESSAGE_GET_LATENCY: {
+            size_t n = 0;
+            int l;
+
+#ifdef FIONREAD
+            if (ioctl(u->fd, FIONREAD, &l) >= 0 && l > 0)
+                n = (size_t) l;
+#endif
+
+            *((pa_usec_t*) data) = pa_bytes_to_usec(n, &u->source->sample_spec);
+            return 0;
+        }
+    }
+
+    return pa_source_process_msg(o, code, data, offset, chunk);
+}
+
 static void thread_func(void *userdata) {
     struct userdata *u = userdata;
     int read_type = 0;
@@ -137,9 +164,9 @@ static void thread_func(void *userdata) {
 
             } else {
 
-                u->memchunk.length = l;
+                u->memchunk.length = (size_t) l;
                 pa_source_post(u->source, &u->memchunk);
-                u->memchunk.index += l;
+                u->memchunk.index += (size_t) l;
 
                 if (u->memchunk.index >= pa_memblock_get_length(u->memchunk.memblock)) {
                     pa_memblock_unref(u->memchunk.memblock);
@@ -151,15 +178,16 @@ static void thread_func(void *userdata) {
         }
 
         /* Hmm, nothing to do. Let's sleep */
-        pollfd->events = u->source->thread_info.state == PA_SOURCE_RUNNING ? POLLIN : 0;
+        pollfd->events = (short) (u->source->thread_info.state == PA_SOURCE_RUNNING ? POLLIN : 0);
 
-        if ((ret = pa_rtpoll_run(u->rtpoll, 1)) < 0)
+        if ((ret = pa_rtpoll_run(u->rtpoll, TRUE)) < 0)
             goto fail;
 
         if (ret == 0)
             goto finish;
 
         pollfd = pa_rtpoll_item_get_pollfd(u->rtpoll_item, NULL);
+
         if (pollfd->revents & ~POLLIN) {
             pa_log("FIFO shutdown.");
             goto fail;
@@ -182,8 +210,8 @@ int pa__init(pa_module*m) {
     pa_sample_spec ss;
     pa_channel_map map;
     pa_modargs *ma;
-    char *t;
     struct pollfd *pollfd;
+    pa_source_new_data data;
 
     pa_assert(m);
 
@@ -198,16 +226,14 @@ int pa__init(pa_module*m) {
         goto fail;
     }
 
-    u = pa_xnew0(struct userdata, 1);
+    m->userdata = u = pa_xnew0(struct userdata, 1);
     u->core = m->core;
     u->module = m;
-    m->userdata = u;
     pa_memchunk_reset(&u->memchunk);
-    pa_thread_mq_init(&u->thread_mq, m->core->mainloop);
     u->rtpoll = pa_rtpoll_new();
-    pa_rtpoll_item_new_asyncmsgq(u->rtpoll, PA_RTPOLL_EARLY, u->thread_mq.inq);
+    pa_thread_mq_init(&u->thread_mq, m->core->mainloop, u->rtpoll);
 
-    u->filename = pa_xstrdup(pa_modargs_get_value(ma, "file", DEFAULT_FILE_NAME));
+    u->filename = pa_runtime_path(pa_modargs_get_value(ma, "file", DEFAULT_FILE_NAME));
 
     mkfifo(u->filename, 0666);
     if ((u->fd = open(u->filename, O_RDWR|O_NOCTTY)) < 0) {
@@ -228,19 +254,28 @@ int pa__init(pa_module*m) {
         goto fail;
     }
 
-    if (!(u->source = pa_source_new(m->core, __FILE__, pa_modargs_get_value(ma, "source_name", DEFAULT_SOURCE_NAME), 0, &ss, &map))) {
+    pa_source_new_data_init(&data);
+    data.driver = __FILE__;
+    data.module = m;
+    pa_source_new_data_set_name(&data, pa_modargs_get_value(ma, "source_name", DEFAULT_SOURCE_NAME));
+    pa_proplist_sets(data.proplist, PA_PROP_DEVICE_STRING, u->filename);
+    pa_proplist_setf(data.proplist, PA_PROP_DEVICE_DESCRIPTION, "Unix FIFO source %s", u->filename);
+    pa_source_new_data_set_sample_spec(&data, &ss);
+    pa_source_new_data_set_channel_map(&data, &map);
+
+    u->source = pa_source_new(m->core, &data, PA_SOURCE_LATENCY);
+    pa_source_new_data_done(&data);
+
+    if (!u->source) {
         pa_log("Failed to create source.");
         goto fail;
     }
 
+    u->source->parent.process_msg = source_process_msg;
     u->source->userdata = u;
-    u->source->flags = 0;
 
-    pa_source_set_module(u->source, m);
     pa_source_set_asyncmsgq(u->source, u->thread_mq.inq);
     pa_source_set_rtpoll(u->source, u->rtpoll);
-    pa_source_set_description(u->source, t = pa_sprintf_malloc("Unix FIFO source '%s'", u->filename));
-    pa_xfree(t);
 
     u->rtpoll_item = pa_rtpoll_item_new(u->rtpoll, PA_RTPOLL_NEVER, 1);
     pollfd = pa_rtpoll_item_get_pollfd(u->rtpoll_item, NULL);
