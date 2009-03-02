@@ -27,7 +27,7 @@
 0027_fix_piped_pacmd.patch
 0028_fix_uninit_rtp_resamp.patch
 0029_fix_suspend_on_idle_null_race.patch
-0030_set_tsched0.patch
+#0030_set_tsched0.patch
 0031_fix_6chan_map.patch
 0032_reinit_proplist.patch
 0033_fix_pa-gcc-packedmalloc.patch
@@ -40,3 +40,5 @@
 0040_legacy_fixes.patch
 0041_clarify_cmdline_opts.patch
 0042_fix_selem_init.patch
+#0090_tweak_tsched.patch
+0091_workaround_alsa_horkage.patch
