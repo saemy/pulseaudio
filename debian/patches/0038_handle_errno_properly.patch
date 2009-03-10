@@ -1,7 +1,7 @@
 Index: pulseaudio-0.9.14/src/pulsecore/core-error.c
 ===================================================================
---- pulseaudio-0.9.14.orig/src/pulsecore/core-error.c	2009-02-19 18:44:05.000000000 -0500
-+++ pulseaudio-0.9.14/src/pulsecore/core-error.c	2009-02-19 18:44:23.000000000 -0500
+--- pulseaudio-0.9.14.orig/src/pulsecore/core-error.c	2009-03-05 17:12:02.000000000 -0500
++++ pulseaudio-0.9.14/src/pulsecore/core-error.c	2009-03-05 17:12:16.000000000 -0500
 @@ -47,6 +47,9 @@
      char *translated, *t;
      char errbuf[128];
@@ -12,3 +12,19 @@ Index: pulseaudio-0.9.14/src/pulsecore/core-error.c
      if ((t = PA_STATIC_TLS_GET(cstrerror)))
          pa_xfree(t);
  
+Index: pulseaudio-0.9.14/src/pulse/error.c
+===================================================================
+--- pulseaudio-0.9.14.orig/src/pulse/error.c	2009-03-05 17:12:34.000000000 -0500
++++ pulseaudio-0.9.14/src/pulse/error.c	2009-03-05 17:12:54.000000000 -0500
+@@ -66,7 +66,10 @@
+ 
+     pa_init_i18n();
+ 
+-    if (error < 0 || error >= PA_ERR_MAX)
++    if (error < 0)
++        error = -error;
++
++    if (error >= PA_ERR_MAX)
+         return NULL;
+ 
+     return _(errortab[error]);

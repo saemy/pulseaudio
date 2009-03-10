@@ -40,6 +40,7 @@ update-patch-series:
 		mv $${patch}.chomped $$patch ; \
 	done
 
+DEB_OPT_FLAG = -O3
 DEB_CONFIGURE_EXTRA_FLAGS = --with-realtime-group=pulse-rt --enable-static
 DEB_DH_MAKESHLIBS_ARGS_ALL = --exclude=usr/lib/pulse-0.9/modules
 DEB_DH_INSTALL_ARGS = --sourcedir=$(CURDIR)/debian/tmp

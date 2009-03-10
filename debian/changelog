@@ -1,3 +1,39 @@
+pulseaudio (0.9.14-0ubuntu11) jaunty; urgency=low
+
+  [ Daniel T Chen ]
+  * Reenable 0030_set_tsched0.patch, which re-disables glitch-free;
+    too many users are reporting regressions and audio aberrations.
+  * Adjust 0003_change_resample_and_buffering.patch to use linear
+    resampler to work better with lack of PREEMPT in jaunty's
+    -generic kernel config (LP: #207135, #322250, #332761, #335955,
+    LP: #336965).
+  * Last upload, specifically 0091_workaround_alsa_horkage, fixes:
+    LP: #235990, #237443, #279847, #317997, #323185, #330814,
+    LP: #334874.
+  * sudo -H change in ubuntu6 fixed LP: #312505.
+  * Closing old bugs fixed in 0.9.11+: LP: #187963, #193520, #211052.
+  * Refresh 0006_regen-autotools.patch.
+  * Add 0043_load_sample_dir_lazy.patch to cache
+    /usr/share/sounds/ubuntu/stereo/* in default.pa.
+  * debian/:
+    - control: Build against libcap2-dev (LP: #339448);
+    - copyright: Update copyright from Debian's 0.9.14-2;
+    - rules: Add DEB_OPT_FLAG = -O3 as per recommendation from
+      pulseaudio-discuss/2007-December/001017.html.
+  * Refresh fixes from git HEAD:
+    - 0038_handle_errno_properly.patch,
+    - 0091_workaround_alsa_horkage.patch,
+    - 0092_fix_null_pointer_access.patch.
+
+  [ Luke Yelavich ]
+  * Add a special case to prevent Pulseaudio from being started when the
+    blindness accessibility profile has been enabled from the Ubuntu live CD,
+    and for an accessibility install. Unfortunately Pulseaudio and speech do
+    not currently work very well with each other, and its too late in
+    the cycle to solve this problem any other way.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Tue, 10 Mar 2009 09:00:40 +1100
+
 pulseaudio (0.9.14-0ubuntu10) jaunty; urgency=low
 
   [ Daniel T Chen ]

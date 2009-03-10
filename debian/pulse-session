@@ -3,7 +3,8 @@
 # Wrapper script to load pulseaudio at X session starttttttttttttt, when GNOME
 # is chosen as the desktop environment.
 
-if [ -x /usr/bin/start-pulseaudio-x11 ]; then
+if [ -x /usr/bin/start-pulseaudio-x11 ] && \
+   [ ! -f /etc/pulse/a11y_nostart ]; then
 	/usr/bin/start-pulseaudio-x11
 fi
 
