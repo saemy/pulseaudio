@@ -1,7 +1,7 @@
 Index: pulseaudio-0.9.14/src/modules/module-alsa-sink.c
 ===================================================================
---- pulseaudio-0.9.14.orig/src/modules/module-alsa-sink.c	2009-02-27 19:24:34.000000000 -0500
-+++ pulseaudio-0.9.14/src/modules/module-alsa-sink.c	2009-02-27 19:24:35.000000000 -0500
+--- pulseaudio-0.9.14.orig/src/modules/module-alsa-sink.c	2009-03-14 22:35:54.000000000 -0400
++++ pulseaudio-0.9.14/src/modules/module-alsa-sink.c	2009-03-14 22:37:30.000000000 -0400
 @@ -94,8 +94,8 @@
  #define DEFAULT_DEVICE "default"
  #define DEFAULT_TSCHED_BUFFER_USEC (2*PA_USEC_PER_SEC)            /* 2s */
@@ -222,7 +222,7 @@ Index: pulseaudio-0.9.14/src/modules/module-alsa-sink.c
  
          if (u->use_tsched)
  
-@@ -283,7 +304,7 @@
+@@ -283,18 +304,20 @@
                  pa_bytes_to_usec(left_to_play, &u->sink->sample_spec) > process_usec+max_sleep_usec/2)
                  break;
  
@@ -230,8 +230,11 @@ Index: pulseaudio-0.9.14/src/modules/module-alsa-sink.c
 +        if (PA_UNLIKELY(n_bytes <= u->hwbuf_unused)) {
  
              if (u->use_tsched && polled)
-                 pa_log("ALSA woke us up to write new data to the device, but there was actually nothing to write! "
-@@ -293,8 +314,10 @@
+-                pa_log("ALSA woke us up to write new data to the device, but there was actually nothing to write! "
++                pa_log_debug("ALSA woke us up to write new data to the device, but there was actually nothing to write! "
+                        "Most likely this is a Linux bug. Please report this issue to the ALSA developers. "
+                        "We were woken up with POLLOUT set -- however a subsequent snd_pcm_avail_update() returned 0.");
+ 
              break;
          }
  
@@ -322,7 +325,7 @@ Index: pulseaudio-0.9.14/src/modules/module-alsa-sink.c
  
          if (u->use_tsched)
  
-@@ -406,7 +429,7 @@
+@@ -406,18 +429,20 @@
                  pa_bytes_to_usec(left_to_play, &u->sink->sample_spec) > process_usec+max_sleep_usec/2)
                  break;
  
@@ -330,8 +333,11 @@ Index: pulseaudio-0.9.14/src/modules/module-alsa-sink.c
 +        if (PA_UNLIKELY(n_bytes <= u->hwbuf_unused)) {
  
              if (u->use_tsched && polled)
-                 pa_log("ALSA woke us up to write new data to the device, but there was actually nothing to write! "
-@@ -416,8 +439,10 @@
+-                pa_log("ALSA woke us up to write new data to the device, but there was actually nothing to write! "
++                pa_log_debug("ALSA woke us up to write new data to the device, but there was actually nothing to write! "
+                        "Most likely this is a Linux bug. Please report this issue to the ALSA developers. "
+                        "We were woken up with POLLOUT set -- however a subsequent snd_pcm_avail_update() returned 0.");
+ 
              break;
          }
  
@@ -622,8 +628,8 @@ Index: pulseaudio-0.9.14/src/modules/module-alsa-sink.c
      u->sink->thread_info.max_request = u->hwbuf_size;
 Index: pulseaudio-0.9.14/src/modules/module-alsa-source.c
 ===================================================================
---- pulseaudio-0.9.14.orig/src/modules/module-alsa-source.c	2009-02-27 19:24:34.000000000 -0500
-+++ pulseaudio-0.9.14/src/modules/module-alsa-source.c	2009-02-27 19:24:35.000000000 -0500
+--- pulseaudio-0.9.14.orig/src/modules/module-alsa-source.c	2009-03-14 22:35:54.000000000 -0400
++++ pulseaudio-0.9.14/src/modules/module-alsa-source.c	2009-03-14 22:38:12.000000000 -0400
 @@ -95,8 +95,8 @@
  #define DEFAULT_DEVICE "default"
  #define DEFAULT_TSCHED_BUFFER_USEC (2*PA_USEC_PER_SEC)       /* 2s */
@@ -830,7 +836,7 @@ Index: pulseaudio-0.9.14/src/modules/module-alsa-source.c
          if (PA_UNLIKELY((n = pa_alsa_safe_avail_update(u->pcm_handle, u->hwbuf_size, &u->source->sample_spec)) < 0)) {
  
              if ((r = try_recover(u, "snd_pcm_avail_update", (int) n)) == 0)
-@@ -263,14 +279,15 @@
+@@ -263,33 +279,38 @@
              return r;
          }
  
@@ -847,8 +853,11 @@ Index: pulseaudio-0.9.14/src/modules/module-alsa-source.c
 +        if (PA_UNLIKELY(n_bytes <= 0)) {
  
              if (u->use_tsched && polled)
-                 pa_log("ALSA woke us up to read new data from the device, but there was actually nothing to read! "
-@@ -280,16 +297,20 @@
+-                pa_log("ALSA woke us up to read new data from the device, but there was actually nothing to read! "
++                pa_log_debug("ALSA woke us up to read new data from the device, but there was actually nothing to read! "
+                        "Most likely this is a Linux bug. Please report this issue to the ALSA developers. "
+                        "We were woken up with POLLIN set -- however a subsequent snd_pcm_avail_update() returned 0.");
+ 
              break;
          }
  
@@ -934,7 +943,8 @@ Index: pulseaudio-0.9.14/src/modules/module-alsa-source.c
 +        if (PA_UNLIKELY(n_bytes <= 0)) {
  
              if (u->use_tsched && polled)
-                 pa_log("ALSA woke us up to read new data from the device, but there was actually nothing to read! "
+-                pa_log("ALSA woke us up to read new data from the device, but there was actually nothing to read! "
++                pa_log_debug("ALSA woke us up to read new data from the device, but there was actually nothing to read! "
                         "Most likely this is a Linux bug. Please report this issue to the ALSA developers. "
                         "We were woken up with POLLIN set -- however a subsequent snd_pcm_avail_update() returned 0.");
  
@@ -1148,8 +1158,8 @@ Index: pulseaudio-0.9.14/src/modules/module-alsa-source.c
                                  !use_tsched ? pa_bytes_to_usec(u->hwbuf_size, &ss) : (pa_usec_t) -1,
 Index: pulseaudio-0.9.14/src/modules/alsa-util.c
 ===================================================================
---- pulseaudio-0.9.14.orig/src/modules/alsa-util.c	2009-02-27 19:24:35.000000000 -0500
-+++ pulseaudio-0.9.14/src/modules/alsa-util.c	2009-02-27 19:24:35.000000000 -0500
+--- pulseaudio-0.9.14.orig/src/modules/alsa-util.c	2009-03-14 22:35:55.000000000 -0400
++++ pulseaudio-0.9.14/src/modules/alsa-util.c	2009-03-14 22:38:50.000000000 -0400
 @@ -442,6 +442,7 @@
  
  int pa_alsa_set_sw_params(snd_pcm_t *pcm, snd_pcm_uframes_t avail_min) {
@@ -1188,9 +1198,10 @@ Index: pulseaudio-0.9.14/src/modules/alsa-util.c
  
 -    if (k >= hwbuf_size * 3 ||
 -        k >= pa_bytes_per_second(ss)*10)
+-        pa_log("snd_pcm_avail_update() returned a value that is exceptionally large: %lu bytes (%lu ms) "
 +    if (k >= hwbuf_size * 5 ||
 +        k >= pa_bytes_per_second(ss)*10) {
-         pa_log("snd_pcm_avail_update() returned a value that is exceptionally large: %lu bytes (%lu ms) "
++        pa_log_debug("snd_pcm_avail_update() returned a value that is exceptionally large: %lu bytes (%lu ms) "
                 "Most likely this is a Linux bug. Please report this issue to the ALSA developers.",
                 (unsigned long) k, (unsigned long) (pa_bytes_to_usec(k, ss) / PA_USEC_PER_MSEC));
 +        /* Mhmm, let's try not to fail completely */
@@ -1236,10 +1247,19 @@ Index: pulseaudio-0.9.14/src/modules/alsa-util.c
  int pa_alsa_safe_mmap_begin(snd_pcm_t *pcm, const snd_pcm_channel_area_t **areas, snd_pcm_uframes_t *offset, snd_pcm_uframes_t *frames, size_t hwbuf_size, const pa_sample_spec *ss) {
      int r;
      snd_pcm_uframes_t before;
+@@ -1262,7 +1314,7 @@
+         k >= hwbuf_size * 3 ||
+         k >= pa_bytes_per_second(ss)*10)
+ 
+-        pa_log("snd_pcm_mmap_begin() returned a value that is exceptionally large: %lu bytes (%lu ms) "
++        pa_log_debug("snd_pcm_mmap_begin() returned a value that is exceptionally large: %lu bytes (%lu ms) "
+                "Most likely this is a Linux bug. Please report this issue to the ALSA developers.",
+                (unsigned long) k, (unsigned long) (pa_bytes_to_usec(k, ss) / PA_USEC_PER_MSEC));
+ 
 Index: pulseaudio-0.9.14/src/modules/alsa-util.h
 ===================================================================
---- pulseaudio-0.9.14.orig/src/modules/alsa-util.h	2009-02-27 19:24:34.000000000 -0500
-+++ pulseaudio-0.9.14/src/modules/alsa-util.h	2009-02-27 19:24:35.000000000 -0500
+--- pulseaudio-0.9.14.orig/src/modules/alsa-util.h	2009-03-14 22:35:54.000000000 -0400
++++ pulseaudio-0.9.14/src/modules/alsa-util.h	2009-03-14 22:35:55.000000000 -0400
 @@ -93,6 +93,7 @@
  pa_rtpoll_item* pa_alsa_build_pollfd(snd_pcm_t *pcm, pa_rtpoll *rtpoll);
  
@@ -1250,8 +1270,8 @@ Index: pulseaudio-0.9.14/src/modules/alsa-util.h
  #endif
 Index: pulseaudio-0.9.14/src/pulsecore/rtclock.c
 ===================================================================
---- pulseaudio-0.9.14.orig/src/pulsecore/rtclock.c	2009-02-27 19:26:44.000000000 -0500
-+++ pulseaudio-0.9.14/src/pulsecore/rtclock.c	2009-02-27 19:29:09.000000000 -0500
+--- pulseaudio-0.9.14.orig/src/pulsecore/rtclock.c	2009-03-14 22:34:19.000000000 -0400
++++ pulseaudio-0.9.14/src/pulsecore/rtclock.c	2009-03-14 22:35:55.000000000 -0400
 @@ -115,3 +115,11 @@
  
      return tv;
@@ -1266,8 +1286,8 @@ Index: pulseaudio-0.9.14/src/pulsecore/rtclock.c
 +}
 Index: pulseaudio-0.9.14/src/pulsecore/rtclock.h
 ===================================================================
---- pulseaudio-0.9.14.orig/src/pulsecore/rtclock.h	2009-02-27 19:26:44.000000000 -0500
-+++ pulseaudio-0.9.14/src/pulsecore/rtclock.h	2009-02-27 19:28:00.000000000 -0500
+--- pulseaudio-0.9.14.orig/src/pulsecore/rtclock.h	2009-03-14 22:34:19.000000000 -0400
++++ pulseaudio-0.9.14/src/pulsecore/rtclock.h	2009-03-14 22:35:55.000000000 -0400
 @@ -41,4 +41,6 @@
  
  struct timeval* pa_rtclock_from_wallclock(struct timeval *tv);
