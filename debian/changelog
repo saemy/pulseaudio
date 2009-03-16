@@ -1,3 +1,10 @@
+pulseaudio (0.9.14-0ubuntu13) jaunty; urgency=low
+
+  * debian/rules: Generate a PO template on build. Thanks to Timo Jyrinki for
+    the patch! (LP: #342159)
+
+ -- Martin Pitt <martin.pitt@ubuntu.com>  Mon, 16 Mar 2009 10:14:19 +0100
+
 pulseaudio (0.9.14-0ubuntu12) jaunty; urgency=low
 
   * 0091_workaround_alsa_horkage.patch:
