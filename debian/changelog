@@ -1,3 +1,9 @@
+pulseaudio (0.9.14-0ubuntu14) jaunty; urgency=low
+
+  * No-change rebuild to fix lpia shared library dependencies.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Thu, 19 Mar 2009 13:57:35 +0000
+
 pulseaudio (0.9.14-0ubuntu13) jaunty; urgency=low
 
   * debian/rules: Generate a PO template on build. Thanks to Timo Jyrinki for
