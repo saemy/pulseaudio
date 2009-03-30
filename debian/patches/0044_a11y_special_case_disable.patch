@@ -6,6 +6,6 @@ diff -urN pulseaudio-0.9.14/src/daemon/esdcompat.in pulseaudio-0.9.14.new/src/da
  done
  
 -eval "exec '@PA_BINARY@'$ARGS"
-+if [ ! -f /etc/pulse/a11y_nostart ]; then
++if [ ! -f $HOME/.pulse_a11y_nostart ]; then
 +    eval "exec '@PA_BINARY@'$ARGS"
 +fi

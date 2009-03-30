@@ -42,5 +42,6 @@
 0042_fix_selem_init.patch
 0043_load_sample_dir_lazy.patch
 0044_a11y_special_case_disable.patch
+0045_esd_honour_system_pulseaudio.patch
 0091_workaround_alsa_horkage.patch
 0092_fix_null_pointer_access.patch
