@@ -5,7 +5,7 @@
 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2.1 of the License,
+  by the Free Software Foundation; either version 2 of the License,
   or (at your option) any later version.
 
   PulseAudio is distributed in the hope that it will be useful, but
@@ -79,111 +79,106 @@ static int add_key_value(pa_hashmap *map, char *key, char *value, const char* co
 }
 
 pa_modargs *pa_modargs_new(const char *args, const char* const* valid_keys) {
-    enum {
-        WHITESPACE,
-        KEY,
-        VALUE_START,
-        VALUE_SIMPLE,
-        VALUE_DOUBLE_QUOTES,
-        VALUE_TICKS
-    } state;
-
-    const char *p, *key = NULL, *value = NULL;
-    size_t key_len = 0, value_len = 0;
-    pa_hashmap *map;
+    pa_hashmap *map = NULL;
 
     map = pa_hashmap_new(pa_idxset_string_hash_func, pa_idxset_string_compare_func);
 
-    if (!args)
-        return (pa_modargs*) map;
+    if (args) {
+        enum {
+            WHITESPACE,
+            KEY,
+            VALUE_START,
+            VALUE_SIMPLE,
+            VALUE_DOUBLE_QUOTES,
+            VALUE_TICKS
+        } state;
 
-    state = WHITESPACE;
+        const char *p, *key, *value;
+        size_t key_len = 0, value_len = 0;
 
-    for (p = args; *p; p++) {
-        switch (state) {
-
-            case WHITESPACE:
-                if (*p == '=')
-                    goto fail;
-                else if (!isspace(*p)) {
-                    key = p;
-                    state = KEY;
-                    key_len = 1;
-                }
-                break;
-
-            case KEY:
-                if (*p == '=')
-                    state = VALUE_START;
-                else if (isspace(*p))
-                    goto fail;
-                else
-                    key_len++;
-                break;
-
-            case  VALUE_START:
-                if (*p == '\'') {
-                    state = VALUE_TICKS;
-                    value = p+1;
-                    value_len = 0;
-                } else if (*p == '"') {
-                    state = VALUE_DOUBLE_QUOTES;
-                    value = p+1;
-                    value_len = 0;
-                } else if (isspace(*p)) {
-                    if (add_key_value(map, pa_xstrndup(key, key_len), pa_xstrdup(""), valid_keys) < 0)
+        key = value = NULL;
+        state = WHITESPACE;
+        for (p = args; *p; p++) {
+            switch (state) {
+                case WHITESPACE:
+                    if (*p == '=')
                         goto fail;
-                    state = WHITESPACE;
-                } else {
-                    state = VALUE_SIMPLE;
-                    value = p;
-                    value_len = 1;
-                }
-                break;
-
-            case VALUE_SIMPLE:
-                if (isspace(*p)) {
-                    if (add_key_value(map, pa_xstrndup(key, key_len), pa_xstrndup(value, value_len), valid_keys) < 0)
+                    else if (!isspace(*p)) {
+                        key = p;
+                        state = KEY;
+                        key_len = 1;
+                    }
+                    break;
+                case KEY:
+                    if (*p == '=')
+                        state = VALUE_START;
+                    else if (isspace(*p))
                         goto fail;
-                    state = WHITESPACE;
-                } else
-                    value_len++;
-                break;
-
-            case VALUE_DOUBLE_QUOTES:
-                if (*p == '"') {
-                    if (add_key_value(map, pa_xstrndup(key, key_len), pa_xstrndup(value, value_len), valid_keys) < 0)
-                        goto fail;
-                    state = WHITESPACE;
-                } else
-                    value_len++;
-                break;
-
-            case VALUE_TICKS:
-                if (*p == '\'') {
-                    if (add_key_value(map, pa_xstrndup(key, key_len), pa_xstrndup(value, value_len), valid_keys) < 0)
-                        goto fail;
-                    state = WHITESPACE;
-                } else
-                    value_len++;
-                break;
+                    else
+                        key_len++;
+                    break;
+                case  VALUE_START:
+                    if (*p == '\'') {
+                        state = VALUE_TICKS;
+                        value = p+1;
+                        value_len = 0;
+                    } else if (*p == '"') {
+                        state = VALUE_DOUBLE_QUOTES;
+                        value = p+1;
+                        value_len = 0;
+                    } else if (isspace(*p)) {
+                        if (add_key_value(map, pa_xstrndup(key, key_len), pa_xstrdup(""), valid_keys) < 0)
+                            goto fail;
+                        state = WHITESPACE;
+                    } else {
+                        state = VALUE_SIMPLE;
+                        value = p;
+                        value_len = 1;
+                    }
+                    break;
+                case VALUE_SIMPLE:
+                    if (isspace(*p)) {
+                        if (add_key_value(map, pa_xstrndup(key, key_len), pa_xstrndup(value, value_len), valid_keys) < 0)
+                            goto fail;
+                        state = WHITESPACE;
+                    } else
+                        value_len++;
+                    break;
+                case VALUE_DOUBLE_QUOTES:
+                    if (*p == '"') {
+                        if (add_key_value(map, pa_xstrndup(key, key_len), pa_xstrndup(value, value_len), valid_keys) < 0)
+                            goto fail;
+                        state = WHITESPACE;
+                    } else
+                        value_len++;
+                    break;
+                case VALUE_TICKS:
+                    if (*p == '\'') {
+                        if (add_key_value(map, pa_xstrndup(key, key_len), pa_xstrndup(value, value_len), valid_keys) < 0)
+                            goto fail;
+                        state = WHITESPACE;
+                    } else
+                        value_len++;
+                    break;
+            }
         }
-    }
 
-    if (state == VALUE_START) {
-        if (add_key_value(map, pa_xstrndup(key, key_len), pa_xstrdup(""), valid_keys) < 0)
+        if (state == VALUE_START) {
+            if (add_key_value(map, pa_xstrndup(key, key_len), pa_xstrdup(""), valid_keys) < 0)
+                goto fail;
+        } else if (state == VALUE_SIMPLE) {
+            if (add_key_value(map, pa_xstrndup(key, key_len), pa_xstrdup(value), valid_keys) < 0)
+                goto fail;
+        } else if (state != WHITESPACE)
             goto fail;
-    } else if (state == VALUE_SIMPLE) {
-        if (add_key_value(map, pa_xstrndup(key, key_len), pa_xstrdup(value), valid_keys) < 0)
-            goto fail;
-    } else if (state != WHITESPACE)
-        goto fail;
+    }
 
     return (pa_modargs*) map;
 
 fail:
 
-    pa_modargs_free((pa_modargs*) map);
+    if (map)
+        pa_modargs_free((pa_modargs*) map);
 
     return NULL;
 }
@@ -274,15 +269,11 @@ int pa_modargs_get_sample_spec(pa_modargs *ma, pa_sample_spec *rss) {
     pa_assert(rss);
 
     ss = *rss;
-    if ((pa_modargs_get_value_u32(ma, "rate", &ss.rate)) < 0 ||
-        ss.rate <= 0 ||
-        ss.rate > PA_RATE_MAX)
+    if ((pa_modargs_get_value_u32(ma, "rate", &ss.rate)) < 0)
         return -1;
 
     channels = ss.channels;
-    if ((pa_modargs_get_value_u32(ma, "channels", &channels)) < 0 ||
-        channels <= 0 ||
-        channels >= PA_CHANNELS_MAX)
+    if ((pa_modargs_get_value_u32(ma, "channels", &channels)) < 0)
         return -1;
     ss.channels = (uint8_t) channels;
 
@@ -318,12 +309,7 @@ int pa_modargs_get_channel_map(pa_modargs *ma, const char *name, pa_channel_map 
     return 0;
 }
 
-int pa_modargs_get_sample_spec_and_channel_map(
-        pa_modargs *ma,
-        pa_sample_spec *rss,
-        pa_channel_map *rmap,
-        pa_channel_map_def_t def) {
-
+int pa_modargs_get_sample_spec_and_channel_map(pa_modargs *ma, pa_sample_spec *rss, pa_channel_map *rmap, pa_channel_map_def_t def) {
     pa_sample_spec ss;
     pa_channel_map map;
 
@@ -336,10 +322,7 @@ int pa_modargs_get_sample_spec_and_channel_map(
     if (pa_modargs_get_sample_spec(ma, &ss) < 0)
         return -1;
 
-    map = *rmap;
-
-    if (ss.channels != map.channels)
-        pa_channel_map_init_extend(&map, ss.channels, def);
+    pa_channel_map_init_extend(&map, ss.channels, def);
 
     if (pa_modargs_get_channel_map(ma, NULL, &map) < 0)
         return -1;

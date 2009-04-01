@@ -1,12 +1,11 @@
 prefix=@prefix@
-exec_prefix=@exec_prefix@
+exec_prefix=${prefix}
 libdir=@libdir@
-includedir=@includedir@
+includedir=${prefix}/include
 
 Name: libpulse-browse
-Description: PulseAudio Network Browsing Interface
+Description: PulseAudio Network Browsing API
 Version: @PACKAGE_VERSION@
 Libs: -L${libdir} -lpulse-browse @PTHREAD_LIBS@
-Libs.private: -lpulsecommon-@PA_MAJORMINORMICRO@
-Cflags: -I${includedir} -D_REENTRANT
+Cflags: -D_REENTRANT -I${includedir}
 Requires: libpulse

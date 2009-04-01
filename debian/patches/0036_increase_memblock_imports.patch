@@ -1,0 +1,13 @@
+Index: pulseaudio-0.9.14/src/pulsecore/memblock.c
+===================================================================
+--- pulseaudio-0.9.14.orig/src/pulsecore/memblock.c	2009-02-18 16:40:03.000000000 -0500
++++ pulseaudio-0.9.14/src/pulsecore/memblock.c	2009-02-18 16:40:13.000000000 -0500
+@@ -57,7 +57,7 @@
+ 
+ #define PA_MEMEXPORT_SLOTS_MAX 128
+ 
+-#define PA_MEMIMPORT_SLOTS_MAX 128
++#define PA_MEMIMPORT_SLOTS_MAX 160
+ #define PA_MEMIMPORT_SEGMENTS_MAX 16
+ 
+ struct pa_memblock {

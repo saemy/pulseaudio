@@ -5,7 +5,7 @@
 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2.1 of the License,
+  by the Free Software Foundation; either version 2 of the License,
   or (at your option) any later version.
 
   PulseAudio is distributed in the hope that it will be useful, but
@@ -177,9 +177,7 @@ int pa__init(pa_module*m) {
     pa_sample_spec ss;
     pa_channel_map cm;
     struct sockaddr_in sa4, sap_sa4;
-#ifdef HAVE_IPV6
     struct sockaddr_in6 sa6, sap_sa6;
-#endif
     struct sockaddr_storage sa_dst;
     pa_source_output *o = NULL;
     uint8_t payload;
@@ -198,7 +196,7 @@ int pa__init(pa_module*m) {
         goto fail;
     }
 
-    if (!(s = pa_namereg_get(m->core, pa_modargs_get_value(ma, "source", NULL), PA_NAMEREG_SOURCE))) {
+    if (!(s = pa_namereg_get(m->core, pa_modargs_get_value(ma, "source", NULL), PA_NAMEREG_SOURCE, 1))) {
         pa_log("Source does not exist.");
         goto fail;
     }
@@ -249,18 +247,16 @@ int pa__init(pa_module*m) {
 
     dest = pa_modargs_get_value(ma, "destination", DEFAULT_DESTINATION);
 
-    if (inet_pton(AF_INET, dest, &sa4.sin_addr) > 0) {
-        sa4.sin_family = af = AF_INET;
-        sa4.sin_port = htons((uint16_t) port);
-        sap_sa4 = sa4;
-        sap_sa4.sin_port = htons(SAP_PORT);
-#ifdef HAVE_IPV6
-    } else if (inet_pton(AF_INET6, dest, &sa6.sin6_addr) > 0) {
+    if (inet_pton(AF_INET6, dest, &sa6.sin6_addr) > 0) {
         sa6.sin6_family = af = AF_INET6;
         sa6.sin6_port = htons((uint16_t) port);
         sap_sa6 = sa6;
         sap_sa6.sin6_port = htons(SAP_PORT);
-#endif
+    } else if (inet_pton(AF_INET, dest, &sa4.sin_addr) > 0) {
+        sa4.sin_family = af = AF_INET;
+        sa4.sin_port = htons((uint16_t) port);
+        sap_sa4 = sa4;
+        sap_sa4.sin_port = htons(SAP_PORT);
     } else {
         pa_log("Invalid destination '%s'", dest);
         goto fail;
@@ -271,14 +267,9 @@ int pa__init(pa_module*m) {
         goto fail;
     }
 
-    if (af == AF_INET && connect(fd, (struct sockaddr*) &sa4, sizeof(sa4)) < 0) {
+    if (connect(fd, af == AF_INET ? (struct sockaddr*) &sa4 : (struct sockaddr*) &sa6, (socklen_t) (af == AF_INET ? sizeof(sa4) : sizeof(sa6))) < 0) {
         pa_log("connect() failed: %s", pa_cstrerror(errno));
         goto fail;
-#ifdef HAVE_IPV6
-    } else if (af == AF_INET6 && connect(fd, (struct sockaddr*) &sa6, sizeof(sa6)) < 0) {
-        pa_log("connect() failed: %s", pa_cstrerror(errno));
-        goto fail;
-#endif
     }
 
     if ((sap_fd = socket(af, SOCK_DGRAM, 0)) < 0) {
@@ -286,14 +277,9 @@ int pa__init(pa_module*m) {
         goto fail;
     }
 
-    if (af == AF_INET && connect(sap_fd, (struct sockaddr*) &sap_sa4, sizeof(sap_sa4)) < 0) {
+    if (connect(sap_fd, af == AF_INET ? (struct sockaddr*) &sap_sa4 : (struct sockaddr*) &sap_sa6, (socklen_t) (af == AF_INET ? sizeof(sap_sa4) : sizeof(sap_sa6))) < 0) {
         pa_log("connect() failed: %s", pa_cstrerror(errno));
         goto fail;
-#ifdef HAVE_IPV6
-    } else if (af == AF_INET6 && connect(sap_fd, (struct sockaddr*) &sap_sa6, sizeof(sap_sa6)) < 0) {
-        pa_log("connect() failed: %s", pa_cstrerror(errno));
-        goto fail;
-#endif
     }
 
     j = !!loop;
@@ -335,7 +321,7 @@ int pa__init(pa_module*m) {
     pa_source_output_new_data_set_sample_spec(&data, &ss);
     pa_source_output_new_data_set_channel_map(&data, &cm);
 
-    pa_source_output_new(&o, m->core, &data, PA_SOURCE_OUTPUT_DONT_INHIBIT_AUTO_SUSPEND);
+    o = pa_source_output_new(m->core, &data, 0);
     pa_source_output_new_data_done(&data);
 
     if (!o) {
@@ -371,19 +357,10 @@ int pa__init(pa_module*m) {
 
     n = pa_sprintf_malloc("PulseAudio RTP Stream on %s", pa_get_fqdn(hn, sizeof(hn)));
 
-    if (af == AF_INET) {
-        p = pa_sdp_build(af,
-                     (void*) &((struct sockaddr_in*) &sa_dst)->sin_addr,
-                     (void*) &sa4.sin_addr,
+    p = pa_sdp_build(af,
+                     af == AF_INET ? (void*) &((struct sockaddr_in*) &sa_dst)->sin_addr : (void*) &((struct sockaddr_in6*) &sa_dst)->sin6_addr,
+                     af == AF_INET ? (void*) &sa4.sin_addr : (void*) &sa6.sin6_addr,
                      n, (uint16_t) port, payload, &ss);
-#ifdef HAVE_IPV6
-    } else {
-        p = pa_sdp_build(af,
-                     (void*) &((struct sockaddr_in6*) &sa_dst)->sin6_addr,
-                     (void*) &sa6.sin6_addr,
-                     n, (uint16_t) port, payload, &ss);
-#endif
-    }
 
     pa_xfree(n);
 

@@ -1,12 +1,10 @@
 prefix=@prefix@
-exec_prefix=@exec_prefix@
+exec_prefix=${prefix}
 libdir=@libdir@
-includedir=@includedir@
-modlibexecdir=@modlibexecdir@
+includedir=${prefix}/include
 
 Name: libpulse
-Description: PulseAudio Client Interface
+Description: Client Interface to PulseAudio
 Version: @PACKAGE_VERSION@
 Libs: -L${libdir} -lpulse @PTHREAD_LIBS@
-Libs.private: -lpulsecommon-@PA_MAJORMINORMICRO@
-Cflags: -I${includedir} -D_REENTRANT
+Cflags: -D_REENTRANT -I${includedir}

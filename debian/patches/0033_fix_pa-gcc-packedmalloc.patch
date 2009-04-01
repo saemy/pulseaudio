@@ -1,0 +1,43 @@
+Index: pulseaudio-0.9.14/src/pulse/gccmacro.h
+===================================================================
+--- pulseaudio-0.9.14.orig/src/pulse/gccmacro.h	2009-02-13 23:07:17.000000000 -0500
++++ pulseaudio-0.9.14/src/pulse/gccmacro.h	2009-02-13 23:09:29.000000000 -0500
+@@ -85,7 +85,7 @@
+ #endif
+ 
+ #ifndef PA_GCC_PACKED
+-#ifdef __GNUCC__
++#ifdef __GNUC__
+ #define PA_GCC_PACKED __attribute__ ((packed))
+ #else
+ /** Structure shall be packed in memory **/
+@@ -105,7 +105,7 @@
+ #endif
+ 
+ #ifndef PA_GCC_MALLOC
+-#ifdef __GNUCC__
++#ifdef __GNUC__
+ #define PA_GCC_MALLOC __attribute__ ((malloc))
+ #else
+ /** Macro for usage of GCC's malloc attribute */
+Index: pulseaudio-0.9.14/src/pulsecore/shm.c
+===================================================================
+--- pulseaudio-0.9.14.orig/src/pulsecore/shm.c	2009-02-13 23:07:17.000000000 -0500
++++ pulseaudio-0.9.14/src/pulsecore/shm.c	2009-02-13 23:09:29.000000000 -0500
+@@ -70,14 +70,14 @@
+ 
+ /* We now put this SHM marker at the end of each segment. It's
+  * optional, to not require a reboot when upgrading, though */
+-struct shm_marker PA_GCC_PACKED {
++struct shm_marker {
+     pa_atomic_t marker; /* 0xbeefcafe */
+     pa_atomic_t pid;
+     uint64_t _reserved1;
+     uint64_t _reserved2;
+     uint64_t _reserved3;
+     uint64_t _reserved4;
+-};
++} PA_GCC_PACKED;
+ 
+ static char *segment_name(char *fn, size_t l, unsigned id) {
+     pa_snprintf(fn, l, "/pulse-shm-%u", id);

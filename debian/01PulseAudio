@@ -8,13 +8,13 @@ get_pulse_users() {
 
 suspend_pulse() {
     for i in $(get_pulse_users); do
-        echo 'suspend 1' | sudo -u $i pacmd &> /dev/null
+        echo 'suspend 1' | sudo -H -u $i pacmd &> /dev/null
     done
 }
 
 resume_pulse() {
     for i in $(get_pulse_users); do
-        echo 'suspend 0' | sudo -u $i pacmd &> /dev/null
+        echo 'suspend 0' | sudo -H -u $i pacmd &> /dev/null
     done
 }
 

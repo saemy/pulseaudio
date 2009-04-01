@@ -1,0 +1,24 @@
+Index: pulseaudio-0.9.14/src/pulsecore/ltdl-helper.c
+===================================================================
+--- pulseaudio-0.9.14.orig/src/pulsecore/ltdl-helper.c	2009-02-04 18:50:11.000000000 -0500
++++ pulseaudio-0.9.14/src/pulsecore/ltdl-helper.c	2009-02-04 18:50:21.000000000 -0500
+@@ -42,7 +42,9 @@
+     pa_assert(handle);
+     pa_assert(symbol);
+ 
+-    if ((f = ((pa_void_func_t) (size_t) lt_dlsym(handle, symbol))))
++    *(void**) &f = lt_dlsym(handle, symbol);
++
++    if (f)
+         return f;
+ 
+     if (!module)
+@@ -57,7 +59,7 @@
+         if (!isalnum(*c))
+             *c = '_';
+ 
+-    f = (pa_void_func_t) (size_t) lt_dlsym(handle, sn);
++    *(void**) &f = lt_dlsym(handle, sn);
+     pa_xfree(sn);
+ 
+     return f;

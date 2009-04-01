@@ -5,7 +5,7 @@
 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2.1 of the License,
+  by the Free Software Foundation; either version 2 of the License,
   or (at your option) any later version.
 
   PulseAudio is distributed in the hope that it will be useful, but
@@ -49,7 +49,7 @@ struct userdata {
     pa_core *core;
     pa_module *module;
     pa_sink_input *sink_input;
-    pa_memchunk memchunk;
+    pa_memblock *memblock;
     size_t peek_index;
 };
 
@@ -66,11 +66,9 @@ static int sink_input_pop_cb(pa_sink_input *i, size_t nbytes, pa_memchunk *chunk
     pa_assert_se(u = i->userdata);
     pa_assert(chunk);
 
-    *chunk = u->memchunk;
-    pa_memblock_ref(chunk->memblock);
-
-    chunk->index += u->peek_index;
-    chunk->length -= u->peek_index;
+    chunk->memblock = pa_memblock_ref(u->memblock);
+    chunk->length = pa_memblock_get_length(u->memblock) - u->peek_index;
+    chunk->index = u->peek_index;
 
     u->peek_index = 0;
 
@@ -78,17 +76,19 @@ static int sink_input_pop_cb(pa_sink_input *i, size_t nbytes, pa_memchunk *chunk
 }
 
 static void sink_input_process_rewind_cb(pa_sink_input *i, size_t nbytes) {
+    size_t l;
     struct userdata *u;
 
     pa_sink_input_assert_ref(i);
     pa_assert_se(u = i->userdata);
 
-    nbytes %= u->memchunk.length;
+    l = pa_memblock_get_length(u->memblock);
+    nbytes %= l;
 
     if (u->peek_index >= nbytes)
         u->peek_index -= nbytes;
     else
-        u->peek_index = u->memchunk.length + u->peek_index - nbytes;
+        u->peek_index = l + u->peek_index - nbytes;
 }
 
 static void sink_input_kill_cb(pa_sink_input *i) {
@@ -115,7 +115,16 @@ static void sink_input_state_change_cb(pa_sink_input *i, pa_sink_input_state_t s
      * we are heard right-away. */
     if (PA_SINK_INPUT_IS_LINKED(state) &&
         i->thread_info.state == PA_SINK_INPUT_INIT)
-        pa_sink_input_request_rewind(i, 0, FALSE, TRUE, TRUE);
+        pa_sink_input_request_rewind(i, 0, FALSE, TRUE);
+}
+
+static void calc_sine(float *f, size_t l, double freq) {
+    size_t i;
+
+    l /= sizeof(float);
+
+    for (i = 0; i < l; i++)
+        f[i] = (float) sin((double) i/(double)l*M_PI*2*freq)/2;
 }
 
 int pa__init(pa_module*m) {
@@ -124,6 +133,7 @@ int pa__init(pa_module*m) {
     pa_sink *sink;
     pa_sample_spec ss;
     uint32_t frequency;
+    void *p;
     pa_sink_input_new_data data;
 
     if (!(ma = pa_modargs_new(m->argument, valid_modargs))) {
@@ -131,7 +141,14 @@ int pa__init(pa_module*m) {
         goto fail;
     }
 
-    if (!(sink = pa_namereg_get(m->core, pa_modargs_get_value(ma, "sink", NULL), PA_NAMEREG_SINK))) {
+    m->userdata = u = pa_xnew0(struct userdata, 1);
+    u->core = m->core;
+    u->module = m;
+    u->sink_input = NULL;
+    u->memblock = NULL;
+    u->peek_index = 0;
+
+    if (!(sink = pa_namereg_get(m->core, pa_modargs_get_value(ma, "sink", NULL), PA_NAMEREG_SINK, 1))) {
         pa_log("No such sink.");
         goto fail;
     }
@@ -146,24 +163,21 @@ int pa__init(pa_module*m) {
         goto fail;
     }
 
-    m->userdata = u = pa_xnew0(struct userdata, 1);
-    u->core = m->core;
-    u->module = m;
-    u->sink_input = NULL;
-
-    u->peek_index = 0;
-    pa_memchunk_sine(&u->memchunk, m->core->mempool, ss.rate, frequency);
+    u->memblock = pa_memblock_new(m->core->mempool, pa_bytes_per_second(&ss));
+    p = pa_memblock_acquire(u->memblock);
+    calc_sine(p, pa_memblock_get_length(u->memblock), (double) frequency);
+    pa_memblock_release(u->memblock);
 
     pa_sink_input_new_data_init(&data);
-    data.driver = __FILE__;
-    data.module = m;
     data.sink = sink;
+    data.driver = __FILE__;
     pa_proplist_setf(data.proplist, PA_PROP_MEDIA_NAME, "%u Hz Sine", frequency);
     pa_proplist_sets(data.proplist, PA_PROP_MEDIA_ROLE, "abstract");
     pa_proplist_setf(data.proplist, "sine.hz", "%u", frequency);
     pa_sink_input_new_data_set_sample_spec(&data, &ss);
+    data.module = m;
 
-    pa_sink_input_new(&u->sink_input, m->core, &data, 0);
+    u->sink_input = pa_sink_input_new(m->core, &data, 0);
     pa_sink_input_new_data_done(&data);
 
     if (!u->sink_input)
@@ -201,8 +215,8 @@ void pa__done(pa_module*m) {
         pa_sink_input_unref(u->sink_input);
     }
 
-    if (u->memchunk.memblock)
-        pa_memblock_unref(u->memchunk.memblock);
+    if (u->memblock)
+        pa_memblock_unref(u->memblock);
 
     pa_xfree(u);
 }

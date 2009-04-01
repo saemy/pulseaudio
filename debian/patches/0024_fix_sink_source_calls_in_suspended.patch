@@ -1,0 +1,195 @@
+Index: pulseaudio-0.9.14/src/pulsecore/sink.c
+===================================================================
+--- pulseaudio-0.9.14.orig/src/pulsecore/sink.c	2009-02-04 19:05:00.000000000 -0500
++++ pulseaudio-0.9.14/src/pulsecore/sink.c	2009-02-04 19:05:50.000000000 -0500
+@@ -467,6 +467,9 @@
+     s->thread_info.rewind_nbytes = 0;
+     s->thread_info.rewind_requested = FALSE;
+ 
++    if (s->thread_info.state == PA_SINK_SUSPENDED)
++        return;
++
+     if (nbytes > 0)
+         pa_log_debug("Processing rewind...");
+ 
+@@ -476,7 +479,7 @@
+     }
+ 
+     if (nbytes > 0)
+-        if (s->monitor_source && PA_SOURCE_IS_OPENED(s->monitor_source->thread_info.state))
++        if (s->monitor_source && PA_SOURCE_IS_LINKED(s->monitor_source->thread_info.state))
+             pa_source_process_rewind(s->monitor_source, nbytes);
+ }
+ 
+@@ -556,7 +559,7 @@
+         /* Drop read data */
+         pa_sink_input_drop(i, result->length);
+ 
+-        if (s->monitor_source && PA_SOURCE_IS_OPENED(pa_source_get_state(s->monitor_source))) {
++        if (s->monitor_source && PA_SOURCE_IS_LINKED(s->monitor_source->thread_info.state)) {
+ 
+             if (pa_hashmap_size(i->thread_info.direct_outputs) > 0) {
+                 void *ostate = NULL;
+@@ -612,7 +615,7 @@
+         }
+     }
+ 
+-    if (s->monitor_source && PA_SOURCE_IS_OPENED(pa_source_get_state(s->monitor_source)))
++    if (s->monitor_source && PA_SOURCE_IS_LINKED(s->monitor_source->thread_info.state))
+         pa_source_post(s->monitor_source, result);
+ }
+ 
+@@ -623,7 +626,7 @@
+     size_t block_size_max;
+ 
+     pa_sink_assert_ref(s);
+-    pa_assert(PA_SINK_IS_OPENED(s->thread_info.state));
++    pa_assert(PA_SINK_IS_LINKED(s->thread_info.state));
+     pa_assert(pa_frame_aligned(length, &s->sample_spec));
+     pa_assert(result);
+ 
+@@ -632,6 +635,13 @@
+     pa_assert(!s->thread_info.rewind_requested);
+     pa_assert(s->thread_info.rewind_nbytes == 0);
+ 
++    if (s->thread_info.state == PA_SINK_SUSPENDED) {
++        result->memblock = pa_memblock_ref(s->silence.memblock);
++        result->index = s->silence.index;
++        result->length = PA_MIN(s->silence.length, length);
++        return;
++    }
++
+     if (length <= 0)
+         length = pa_frame_align(MIX_BUFFER_LENGTH, &s->sample_spec);
+ 
+@@ -696,7 +706,7 @@
+     size_t length, block_size_max;
+ 
+     pa_sink_assert_ref(s);
+-    pa_assert(PA_SINK_IS_OPENED(s->thread_info.state));
++    pa_assert(PA_SINK_IS_LINKED(s->thread_info.state));
+     pa_assert(target);
+     pa_assert(target->memblock);
+     pa_assert(target->length > 0);
+@@ -707,6 +717,11 @@
+     pa_assert(!s->thread_info.rewind_requested);
+     pa_assert(s->thread_info.rewind_nbytes == 0);
+ 
++    if (s->thread_info.state == PA_SINK_SUSPENDED) {
++        pa_silence_memchunk(target, &s->sample_spec);
++        return;
++    }
++
+     length = target->length;
+     block_size_max = pa_mempool_block_size_max(s->core->mempool);
+     if (length > block_size_max)
+@@ -774,7 +789,7 @@
+     size_t l, d;
+ 
+     pa_sink_assert_ref(s);
+-    pa_assert(PA_SINK_IS_OPENED(s->thread_info.state));
++    pa_assert(PA_SINK_IS_LINKED(s->thread_info.state));
+     pa_assert(target);
+     pa_assert(target->memblock);
+     pa_assert(target->length > 0);
+@@ -804,7 +819,7 @@
+ /* Called from IO thread context */
+ void pa_sink_render_full(pa_sink *s, size_t length, pa_memchunk *result) {
+     pa_sink_assert_ref(s);
+-    pa_assert(PA_SINK_IS_OPENED(s->thread_info.state));
++    pa_assert(PA_SINK_IS_LINKED(s->thread_info.state));
+     pa_assert(length > 0);
+     pa_assert(pa_frame_aligned(length, &s->sample_spec));
+     pa_assert(result);
+@@ -830,7 +845,7 @@
+ 
+     /* The returned value is supposed to be in the time domain of the sound card! */
+ 
+-    if (!PA_SINK_IS_OPENED(s->state))
++    if (s->state == PA_SINK_SUSPENDED)
+         return 0;
+ 
+     if (!(s->flags & PA_SINK_LATENCY))
+@@ -1342,6 +1357,9 @@
+     pa_sink_assert_ref(s);
+     pa_assert(PA_SINK_IS_LINKED(s->thread_info.state));
+ 
++    if (s->thread_info.state == PA_SINK_SUSPENDED)
++        return;
++
+     if (nbytes == (size_t) -1)
+         nbytes = s->thread_info.max_rewind;
+ 
+@@ -1403,7 +1421,7 @@
+     pa_sink_assert_ref(s);
+     pa_assert(PA_SINK_IS_LINKED(s->state));
+ 
+-    if (!PA_SINK_IS_OPENED(s->state))
++    if (s->state == PA_SINK_SUSPENDED)
+         return 0;
+ 
+     pa_assert_se(pa_asyncmsgq_send(s->asyncmsgq, PA_MSGOBJECT(s), PA_SINK_MESSAGE_GET_REQUESTED_LATENCY, &usec, 0, NULL) == 0);
+Index: pulseaudio-0.9.14/src/pulsecore/source.c
+===================================================================
+--- pulseaudio-0.9.14.orig/src/pulsecore/source.c	2009-02-04 19:05:00.000000000 -0500
++++ pulseaudio-0.9.14/src/pulsecore/source.c	2009-02-04 19:05:50.000000000 -0500
+@@ -406,7 +406,10 @@
+     void *state = NULL;
+ 
+     pa_source_assert_ref(s);
+-    pa_assert(PA_SOURCE_IS_OPENED(s->thread_info.state));
++    pa_assert(PA_SOURCE_IS_LINKED(s->thread_info.state));
++
++    if (s->thread_info.state == PA_SOURCE_SUSPENDED)
++        return;
+ 
+     if (nbytes <= 0)
+         return;
+@@ -425,9 +428,12 @@
+     void *state = NULL;
+ 
+     pa_source_assert_ref(s);
+-    pa_assert(PA_SOURCE_IS_OPENED(s->thread_info.state));
++    pa_assert(PA_SOURCE_IS_LINKED(s->thread_info.state));
+     pa_assert(chunk);
+ 
++    if (s->thread_info.state == PA_SOURCE_SUSPENDED)
++        return;
++
+     if (s->thread_info.soft_muted || !pa_cvolume_is_norm(&s->thread_info.soft_volume)) {
+         pa_memchunk vchunk = *chunk;
+ 
+@@ -461,11 +467,14 @@
+ /* Called from IO thread context */
+ void pa_source_post_direct(pa_source*s, pa_source_output *o, const pa_memchunk *chunk) {
+     pa_source_assert_ref(s);
+-    pa_assert(PA_SOURCE_IS_OPENED(s->thread_info.state));
++    pa_assert(PA_SOURCE_IS_LINKED(s->thread_info.state));
+     pa_source_output_assert_ref(o);
+     pa_assert(o->thread_info.direct_on_input);
+     pa_assert(chunk);
+ 
++    if (s->thread_info.state == PA_SOURCE_SUSPENDED)
++        return;
++
+     if (s->thread_info.soft_muted || !pa_cvolume_is_norm(&s->thread_info.soft_volume)) {
+         pa_memchunk vchunk = *chunk;
+ 
+@@ -491,7 +500,7 @@
+     pa_source_assert_ref(s);
+     pa_assert(PA_SOURCE_IS_LINKED(s->state));
+ 
+-    if (!PA_SOURCE_IS_OPENED(s->state))
++    if (s->state == PA_SOURCE_SUSPENDED)
+         return 0;
+ 
+     if (!(s->flags & PA_SOURCE_LATENCY))
+@@ -882,7 +891,7 @@
+     pa_source_assert_ref(s);
+     pa_assert(PA_SOURCE_IS_LINKED(s->state));
+ 
+-    if (!PA_SOURCE_IS_OPENED(s->state))
++    if (s->state == PA_SOURCE_SUSPENDED)
+         return 0;
+ 
+     pa_assert_se(pa_asyncmsgq_send(s->asyncmsgq, PA_MSGOBJECT(s), PA_SOURCE_MESSAGE_GET_REQUESTED_LATENCY, &usec, 0, NULL) == 0);

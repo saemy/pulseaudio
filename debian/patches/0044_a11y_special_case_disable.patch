@@ -1,0 +1,11 @@
+diff -urN pulseaudio-0.9.14/src/daemon/esdcompat.in pulseaudio-0.9.14.new/src/daemon/esdcompat.in
+--- pulseaudio-0.9.14/src/daemon/esdcompat.in	2009-01-13 10:10:34.000000000 +1100
++++ pulseaudio-0.9.14.new/src/daemon/esdcompat.in	2009-03-10 08:32:05.000000000 +1100
+@@ -93,4 +93,6 @@
+     shift
+ done
+ 
+-eval "exec '@PA_BINARY@'$ARGS"
++if [ ! -f $HOME/.pulse_a11y_nostart ]; then
++    eval "exec '@PA_BINARY@'$ARGS"
++fi

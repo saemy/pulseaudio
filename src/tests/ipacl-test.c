@@ -25,15 +25,12 @@
 #endif
 
 #include "../pulsecore/winsock.h"
-#include "../pulsecore/macro.h"
 
 #include <pulsecore/ipacl.h>
 
 int main(int argc, char *argv[]) {
     struct sockaddr_in sa;
-#ifdef HAVE_IPV6
     struct sockaddr_in6 sa6;
-#endif
     int fd;
     int r;
     pa_ip_acl *acl;
@@ -90,14 +87,13 @@ int main(int argc, char *argv[]) {
 
     close(fd);
 
-#ifdef HAVE_IPV6
     fd = socket(PF_INET6, SOCK_STREAM, 0);
     assert(fd >= 0);
 
     memset(&sa6, 0, sizeof(sa6));
     sa6.sin6_family = AF_INET6;
     sa6.sin6_port = htons(22);
-    pa_assert_se(inet_pton(AF_INET6, "::1", &sa6.sin6_addr) == 1);
+    inet_pton(AF_INET6, "::1", &sa6.sin6_addr);
 
     r = connect(fd, (struct sockaddr*) &sa6, sizeof(sa6));
     assert(r >= 0);
@@ -133,7 +129,6 @@ int main(int argc, char *argv[]) {
     pa_ip_acl_free(acl);
 
     close(fd);
-#endif
 
     return 0;
 }

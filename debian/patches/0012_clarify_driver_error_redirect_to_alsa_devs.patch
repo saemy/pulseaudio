@@ -1,0 +1,82 @@
+Index: pulseaudio-0.9.14/src/modules/module-alsa-sink.c
+===================================================================
+--- pulseaudio-0.9.14.orig/src/modules/module-alsa-sink.c	2009-02-15 21:48:29.000000000 -0500
++++ pulseaudio-0.9.14/src/modules/module-alsa-sink.c	2009-02-15 21:48:29.000000000 -0500
+@@ -285,9 +285,10 @@
+ 
+         if (PA_UNLIKELY(n <= u->hwbuf_unused_frames)) {
+ 
+-            if (polled)
++            if (u->use_tsched && polled)
+                 pa_log("ALSA woke us up to write new data to the device, but there was actually nothing to write! "
+-                       "Most likely this is an ALSA driver bug. Please report this issue to the PulseAudio developers.");
++                       "Most likely this is a Linux bug. Please report this issue to the ALSA developers. "
++                       "We were woken up with POLLOUT set -- however a subsequent snd_pcm_avail_update() returned 0.");
+ 
+             break;
+         }
+@@ -407,9 +408,10 @@
+ 
+         if (PA_UNLIKELY(n <= u->hwbuf_unused_frames)) {
+ 
+-            if (polled)
++            if (u->use_tsched && polled)
+                 pa_log("ALSA woke us up to write new data to the device, but there was actually nothing to write! "
+-                       "Most likely this is an ALSA driver bug. Please report this issue to the PulseAudio developers.");
++                       "Most likely this is a Linux bug. Please report this issue to the ALSA developers. "
++                       "We were woken up with POLLOUT set -- however a subsequent snd_pcm_avail_update() returned 0.");
+ 
+             break;
+         }
+Index: pulseaudio-0.9.14/src/modules/module-alsa-source.c
+===================================================================
+--- pulseaudio-0.9.14.orig/src/modules/module-alsa-source.c	2009-02-15 21:48:29.000000000 -0500
++++ pulseaudio-0.9.14/src/modules/module-alsa-source.c	2009-02-15 21:48:29.000000000 -0500
+@@ -272,9 +272,10 @@
+ 
+         if (PA_UNLIKELY(n <= 0)) {
+ 
+-            if (polled)
++            if (u->use_tsched && polled)
+                 pa_log("ALSA woke us up to read new data from the device, but there was actually nothing to read! "
+-                       "Most likely this is an ALSA driver bug. Please report this issue to the PulseAudio device.");
++                       "Most likely this is a Linux bug. Please report this issue to the ALSA developers. "
++                       "We were woken up with POLLIN set -- however a subsequent snd_pcm_avail_update() returned 0.");
+ 
+             break;
+         }
+@@ -379,9 +380,10 @@
+ 
+         if (PA_UNLIKELY(n <= 0)) {
+ 
+-            if (polled)
++            if (u->use_tsched && polled)
+                 pa_log("ALSA woke us up to read new data from the device, but there was actually nothing to read! "
+-                       "Most likely this is an ALSA driver bug. Please report this issue to the PulseAudio developers.");
++                       "Most likely this is a Linux bug. Please report this issue to the ALSA developers. "
++                       "We were woken up with POLLIN set -- however a subsequent snd_pcm_avail_update() returned 0.");
+ 
+             return work_done;
+         }
+Index: pulseaudio-0.9.14/src/modules/alsa-util.c
+===================================================================
+--- pulseaudio-0.9.14.orig/src/modules/alsa-util.c	2009-02-15 21:49:10.000000000 -0500
++++ pulseaudio-0.9.14/src/modules/alsa-util.c	2009-02-15 21:50:39.000000000 -0500
+@@ -1222,7 +1222,7 @@
+     if (k >= hwbuf_size * 3 ||
+         k >= pa_bytes_per_second(ss)*10)
+         pa_log("snd_pcm_avail_update() returned a value that is exceptionally large: %lu bytes (%lu ms) "
+-               "Most likely this is an ALSA driver bug. Please report this issue to the PulseAudio developers.",
++               "Most likely this is a Linux bug. Please report this issue to the ALSA developers.",
+                (unsigned long) k, (unsigned long) (pa_bytes_to_usec(k, ss) / PA_USEC_PER_MSEC));
+ 
+     return n;
+@@ -1254,7 +1254,7 @@
+         k >= pa_bytes_per_second(ss)*10)
+ 
+         pa_log("snd_pcm_mmap_begin() returned a value that is exceptionally large: %lu bytes (%lu ms) "
+-               "Most likely this is an ALSA driver bug. Please report this issue to the PulseAudio developers.",
++               "Most likely this is a Linux bug. Please report this issue to the ALSA developers.",
+                (unsigned long) k, (unsigned long) (pa_bytes_to_usec(k, ss) / PA_USEC_PER_MSEC));
+ 
+     return r;

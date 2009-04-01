@@ -5,7 +5,7 @@
 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2.1 of the License,
+  by the Free Software Foundation; either version 2 of the License,
   or (at your option) any later version.
 
   PulseAudio is distributed in the hope that it will be useful, but
@@ -119,7 +119,7 @@ static void sink_request_rewind(pa_sink *s) {
     pa_sink_assert_ref(s);
     pa_assert_se(u = s->userdata);
 
-    pa_sink_input_request_rewind(u->sink_input, s->thread_info.rewind_nbytes, TRUE, FALSE, FALSE);
+    pa_sink_input_request_rewind(u->sink_input, s->thread_info.rewind_nbytes, TRUE, FALSE);
 }
 
 /* Called from I/O thread context */
@@ -179,7 +179,7 @@ static void sink_input_update_max_rewind_cb(pa_sink_input *i, size_t nbytes) {
     if (!u->sink || !PA_SINK_IS_LINKED(u->sink->thread_info.state))
         return;
 
-    pa_sink_set_max_rewind_within_thread(u->sink, nbytes);
+    pa_sink_set_max_rewind(u->sink, nbytes);
 }
 
 /* Called from I/O thread context */
@@ -192,7 +192,7 @@ static void sink_input_update_max_request_cb(pa_sink_input *i, size_t nbytes) {
     if (!u->sink || !PA_SINK_IS_LINKED(u->sink->thread_info.state))
         return;
 
-    pa_sink_set_max_request_within_thread(u->sink, nbytes);
+    pa_sink_set_max_request(u->sink, nbytes);
 }
 
 /* Called from I/O thread context */
@@ -205,7 +205,7 @@ static void sink_input_update_sink_latency_range_cb(pa_sink_input *i) {
     if (!u->sink || !PA_SINK_IS_LINKED(u->sink->thread_info.state))
         return;
 
-    pa_sink_set_latency_range_within_thread(u->sink, i->sink->thread_info.min_latency, i->sink->thread_info.max_latency);
+    pa_sink_update_latency_range(u->sink, i->sink->thread_info.min_latency, i->sink->thread_info.max_latency);
 }
 
 /* Called from I/O thread context */
@@ -237,7 +237,7 @@ static void sink_input_attach_cb(pa_sink_input *i) {
     pa_sink_set_rtpoll(u->sink, i->sink->rtpoll);
     pa_sink_attach_within_thread(u->sink);
 
-    pa_sink_set_latency_range_within_thread(u->sink, u->master->thread_info.min_latency, u->master->thread_info.max_latency);
+    pa_sink_update_latency_range(u->sink, u->master->thread_info.min_latency, u->master->thread_info.max_latency);
 }
 
 /* Called from main context */
@@ -270,18 +270,8 @@ static void sink_input_state_change_cb(pa_sink_input *i, pa_sink_input_state_t s
     if (PA_SINK_INPUT_IS_LINKED(state) &&
         i->thread_info.state == PA_SINK_INPUT_INIT) {
         pa_log_debug("Requesting rewind due to state change.");
-        pa_sink_input_request_rewind(i, 0, FALSE, TRUE, TRUE);
+        pa_sink_input_request_rewind(i, 0, FALSE, TRUE);
     }
-}
-
-/* Called from main context */
-static pa_bool_t sink_input_may_move_to_cb(pa_sink_input *i, pa_sink *dest) {
-    struct userdata *u;
-
-    pa_sink_input_assert_ref(i);
-    pa_assert_se(u = i->userdata);
-
-    return u->sink != dest;
 }
 
 int pa__init(pa_module*m) {
@@ -302,7 +292,7 @@ int pa__init(pa_module*m) {
         goto fail;
     }
 
-    if (!(master = pa_namereg_get(m->core, pa_modargs_get_value(ma, "master", NULL), PA_NAMEREG_SINK))) {
+    if (!(master = pa_namereg_get(m->core, pa_modargs_get_value(ma, "master", NULL), PA_NAMEREG_SINK, 1))) {
         pa_log("Master sink not found");
         goto fail;
     }
@@ -354,7 +344,7 @@ int pa__init(pa_module*m) {
     pa_proplist_sets(sink_data.proplist, PA_PROP_DEVICE_MASTER_DEVICE, master->name);
     pa_proplist_sets(sink_data.proplist, PA_PROP_DEVICE_CLASS, "filter");
 
-    u->sink = pa_sink_new(m->core, &sink_data, PA_SINK_LATENCY|PA_SINK_DYNAMIC_LATENCY);
+    u->sink = pa_sink_new(m->core, &sink_data, PA_SINK_LATENCY);
     pa_sink_new_data_done(&sink_data);
 
     if (!u->sink) {
@@ -381,7 +371,7 @@ int pa__init(pa_module*m) {
     pa_sink_input_new_data_set_sample_spec(&sink_input_data, &ss);
     pa_sink_input_new_data_set_channel_map(&sink_input_data, &stream_map);
 
-    pa_sink_input_new(&u->sink_input, m->core, &sink_input_data, PA_SINK_INPUT_DONT_MOVE | (remix ? 0 : PA_SINK_INPUT_NO_REMIX));
+    u->sink_input = pa_sink_input_new(m->core, &sink_input_data, PA_SINK_INPUT_DONT_MOVE | (remix ? 0 : PA_SINK_INPUT_NO_REMIX));
     pa_sink_input_new_data_done(&sink_input_data);
 
     if (!u->sink_input)
@@ -396,7 +386,6 @@ int pa__init(pa_module*m) {
     u->sink_input->detach = sink_input_detach_cb;
     u->sink_input->kill = sink_input_kill_cb;
     u->sink_input->state_change = sink_input_state_change_cb;
-    u->sink_input->may_move_to = sink_input_may_move_to_cb;
     u->sink_input->userdata = u;
 
     pa_sink_put(u->sink);
@@ -413,15 +402,6 @@ fail:
     pa__done(m);
 
     return -1;
-}
-
-int pa__get_n_used(pa_module *m) {
-    struct userdata *u;
-
-    pa_assert(m);
-    pa_assert_se(u = m->userdata);
-
-    return pa_sink_linked_by(u->sink);
 }
 
 void pa__done(pa_module*m) {

@@ -1,0 +1,16 @@
+Index: pulseaudio-0.9.14/src/pulsecore/sink.c
+===================================================================
+--- pulseaudio-0.9.14.orig/src/pulsecore/sink.c	2009-02-04 19:19:17.000000000 -0500
++++ pulseaudio-0.9.14/src/pulsecore/sink.c	2009-02-04 19:19:24.000000000 -0500
+@@ -464,6 +464,11 @@
+     pa_sink_assert_ref(s);
+     pa_assert(PA_SINK_IS_LINKED(s->thread_info.state));
+ 
++    /* If nobody requested this and this is actually no real rewind
++     * then we can short cut this */
++    if (!s->thread_info.rewind_requested && nbytes <= 0)
++        return;
++
+     s->thread_info.rewind_nbytes = 0;
+     s->thread_info.rewind_requested = FALSE;
+ 

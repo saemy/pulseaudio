@@ -1,0 +1,28 @@
+Index: pulseaudio-0.9.14/src/pulsecore/protocol-esound.c
+===================================================================
+--- pulseaudio-0.9.14.orig/src/pulsecore/protocol-esound.c	2009-03-05 17:15:48.000000000 -0500
++++ pulseaudio-0.9.14/src/pulsecore/protocol-esound.c	2009-03-05 17:15:49.000000000 -0500
+@@ -1198,6 +1198,9 @@
+     connection *c = CONNECTION(o);
+     connection_assert_ref(c);
+ 
++    if (!c->protocol)
++        return -1;
++
+     switch (code) {
+         case CONNECTION_MESSAGE_REQUEST_DATA:
+             do_work(c);
+Index: pulseaudio-0.9.14/src/pulsecore/protocol-simple.c
+===================================================================
+--- pulseaudio-0.9.14.orig/src/pulsecore/protocol-simple.c	2009-03-05 17:12:00.000000000 -0500
++++ pulseaudio-0.9.14/src/pulsecore/protocol-simple.c	2009-03-05 17:15:49.000000000 -0500
+@@ -283,6 +283,9 @@
+     connection *c = CONNECTION(o);
+     connection_assert_ref(c);
+ 
++    if (!c->protocol)
++        return -1;
++
+     switch (code) {
+         case CONNECTION_MESSAGE_REQUEST_DATA:
+             do_work(c);

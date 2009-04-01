@@ -5,7 +5,7 @@
 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2.1 of the License,
+  by the Free Software Foundation; either version 2 of the License,
   or (at your option) any later version.
 
   PulseAudio is distributed in the hope that it will be useful, but
@@ -163,7 +163,7 @@ static int jack_process(jack_nframes_t nframes, void *arg) {
     pa_assert(u);
 
     for (c = 0; c < u->channels; c++)
-        pa_assert_se(buffer[c] = jack_port_get_buffer(u->port[c], nframes));
+        pa_assert(buffer[c] = jack_port_get_buffer(u->port[c], nframes));
 
     /* We interleave the data and pass it on to the other RT thread */
 
@@ -270,10 +270,12 @@ int pa__init(pa_module*m) {
     server_name = pa_modargs_get_value(ma, "server_name", NULL);
     client_name = pa_modargs_get_value(ma, "client_name", "PulseAudio JACK Source");
 
-    m->userdata = u = pa_xnew0(struct userdata, 1);
+    u = pa_xnew0(struct userdata, 1);
     u->core = m->core;
     u->module = m;
+    m->userdata = u;
     u->saved_frame_time_valid = FALSE;
+
     u->rtpoll = pa_rtpoll_new();
     pa_thread_mq_init(&u->thread_mq, m->core->mainloop, u->rtpoll);
 
@@ -294,18 +296,12 @@ int pa__init(pa_module*m) {
     if (!channels)
         channels = m->core->default_sample_spec.channels;
 
-    if (pa_modargs_get_value_u32(ma, "channels", &channels) < 0 ||
-        channels <= 0 ||
-        channels >= PA_CHANNELS_MAX) {
+    if (pa_modargs_get_value_u32(ma, "channels", &channels) < 0 || channels <= 0 || channels >= PA_CHANNELS_MAX) {
         pa_log("failed to parse channels= argument.");
         goto fail;
     }
 
-    if (channels == m->core->default_channel_map.channels)
-        map = m->core->default_channel_map;
-    else
-        pa_channel_map_init_extend(&map, channels, PA_CHANNEL_MAP_ALSA);
-
+    pa_channel_map_init_extend(&map, channels, PA_CHANNEL_MAP_ALSA);
     if (pa_modargs_get_channel_map(ma, NULL, &map) < 0 || map.channels != channels) {
         pa_log("failed to parse channel_map= argument.");
         goto fail;
@@ -370,14 +366,14 @@ int pa__init(pa_module*m) {
         for (i = 0, p = ports; i < ss.channels; i++, p++) {
 
             if (!*p) {
-                pa_log("Not enough physical output ports, leaving unconnected.");
+                pa_log("not enough physical output ports, leaving unconnected.");
                 break;
             }
 
-            pa_log_info("Connecting %s to %s", jack_port_name(u->port[i]), *p);
+            pa_log_info("connecting %s to %s", jack_port_name(u->port[i]), *p);
 
             if (jack_connect(u->client, *p, jack_port_name(u->port[i]))) {
-                pa_log("Failed to connect %s to %s, leaving unconnected.", jack_port_name(u->port[i]), *p);
+                pa_log("failed to connect %s to %s, leaving unconnected.", jack_port_name(u->port[i]), *p);
                 break;
             }
         }
@@ -400,15 +396,6 @@ fail:
     pa__done(m);
 
     return -1;
-}
-
-int pa__get_n_used(pa_module *m) {
-    struct userdata *u;
-
-    pa_assert(m);
-    pa_assert_se(u = m->userdata);
-
-    return pa_source_linked_by(u->source);
 }
 
 void pa__done(pa_module*m) {
