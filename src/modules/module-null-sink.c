@@ -5,7 +5,7 @@
 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2 of the License,
+  by the Free Software Foundation; either version 2.1 of the License,
   or (at your option) any later version.
 
   PulseAudio is distributed in the hope that it will be useful, but
@@ -62,7 +62,7 @@ PA_MODULE_USAGE(
         "description=<description for the sink>");
 
 #define DEFAULT_SINK_NAME "null"
-#define MAX_LATENCY_USEC (PA_USEC_PER_SEC * 2)
+#define BLOCK_USEC (PA_USEC_PER_SEC * 2)
 
 struct userdata {
     pa_core *core;
@@ -253,6 +253,7 @@ int pa__init(pa_module*m) {
     pa_channel_map map;
     pa_modargs *ma = NULL;
     pa_sink_new_data data;
+    size_t nbytes;
 
     pa_assert(m);
 
@@ -262,6 +263,7 @@ int pa__init(pa_module*m) {
     }
 
     ss = m->core->default_sample_spec;
+    map = m->core->default_channel_map;
     if (pa_modargs_get_sample_spec_and_channel_map(ma, &ss, &map, PA_CHANNEL_MAP_DEFAULT) < 0) {
         pa_log("Invalid sample format specification or channel map");
         goto fail;
@@ -297,12 +299,10 @@ int pa__init(pa_module*m) {
     pa_sink_set_asyncmsgq(u->sink, u->thread_mq.inq);
     pa_sink_set_rtpoll(u->sink, u->rtpoll);
 
-    pa_sink_set_latency_range(u->sink, (pa_usec_t) -1, MAX_LATENCY_USEC);
-    u->block_usec = u->sink->thread_info.max_latency;
-
-    u->sink->thread_info.max_rewind =
-        u->sink->thread_info.max_request =
-        pa_usec_to_bytes(u->block_usec, &u->sink->sample_spec);
+    u->block_usec = BLOCK_USEC;
+    nbytes = pa_usec_to_bytes(u->block_usec, &u->sink->sample_spec);
+    pa_sink_set_max_rewind(u->sink, nbytes);
+    pa_sink_set_max_request(u->sink, nbytes);
 
     if (!(u->thread = pa_thread_new(thread_func, u))) {
         pa_log("Failed to create thread.");
@@ -322,6 +322,15 @@ fail:
     pa__done(m);
 
     return -1;
+}
+
+int pa__get_n_used(pa_module *m) {
+    struct userdata *u;
+
+    pa_assert(m);
+    pa_assert_se(u = m->userdata);
+
+    return pa_sink_linked_by(u->sink);
 }
 
 void pa__done(pa_module*m) {

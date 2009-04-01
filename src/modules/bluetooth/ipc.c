@@ -2,7 +2,7 @@
  *
  *  BlueZ - Bluetooth protocol stack for Linux
  *
- *  Copyright (C) 2004-2008  Marcel Holtmann <marcel@holtmann.org>
+ *  Copyright (C) 2004-2009  Marcel Holtmann <marcel@holtmann.org>
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -35,6 +35,7 @@ static const char *strtypes[] = {
 /* This table contains the string representation for messages names */
 static const char *strnames[] = {
 	"BT_GET_CAPABILITIES",
+	"BT_OPEN",
 	"BT_SET_CONFIGURATION",
 	"BT_NEW_STREAM",
 	"BT_START_STREAM",

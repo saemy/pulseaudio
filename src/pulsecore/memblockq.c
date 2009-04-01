@@ -5,7 +5,7 @@
 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2 of the License,
+  by the Free Software Foundation; either version 2.1 of the License,
   or (at your option) any later version.
 
   PulseAudio is distributed in the hope that it will be useful, but
@@ -849,6 +849,26 @@ void pa_memblockq_set_maxrewind(pa_memblockq *bq, size_t maxrewind) {
     pa_assert(bq);
 
     bq->maxrewind = (maxrewind/bq->base)*bq->base;
+}
+
+void pa_memblockq_apply_attr(pa_memblockq *bq, const pa_buffer_attr *a) {
+    pa_assert(bq);
+    pa_assert(a);
+
+    pa_memblockq_set_maxlength(bq, a->maxlength);
+    pa_memblockq_set_tlength(bq, a->tlength);
+    pa_memblockq_set_prebuf(bq, a->prebuf);
+    pa_memblockq_set_minreq(bq, a->minreq);
+}
+
+void pa_memblockq_get_attr(pa_memblockq *bq, pa_buffer_attr *a) {
+    pa_assert(bq);
+    pa_assert(a);
+
+    a->maxlength = (uint32_t) pa_memblockq_get_maxlength(bq);
+    a->tlength = (uint32_t) pa_memblockq_get_tlength(bq);
+    a->prebuf = (uint32_t) pa_memblockq_get_prebuf(bq);
+    a->minreq = (uint32_t) pa_memblockq_get_minreq(bq);
 }
 
 int pa_memblockq_splice(pa_memblockq *bq, pa_memblockq *source) {
