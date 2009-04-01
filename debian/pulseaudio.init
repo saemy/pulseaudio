@@ -6,7 +6,7 @@
 # Should-Start:      hal
 # Should-Stop:       hal
 # Default-Start:     2 3 4 5
-# Default-Stop:      1
+# Default-Stop:      0 1 6
 # Short-Description: Start the PulseAudio sound server
 # Description:       System mode startup script for
 #                    the PulseAudio sound server.
@@ -45,15 +45,13 @@ pulseaudio_start () {
 pulseaudio_stop () {
 	local status
 	log_daemon_msg "Stopping system PulseAudio Daemon"
-	start-stop-daemon -p $PIDFILE --stop --retry TERM/3 --oknodo || status=$?
+	start-stop-daemon -p $PIDFILE --stop --retry TERM/3 || status=$?
 	case "$status" in
 		1)
 			log_warning_msg "PulseAudio Daemon is not running"
 			;;
 		2)
 			log_warning_msg "PulseAudio Daemon is still running..."
-			;;
-		*)
 			;;
 	esac
 	log_end_msg $status

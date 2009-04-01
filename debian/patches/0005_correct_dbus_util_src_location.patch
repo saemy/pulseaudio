@@ -1,0 +1,12 @@
+diff -urN pulseaudio-0.9.15~test7/po/POTFILES.in pulseaudio-0.9.15~test7.new/po/POTFILES.in
+--- pulseaudio-0.9.15~test7/po/POTFILES.in	2009-04-01 12:50:48.000000000 +1100
++++ pulseaudio-0.9.15~test7.new/po/POTFILES.in	2009-04-01 13:02:34.000000000 +1100
+@@ -5,7 +5,7 @@
+ src/modules/alsa/module-alsa-source.c
+ src/modules/module-device-restore.c
+ src/modules/module-match.c
+-src/modules/dbus-util.c
++src/pulsecore/dbus-util.c
+ src/modules/module-console-kit.c
+ src/modules/oss/module-oss.c
+ src/modules/oss/oss-util.c

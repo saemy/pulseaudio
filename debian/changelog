@@ -1,187 +1,107 @@
-pulseaudio (0.9.14-0ubuntu15) jaunty; urgency=low
+pulseaudio (0.9.15~test7-0ubuntu1~ppa1) jaunty; urgency=low
 
-  [ Daniel T Chen ]
-  * README.Debian:
-    pulse-session:
-    pulseaudio.default: Clarify function of system-wide check, and
-    make /usr/bin/pulse-session do the right thing if system-wide
-    is enabled (LP: #286966)
+  * New upstream test release.
 
-  [ Luke Yelavich ]
-  * Make the a11y no start special case per user, not system wide.
-  * Also make the esd wrapper script honour system wide pulseaudio.
+ -- Luke Yelavich <themuso@ubuntu.com>  Wed, 01 Apr 2009 12:20:28 +1100
 
- -- Luke Yelavich <themuso@ubuntu.com>  Mon, 30 Mar 2009 11:33:33 +1100
+pulseaudio (0.9.15~test6-0ubuntu1~ppa2) jaunty; urgency=low
 
-pulseaudio (0.9.14-0ubuntu14) jaunty; urgency=low
+  * Add libudev-dev as a build dependency.
 
-  * No-change rebuild to fix lpia shared library dependencies.
+ -- Luke Yelavich <themuso@ubuntu.com>  Wed, 01 Apr 2009 12:07:52 +1100
 
- -- Colin Watson <cjwatson@ubuntu.com>  Thu, 19 Mar 2009 13:57:35 +0000
+pulseaudio (0.9.15~test6-0ubuntu1~ppa1) jaunty; urgency=low
 
-pulseaudio (0.9.14-0ubuntu13) jaunty; urgency=low
+  * New upstream test release.
+  * Generate .po template on build.
+  * Change init script start/stop symantics, taken from official jaunty package.
+  * Add -O3 CFLAGS, taken from official Jaunty package.
+  * Dropped autospawn patch, as its enabled by default anyway.
 
-  * debian/rules: Generate a PO template on build. Thanks to Timo Jyrinki for
-    the patch! (LP: #342159)
+ -- Luke Yelavich <themuso@ubuntu.com>  Wed, 01 Apr 2009 11:49:43 +1100
 
- -- Martin Pitt <martin.pitt@ubuntu.com>  Mon, 16 Mar 2009 10:14:19 +0100
+pulseaudio (0.9.15~test5-0ubuntu1~ppa2) jaunty; urgency=low
 
-pulseaudio (0.9.14-0ubuntu12) jaunty; urgency=low
+  * add libbluetooth-util.so, thanks to Ernst Persson for the pointer
 
-  * 0091_workaround_alsa_horkage.patch:
-    - Lower severity of logging level to prevent DoS on syslog
-      LP: #320875, #343254
-      LP #330814
+ -- Luke Yelavich <themuso@ubuntu.com>  Mon, 09 Mar 2009 09:39:13 +1100
 
- -- Daniel T Chen <crimsun@ubuntu.com>  Sat, 14 Mar 2009 22:39:03 -0400
+pulseaudio (0.9.15~test5-0ubuntu1~ppa1) jaunty; urgency=low
 
-pulseaudio (0.9.14-0ubuntu11) jaunty; urgency=low
+  * New upstream test release
+  * add RAOP/AirTunes support, thanks to Christopher L Conway
+    <cconway@cs.nyu.edu> for the patch
 
-  [ Daniel T Chen ]
-  * Reenable 0030_set_tsched0.patch, which re-disables glitch-free;
-    too many users are reporting regressions and audio aberrations.
-  * Adjust 0003_change_resample_and_buffering.patch to use linear
-    resampler to work better with lack of PREEMPT in jaunty's
-    -generic kernel config (LP: #207135, #322250, #332761, #335955,
-    LP: #336965).
-  * Last upload, specifically 0091_workaround_alsa_horkage, fixes:
-    LP: #235990, #237443, #279847, #317997, #323185, #330814,
-    LP: #334874.
-  * sudo -H change in ubuntu6 fixed LP: #312505.
-  * Closing old bugs fixed in 0.9.11+: LP: #187963, #193520, #211052.
-  * Refresh 0006_regen-autotools.patch.
-  * Add 0043_load_sample_dir_lazy.patch to cache
-    /usr/share/sounds/ubuntu/stereo/* in default.pa.
-  * debian/:
-    - control: Build against libcap2-dev (LP: #339448);
-    - copyright: Update copyright from Debian's 0.9.14-2;
-    - rules: Add DEB_OPT_FLAG = -O3 as per recommendation from
-      pulseaudio-discuss/2007-December/001017.html.
-  * Refresh fixes from git HEAD:
-    - 0038_handle_errno_properly.patch,
-    - 0091_workaround_alsa_horkage.patch,
-    - 0092_fix_null_pointer_access.patch.
+ -- Luke Yelavich <themuso@ubuntu.com>  Fri, 06 Mar 2009 10:34:06 +1100
 
-  [ Luke Yelavich ]
-  * Add a special case to prevent Pulseaudio from being started when the
-    blindness accessibility profile has been enabled from the Ubuntu live CD,
-    and for an accessibility install. Unfortunately Pulseaudio and speech do
-    not currently work very well with each other, and its too late in
-    the cycle to solve this problem any other way.
+pulseaudio (0.9.15~test3-0ubuntu1~ppa3) jaunty; urgency=low
 
- -- Luke Yelavich <themuso@ubuntu.com>  Tue, 10 Mar 2009 09:00:40 +1100
+  * 0006_fix_bluetooth_modules.patch: Fix to allow bluetooth modules to be
+    loaded. This is similar breakage to the fix for the alsa modules in the
+    previous upload.
+  * Adjust autotools rebuild patch accordingly.
 
-pulseaudio (0.9.14-0ubuntu10) jaunty; urgency=low
+ -- Luke Yelavich <themuso@ubuntu.com>  Fri, 27 Feb 2009 10:28:11 +1100
 
-  [ Daniel T Chen ]
-  * 0030_set_tsched0.patch: Disable this patch, which has the effect of
-    reenabling glitch-free. Depends on 0091_workaround_alsa_horkage.
-  * 0091_workaround_alsa_horkage.patch: Rework ALSA delay handling.
+pulseaudio (0.9.15~test3-0ubuntu1~ppa2) jaunty; urgency=low
 
-  [ Luke Yelavich ]
-  * debian/control: re-add the vcs bzr URL for Ubuntu's pulseaudio packaging
-    as it got lost somewhere along the way
+  * 0005_fix_module_alsa_card.patch: Patch to fix a weird file not found error
+    with module-alsa-card
+  * 0006_regen_autotools.patch: Rebuild autotools related files dueo to above
+    patch
 
- -- Luke Yelavich <themuso@ubuntu.com>  Mon, 02 Mar 2009 10:40:11 +1100
+ -- Luke Yelavich <themuso@ubuntu.com>  Thu, 26 Feb 2009 13:02:06 +1100
 
-pulseaudio (0.9.14-0ubuntu9) jaunty; urgency=low
+pulseaudio (0.9.15~test3-0ubuntu1~ppa1) jaunty; urgency=low
 
-  * PulseAudio does not need to be started before gdm, especially since we use
-    user sessions by default.
+  * New upstream release
+  * enable auto spawn as per the official PulseAudio jaunty package
+  * edd libxtst-dev and libxi-dev as build dependencies
+  * bumped libasound2-dev requirement to 1.0.19
 
- -- Scott James Remnant <scott@ubuntu.com>  Fri, 27 Feb 2009 01:27:20 +0000
+ -- Luke Yelavich <themuso@ubuntu.com>  Wed, 25 Feb 2009 12:47:23 +1100
 
-pulseaudio (0.9.14-0ubuntu8) jaunty; urgency=low
+pulseaudio (0.9.15~test2-0ubuntu1~ppa1) jaunty; urgency=low
 
-  [ Daniel T Chen ]
-  * Backport fixes from git HEAD:
-    - 0041_clarify_cmdline_opts.patch,
-    - 0042_fix_selem_init.patch
+  * New upstream release
+  * Re-enable position event sounds module
+  * Add new modules to pulseaudio package.
 
-  [ Luke Yelavich ]
-  * 0001_more_translatable_strings.patch: Make the .desktop file and PolicyKit
-    files translatable, thanks to Gabor Kelemen <kelemeng@gnome.hu for this
-    work (LP: #331831)
-  * 0006_regen-autotools.patch: re-create to take into account changes needed
-    for the above mentioned translation additions
+ -- Luke Yelavich <themuso@ubuntu.com>  Fri, 13 Feb 2009 09:13:38 +1100
 
- -- Luke Yelavich <themuso@ubuntu.com>  Tue, 24 Feb 2009 13:46:25 +1100
+pulseaudio (0.9.15~test1-0ubuntu1~ppa4) jaunty; urgency=low
 
-pulseaudio (0.9.14-0ubuntu7) jaunty; urgency=low
+  * debian/pulseaudio.install: Add missing module-alsa-card.so
+    and module-card-restore.so
 
-  [ Luke Yelavich ]
-  * 0001-Fix-library-search-path-to-include-lib-and-usr-lib.patch: Dropped,
-    no longer applicable, as evident in Debian's pulseaudio git branch.
+ -- Daniel T Chen <crimsun@ubuntu.com>  Fri, 06 Feb 2009 19:59:00 -0500
 
-  [ Daniel T Chen ]
-  * 0004_enable_autospawn.patch: Renamed from .."disable".. for clarity,
-    and actually apply it.
-  * 0012_clarify_driver_error_redirect_to_alsa_devs.patch: Clarify
-    logging message for 'linux' source package and ALSA developers
-    instead of PulseAudio developers in alsa-util.c, too.
-    - This patch can be tweaked, since upstream has now applied it to
-      git HEAD
-  * Backport fixes from git HEAD:
-    - 0035_fix_module-detect_access.patch,
-    - 0036_increase_memblock_imports.patch,
-    - 0037_fill_silence_fail_import_memblock.patch,
-    - 0038_handle_errno_properly.patch,
-    - 0039_add_validity_checks.patch,
-    - 0040_legacy_fixes.patch
+pulseaudio (0.9.15~test1-0ubuntu1~ppa3) jaunty; urgency=low
 
- -- Daniel T Chen <crimsun@ubuntu.com>  Thu, 19 Feb 2009 19:34:03 -0500
+  * Fix conflicts/replaces screwup from last upload, and libpulsecore0 ->
+    libpulsecore9
 
-pulseaudio (0.9.14-0ubuntu6) jaunty; urgency=low
+ -- Luke Yelavich <themuso@ubuntu.com>  Fri, 06 Feb 2009 17:18:35 +0100
 
-  * 0004_disable_autospawn.patch: Disable this patch. Doing so
-    allows the daemon to spawn if not already running, which
-    works around LP: #191027, #204272
-  * 0012_clarify_driver_error_redirect_to_alsa_devs.patch:
-    - Only log POLL* being set if tsched is used so that syslog
-      isn't filled with innocuous messages when we set tsched=0
-      (see 0030 below) (LP: #323712),
-    - Hint 'linux' source package instead of 'alsa-driver' for
-      Launchpad bug reports,
-    - The debug-specific portion is only applicable to 0.9.14;
-      0.9.15 enables a rate limiting module by default to work
-      around this (and other) issues
-  * 0029_fix_suspend_on_idle_null_race.patch: Handle sink case,
-    too
-  * 0030_set_tsched0.patch: Work around a shedload of (driver)
-    bugs by falling back to interrupt-based buffer semantics
-    (LP: #190754, #292880, #295519, #298494, #301755, #302964,
-     LP: #319118, #323976, #324103, #326205, #326864)
-  * Backport fixes from git HEAD:
-    - 0031_fix_6chan_map.patch,
-    - 0032_reinit_proplist.patch,
-    - 0033_fix_pa-gcc-packedmalloc.patch,
-    - 0034_bt_fixes.patch
-  * Make invoking the stop target in the initscript not fail an
-    upgrade (LP: #317921)
-  * Previous upload (0.9.14-0ubuntu3) fixed LP: #321357
-  * 01PulseAudio: use sudo -H to ensure that $HOME is, in fact,
-    the user's when invoking pacmd for suspend/resume
+pulseaudio (0.9.15~test1-0ubuntu1~ppa2) jaunty; urgency=low
 
- -- Daniel T Chen <crimsun@ubuntu.com>  Sun, 15 Feb 2009 02:35:26 -0500
+  * Add conflicts/replaces for libpulse0
 
-pulseaudio (0.9.14-0ubuntu5) jaunty; urgency=low
+ -- Luke Yelavich <themuso@ubuntu.com>  Fri, 06 Feb 2009 16:30:02 +0100
 
-  * Add fixes from git HEAD:
-    - 0028_fix_uninit_rtp_resamp.patch,
-    - 0029_fix_suspend_on_idle_null_race.patch
+pulseaudio (0.9.15~test1-0ubuntu1~ppa1) jaunty; urgency=low
 
- -- Daniel T Chen <crimsun@ubuntu.com>  Thu, 12 Feb 2009 18:28:42 -0500
+  * New upstream release (testing only)
+    - Dropped patches that were originally taken from git head
+    - Disabled position event sounds module. Upstream has stated
+      that it is buggy, and should be disabled. A fix should be in
+      the next release
+  * Get rid of the libpulsecore package, since it no longer exists as
+    a shared library with a soname
+  * Put the new shared object file for libpulsecore in the pulseaudio package
+  * Add the libpulsecommon shared object file to libpulse0
 
-pulseaudio (0.9.14-0ubuntu4) jaunty; urgency=low
-
-  * Add fixes from git HEAD:
-    - 0023_work_around_dlsym_retval_mistyping.patch,
-    - 0024_fix_sink_source_calls_in_suspended.patch,
-    - 0025_shortcut_pa-sink-process-rewind.patch,
-    - 0026_reset_rewind-requested_when_suspend.patch,
-    - 0027_fix_piped_pacmd.patch
-
- -- Daniel T Chen <crimsun@ubuntu.com>  Wed, 04 Feb 2009 19:36:09 -0500
+ -- Luke Yelavich <themuso@ubuntu.com>  Fri, 06 Feb 2009 16:29:57 +0100
 
 pulseaudio (0.9.14-0ubuntu3) jaunty; urgency=low
 

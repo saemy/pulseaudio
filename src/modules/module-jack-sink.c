@@ -5,7 +5,7 @@
 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2 of the License,
+  by the Free Software Foundation; either version 2.1 of the License,
   or (at your option) any later version.
 
   PulseAudio is distributed in the hope that it will be useful, but
@@ -112,6 +112,7 @@ static const char* const valid_modargs[] = {
 
 enum {
     SINK_MESSAGE_RENDER = PA_SINK_MESSAGE_MAX,
+    SINK_MESSAGE_BUFFER_SIZE,
     SINK_MESSAGE_ON_SHUTDOWN
 };
 
@@ -158,6 +159,10 @@ static int sink_process_msg(pa_msgobject *o, int code, void *data, int64_t offse
 
             return 0;
 
+        case SINK_MESSAGE_BUFFER_SIZE:
+            pa_sink_set_max_request_within_thread(u->sink, (size_t) offset * pa_frame_size(&u->sink->sample_spec));
+            return 0;
+
         case SINK_MESSAGE_ON_SHUTDOWN:
             pa_asyncmsgq_post(u->thread_mq.outq, PA_MSGOBJECT(u->core), PA_CORE_MESSAGE_UNLOAD_MODULE, u->module, 0, NULL, NULL);
             return 0;
@@ -184,6 +189,7 @@ static int sink_process_msg(pa_msgobject *o, int code, void *data, int64_t offse
 
             return 0;
         }
+
     }
 
     return pa_sink_process_msg(o, code, data, offset, memchunk);
@@ -263,8 +269,16 @@ static void jack_init(void *arg) {
 static void jack_shutdown(void* arg) {
     struct userdata *u = arg;
 
-    pa_log_info("JACK thread shutting down..");
+    pa_log_info("JACK thread shutting down.");
     pa_asyncmsgq_post(u->jack_msgq, PA_MSGOBJECT(u->sink), SINK_MESSAGE_ON_SHUTDOWN, NULL, 0, NULL, NULL);
+}
+
+static int jack_buffer_size(jack_nframes_t nframes, void *arg) {
+    struct userdata *u = arg;
+
+    pa_log_info("JACK buffer size changed.");
+    pa_asyncmsgq_post(u->jack_msgq, PA_MSGOBJECT(u->sink), SINK_MESSAGE_BUFFER_SIZE, NULL, nframes, NULL, NULL);
+    return 0;
 }
 
 int pa__init(pa_module*m) {
@@ -297,10 +311,9 @@ int pa__init(pa_module*m) {
     server_name = pa_modargs_get_value(ma, "server_name", NULL);
     client_name = pa_modargs_get_value(ma, "client_name", "PulseAudio JACK Sink");
 
-    u = pa_xnew0(struct userdata, 1);
+    m->userdata = u = pa_xnew0(struct userdata, 1);
     u->core = m->core;
     u->module = m;
-    m->userdata = u;
     u->saved_frame_time_valid = FALSE;
     u->rtpoll = pa_rtpoll_new();
     pa_thread_mq_init(&u->thread_mq, m->core->mainloop, u->rtpoll);
@@ -329,12 +342,18 @@ int pa__init(pa_module*m) {
     if (!channels)
         channels = m->core->default_sample_spec.channels;
 
-    if (pa_modargs_get_value_u32(ma, "channels", &channels) < 0 || channels <= 0 || channels >= PA_CHANNELS_MAX) {
+    if (pa_modargs_get_value_u32(ma, "channels", &channels) < 0 ||
+        channels <= 0 ||
+        channels > PA_CHANNELS_MAX) {
         pa_log("Failed to parse channels= argument.");
         goto fail;
     }
 
-    pa_channel_map_init_extend(&map, channels, PA_CHANNEL_MAP_ALSA);
+    if (channels == m->core->default_channel_map.channels)
+        map = m->core->default_channel_map;
+    else
+        pa_channel_map_init_extend(&map, channels, PA_CHANNEL_MAP_ALSA);
+
     if (pa_modargs_get_channel_map(ma, NULL, &map) < 0 || map.channels != channels) {
         pa_log("Failed to parse channel_map= argument.");
         goto fail;
@@ -380,10 +399,12 @@ int pa__init(pa_module*m) {
 
     pa_sink_set_asyncmsgq(u->sink, u->thread_mq.inq);
     pa_sink_set_rtpoll(u->sink, u->rtpoll);
+    pa_sink_set_max_request(u->sink, jack_get_buffer_size(u->client) * pa_frame_size(&u->sink->sample_spec));
 
     jack_set_process_callback(u->client, jack_process, u);
     jack_on_shutdown(u->client, jack_shutdown, u);
     jack_set_thread_init_callback(u->client, jack_init, u);
+    jack_set_buffer_size_callback(u->client, jack_buffer_size, u);
 
     if (!(u->thread = pa_thread_new(thread_func, u))) {
         pa_log("Failed to create thread.");
@@ -428,6 +449,15 @@ fail:
     pa__done(m);
 
     return -1;
+}
+
+int pa__get_n_used(pa_module *m) {
+    struct userdata *u;
+
+    pa_assert(m);
+    pa_assert_se(u = m->userdata);
+
+    return pa_sink_linked_by(u->sink);
 }
 
 void pa__done(pa_module*m) {

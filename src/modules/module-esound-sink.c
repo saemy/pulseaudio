@@ -5,7 +5,7 @@
 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2 of the License,
+  by the Free Software Foundation; either version 2.1 of the License,
   or (at your option) any later version.
 
   PulseAudio is distributed in the hope that it will be useful, but
@@ -156,6 +156,7 @@ static int sink_process_msg(pa_msgobject *o, int code, void *data, int64_t offse
 
                 case PA_SINK_UNLINKED:
                 case PA_SINK_INIT:
+                case PA_SINK_INVALID_STATE:
                     ;
             }
 
@@ -168,7 +169,7 @@ static int sink_process_msg(pa_msgobject *o, int code, void *data, int64_t offse
             w = pa_bytes_to_usec((uint64_t) u->offset + u->memchunk.length, &u->sink->sample_spec);
 
             *((pa_usec_t*) data) = w > r ? w - r : 0;
-            break;
+            return 0;
         }
 
         case SINK_MESSAGE_PASS_SOCKET: {
@@ -353,6 +354,9 @@ static int do_write(struct userdata *u) {
     }
 
     if (!u->write_data && u->state == STATE_PREPARE) {
+        int so_sndbuf = 0;
+        socklen_t sl = sizeof(int);
+
         /* OK, we're done with sending all control data we need to, so
          * let's hand the socket over to the IO thread now */
 
@@ -364,6 +368,13 @@ static int do_write(struct userdata *u) {
         u->io = NULL;
 
         pa_make_tcp_socket_low_delay(u->fd);
+
+        if (getsockopt(u->fd, SOL_SOCKET, SO_SNDBUF, &so_sndbuf, &sl) < 0)
+            pa_log_warn("getsockopt(SO_SNDBUF) failed: %s", pa_cstrerror(errno));
+        else {
+            pa_log_debug("SO_SNDBUF is %zu.", (size_t) so_sndbuf);
+            pa_sink_set_max_request(u->sink, PA_MAX((size_t) so_sndbuf, u->block_size));
+        }
 
         pa_log_debug("Connection authenticated, handing fd to IO thread...");
 
@@ -565,7 +576,8 @@ int pa__init(pa_module*m) {
     pa_sink_new_data_set_name(&data, pa_modargs_get_value(ma, "sink_name", DEFAULT_SINK_NAME));
     pa_sink_new_data_set_sample_spec(&data, &ss);
     pa_proplist_sets(data.proplist, PA_PROP_DEVICE_STRING, espeaker);
-    pa_proplist_setf(data.proplist, PA_PROP_DEVICE_DESCRIPTION, "Esound sink '%s'", espeaker);
+    pa_proplist_sets(data.proplist, PA_PROP_DEVICE_API, "esd");
+    pa_proplist_setf(data.proplist, PA_PROP_DEVICE_DESCRIPTION, "EsounD Output on %s", espeaker);
 
     u->sink = pa_sink_new(m->core, &data, PA_SINK_LATENCY|PA_SINK_NETWORK);
     pa_sink_new_data_done(&data);
@@ -619,6 +631,15 @@ fail:
     pa__done(m);
 
     return -1;
+}
+
+int pa__get_n_used(pa_module *m) {
+    struct userdata *u;
+
+    pa_assert(m);
+    pa_assert_se(u = m->userdata);
+
+    return pa_sink_linked_by(u->sink);
 }
 
 void pa__done(pa_module*m) {

@@ -6,7 +6,7 @@
 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2 of the License,
+  by the Free Software Foundation; either version 2.1 of the License,
   or (at your option) any later version.
 
   PulseAudio is distributed in the hope that it will be useful, but
@@ -74,6 +74,7 @@
 #include "internal.h"
 
 #include "client-conf.h"
+#include "fork-detect.h"
 
 #ifdef HAVE_X11
 #include "client-conf-x11.h"
@@ -95,9 +96,15 @@ static const pa_pdispatch_cb_t command_table[PA_COMMAND_MAX] = {
     [PA_COMMAND_RECORD_STREAM_SUSPENDED] = pa_command_stream_suspended,
     [PA_COMMAND_STARTED] = pa_command_stream_started,
     [PA_COMMAND_SUBSCRIBE_EVENT] = pa_command_subscribe_event,
-    [PA_COMMAND_EXTENSION] = pa_command_extension
+    [PA_COMMAND_EXTENSION] = pa_command_extension,
+    [PA_COMMAND_PLAYBACK_STREAM_EVENT] = pa_command_stream_event,
+    [PA_COMMAND_RECORD_STREAM_EVENT] = pa_command_stream_event,
+    [PA_COMMAND_CLIENT_EVENT] = pa_command_client_event,
+    [PA_COMMAND_PLAYBACK_BUFFER_ATTR_CHANGED] = pa_command_stream_buffer_attr,
+    [PA_COMMAND_RECORD_BUFFER_ATTR_CHANGED] = pa_command_stream_buffer_attr
 };
 static void context_free(pa_context *c);
+static DBusHandlerResult filter_cb(DBusConnection *bus, DBusMessage *message, void *userdata);
 
 pa_context *pa_context_new(pa_mainloop_api *mainloop, const char *name) {
     return pa_context_new_with_proplist(mainloop, name, NULL);
@@ -112,6 +119,9 @@ static void reset_callbacks(pa_context *c) {
     c->subscribe_callback = NULL;
     c->subscribe_userdata = NULL;
 
+    c->event_callback = NULL;
+    c->event_userdata = NULL;
+
     c->ext_stream_restore.callback = NULL;
     c->ext_stream_restore.userdata = NULL;
 }
@@ -121,10 +131,10 @@ pa_context *pa_context_new_with_proplist(pa_mainloop_api *mainloop, const char *
 
     pa_assert(mainloop);
 
-    pa_init_i18n();
-
-    if (!name && !pa_proplist_contains(p, PA_PROP_APPLICATION_NAME))
+    if (pa_detect_fork())
         return NULL;
+
+    pa_init_i18n();
 
     c = pa_xnew(pa_context, 1);
     PA_REFCNT_INIT(c);
@@ -134,6 +144,7 @@ pa_context *pa_context_new_with_proplist(pa_mainloop_api *mainloop, const char *
     if (name)
         pa_proplist_sets(c->proplist, PA_PROP_APPLICATION_NAME, name);
 
+    c->system_bus = c->session_bus = NULL;
     c->mainloop = mainloop;
     c->client = NULL;
     c->pstream = NULL;
@@ -158,6 +169,8 @@ pa_context *pa_context_new_with_proplist(pa_mainloop_api *mainloop, const char *
 
     c->do_shm = FALSE;
 
+    c->server_specified = FALSE;
+    c->no_fail = FALSE;
     c->do_autospawn = FALSE;
     memset(&c->spawn_api, 0, sizeof(c->spawn_api));
 
@@ -227,6 +240,16 @@ static void context_free(pa_context *c) {
     pa_assert(c);
 
     context_unlink(c);
+
+    if (c->system_bus) {
+        dbus_connection_remove_filter(pa_dbus_wrap_connection_get(c->system_bus), filter_cb, c);
+        pa_dbus_wrap_connection_free(c->system_bus);
+    }
+
+    if (c->session_bus) {
+        dbus_connection_remove_filter(pa_dbus_wrap_connection_get(c->session_bus), filter_cb, c);
+        pa_dbus_wrap_connection_free(c->session_bus);
+    }
 
     if (c->record_streams)
         pa_dynarray_free(c->record_streams, NULL, NULL);
@@ -332,8 +355,7 @@ static void pstream_memblock_callback(pa_pstream *p, uint32_t channel, int64_t o
 
     pa_assert(p);
     pa_assert(chunk);
-    pa_assert(chunk->memblock);
-    pa_assert(chunk->length);
+    pa_assert(chunk->length > 0);
     pa_assert(c);
     pa_assert(PA_REFCNT_VALUE(c) >= 1);
 
@@ -341,11 +363,11 @@ static void pstream_memblock_callback(pa_pstream *p, uint32_t channel, int64_t o
 
     if ((s = pa_dynarray_get(c->record_streams, channel))) {
 
-        pa_assert(seek == PA_SEEK_RELATIVE);
-        pa_assert(offset == 0);
-
-        pa_memblockq_seek(s->record_memblockq, offset, seek);
-        pa_memblockq_push_align(s->record_memblockq, chunk);
+        if (chunk->memblock) {
+            pa_memblockq_seek(s->record_memblockq, offset, seek);
+            pa_memblockq_push_align(s->record_memblockq, chunk);
+        } else
+            pa_memblockq_seek(s->record_memblockq, offset+chunk->length, seek);
 
         if (s->read_callback) {
             size_t l;
@@ -366,7 +388,8 @@ int pa_context_handle_error(pa_context *c, uint32_t command, pa_tagstruct *t, pa
     if (command == PA_COMMAND_ERROR) {
         pa_assert(t);
 
-        if (pa_tagstruct_getu32(t, &err) < 0) {
+        if (pa_tagstruct_getu32(t, &err) < 0 ||
+            !pa_tagstruct_eof(t)) {
             pa_context_fail(c, PA_ERR_PROTOCOL);
             return -1;
         }
@@ -551,6 +574,7 @@ static void setup_context(pa_context *c, pa_iochannel *io) {
     pa_context_unref(c);
 }
 
+#ifdef ENABLE_LEGACY_RUNTIME_DIR
 static char *get_old_legacy_runtime_dir(void) {
     char *p, u[128];
     struct stat st;
@@ -594,10 +618,12 @@ static char *get_very_old_legacy_runtime_dir(void) {
 
     return p;
 }
-
+#endif
 
 static pa_strlist *prepend_per_user(pa_strlist *l) {
     char *ufn;
+
+#ifdef ENABLE_LEGACY_RUNTIME_DIR
     static char *legacy_dir;
 
     /* The very old per-user instance path (< 0.9.11). This is supported only to ease upgrades */
@@ -615,6 +641,7 @@ static pa_strlist *prepend_per_user(pa_strlist *l) {
         pa_xfree(p);
         pa_xfree(legacy_dir);
     }
+#endif
 
     /* The per-user instance */
     if ((ufn = pa_runtime_path(PA_NATIVE_DEFAULT_UNIX_SOCKET))) {
@@ -715,6 +742,32 @@ fail:
 
 static void on_connection(pa_socket_client *client, pa_iochannel*io, void *userdata);
 
+static void track_pulseaudio_on_dbus(pa_context *c, DBusBusType type, pa_dbus_wrap_connection **conn) {
+    DBusError error;
+
+    pa_assert(c);
+    pa_assert(conn);
+
+    dbus_error_init(&error);
+    if (!(*conn = pa_dbus_wrap_connection_new(c->mainloop, type, &error)) || dbus_error_is_set(&error)) {
+        pa_log_warn("Unable to contact DBUS: %s: %s", error.name, error.message);
+        goto finish;
+    }
+
+    if (!dbus_connection_add_filter(pa_dbus_wrap_connection_get(*conn), filter_cb, c, NULL)) {
+        pa_log_warn("Failed to add filter function");
+        goto finish;
+    }
+
+    if (pa_dbus_add_matches(
+                pa_dbus_wrap_connection_get(*conn), &error,
+                "type='signal',sender='" DBUS_SERVICE_DBUS "',interface='" DBUS_INTERFACE_DBUS "',member='NameOwnerChanged',arg0='org.pulseaudio.Server',arg1=''", NULL) < 0)
+        pa_log_warn("Unable to track org.pulseaudio.Server: %s: %s", error.name, error.message);
+
+ finish:
+    dbus_error_free(&error);
+}
+
 static int try_next_connection(pa_context *c) {
     char *u = NULL;
     int r = -1;
@@ -747,7 +800,14 @@ static int try_next_connection(pa_context *c) {
             }
 #endif
 
-            pa_context_fail(c, PA_ERR_CONNECTIONREFUSED);
+            if (c->no_fail && !c->server_specified) {
+                if (!c->system_bus)
+                    track_pulseaudio_on_dbus(c, DBUS_BUS_SYSTEM, &c->system_bus);
+                if (!c->session_bus)
+                    track_pulseaudio_on_dbus(c, DBUS_BUS_SESSION, &c->session_bus);
+            } else
+                pa_context_fail(c, PA_ERR_CONNECTIONREFUSED);
+
             goto finish;
         }
 
@@ -804,6 +864,38 @@ finish:
     pa_context_unref(c);
 }
 
+static DBusHandlerResult filter_cb(DBusConnection *bus, DBusMessage *message, void *userdata) {
+    pa_context *c = userdata;
+    pa_bool_t is_session;
+
+    pa_assert(bus);
+    pa_assert(message);
+    pa_assert(c);
+
+    if (c->state != PA_CONTEXT_CONNECTING)
+        goto finish;
+
+    if (!c->no_fail)
+        goto finish;
+
+    /* FIXME: We probably should check if this is actually the NameOwnerChanged we were looking for */
+
+    is_session = bus == pa_dbus_wrap_connection_get(c->session_bus);
+    pa_log_debug("Rock!! PulseAudio is back on %s bus", is_session ? "session" : "system");
+
+    if (is_session)
+        /* The user instance via PF_LOCAL */
+        c->server_list = prepend_per_user(c->server_list);
+    else
+        /* The system wide instance via PF_LOCAL */
+        c->server_list = pa_strlist_prepend(c->server_list, PA_SYSTEM_RUNTIME_PATH PA_PATH_SEP PA_NATIVE_DEFAULT_UNIX_SOCKET);
+
+    try_next_connection(c);
+
+finish:
+    return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+}
+
 int pa_context_connect(
         pa_context *c,
         const char *server,
@@ -815,8 +907,9 @@ int pa_context_connect(
     pa_assert(c);
     pa_assert(PA_REFCNT_VALUE(c) >= 1);
 
+    PA_CHECK_VALIDITY(c, !pa_detect_fork(), PA_ERR_FORKED);
     PA_CHECK_VALIDITY(c, c->state == PA_CONTEXT_UNCONNECTED, PA_ERR_BADSTATE);
-    PA_CHECK_VALIDITY(c, !(flags & ~PA_CONTEXT_NOAUTOSPAWN), PA_ERR_INVALID);
+    PA_CHECK_VALIDITY(c, !(flags & ~(PA_CONTEXT_NOAUTOSPAWN|PA_CONTEXT_NOFAIL)), PA_ERR_INVALID);
     PA_CHECK_VALIDITY(c, !server || *server, PA_ERR_INVALID);
 
     if (!server)
@@ -824,6 +917,8 @@ int pa_context_connect(
 
     pa_context_ref(c);
 
+    c->no_fail = flags & PA_CONTEXT_NOFAIL;
+    c->server_specified = !!server;
     pa_assert(!c->server_list);
 
     if (server) {
@@ -887,6 +982,9 @@ void pa_context_disconnect(pa_context *c) {
     pa_assert(c);
     pa_assert(PA_REFCNT_VALUE(c) >= 1);
 
+    if (pa_detect_fork())
+        return;
+
     if (PA_CONTEXT_IS_GOOD(c->state))
         pa_context_set_state(c, PA_CONTEXT_TERMINATED);
 }
@@ -909,6 +1007,9 @@ void pa_context_set_state_callback(pa_context *c, pa_context_notify_cb_t cb, voi
     pa_assert(c);
     pa_assert(PA_REFCNT_VALUE(c) >= 1);
 
+    if (pa_detect_fork())
+        return;
+
     if (c->state == PA_CONTEXT_TERMINATED || c->state == PA_CONTEXT_FAILED)
         return;
 
@@ -916,10 +1017,25 @@ void pa_context_set_state_callback(pa_context *c, pa_context_notify_cb_t cb, voi
     c->state_userdata = userdata;
 }
 
+void pa_context_set_event_callback(pa_context *c, pa_context_event_cb_t cb, void *userdata) {
+    pa_assert(c);
+    pa_assert(PA_REFCNT_VALUE(c) >= 1);
+
+    if (pa_detect_fork())
+        return;
+
+    if (c->state == PA_CONTEXT_TERMINATED || c->state == PA_CONTEXT_FAILED)
+        return;
+
+    c->event_callback = cb;
+    c->event_userdata = userdata;
+}
+
 int pa_context_is_pending(pa_context *c) {
     pa_assert(c);
     pa_assert(PA_REFCNT_VALUE(c) >= 1);
 
+    PA_CHECK_VALIDITY(c, !pa_detect_fork(), PA_ERR_FORKED);
     PA_CHECK_VALIDITY(c, PA_CONTEXT_IS_GOOD(c->state), PA_ERR_BADSTATE);
 
     return (c->pstream && pa_pstream_is_pending(c->pstream)) ||
@@ -976,6 +1092,7 @@ pa_operation* pa_context_drain(pa_context *c, pa_context_notify_cb_t cb, void *u
     pa_assert(c);
     pa_assert(PA_REFCNT_VALUE(c) >= 1);
 
+    PA_CHECK_VALIDITY_RETURN_NULL(c, !pa_detect_fork(), PA_ERR_FORKED);
     PA_CHECK_VALIDITY_RETURN_NULL(c, c->state == PA_CONTEXT_READY, PA_ERR_BADSTATE);
     PA_CHECK_VALIDITY_RETURN_NULL(c, pa_context_is_pending(c), PA_ERR_BADSTATE);
 
@@ -1024,6 +1141,7 @@ pa_operation* pa_context_send_simple_command(pa_context *c, uint32_t command, pa
     pa_assert(c);
     pa_assert(PA_REFCNT_VALUE(c) >= 1);
 
+    PA_CHECK_VALIDITY_RETURN_NULL(c, !pa_detect_fork(), PA_ERR_FORKED);
     PA_CHECK_VALIDITY_RETURN_NULL(c, c->state == PA_CONTEXT_READY, PA_ERR_BADSTATE);
 
     o = pa_operation_new(c, NULL, cb, userdata);
@@ -1050,6 +1168,7 @@ pa_operation* pa_context_set_default_sink(pa_context *c, const char *name, pa_co
     pa_assert(c);
     pa_assert(PA_REFCNT_VALUE(c) >= 1);
 
+    PA_CHECK_VALIDITY_RETURN_NULL(c, !pa_detect_fork(), PA_ERR_FORKED);
     PA_CHECK_VALIDITY_RETURN_NULL(c, c->state == PA_CONTEXT_READY, PA_ERR_BADSTATE);
 
     o = pa_operation_new(c, NULL, (pa_operation_cb_t) cb, userdata);
@@ -1069,6 +1188,7 @@ pa_operation* pa_context_set_default_source(pa_context *c, const char *name, pa_
     pa_assert(c);
     pa_assert(PA_REFCNT_VALUE(c) >= 1);
 
+    PA_CHECK_VALIDITY_RETURN_NULL(c, !pa_detect_fork(), PA_ERR_FORKED);
     PA_CHECK_VALIDITY_RETURN_NULL(c, c->state == PA_CONTEXT_READY, PA_ERR_BADSTATE);
 
     o = pa_operation_new(c, NULL, (pa_operation_cb_t) cb, userdata);
@@ -1084,6 +1204,7 @@ int pa_context_is_local(pa_context *c) {
     pa_assert(c);
     pa_assert(PA_REFCNT_VALUE(c) >= 1);
 
+    PA_CHECK_VALIDITY_RETURN_ANY(c, !pa_detect_fork(), PA_ERR_FORKED, -1);
     PA_CHECK_VALIDITY_RETURN_ANY(c, PA_CONTEXT_IS_GOOD(c->state), PA_ERR_BADSTATE, -1);
 
     return !!c->is_local;
@@ -1096,6 +1217,7 @@ pa_operation* pa_context_set_name(pa_context *c, const char *name, pa_context_su
     pa_assert(PA_REFCNT_VALUE(c) >= 1);
     pa_assert(name);
 
+    PA_CHECK_VALIDITY_RETURN_NULL(c, !pa_detect_fork(), PA_ERR_FORKED);
     PA_CHECK_VALIDITY_RETURN_NULL(c, c->state == PA_CONTEXT_READY, PA_ERR_BADSTATE);
 
     if (c->version >= 13) {
@@ -1126,8 +1248,8 @@ const char* pa_context_get_server(pa_context *c) {
     pa_assert(c);
     pa_assert(PA_REFCNT_VALUE(c) >= 1);
 
-    if (!c->server)
-        return NULL;
+    PA_CHECK_VALIDITY_RETURN_NULL(c, !pa_detect_fork(), PA_ERR_FORKED);
+    PA_CHECK_VALIDITY_RETURN_NULL(c, c->server, PA_ERR_NOENTITY);
 
     if (*c->server == '{') {
         char *e = strchr(c->server+1, '}');
@@ -1145,6 +1267,7 @@ uint32_t pa_context_get_server_protocol_version(pa_context *c) {
     pa_assert(c);
     pa_assert(PA_REFCNT_VALUE(c) >= 1);
 
+    PA_CHECK_VALIDITY_RETURN_ANY(c, !pa_detect_fork(), PA_ERR_FORKED, PA_INVALID_INDEX);
     PA_CHECK_VALIDITY_RETURN_ANY(c, PA_CONTEXT_IS_GOOD(c->state), PA_ERR_BADSTATE, PA_INVALID_INDEX);
 
     return c->version;
@@ -1167,6 +1290,7 @@ uint32_t pa_context_get_index(pa_context *c) {
     pa_assert(c);
     pa_assert(PA_REFCNT_VALUE(c) >= 1);
 
+    PA_CHECK_VALIDITY_RETURN_ANY(c, !pa_detect_fork(), PA_ERR_FORKED, PA_INVALID_INDEX);
     PA_CHECK_VALIDITY_RETURN_ANY(c, c->state == PA_CONTEXT_READY, PA_ERR_BADSTATE, PA_INVALID_INDEX);
     PA_CHECK_VALIDITY_RETURN_ANY(c, c->version >= 13, PA_ERR_NOTSUPPORTED, PA_INVALID_INDEX);
 
@@ -1181,6 +1305,7 @@ pa_operation *pa_context_proplist_update(pa_context *c, pa_update_mode_t mode, p
     pa_assert(c);
     pa_assert(PA_REFCNT_VALUE(c) >= 1);
 
+    PA_CHECK_VALIDITY_RETURN_NULL(c, !pa_detect_fork(), PA_ERR_FORKED);
     PA_CHECK_VALIDITY_RETURN_NULL(c, mode == PA_UPDATE_SET || mode == PA_UPDATE_MERGE || mode == PA_UPDATE_REPLACE, PA_ERR_INVALID);
     PA_CHECK_VALIDITY_RETURN_NULL(c, c->state == PA_CONTEXT_READY, PA_ERR_BADSTATE);
     PA_CHECK_VALIDITY_RETURN_NULL(c, c->version >= 13, PA_ERR_NOTSUPPORTED);
@@ -1209,6 +1334,7 @@ pa_operation *pa_context_proplist_remove(pa_context *c, const char *const keys[]
     pa_assert(c);
     pa_assert(PA_REFCNT_VALUE(c) >= 1);
 
+    PA_CHECK_VALIDITY_RETURN_NULL(c, !pa_detect_fork(), PA_ERR_FORKED);
     PA_CHECK_VALIDITY_RETURN_NULL(c, keys && keys[0], PA_ERR_INVALID);
     PA_CHECK_VALIDITY_RETURN_NULL(c, c->state == PA_CONTEXT_READY, PA_ERR_BADSTATE);
     PA_CHECK_VALIDITY_RETURN_NULL(c, c->version >= 13, PA_ERR_NOTSUPPORTED);
@@ -1244,6 +1370,11 @@ void pa_command_extension(pa_pdispatch *pd, uint32_t command, uint32_t tag, pa_t
 
     pa_context_ref(c);
 
+    if (c->version < 15) {
+        pa_context_fail(c, PA_ERR_PROTOCOL);
+        goto finish;
+    }
+
     if (pa_tagstruct_getu32(t, &idx) < 0 ||
         pa_tagstruct_gets(t, &name) < 0) {
         pa_context_fail(c, PA_ERR_PROTOCOL);
@@ -1257,4 +1388,42 @@ void pa_command_extension(pa_pdispatch *pd, uint32_t command, uint32_t tag, pa_t
 
 finish:
     pa_context_unref(c);
+}
+
+
+void pa_command_client_event(pa_pdispatch *pd, uint32_t command, uint32_t tag, pa_tagstruct *t, void *userdata) {
+    pa_context *c = userdata;
+    pa_proplist *pl = NULL;
+    const char *event;
+
+    pa_assert(pd);
+    pa_assert(command == PA_COMMAND_CLIENT_EVENT);
+    pa_assert(t);
+    pa_assert(c);
+    pa_assert(PA_REFCNT_VALUE(c) >= 1);
+
+    pa_context_ref(c);
+
+    if (c->version < 15) {
+        pa_context_fail(c, PA_ERR_PROTOCOL);
+        goto finish;
+    }
+
+    pl = pa_proplist_new();
+
+    if (pa_tagstruct_gets(t, &event) < 0 ||
+        pa_tagstruct_get_proplist(t, pl) < 0 ||
+        !pa_tagstruct_eof(t) || !event) {
+        pa_context_fail(c, PA_ERR_PROTOCOL);
+        goto finish;
+    }
+
+    if (c->event_callback)
+        c->event_callback(c, event, pl, c->event_userdata);
+
+finish:
+    pa_context_unref(c);
+
+    if (pl)
+        pa_proplist_free(pl);
 }
