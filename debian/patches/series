@@ -45,3 +45,6 @@
 0045_esd_honour_system_pulseaudio.patch
 0091_workaround_alsa_horkage.patch
 0092_fix_null_pointer_access.patch
+0046_ignore_hal_no_such_cap.patch
+#0047_pick_up_all_cards.patch
+0048_fix_stuck_prebuf.patch

@@ -1,0 +1,24 @@
+Index: pulseaudio-0.9.14/src/modules/module-hal-detect.c
+===================================================================
+--- pulseaudio-0.9.14.orig/src/modules/module-hal-detect.c	2009-04-02 13:28:53.000000000 -0400
++++ pulseaudio-0.9.14/src/modules/module-hal-detect.c	2009-04-02 13:31:08.000000000 -0400
+@@ -165,7 +165,7 @@
+ static pa_module* hal_device_load_alsa(struct userdata *u, const char *udi, char **sink_name, char **source_name) {
+     char *args;
+     alsa_type_t type;
+-    int device, card;
++    int card;
+     const char *module_name;
+     DBusError error;
+     pa_module *m;
+@@ -182,10 +182,6 @@
+     if (dbus_error_is_set(&error) || type == ALSA_TYPE_OTHER)
+         goto fail;
+ 
+-    device = libhal_device_get_property_int(u->context, udi, "alsa.device", &error);
+-    if (dbus_error_is_set(&error) || device != 0)
+-        goto fail;
+-
+     card = libhal_device_get_property_int(u->context, udi, "alsa.card", &error);
+     if (dbus_error_is_set(&error))
+         goto fail;

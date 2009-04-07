@@ -13,7 +13,9 @@
 ### END INIT INFO
 
 DAEMON=/usr/bin/pulseaudio
-PIDFILE=/var/run/pulse/pid 
+PIDDIR=/var/run/pulse
+PIDFILE=$PIDDIR/pid 
+DAEMONUSER=pulse
 PATH=/sbin:/bin:/usr/sbin:/usr/bin
 
 test -x $DAEMON || exit 0
@@ -30,6 +32,10 @@ fi
 
 pulseaudio_start () {
 	log_daemon_msg "Starting system PulseAudio Daemon"
+	if [ ! -d $PIDDIR ]; then
+		mkdir -p $PIDDIR
+		chown $DAEMONUSER:$DAEMONUSER $PIDDIR
+	fi
 	start-stop-daemon -x $DAEMON -p $PIDFILE --start -- --system --daemonize --high-priority --log-target=syslog --disallow-module-loading=$DISALLOW_MODULE_LOADING
 	if [ -e /var/run/pulse/.esd_auth ]; then
 		chown pulse:pulse-access /var/run/pulse/.esd_auth
@@ -64,8 +70,10 @@ case "$1" in
 		pulseaudio_${1}
 		;;
 	restart|reload|force-reload)
-		pulseaudio_stop
-		pulseaudio_start
+		if [ -s $PIDFILE ] && kill -0 $(cat $PIDFILE) >/dev/null 2>&1; then
+			pulseaudio_stop
+			pulseaudio_start
+		fi
 		;;
 	force-stop)
 		pulseaudio_stop
@@ -73,8 +81,11 @@ case "$1" in
 		sleep 2
 		killall -9 pulseaudio || true
 		;;
+	status)
+		status_of_proc -p $PIDFILE "$DAEMON" "system-wide PulseAudio" && exit 0 || exit $?
+		;;
 	*)
-		echo "Usage: /etc/init.d/pulseaudio {start|stop|force-stop|restart|reload|force-reload}"
+		echo "Usage: /etc/init.d/pulseaudio {start|stop|force-stop|restart|reload|force-reload|status}"
 		exit 1
 		;;
 esac

@@ -1,3 +1,23 @@
+pulseaudio (1:0.9.14-0ubuntu17) jaunty; urgency=low
+
+  [ Daniel T Chen ]
+  * debian/pulseaudio.init:
+    - Actually create /var/run/pulse, and make handling of /restart
+      more robust (LP #317921)
+    - Add /status check for system-wide daemon instance
+      (LP: #298299)
+  * Backport from upstream git HEAD:
+    - 0046_ignore_hal_no_such_cap.patch,
+    - 0047_pick_up_all_cards.patch (LP: #353807),
+    - 0048_fix_stuck_prebuf.patch (LP: #355825)
+
+  [ Luke Yelavich ]
+  * debian/control: Drop recommends from the pulseaudio-module-x11 package. if
+    they were dropped previously, they were re-added somehow, so lets get rid
+    of them once and for all.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Tue, 07 Apr 2009 16:51:59 +1000
+
 pulseaudio (1:0.9.14-0ubuntu16) jaunty; urgency=low
 
   * Introduce epoch to fix my stupidity in uploading a test release of

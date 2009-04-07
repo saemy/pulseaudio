@@ -1,0 +1,34 @@
+Index: pulseaudio-0.9.14/src/modules/module-hal-detect.c
+===================================================================
+--- pulseaudio-0.9.14.orig/src/modules/module-hal-detect.c	2009-04-02 13:09:51.000000000 -0400
++++ pulseaudio-0.9.14/src/modules/module-hal-detect.c	2009-04-02 13:19:28.000000000 -0400
+@@ -449,7 +449,8 @@
+         good = device_has_capability(context, udi, u->capability, &error);
+ 
+         if (dbus_error_is_set(&error)) {
+-            pa_log_error("Error getting capability: %s: %s", error.name, error.message);
++            if (!dbus_error_has_name(&error, "org.freedesktop.Hal.NoSuchProperty"))
++                pa_log_error("D-Bus error while parsing HAL data: %s: %s", error.name, error.message);
+             dbus_error_free(&error);
+             return;
+         }
+@@ -460,7 +461,8 @@
+         good = device_has_capability(context, udi, CAPABILITY_ALSA, &error);
+ 
+         if (dbus_error_is_set(&error)) {
+-            pa_log_error("Error getting capability: %s: %s", error.name, error.message);
++            if (!dbus_error_has_name(&error, "org.freedesktop.Hal.NoSuchProperty"))
++                pa_log_error("D-Bus error while parsing HAL data: %s: %s", error.name, error.message);
+             dbus_error_free(&error);
+             return;
+         }
+@@ -475,7 +477,8 @@
+             good = device_has_capability(context, udi, CAPABILITY_OSS, &error);
+ 
+             if (dbus_error_is_set(&error)) {
+-                pa_log_error("Error getting capability: %s: %s", error.name, error.message);
++                if (!dbus_error_has_name(&error, "org.freedesktop.Hal.NoSuchProperty"))
++                    pa_log_error("D-Bus error while parsing HAL data: %s: %s", error.name, error.message);
+                 dbus_error_free(&error);
+                 return;
+             }
