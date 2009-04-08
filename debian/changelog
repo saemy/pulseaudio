@@ -1,3 +1,11 @@
+pulseaudio (1:0.9.14-0ubuntu18) jaunty; urgency=low
+
+  * debian/apport-hook.py: Add apport hook
+  * debian/rules, debian/pulseaudio.install: Install apport hook
+  * LP: #357913
+
+ -- Matt Zimmerman <mdz@ubuntu.com>  Wed, 08 Apr 2009 20:14:17 +0100
+
 pulseaudio (1:0.9.14-0ubuntu17) jaunty; urgency=low
 
   [ Daniel T Chen ]
