@@ -1,3 +1,9 @@
+pulseaudio (1:0.9.14-0ubuntu20) jaunty; urgency=low
+
+  * debian/01PulseAudio: use pactl instead of pacmd (LP: #202089)
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Wed, 08 Apr 2009 18:54:30 -0400
+
 pulseaudio (1:0.9.14-0ubuntu19) jaunty; urgency=low
 
   [ Daniel T Chen ]
