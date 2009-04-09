@@ -3,7 +3,7 @@
 . "${PM_FUNCTIONS}"
 
 get_pulse_users() {
-    echo $(ps aux | awk '/\/usr\/bin\/pulseaudio --start/ {print $1}')
+    ps -C pulseaudio -o user=;
 }
 
 suspend_pulse() {

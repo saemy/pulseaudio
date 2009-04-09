@@ -1,3 +1,12 @@
+pulseaudio (1:0.9.15-1ubuntu2) karmic; urgency=low
+
+  * debian/01PulseAudio: harvest users more robustly. Thanks,
+    Chow Loong Jin <hyperair@gmail.com>! (LP: #202089)
+  * debian/control: pulseaudio depends on pulseaudio-module-hal
+    to fix LP: #326532
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Thu, 09 Apr 2009 17:03:00 -0400
+
 pulseaudio (1:0.9.15-1ubuntu1) karmic; urgency=low
 
   * Merge from unreleased Debian pulseaudio git, remaining changes:
