@@ -48,3 +48,4 @@
 0046_ignore_hal_no_such_cap.patch
 #0047_pick_up_all_cards.patch
 0048_fix_stuck_prebuf.patch
+0049_fix_sampling_rate_not_beyond_pa-rate-max.patch
