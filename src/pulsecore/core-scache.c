@@ -47,7 +47,6 @@
 #include <pulse/util.h>
 #include <pulse/volume.h>
 #include <pulse/xmalloc.h>
-#include <pulse/rtclock.h>
 
 #include <pulsecore/sink-input.h>
 #include <pulsecore/sample-util.h>
@@ -55,7 +54,6 @@
 #include <pulsecore/core-subscribe.h>
 #include <pulsecore/namereg.h>
 #include <pulsecore/sound-file.h>
-#include <pulsecore/core-rtclock.h>
 #include <pulsecore/core-util.h>
 #include <pulsecore/log.h>
 #include <pulsecore/core-error.h>
@@ -63,10 +61,11 @@
 
 #include "core-scache.h"
 
-#define UNLOAD_POLL_TIME (60 * PA_USEC_PER_SEC)
+#define UNLOAD_POLL_TIME 60
 
-static void timeout_callback(pa_mainloop_api *m, pa_time_event *e, const struct timeval *t, void *userdata) {
+static void timeout_callback(pa_mainloop_api *m, pa_time_event*e, const struct timeval *tv, void *userdata) {
     pa_core *c = userdata;
+    struct timeval ntv;
 
     pa_assert(c);
     pa_assert(c->mainloop == m);
@@ -74,7 +73,9 @@ static void timeout_callback(pa_mainloop_api *m, pa_time_event *e, const struct 
 
     pa_scache_unload_unused(c);
 
-    pa_core_rttime_restart(c, e, pa_rtclock_now() + UNLOAD_POLL_TIME);
+    pa_gettimeofday(&ntv);
+    ntv.tv_sec += UNLOAD_POLL_TIME;
+    m->time_restart(e, &ntv);
 }
 
 static void free_entry(pa_scache_entry *e) {
@@ -218,14 +219,11 @@ int pa_scache_add_file(pa_core *c, const char *name, const char *filename, uint3
     pa_assert(name);
     pa_assert(filename);
 
+    if (pa_sound_file_load(c->mempool, filename, &ss, &map, &chunk) < 0)
+        return -1;
+
     p = pa_proplist_new();
     pa_proplist_sets(p, PA_PROP_MEDIA_FILENAME, filename);
-
-    if (pa_sound_file_load(c->mempool, filename, &ss, &map, &chunk, p) < 0) {
-        pa_proplist_free(p);
-        return -1;
-    }
-
     r = pa_scache_add_item(c, name, &ss, &map, &chunk, p, idx);
     pa_memblock_unref(chunk.memblock);
     pa_proplist_free(p);
@@ -255,8 +253,12 @@ int pa_scache_add_file_lazy(pa_core *c, const char *name, const char *filename, 
 
     pa_proplist_sets(e->proplist, PA_PROP_MEDIA_FILENAME, filename);
 
-    if (!c->scache_auto_unload_event)
-        c->scache_auto_unload_event = pa_core_rttime_new(c, pa_rtclock_now() + UNLOAD_POLL_TIME, timeout_callback, c);
+    if (!c->scache_auto_unload_event) {
+        struct timeval ntv;
+        pa_gettimeofday(&ntv);
+        ntv.tv_sec += UNLOAD_POLL_TIME;
+        c->scache_auto_unload_event = c->mainloop->time_new(c->mainloop, &ntv, timeout_callback, c);
+    }
 
     if (idx)
         *idx = e->index;
@@ -309,14 +311,11 @@ int pa_scache_play_item(pa_core *c, const char *name, pa_sink *sink, pa_volume_t
     if (!(e = pa_namereg_get(c, name, PA_NAMEREG_SAMPLE)))
         return -1;
 
-    merged = pa_proplist_new();
-    pa_proplist_setf(merged, PA_PROP_MEDIA_NAME, "Sample %s", name);
-
     if (e->lazy && !e->memchunk.memblock) {
         pa_channel_map old_channel_map = e->channel_map;
 
-        if (pa_sound_file_load(c->mempool, e->filename, &e->sample_spec, &e->channel_map, &e->memchunk, merged) < 0)
-            goto fail;
+        if (pa_sound_file_load(c->mempool, e->filename, &e->sample_spec, &e->channel_map, &e->memchunk) < 0)
+            return -1;
 
         pa_subscription_post(c, PA_SUBSCRIPTION_EVENT_SAMPLE_CACHE|PA_SUBSCRIPTION_EVENT_CHANGE, e->index);
 
@@ -329,7 +328,7 @@ int pa_scache_play_item(pa_core *c, const char *name, pa_sink *sink, pa_volume_t
     }
 
     if (!e->memchunk.memblock)
-        goto fail;
+        return -1;
 
     pa_log_debug("Playing sample \"%s\" on \"%s\"", name, sink->name);
 
@@ -345,13 +344,17 @@ int pa_scache_play_item(pa_core *c, const char *name, pa_sink *sink, pa_volume_t
     else
         pass_volume = FALSE;
 
+    merged = pa_proplist_new();
+    pa_proplist_setf(merged, PA_PROP_MEDIA_NAME, "Sample %s", name);
     pa_proplist_update(merged, PA_UPDATE_REPLACE, e->proplist);
 
     if (p)
         pa_proplist_update(merged, PA_UPDATE_REPLACE, p);
 
-    if (pa_play_memchunk(sink, &e->sample_spec, &e->channel_map, &e->memchunk, pass_volume ? &r : NULL, merged, sink_input_idx) < 0)
-        goto fail;
+    if (pa_play_memchunk(sink, &e->sample_spec, &e->channel_map, &e->memchunk, pass_volume ? &r : NULL, merged, sink_input_idx) < 0) {
+        pa_proplist_free(merged);
+        return -1;
+    }
 
     pa_proplist_free(merged);
 
@@ -359,10 +362,6 @@ int pa_scache_play_item(pa_core *c, const char *name, pa_sink *sink, pa_volume_t
         time(&e->last_used_time);
 
     return 0;
-
-fail:
-    pa_proplist_free(merged);
-    return -1;
 }
 
 int pa_scache_play_item_by_name(pa_core *c, const char *name, const char*sink_name, pa_volume_t volume, pa_proplist *p, uint32_t *sink_input_idx) {
@@ -494,14 +493,13 @@ int pa_scache_add_directory_lazy(pa_core *c, const char *pathname) {
         struct dirent *e;
 
         while ((e = readdir(dir))) {
-            char *p;
+            char p[PATH_MAX];
 
             if (e->d_name[0] == '.')
                 continue;
 
-            p = pa_sprintf_malloc("%s" PA_PATH_SEP "%s", pathname, e->d_name);
+            pa_snprintf(p, sizeof(p), "%s/%s", pathname, e->d_name);
             add_file(c, p);
-            pa_xfree(p);
         }
 
         closedir(dir);

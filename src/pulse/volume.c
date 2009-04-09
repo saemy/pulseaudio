@@ -27,10 +27,8 @@
 #include <string.h>
 
 #include <pulse/i18n.h>
-
 #include <pulsecore/core-util.h>
 #include <pulsecore/macro.h>
-#include <pulsecore/sample-util.h>
 
 #include "volume.h"
 
@@ -40,10 +38,6 @@ int pa_cvolume_equal(const pa_cvolume *a, const pa_cvolume *b) {
     pa_assert(b);
 
     pa_return_val_if_fail(pa_cvolume_valid(a), 0);
-
-    if (PA_UNLIKELY(a == b))
-        return 1;
-
     pa_return_val_if_fail(pa_cvolume_valid(b), 0);
 
     if (a->channels != b->channels)
@@ -86,156 +80,60 @@ pa_cvolume* pa_cvolume_set(pa_cvolume *a, unsigned channels, pa_volume_t v) {
 
 pa_volume_t pa_cvolume_avg(const pa_cvolume *a) {
     uint64_t sum = 0;
-    unsigned c;
+    int i;
 
     pa_assert(a);
     pa_return_val_if_fail(pa_cvolume_valid(a), PA_VOLUME_MUTED);
 
-    for (c = 0; c < a->channels; c++)
-        sum += a->values[c];
+    for (i = 0; i < a->channels; i++)
+        sum += a->values[i];
 
     sum /= a->channels;
 
     return (pa_volume_t) sum;
 }
 
-pa_volume_t pa_cvolume_avg_mask(const pa_cvolume *a, const pa_channel_map *cm, pa_channel_position_mask_t mask) {
-    uint64_t sum = 0;
-    unsigned c, n;
-
-    pa_assert(a);
-
-    if (!cm)
-        return pa_cvolume_avg(a);
-
-    pa_return_val_if_fail(pa_cvolume_compatible_with_channel_map(a, cm), PA_VOLUME_MUTED);
-
-    for (c = n = 0; c < a->channels; c++) {
-
-        if (!(PA_CHANNEL_POSITION_MASK(cm->map[c]) & mask))
-            continue;
-
-        sum += a->values[c];
-        n ++;
-    }
-
-    if (n > 0)
-        sum /= n;
-
-    return (pa_volume_t) sum;
-}
-
 pa_volume_t pa_cvolume_max(const pa_cvolume *a) {
-    pa_volume_t m = PA_VOLUME_MUTED;
-    unsigned c;
+    pa_volume_t m = 0;
+    int i;
 
     pa_assert(a);
     pa_return_val_if_fail(pa_cvolume_valid(a), PA_VOLUME_MUTED);
 
-    for (c = 0; c < a->channels; c++)
-        if (a->values[c] > m)
-            m = a->values[c];
-
-    return m;
-}
-
-pa_volume_t pa_cvolume_min(const pa_cvolume *a) {
-    pa_volume_t m = PA_VOLUME_MAX;
-    unsigned c;
-
-    pa_assert(a);
-    pa_return_val_if_fail(pa_cvolume_valid(a), PA_VOLUME_MUTED);
-
-    for (c = 0; c < a->channels; c++)
-        if (a->values[c] < m)
-            m = a->values[c];
-
-    return m;
-}
-
-pa_volume_t pa_cvolume_max_mask(const pa_cvolume *a, const pa_channel_map *cm, pa_channel_position_mask_t mask) {
-    pa_volume_t m = PA_VOLUME_MUTED;
-    unsigned c, n;
-
-    pa_assert(a);
-
-    if (!cm)
-        return pa_cvolume_max(a);
-
-    pa_return_val_if_fail(pa_cvolume_compatible_with_channel_map(a, cm), PA_VOLUME_MUTED);
-
-    for (c = n = 0; c < a->channels; c++) {
-
-        if (!(PA_CHANNEL_POSITION_MASK(cm->map[c]) & mask))
-            continue;
-
-        if (a->values[c] > m)
-            m = a->values[c];
-    }
-
-    return m;
-}
-
-pa_volume_t pa_cvolume_min_mask(const pa_cvolume *a, const pa_channel_map *cm, pa_channel_position_mask_t mask) {
-    pa_volume_t m = PA_VOLUME_MAX;
-    unsigned c, n;
-
-    pa_assert(a);
-
-    if (!cm)
-        return pa_cvolume_min(a);
-
-    pa_return_val_if_fail(pa_cvolume_compatible_with_channel_map(a, cm), PA_VOLUME_MUTED);
-
-    for (c = n = 0; c < a->channels; c++) {
-
-        if (!(PA_CHANNEL_POSITION_MASK(cm->map[c]) & mask))
-            continue;
-
-        if (a->values[c] < m)
-            m = a->values[c];
-    }
+    for (i = 0; i < a->channels; i++)
+        if (a->values[i] > m)
+            m = a->values[i];
 
     return m;
 }
 
 pa_volume_t pa_sw_volume_multiply(pa_volume_t a, pa_volume_t b) {
-
-    /* cbrt((a/PA_VOLUME_NORM)^3*(b/PA_VOLUME_NORM)^3)*PA_VOLUME_NORM = a*b/PA_VOLUME_NORM */
-
-    return (pa_volume_t) (((uint64_t) a * (uint64_t) b + (uint64_t) PA_VOLUME_NORM / 2ULL) / (uint64_t) PA_VOLUME_NORM);
+    return pa_sw_volume_from_linear(pa_sw_volume_to_linear(a) * pa_sw_volume_to_linear(b));
 }
 
 pa_volume_t pa_sw_volume_divide(pa_volume_t a, pa_volume_t b) {
+    double v = pa_sw_volume_to_linear(b);
 
-    if (b <= PA_VOLUME_MUTED)
+    if (v <= 0)
         return 0;
 
-    return (pa_volume_t) (((uint64_t) a * (uint64_t) PA_VOLUME_NORM + (uint64_t) b / 2ULL) / (uint64_t) b);
+    return pa_sw_volume_from_linear(pa_sw_volume_to_linear(a) / v);
 }
 
-/* Amplitude, not power */
-static double linear_to_dB(double v) {
-    return 20.0 * log10(v);
-}
-
-static double dB_to_linear(double v) {
-    return pow(10.0, v / 20.0);
-}
+#define USER_DECIBEL_RANGE 90
 
 pa_volume_t pa_sw_volume_from_dB(double dB) {
-    if (isinf(dB) < 0 || dB <= PA_DECIBEL_MININFTY)
+    if (isinf(dB) < 0 || dB <= -USER_DECIBEL_RANGE)
         return PA_VOLUME_MUTED;
 
-    return pa_sw_volume_from_linear(dB_to_linear(dB));
+    return (pa_volume_t) lrint(ceil((dB/USER_DECIBEL_RANGE+1.0)*PA_VOLUME_NORM));
 }
 
 double pa_sw_volume_to_dB(pa_volume_t v) {
-
-    if (v <= PA_VOLUME_MUTED)
+    if (v == PA_VOLUME_MUTED)
         return PA_DECIBEL_MININFTY;
 
-    return linear_to_dB(pa_sw_volume_to_linear(v));
+    return ((double) v/PA_VOLUME_NORM-1)*USER_DECIBEL_RANGE;
 }
 
 pa_volume_t pa_sw_volume_from_linear(double v) {
@@ -243,31 +141,18 @@ pa_volume_t pa_sw_volume_from_linear(double v) {
     if (v <= 0.0)
         return PA_VOLUME_MUTED;
 
-    /*
-     * We use a cubic mapping here, as suggested and discussed here:
-     *
-     * http://www.robotplanet.dk/audio/audio_gui_design/
-     * http://lists.linuxaudio.org/pipermail/linux-audio-dev/2009-May/thread.html#23151
-     *
-     * We make sure that the conversion to linear and back yields the
-     * same volume value! That's why we need the lround() below!
-     */
+    if (v > .999 && v < 1.001)
+        return PA_VOLUME_NORM;
 
-    return (pa_volume_t) lround(cbrt(v) * PA_VOLUME_NORM);
+    return pa_sw_volume_from_dB(20.0*log10(v));
 }
 
 double pa_sw_volume_to_linear(pa_volume_t v) {
-    double f;
 
-    if (v <= PA_VOLUME_MUTED)
+    if (v == PA_VOLUME_MUTED)
         return 0.0;
 
-    if (v == PA_VOLUME_NORM)
-        return 1.0;
-
-    f = ((double) v / PA_VOLUME_NORM);
-
-    return f*f*f;
+    return pow(10.0, pa_sw_volume_to_dB(v)/20.0);
 }
 
 char *pa_cvolume_snprint(char *s, size_t l, const pa_cvolume *c) {
@@ -292,7 +177,7 @@ char *pa_cvolume_snprint(char *s, size_t l, const pa_cvolume *c) {
         l -= pa_snprintf(e, l, "%s%u: %3u%%",
                       first ? "" : " ",
                       channel,
-                      (c->values[channel]*100+PA_VOLUME_NORM/2)/PA_VOLUME_NORM);
+                      (c->values[channel]*100)/PA_VOLUME_NORM);
 
         e = strchr(e, 0);
         first = FALSE;
@@ -312,7 +197,7 @@ char *pa_volume_snprint(char *s, size_t l, pa_volume_t v) {
         return s;
     }
 
-    pa_snprintf(s, l, "%3u%%", (v*100+PA_VOLUME_NORM/2)/PA_VOLUME_NORM);
+    pa_snprintf(s, l, "%3u%%", (v*100)/PA_VOLUME_NORM);
     return s;
 }
 
@@ -340,7 +225,7 @@ char *pa_sw_cvolume_snprint_dB(char *s, size_t l, const pa_cvolume *c) {
         l -= pa_snprintf(e, l, "%s%u: %0.2f dB",
                          first ? "" : " ",
                          channel,
-                         isinf(f) < 0 || f <= PA_DECIBEL_MININFTY ? -INFINITY : f);
+                         isinf(f) < 0 || f <= -USER_DECIBEL_RANGE ? -INFINITY : f);
 
         e = strchr(e, 0);
         first = FALSE;
@@ -364,7 +249,7 @@ char *pa_sw_volume_snprint_dB(char *s, size_t l, pa_volume_t v) {
 
     f = pa_sw_volume_to_dB(v);
     pa_snprintf(s, l, "%0.2f dB",
-                isinf(f) < 0 || f <= PA_DECIBEL_MININFTY ?  -INFINITY : f);
+                isinf(f) < 0 || f <= -USER_DECIBEL_RANGE ?  -INFINITY : f);
 
     return s;
 }
@@ -392,24 +277,8 @@ pa_cvolume *pa_sw_cvolume_multiply(pa_cvolume *dest, const pa_cvolume *a, const 
     pa_return_val_if_fail(pa_cvolume_valid(a), NULL);
     pa_return_val_if_fail(pa_cvolume_valid(b), NULL);
 
-    for (i = 0; i < a->channels && i < b->channels; i++)
+    for (i = 0; i < a->channels && i < b->channels && i < PA_CHANNELS_MAX; i++)
         dest->values[i] = pa_sw_volume_multiply(a->values[i], b->values[i]);
-
-    dest->channels = (uint8_t) i;
-
-    return dest;
-}
-
-pa_cvolume *pa_sw_cvolume_multiply_scalar(pa_cvolume *dest, const pa_cvolume *a, pa_volume_t b) {
-    unsigned i;
-
-    pa_assert(dest);
-    pa_assert(a);
-
-    pa_return_val_if_fail(pa_cvolume_valid(a), NULL);
-
-    for (i = 0; i < a->channels; i++)
-        dest->values[i] = pa_sw_volume_multiply(a->values[i], b);
 
     dest->channels = (uint8_t) i;
 
@@ -426,24 +295,8 @@ pa_cvolume *pa_sw_cvolume_divide(pa_cvolume *dest, const pa_cvolume *a, const pa
     pa_return_val_if_fail(pa_cvolume_valid(a), NULL);
     pa_return_val_if_fail(pa_cvolume_valid(b), NULL);
 
-    for (i = 0; i < a->channels && i < b->channels; i++)
+    for (i = 0; i < a->channels && i < b->channels && i < PA_CHANNELS_MAX; i++)
         dest->values[i] = pa_sw_volume_divide(a->values[i], b->values[i]);
-
-    dest->channels = (uint8_t) i;
-
-    return dest;
-}
-
-pa_cvolume *pa_sw_cvolume_divide_scalar(pa_cvolume *dest, const pa_cvolume *a, pa_volume_t b) {
-    unsigned i;
-
-    pa_assert(dest);
-    pa_assert(a);
-
-    pa_return_val_if_fail(pa_cvolume_valid(a), NULL);
-
-    for (i = 0; i < a->channels; i++)
-        dest->values[i] = pa_sw_volume_divide(a->values[i], b);
 
     dest->channels = (uint8_t) i;
 
@@ -466,27 +319,65 @@ int pa_cvolume_valid(const pa_cvolume *v) {
 }
 
 static pa_bool_t on_left(pa_channel_position_t p) {
-    return !!(PA_CHANNEL_POSITION_MASK(p) & PA_CHANNEL_POSITION_MASK_LEFT);
+
+    return
+        p == PA_CHANNEL_POSITION_FRONT_LEFT ||
+        p == PA_CHANNEL_POSITION_REAR_LEFT ||
+        p == PA_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER ||
+        p == PA_CHANNEL_POSITION_SIDE_LEFT ||
+        p == PA_CHANNEL_POSITION_TOP_FRONT_LEFT ||
+        p == PA_CHANNEL_POSITION_TOP_REAR_LEFT;
 }
 
 static pa_bool_t on_right(pa_channel_position_t p) {
-    return !!(PA_CHANNEL_POSITION_MASK(p) & PA_CHANNEL_POSITION_MASK_RIGHT);
+
+    return
+        p == PA_CHANNEL_POSITION_FRONT_RIGHT ||
+        p == PA_CHANNEL_POSITION_REAR_RIGHT ||
+        p == PA_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER ||
+        p == PA_CHANNEL_POSITION_SIDE_RIGHT ||
+        p == PA_CHANNEL_POSITION_TOP_FRONT_RIGHT ||
+        p == PA_CHANNEL_POSITION_TOP_REAR_RIGHT;
 }
 
 static pa_bool_t on_center(pa_channel_position_t p) {
-    return !!(PA_CHANNEL_POSITION_MASK(p) & PA_CHANNEL_POSITION_MASK_CENTER);
+
+    return
+        p == PA_CHANNEL_POSITION_FRONT_CENTER ||
+        p == PA_CHANNEL_POSITION_REAR_CENTER ||
+        p == PA_CHANNEL_POSITION_TOP_CENTER ||
+        p == PA_CHANNEL_POSITION_TOP_FRONT_CENTER ||
+        p == PA_CHANNEL_POSITION_TOP_REAR_CENTER;
 }
 
 static pa_bool_t on_lfe(pa_channel_position_t p) {
-    return p == PA_CHANNEL_POSITION_LFE;
+
+    return
+        p == PA_CHANNEL_POSITION_LFE;
 }
 
 static pa_bool_t on_front(pa_channel_position_t p) {
-    return !!(PA_CHANNEL_POSITION_MASK(p) & PA_CHANNEL_POSITION_MASK_FRONT);
+
+    return
+        p == PA_CHANNEL_POSITION_FRONT_LEFT ||
+        p == PA_CHANNEL_POSITION_FRONT_RIGHT ||
+        p == PA_CHANNEL_POSITION_FRONT_CENTER ||
+        p == PA_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER ||
+        p == PA_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER ||
+        p == PA_CHANNEL_POSITION_TOP_FRONT_LEFT ||
+        p == PA_CHANNEL_POSITION_TOP_FRONT_RIGHT ||
+        p == PA_CHANNEL_POSITION_TOP_FRONT_CENTER;
 }
 
 static pa_bool_t on_rear(pa_channel_position_t p) {
-    return !!(PA_CHANNEL_POSITION_MASK(p) & PA_CHANNEL_POSITION_MASK_REAR);
+
+    return
+        p == PA_CHANNEL_POSITION_REAR_LEFT ||
+        p == PA_CHANNEL_POSITION_REAR_RIGHT ||
+        p == PA_CHANNEL_POSITION_REAR_CENTER ||
+        p == PA_CHANNEL_POSITION_TOP_REAR_LEFT ||
+        p == PA_CHANNEL_POSITION_TOP_REAR_RIGHT ||
+        p == PA_CHANNEL_POSITION_TOP_REAR_CENTER;
 }
 
 pa_cvolume *pa_cvolume_remap(pa_cvolume *v, const pa_channel_map *from, const pa_channel_map *to) {
@@ -681,29 +572,11 @@ pa_cvolume* pa_cvolume_scale(pa_cvolume *v, pa_volume_t max) {
     pa_return_val_if_fail(pa_cvolume_valid(v), NULL);
     pa_return_val_if_fail(max != (pa_volume_t) -1, NULL);
 
-    t = pa_cvolume_max(v);
-
-    if (t <= PA_VOLUME_MUTED)
-        return pa_cvolume_set(v, v->channels, max);
-
     for (c = 0; c < v->channels; c++)
-        v->values[c] = (pa_volume_t) (((uint64_t)  v->values[c] * (uint64_t) max) / (uint64_t) t);
+        if (v->values[c] > t)
+            t = v->values[c];
 
-    return v;
-}
-
-pa_cvolume* pa_cvolume_scale_mask(pa_cvolume *v, pa_volume_t max, pa_channel_map *cm, pa_channel_position_mask_t mask) {
-    unsigned c;
-    pa_volume_t t = 0;
-
-    pa_assert(v);
-
-    pa_return_val_if_fail(pa_cvolume_valid(v), NULL);
-    pa_return_val_if_fail(max != (pa_volume_t) -1, NULL);
-
-    t = pa_cvolume_max_mask(v, cm, mask);
-
-    if (t <= PA_VOLUME_MUTED)
+    if (t <= 0)
         return pa_cvolume_set(v, v->channels, max);
 
     for (c = 0; c < v->channels; c++)
@@ -811,102 +684,4 @@ pa_cvolume* pa_cvolume_set_fade(pa_cvolume *v, const pa_channel_map *map, float 
     }
 
     return v;
-}
-
-pa_cvolume* pa_cvolume_set_position(
-        pa_cvolume *cv,
-        const pa_channel_map *map,
-        pa_channel_position_t t,
-        pa_volume_t v) {
-
-    unsigned c;
-    pa_bool_t good = FALSE;
-
-    pa_assert(cv);
-    pa_assert(map);
-
-    pa_return_val_if_fail(pa_cvolume_compatible_with_channel_map(cv, map), NULL);
-    pa_return_val_if_fail(t < PA_CHANNEL_POSITION_MAX, NULL);
-
-    for (c = 0; c < map->channels; c++)
-        if (map->map[c] == t) {
-            cv->values[c] = v;
-            good = TRUE;
-        }
-
-    return good ? cv : NULL;
-}
-
-pa_volume_t pa_cvolume_get_position(
-        pa_cvolume *cv,
-        const pa_channel_map *map,
-        pa_channel_position_t t) {
-
-    unsigned c;
-    pa_volume_t v = PA_VOLUME_MUTED;
-
-    pa_assert(cv);
-    pa_assert(map);
-
-    pa_return_val_if_fail(pa_cvolume_compatible_with_channel_map(cv, map), PA_VOLUME_MUTED);
-    pa_return_val_if_fail(t < PA_CHANNEL_POSITION_MAX, PA_VOLUME_MUTED);
-
-    for (c = 0; c < map->channels; c++)
-        if (map->map[c] == t)
-            if (cv->values[c] > v)
-                v = cv->values[c];
-
-    return v;
-}
-
-pa_cvolume* pa_cvolume_merge(pa_cvolume *dest, const pa_cvolume *a, const pa_cvolume *b) {
-    unsigned i;
-
-    pa_assert(dest);
-    pa_assert(a);
-    pa_assert(b);
-
-    pa_return_val_if_fail(pa_cvolume_valid(a), NULL);
-    pa_return_val_if_fail(pa_cvolume_valid(b), NULL);
-
-    for (i = 0; i < a->channels && i < b->channels; i++)
-        dest->values[i] = PA_MAX(a->values[i], b->values[i]);
-
-    dest->channels = (uint8_t) i;
-
-    return dest;
-}
-
-pa_cvolume* pa_cvolume_inc(pa_cvolume *v, pa_volume_t inc) {
-    pa_volume_t m;
-
-    pa_assert(v);
-
-    pa_return_val_if_fail(pa_cvolume_valid(v), NULL);
-
-    m = pa_cvolume_max(v);
-
-    if (m >= PA_VOLUME_MAX - inc)
-        m = PA_VOLUME_MAX;
-    else
-        m += inc;
-
-    return pa_cvolume_scale(v, m);
-}
-
-pa_cvolume* pa_cvolume_dec(pa_cvolume *v, pa_volume_t dec) {
-    pa_volume_t m;
-
-    pa_assert(v);
-
-    pa_return_val_if_fail(pa_cvolume_valid(v), NULL);
-
-    m = pa_cvolume_max(v);
-
-    if (m <= PA_VOLUME_MUTED + dec)
-        m = PA_VOLUME_MUTED;
-    else
-        m -= dec;
-
-    return pa_cvolume_scale(v, m);
 }

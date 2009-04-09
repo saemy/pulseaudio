@@ -1,5 +1,5 @@
-#ifndef foopulsecoreparseaddrhfoo
-#define foopulsecoreparseaddrhfoo
+#ifndef fooparseaddrhfoo
+#define fooparseaddrhfoo
 
 /***
   This file is part of PulseAudio.
@@ -24,8 +24,6 @@
 
 #include <inttypes.h>
 
-#include <pulsecore/macro.h>
-
 typedef enum pa_parsed_address_type {
     PA_PARSED_ADDRESS_UNIX,
     PA_PARSED_ADDRESS_TCP4,
@@ -40,7 +38,5 @@ typedef struct pa_parsed_address {
 } pa_parsed_address;
 
 int pa_parse_address(const char *a, pa_parsed_address *ret_p);
-
-pa_bool_t pa_is_ip_address(const char *a);
 
 #endif
