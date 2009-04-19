@@ -6,7 +6,7 @@
 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2 of the License,
+  by the Free Software Foundation; either version 2.1 of the License,
   or (at your option) any later version.
 
   PulseAudio is distributed in the hope that it will be useful, but
@@ -170,7 +170,7 @@ pa_signal_event* pa_signal_new(int sig, pa_signal_cb_t _callback, void *userdata
 
     for (e = signals; e; e = e->next)
         if (e->sig == sig)
-            goto fail;
+            return NULL;
 
     e = pa_xnew(pa_signal_event, 1);
     e->sig = sig;
@@ -196,8 +196,7 @@ pa_signal_event* pa_signal_new(int sig, pa_signal_cb_t _callback, void *userdata
 
     return e;
 fail:
-    if (e)
-        pa_xfree(e);
+    pa_xfree(e);
     return NULL;
 }
 

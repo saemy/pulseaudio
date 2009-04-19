@@ -59,7 +59,7 @@
  * \section intro_sec Introduction
  *
  * This document describes the client API for the PulseAudio sound
- * server. The API comes in two flavours to accomodate different styles
+ * server. The API comes in two flavours to accommodate different styles
  * of applications and different needs in complexity:
  *
  * \li The complete but somewhat complicated to use asynchronous API
@@ -108,7 +108,6 @@
  * modules:
  *
  * \li libpulse - The asynchronous API and the internal main loop implementation.
- * \li libpulse-mainloop-glib12 - GLIB 1.2 main loop bindings.
  * \li libpulse-mainloop-glib - GLIB 2.x main loop bindings.
  * \li libpulse-simple - The simple PulseAudio API.
  */

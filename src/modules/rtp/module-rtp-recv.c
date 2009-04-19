@@ -6,7 +6,7 @@
 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2 of the License,
+  by the Free Software Foundation; either version 2.1 of the License,
   or (at your option) any later version.
 
   PulseAudio is distributed in the hope that it will be useful, but
@@ -52,6 +52,8 @@
 #include <pulsecore/rtclock.h>
 #include <pulsecore/atomic.h>
 #include <pulsecore/time-smoother.h>
+#include <pulsecore/socket-util.h>
+#include <pulsecore/once.h>
 
 #include "module-rtp-recv-symdef.h"
 
@@ -165,7 +167,7 @@ static void sink_input_process_rewind_cb(pa_sink_input *i, size_t nbytes) {
     pa_memblockq_rewind(s->memblockq, nbytes);
 }
 
-/* Called from thread context */
+/* Called from I/O thread context */
 static void sink_input_update_max_rewind_cb(pa_sink_input *i, size_t nbytes) {
     struct session *s;
 
@@ -184,11 +186,24 @@ static void sink_input_kill(pa_sink_input* i) {
     session_free(s);
 }
 
+/* Called from IO context */
+static void sink_input_suspend_within_thread(pa_sink_input* i, pa_bool_t b) {
+    struct session *s;
+    pa_sink_input_assert_ref(i);
+    pa_assert_se(s = i->userdata);
+
+    if (b) {
+        pa_smoother_pause(s->smoother, pa_rtclock_usec());
+        pa_memblockq_flush_read(s->memblockq);
+    } else
+        s->first_packet = FALSE;
+}
+
 /* Called from I/O thread context */
 static int rtpoll_work_cb(pa_rtpoll_item *i) {
     pa_memchunk chunk;
     int64_t k, j, delta;
-    struct timeval now;
+    struct timeval now = { 0, 0 };
     struct session *s;
     struct pollfd *p;
 
@@ -206,10 +221,11 @@ static int rtpoll_work_cb(pa_rtpoll_item *i) {
 
     p->revents = 0;
 
-    if (pa_rtp_recv(&s->rtp_context, &chunk, s->userdata->module->core->mempool) < 0)
+    if (pa_rtp_recv(&s->rtp_context, &chunk, s->userdata->module->core->mempool, &now) < 0)
         return 0;
 
-    if (s->sdp_info.payload != s->rtp_context.payload) {
+    if (s->sdp_info.payload != s->rtp_context.payload ||
+        !PA_SINK_IS_OPENED(s->sink_input->sink->thread_info.state)) {
         pa_memblock_unref(chunk.memblock);
         return 0;
     }
@@ -229,7 +245,7 @@ static int rtpoll_work_cb(pa_rtpoll_item *i) {
         }
     }
 
-    /* Check wheter there was a timestamp overflow */
+    /* Check whether there was a timestamp overflow */
     k = (int64_t) s->rtp_context.timestamp - (int64_t) s->offset;
     j = (int64_t) 0x100000000LL - (int64_t) s->offset + (int64_t) s->rtp_context.timestamp;
 
@@ -238,15 +254,24 @@ static int rtpoll_work_cb(pa_rtpoll_item *i) {
     else
         delta = j;
 
-    pa_memblockq_seek(s->memblockq, delta * (int64_t) s->rtp_context.frame_size, PA_SEEK_RELATIVE);
+    pa_memblockq_seek(s->memblockq, delta * (int64_t) s->rtp_context.frame_size, PA_SEEK_RELATIVE, TRUE);
 
-    pa_rtclock_get(&now);
+    if (now.tv_sec == 0) {
+        PA_ONCE_BEGIN {
+            pa_log_warn("Using artificial time instead of timestamp");
+        } PA_ONCE_END;
+        pa_rtclock_get(&now);
+    } else
+        pa_rtclock_from_wallclock(&now);
 
     pa_smoother_put(s->smoother, pa_timeval_load(&now), pa_bytes_to_usec((uint64_t) pa_memblockq_get_write_index(s->memblockq), &s->sink_input->sample_spec));
 
+    /* Tell the smoother that we are rolling now, in case it is still paused */
+    pa_smoother_resume(s->smoother, pa_timeval_load(&now), TRUE);
+
     if (pa_memblockq_push(s->memblockq, &chunk) < 0) {
         pa_log_warn("Queue overrun");
-        pa_memblockq_seek(s->memblockq, (int64_t) chunk.length, PA_SEEK_RELATIVE);
+        pa_memblockq_seek(s->memblockq, (int64_t) chunk.length, PA_SEEK_RELATIVE, TRUE);
     }
 
 /*     pa_log("blocks in q: %u", pa_memblockq_get_nblocks(s->memblockq)); */
@@ -262,14 +287,14 @@ static int rtpoll_work_cb(pa_rtpoll_item *i) {
         pa_usec_t wi, ri, render_delay, sink_delay = 0, latency, fix;
         unsigned fix_samples;
 
-        pa_log("Updating sample rate");
+        pa_log_debug("Updating sample rate");
 
         wi = pa_smoother_get(s->smoother, pa_timeval_load(&now));
         ri = pa_bytes_to_usec((uint64_t) pa_memblockq_get_read_index(s->memblockq), &s->sink_input->sample_spec);
 
-        if (PA_MSGOBJECT(s->sink_input->sink)->process_msg(PA_MSGOBJECT(s->sink_input->sink), PA_SINK_MESSAGE_GET_LATENCY, &sink_delay, 0, NULL) < 0)
-            sink_delay = 0;
+        pa_log_debug("wi=%lu ri=%lu", (unsigned long) wi, (unsigned long) ri);
 
+        sink_delay = pa_sink_get_latency_within_thread(s->sink_input->sink);
         render_delay = pa_bytes_to_usec(pa_memblockq_get_length(s->sink_input->thread_info.render_memblockq), &s->sink_input->sink->sample_spec);
 
         if (ri > render_delay+sink_delay)
@@ -294,14 +319,20 @@ static int rtpoll_work_cb(pa_rtpoll_item *i) {
         fix_samples = (unsigned) (fix * (pa_usec_t) s->sink_input->thread_info.sample_spec.rate / (pa_usec_t) RATE_UPDATE_INTERVAL);
 
         /* Check if deviation is in bounds */
-        if (fix_samples > s->sink_input->sample_spec.rate*.20)
+        if (fix_samples > s->sink_input->sample_spec.rate*.50)
             pa_log_debug("Hmmm, rate fix is too large (%lu Hz), not applying.", (unsigned long) fix_samples);
+        else {
+            /* Fix up rate */
+            if (latency < s->intended_latency)
+                s->sink_input->sample_spec.rate -= fix_samples;
+            else
+                s->sink_input->sample_spec.rate += fix_samples;
 
-        /* Fix up rate */
-        if (latency < s->intended_latency)
-            s->sink_input->sample_spec.rate -= fix_samples;
-        else
-            s->sink_input->sample_spec.rate += fix_samples;
+            if (s->sink_input->sample_spec.rate > PA_RATE_MAX)
+                s->sink_input->sample_spec.rate = PA_RATE_MAX;
+        }
+
+        pa_assert(pa_sample_spec_valid(&s->sink_input->sample_spec));
 
         pa_resampler_set_input_rate(s->sink_input->thread_info.resampler, s->sink_input->sample_spec.rate);
 
@@ -313,7 +344,7 @@ static int rtpoll_work_cb(pa_rtpoll_item *i) {
     if (pa_memblockq_is_readable(s->memblockq) &&
         s->sink_input->thread_info.underrun_for > 0) {
         pa_log_debug("Requesting rewind due to end of underrun");
-        pa_sink_input_request_rewind(s->sink_input, 0, FALSE, TRUE);
+        pa_sink_input_request_rewind(s->sink_input, 0, FALSE, TRUE, FALSE);
     }
 
     return 1;
@@ -362,6 +393,14 @@ static int mcast_socket(const struct sockaddr* sa, socklen_t salen) {
         goto fail;
     }
 
+    pa_make_udp_socket_low_delay(fd);
+
+    one = 1;
+    if (setsockopt(fd, SOL_SOCKET, SO_TIMESTAMP, &one, sizeof(one)) < 0) {
+        pa_log("SO_TIMESTAMP failed: %s", pa_cstrerror(errno));
+        goto fail;
+    }
+
     one = 1;
     if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one)) < 0) {
         pa_log("SO_REUSEADDR failed: %s", pa_cstrerror(errno));
@@ -373,11 +412,13 @@ static int mcast_socket(const struct sockaddr* sa, socklen_t salen) {
         memset(&mr4, 0, sizeof(mr4));
         mr4.imr_multiaddr = ((const struct sockaddr_in*) sa)->sin_addr;
         r = setsockopt(fd, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mr4, sizeof(mr4));
+#ifdef HAVE_IPV6
     } else {
         struct ipv6_mreq mr6;
         memset(&mr6, 0, sizeof(mr6));
         mr6.ipv6mr_multiaddr = ((const struct sockaddr_in6*) sa)->sin6_addr;
         r = setsockopt(fd, IPPROTO_IPV6, IPV6_JOIN_GROUP, &mr6, sizeof(mr6));
+#endif
     }
 
     if (r < 0) {
@@ -415,7 +456,7 @@ static struct session *session_new(struct userdata *u, const pa_sdp_info *sdp_in
         goto fail;
     }
 
-    if (!(sink = pa_namereg_get(u->module->core, u->sink_name, PA_NAMEREG_SINK, TRUE))) {
+    if (!(sink = pa_namereg_get(u->module->core, u->sink_name, PA_NAMEREG_SINK))) {
         pa_log("Sink does not exist.");
         goto fail;
     }
@@ -428,8 +469,14 @@ static struct session *session_new(struct userdata *u, const pa_sdp_info *sdp_in
     s->sdp_info = *sdp_info;
     s->rtpoll_item = NULL;
     s->intended_latency = LATENCY_USEC;
-    s->smoother = pa_smoother_new(PA_USEC_PER_SEC*5, PA_USEC_PER_SEC*2, TRUE, 10);
-    pa_smoother_set_time_offset(s->smoother, pa_timeval_load(&now));
+    s->smoother = pa_smoother_new(
+            PA_USEC_PER_SEC*5,
+            PA_USEC_PER_SEC*2,
+            TRUE,
+            TRUE,
+            10,
+            pa_timeval_load(&now),
+            TRUE);
     s->last_rate_update = pa_timeval_load(&now);
     pa_atomic_store(&s->timestamp, (int) now.tv_sec);
 
@@ -453,7 +500,7 @@ static struct session *session_new(struct userdata *u, const pa_sdp_info *sdp_in
     data.module = u->module;
     pa_sink_input_new_data_set_sample_spec(&data, &sdp_info->sample_spec);
 
-    s->sink_input = pa_sink_input_new(u->module->core, &data, 0);
+    pa_sink_input_new(&s->sink_input, u->module->core, &data, PA_SINK_INPUT_VARIABLE_RATE);
     pa_sink_input_new_data_done(&data);
 
     if (!s->sink_input) {
@@ -470,6 +517,7 @@ static struct session *session_new(struct userdata *u, const pa_sdp_info *sdp_in
     s->sink_input->kill = sink_input_kill;
     s->sink_input->attach = sink_input_attach;
     s->sink_input->detach = sink_input_detach;
+    s->sink_input->suspend_within_thread = sink_input_suspend_within_thread;
 
     pa_sink_input_get_silence(s->sink_input, &silence);
 
@@ -560,7 +608,7 @@ static void sap_event_cb(pa_mainloop_api *m, pa_io_event *e, int fd, pa_io_event
     } else {
 
         if (!(s = pa_hashmap_get(u->by_origin, info.origin))) {
-            if (!(s = session_new(u, &info)))
+            if (!session_new(u, &info))
                 pa_sdp_info_destroy(&info);
 
         } else {
@@ -608,7 +656,9 @@ int pa__init(pa_module*m) {
     struct userdata *u;
     pa_modargs *ma = NULL;
     struct sockaddr_in sa4;
+#ifdef HAVE_IPV6
     struct sockaddr_in6 sa6;
+#endif
     struct sockaddr *sa;
     socklen_t salen;
     const char *sap_address;
@@ -624,16 +674,18 @@ int pa__init(pa_module*m) {
 
     sap_address = pa_modargs_get_value(ma, "sap_address", DEFAULT_SAP_ADDRESS);
 
-    if (inet_pton(AF_INET6, sap_address, &sa6.sin6_addr) > 0) {
-        sa6.sin6_family = AF_INET6;
-        sa6.sin6_port = htons(SAP_PORT);
-        sa = (struct sockaddr*) &sa6;
-        salen = sizeof(sa6);
-    } else if (inet_pton(AF_INET, sap_address, &sa4.sin_addr) > 0) {
+    if (inet_pton(AF_INET, sap_address, &sa4.sin_addr) > 0) {
         sa4.sin_family = AF_INET;
         sa4.sin_port = htons(SAP_PORT);
         sa = (struct sockaddr*) &sa4;
         salen = sizeof(sa4);
+#ifdef HAVE_IPV6
+    } else if (inet_pton(AF_INET6, sap_address, &sa6.sin6_addr) > 0) {
+        sa6.sin6_family = AF_INET6;
+        sa6.sin6_port = htons(SAP_PORT);
+        sa = (struct sockaddr*) &sa6;
+        salen = sizeof(sa6);
+#endif
     } else {
         pa_log("Invalid SAP address '%s'", sap_address);
         goto fail;
@@ -642,8 +694,7 @@ int pa__init(pa_module*m) {
     if ((fd = mcast_socket(sa, salen)) < 0)
         goto fail;
 
-    u = pa_xnew(struct userdata, 1);
-    m->userdata = u;
+    m->userdata = u = pa_xnew(struct userdata, 1);
     u->module = m;
     u->sink_name = pa_xstrdup(pa_modargs_get_value(ma, "sink", NULL));
 
