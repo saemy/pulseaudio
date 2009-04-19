@@ -27,9 +27,15 @@
 #include <stddef.h>
 #include <time.h>
 #include <sys/time.h>
+#include <errno.h>
+
+#ifdef HAVE_SYS_PRCTL_H
+#include <sys/prctl.h>
+#endif
 
 #include <pulse/timeval.h>
 #include <pulsecore/macro.h>
+#include <pulsecore/core-error.h>
 
 #include "rtclock.h"
 
@@ -89,6 +95,33 @@ pa_bool_t pa_rtclock_hrtimer(void) {
 #endif
 }
 
+#define TIMER_SLACK_NS (int) ((500 * PA_NSEC_PER_USEC))
+
+void pa_rtclock_hrtimer_enable(void) {
+#ifdef PR_SET_TIMERSLACK
+    int slack_ns;
+
+    if ((slack_ns = prctl(PR_GET_TIMERSLACK, 0, 0, 0, 0)) < 0) {
+        pa_log_info("PR_GET_TIMERSLACK/PR_SET_TIMERSLACK not supported.");
+        return;
+    }
+
+    pa_log_debug("Timer slack is set to %i us.", (int) (slack_ns/PA_NSEC_PER_USEC));
+
+    if (slack_ns > TIMER_SLACK_NS) {
+        slack_ns = TIMER_SLACK_NS;
+
+        pa_log_debug("Setting timer slack to %i us.", (int) (slack_ns/PA_NSEC_PER_USEC));
+
+        if (prctl(PR_SET_TIMERSLACK, slack_ns, 0, 0, 0) < 0) {
+            pa_log_warn("PR_SET_TIMERSLACK failed: %s", pa_cstrerror(errno));
+            return;
+        }
+    }
+
+#endif
+}
+
 pa_usec_t pa_rtclock_usec(void) {
     struct timeval tv;
 
@@ -114,4 +147,12 @@ struct timeval* pa_rtclock_from_wallclock(struct timeval *tv) {
 #endif
 
     return tv;
+}
+
+pa_usec_t pa_timespec_load(const struct timespec *ts) {
+    pa_assert(ts);
+
+    return
+        (pa_usec_t) ts->tv_sec * PA_USEC_PER_SEC +
+        (pa_usec_t) ts->tv_nsec / PA_NSEC_PER_USEC;
 }

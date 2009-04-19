@@ -3,7 +3,7 @@
 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2 of the License,
+  by the Free Software Foundation; either version 2.1 of the License,
   or (at your option) any later version.
 
   PulseAudio is distributed in the hope that it will be useful, but
@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
     pa_memchunk chunk1, chunk2, chunk3, chunk4;
     pa_memchunk silence;
 
-    pa_log_set_maximal_level(PA_LOG_DEBUG);
+    pa_log_set_level(PA_LOG_DEBUG);
 
     p = pa_mempool_new(FALSE, 0);
 
@@ -105,45 +105,45 @@ int main(int argc, char *argv[]) {
     ret = pa_memblockq_push(bq, &chunk4);
     assert(ret == 0);
 
-    pa_memblockq_seek(bq, -6, 0);
+    pa_memblockq_seek(bq, -6, 0, TRUE);
     ret = pa_memblockq_push(bq, &chunk3);
     assert(ret == 0);
 
-    pa_memblockq_seek(bq, -2, 0);
+    pa_memblockq_seek(bq, -2, 0, TRUE);
     ret = pa_memblockq_push(bq, &chunk1);
     assert(ret == 0);
 
-    pa_memblockq_seek(bq, -10, 0);
+    pa_memblockq_seek(bq, -10, 0, TRUE);
     ret = pa_memblockq_push(bq, &chunk4);
     assert(ret == 0);
 
-    pa_memblockq_seek(bq, 10, 0);
+    pa_memblockq_seek(bq, 10, 0, TRUE);
 
     ret = pa_memblockq_push(bq, &chunk1);
     assert(ret == 0);
 
-    pa_memblockq_seek(bq, -6, 0);
+    pa_memblockq_seek(bq, -6, 0, TRUE);
     ret = pa_memblockq_push(bq, &chunk2);
     assert(ret == 0);
 
     /* Test splitting */
-    pa_memblockq_seek(bq, -12, 0);
+    pa_memblockq_seek(bq, -12, 0, TRUE);
     ret = pa_memblockq_push(bq, &chunk1);
     assert(ret == 0);
 
-    pa_memblockq_seek(bq, 20, 0);
+    pa_memblockq_seek(bq, 20, 0, TRUE);
 
     /* Test merging */
     ret = pa_memblockq_push(bq, &chunk3);
     assert(ret == 0);
-    pa_memblockq_seek(bq, -2, 0);
+    pa_memblockq_seek(bq, -2, 0, TRUE);
 
     chunk3.index += 2;
     chunk3.length -= 2;
     ret = pa_memblockq_push(bq, &chunk3);
     assert(ret == 0);
 
-    pa_memblockq_seek(bq, 30, PA_SEEK_RELATIVE);
+    pa_memblockq_seek(bq, 30, PA_SEEK_RELATIVE, TRUE);
 
     dump(bq);
 

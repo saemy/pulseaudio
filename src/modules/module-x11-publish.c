@@ -5,7 +5,7 @@
 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2 of the License,
+  by the Free Software Foundation; either version 2.1 of the License,
   or (at your option) any later version.
 
   PulseAudio is distributed in the hope that it will be useful, but
@@ -55,7 +55,11 @@ PA_MODULE_AUTHOR("Lennart Poettering");
 PA_MODULE_DESCRIPTION("X11 credential publisher");
 PA_MODULE_VERSION(PACKAGE_VERSION);
 PA_MODULE_LOAD_ONCE(FALSE);
-PA_MODULE_USAGE("display=<X11 display>");
+PA_MODULE_USAGE(
+        "display=<X11 display> "
+        "sink=<Sink to publish> "
+        "source=<Source to publish> "
+        "cookie=<Cookie file to publish> ");
 
 static const char* const valid_modargs[] = {
     "display",
@@ -132,7 +136,7 @@ static void x11_kill_cb(pa_x11_wrapper *w, void *userdata) {
 int pa__init(pa_module*m) {
     struct userdata *u;
     pa_modargs *ma = NULL;
-    char hn[256], un[128];
+    char *mid, *sid;
     char hx[PA_NATIVE_COOKIE_LENGTH*2+1];
     const char *t;
 
@@ -160,11 +164,16 @@ int pa__init(pa_module*m) {
     if (!(u->x11_wrapper = pa_x11_wrapper_get(m->core, pa_modargs_get_value(ma, "display", NULL))))
         goto fail;
 
-    if (!pa_get_fqdn(hn, sizeof(hn)) || !pa_get_user_name(un, sizeof(un)))
-        goto fail;
+    mid = pa_machine_id();
+    u->id = pa_sprintf_malloc("%lu@%s/%lu", (unsigned long) getuid(), mid, (unsigned long) getpid());
+    pa_xfree(mid);
 
-    u->id = pa_sprintf_malloc("%s@%s/%u", un, hn, (unsigned) getpid());
     pa_x11_set_prop(pa_x11_wrapper_get_display(u->x11_wrapper), "PULSE_ID", u->id);
+
+    if ((sid = pa_session_id())) {
+        pa_x11_set_prop(pa_x11_wrapper_get_display(u->x11_wrapper), "PULSE_SESSION_ID", sid);
+        pa_xfree(sid);
+    }
 
     publish_servers(u, pa_native_protocol_servers(u->protocol));
 
@@ -215,6 +224,7 @@ void pa__done(pa_module*m) {
             pa_x11_del_prop(pa_x11_wrapper_get_display(u->x11_wrapper), "PULSE_SINK");
             pa_x11_del_prop(pa_x11_wrapper_get_display(u->x11_wrapper), "PULSE_SOURCE");
             pa_x11_del_prop(pa_x11_wrapper_get_display(u->x11_wrapper), "PULSE_COOKIE");
+            pa_x11_del_prop(pa_x11_wrapper_get_display(u->x11_wrapper), "PULSE_SESSION_ID");
             XSync(pa_x11_wrapper_get_display(u->x11_wrapper), False);
         }
 
