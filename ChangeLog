@@ -1,11 +1,225 @@
 
+2009-04-14	Lennart Poettering
+	ca9cd14: add a few missing initializations
+	40d71e1: explcitly ignore return values of some functions marked with gcc's warn_unused_result attribute
+	845b312: bump version for final 0.9.15 release
+	a4cea4e: core: when applying delay memblockq take monitored sink latency into account
+	2d94c93: pacat: add missing newline
+	4ee4a55: core: use pa_{source
+2009-04-13	Lennart Poettering
+	16324fc: sort LINGUAS
+	a654155: run make update-po
+	c96f6f3: update LINGUAS
+	0948dca: Merge commit 'origin/master-tx'
+	fe8b10c: core: introduce new 'reference' volume for sinks
+	49dcf09: alsa: include the alsa mixer control that is used in the property list
+	6fd8fd1: alsa: store mixer controls to use in profile data
+	89f74cb: alsa: when passing emptry mixer control name, force sw volume
+	237a9e1: volume: increase dB range to -90dB
+	0ac038e: client-conf-x11: unbreak autospawn due to stale X11 properties
+	0aed5ea: client-conf: when  is set, disable autospawn setting
+	4cc4cbd: client-conf: make setting a default server independant from the autospawn setting
+	20aba71: proplist-util: use pa_session_id() instead of accessing 7b816367b01393ed3e3e650047d78f6e-1239640487.203609-1061245823 directly
+	43650de: client-conf: modernize a few things
+	a36197c: print session id when starting up
+	1d8da03: core-util: filter utf8 in pa_machine_id()
+	1b4e5f1: core-util: add pa_session_id()
+	17f1784: cork-music-on-phone: make sure that we don't check the refcnt of pa_core when the daemon goes down
+	62db10c: lirc: fix logic behind mute buttons
+	66d2184: mmkbd: get rid of support for ancient kernels
+	f1d3dfb: mmkbd,lirc: make use of pa_assert_not_reached()
+	270a698: lirc, mmkbd: extend controllable volume range to PA_VOLUME_MAX
+	6d218e9: api: introduce PA_VOLUME_MAX
+	e9dd7a5: lirc: drop lirc_in_use, it's made redundant by PA_MODULE_LOAD_ONCE
+	d8de5d3: make sure we never overflow when calculating sleep time
+
+2009-04-13	warrink
+	2ba882c: Sending translation for po/nl.po
+
+2009-04-11	ifelix
+	362ec7b: Sending translation for Tamil
+
+2009-04-10	Lennart Poettering
+	6eaeaea: Downgrade default log level to NOTICE to follow documentation
+	a26c945: add missing languages to LINGUAS
+	3e29fd7: prepare another snapshot
+	991cb06: set fixed latencies at more places where appropriate
+
+2009-04-06	Finn Thain
+	80e18c8: make dbus optional during build
+
+2009-04-10	Lennart Poettering
+	e011230: run make update-po
+	d6f019e: Merge commit 'origin/master-tx'
+	5388b44: alsa: when printing warning about bogus data from alsa include snd_pcm_dump()
+	ee6657a: bluetooth: when starting up HSP stream, send 2 packets first, only afterwards enter one-read-one-write logic
+	d77b28c: bluetooth: rework timing logic, properly implement latency callbacks
+	e9a4dec: bluetooth: be a bit more verbose if we exit due to bad poll() revents flag
+	48cff5b: bluetooth: rename sco to hsp also for the user
+	f7c229d: core: add a seperate fixed_latency field for sinks/sources with fixed latency
+	9ae8ca2: core: memory leak, fix ref counting when moving streams
+	dcd4a73: dbus: memory leak, actually free dbus wrapper
+	d827ecd: dbus: drop pa_ prefix from static symbol
+	f8ebe85: protocol-native: downgrade message if we receive pcm block for dead stream
+	5b87196: protocol-native: print underrun message only once for each underrun
+	3507d1e: socket-server: memory leak, free machine id after use
+	669703d: dbus: memory leak, free pending calls
+	9ba9883: dbus: memory leak, free server id after use
+	9ee6a41: bluetooth: memory leak, actually free discovery struct itself
+	f65b276: interpol-test: make it easier to test corking only optionally
+
+2009-04-09	elsupergomez
+	dac687d: Sending translation for Spanish
+
+2009-04-09	mgiri
+	d1cf6eb: Sending translation for Oriya
+	6c5bbd3: Sending translation for Oriya
+
+2009-04-08	mgiri
+	8e1a9b7: Sending translation for Oriya
+
+2009-04-08	kkrothap
+	27784c4: Sending translation for Telugu
+
+2009-04-08	ifelix
+	0474762: Sending translation for po/ta.po
+
+2009-04-08	runab
+	bb7beeb: Sending translation for Bengali (India)
+
+2009-04-08	amitakhya
+	89f5da8: Sending translation for Assamese
+	b445f79: Sending translation for po/as.po
+
+2009-04-08	Lennart Poettering
+	6c04a1c: bluetooth: make sure to set max_request
+	c32c6c8: introduce relative_volume field in sink_input and make use of it on sink flat volume change
+	14e89d4: when calculating volume from dB use ceil()
+	4ff41ec: print smallest attenuation/sample
+
+2009-04-07	kkrothap
+	091a0f2: Sending translation for po/te.po
+
+2009-04-07	kmilos
+	f5eca5d: Sending translation for po/sr@latin.po
+	7202d52: Sending translation for Serbian
+
+2009-04-07	mgiri
+	5b0d1bf: Sending translation for Oriya
+	54c895c: Sending translation for po/or.po
+
+2009-04-07	runab
+	7154f06: Sending translation for po/bn_IN.po
+
+2009-04-07	Lennart Poettering
+	aacb11b: update documentation regarding stream timing a bit
+	c523b16: after propagating a sink volume change to the sink inputs recalculate their soft volumes
+	93e14d3: we need to make our multiplications with linear values
+	02686cc: reduce number of conversions to/from linear volumes
+	d612fbb: compare with doubles, not integer
+	e356a03: If the sink volume is lowered to 0 and then increased again, make sure all stream volumes follow instead of staying at 0
+	2c2713a: make use of SO_TIMESTAMP timestamp for accuracy and leave smoother paused until we have data
+	f204c0f: mark null sink as support dynamic latency
+	298bd0b: adjust max_rewind/max_request whenever the latency changes
+	e976034: send the source latency based on the MTU size
+	61b0776: add suspend_within_thread() callbacks to pa_sink_input/pa_source_output
+	35a4a0b: enable debugging output based on if DEBUG_DATA macro is set
+
+2009-04-07	swkothar
+	ff2dc1b: Sending translation for Gujarati
+
+2009-04-07	shanky
+	682c101: Sending translation for po/kn.po
+
+2009-04-06	Lennart Poettering
+	886ddc3: make sure we don't apply sampling rate fixes that bring the sampling freq > PA_RATE_MAX
+	e61728e: Make sure we don't get stuck when prebuf is too high
+	ff8d66d: extend documentation for pa_stream_cork() a bit
+	7fc2382: properly handle interpolation when queried x is left of last data position
+	daa945a: don't fail device reservation if the D-Bus connection is dead
+	4b521e5: be a bit more verbose about the busses we are connected to
+	90f4fdb: make sure we keep a reference of the bus connection during the whole runtime if we manage to acquire the bus name
+
+2009-04-06	swkothar
+	f598776: Sending translation for Gujarati
+	b9b470e: Sending translation for Gujarati
+	4c0a2e0: Sending translation for po/gu.po
+
+2009-04-06	sandeeps
+	a55c236: Sending translation for po/mr.po
+
+2009-04-06	leahliu
+	f709f2b: Sending translation for Chinese (Simplified)
+
+2009-04-05	soko
+	6c0ce4d: Sending translation for po/sr@latin.po
+	c66e3fd: Sending translation for Serbian
+
+2009-04-05	raven
+	015d66e: Sending translation for Polish
+
+2009-04-05	vpv
+	4053e35: Sending translation for Finnish
+	d5e8488: Sending translation for Finnish
+	f5ec110: Sending translation for Finnish
+
+2009-04-05	Lennart Poettering
+	ecba42b: run make po-update
+	9416cdf: Merge commit 'origin/master-tx'
+	6ba3333: Merge branch 'master' of ssh://rootserver/home/lennart/git/public/pulseaudio
+	923c5bc: make it easy to disable interpolation in the interpolation test tool
+	14e11e4: Fix a couple of races in native protocol
+	7dafa87: don't try to outsmart the transport
+	ce73e71: introduce pa_{sink	d035f4a: Modify smoothing code to make cubic interpolation optional and allow 'quick fixups' on resuming
+
+2009-04-04	vpv
+	82d1301: Sending translation for Finnish
+
+2009-04-04	Lennart Poettering
+	ca39fa2: initialize sound cards only after the 'control' object appeared
+	9bea250: increase log buffer further
+	77a1e38: refuse to initialize on modem devices
+	f708328: add missing files to POTFILES.in
+	99f45a6: run make update-po
+	f446f0e: Merge commit 'origin/master-tx'
+
+2009-04-01	Maarten Bosmans
+	8bcb9c6: various spelling fixes
+
+2009-04-01	Luke Yelavich
+	ccaf765: POTFILES.IN: Refer to src/pulsecore/dbus-util.c
+
+2009-04-03	soko
+	a12f4e6: Sending translation for po/sr@latin.po
+	310d47a: Sending translation for Serbian
+	398e381: Sending translation for po/sr@latin.po
+	a0e46c2: Sending translation for Serbian
+
+2009-04-03	Lennart Poettering
+	6152c52: Merge branch 'master' of ssh://rootserver/home/lennart/git/public/pulseaudio
+	143e1ba: downgrade a few messages
+
+2009-04-02	soko
+	089a081: Sending translation for Serbian
+
+2009-04-02	leahliu
+	cb40e85: Sending translation for Chinese (Simplified)
+
 2009-04-01	Lennart Poettering
+	1c26d7e: plot the difference between system and sound card time
+	373b5ef: properly account for seeks in the requested_bytes counter
+	380e97a: use machine id instead of hostname to identify local connections
+	dcb24f5: load bt discover module only when installed
+	707acab: prepare test7
 	75a8d18: pass destination source/sink when moving streams so that we can access them
 	c2f6d09: don't access i->sink if it is not set
 	d9b19f8: prepare test6
 	5348cc1: increase timing update interval exponentially
 	aa1ad0d: in verbose mode log buffer attr changes
 	0aa99c4: add buffer_attr callback stuff to exported symbol list
+
+2009-04-01	tombo
+	1fa761a: Sending translation for Italian
 
 2009-03-31	Lennart Poettering
 	4e8ceae: fix buffer defaults
