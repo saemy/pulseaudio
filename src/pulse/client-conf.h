@@ -8,7 +8,7 @@
 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2 of the License,
+  by the Free Software Foundation; either version 2.1 of the License,
   or (at your option) any later version.
 
   PulseAudio is distributed in the hope that it will be useful, but
@@ -38,7 +38,7 @@ typedef struct pa_client_conf {
 pa_client_conf *pa_client_conf_new(void);
 void pa_client_conf_free(pa_client_conf *c);
 
-/* Load the configuration data from the speicified file, overwriting
+/* Load the configuration data from the specified file, overwriting
  * the current settings in *c. When the filename is NULL, the
  * default client configuration file name is used. */
 int pa_client_conf_load(pa_client_conf *c, const char *filename);

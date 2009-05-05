@@ -5,7 +5,7 @@
 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as
-  published by the Free Software Foundation; either version 2 of the
+  published by the Free Software Foundation; either version 2.1 of the
   License, or (at your option) any later version.
 
   PulseAudio is distributed in the hope that it will be useful, but
@@ -139,7 +139,7 @@ static void signal_handler(int sig) {
             write_err("Soft CPU time limit exhausted, terminating.\n");
 
             /* Try a soft cleanup */
-            write(the_pipe[1], &c, sizeof(c));
+            (void) write(the_pipe[1], &c, sizeof(c));
             phase = PHASE_SOFT;
             reset_cpu_time(CPUTIME_INTERVAL_HARD);
 

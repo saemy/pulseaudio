@@ -6,7 +6,7 @@
 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2 of the License,
+  by the Free Software Foundation; either version 2.1 of the License,
   or (at your option) any later version.
 
   PulseAudio is distributed in the hope that it will be useful, but
@@ -289,6 +289,7 @@ fail:
     return NULL;
 }
 
+#ifdef HAVE_IPV6
 pa_socket_server* pa_socket_server_new_ipv6(pa_mainloop_api *m, const uint8_t address[16], uint16_t port, const char *tcpwrap_service) {
     pa_socket_server *ss;
     int fd = -1;
@@ -347,6 +348,7 @@ fail:
 
     return NULL;
 }
+#endif
 
 pa_socket_server* pa_socket_server_new_ipv4_loopback(pa_mainloop_api *m, uint16_t port, const char *tcpwrap_service) {
     pa_assert(m);
@@ -355,12 +357,14 @@ pa_socket_server* pa_socket_server_new_ipv4_loopback(pa_mainloop_api *m, uint16_
     return pa_socket_server_new_ipv4(m, INADDR_LOOPBACK, port, tcpwrap_service);
 }
 
+#ifdef HAVE_IPV6
 pa_socket_server* pa_socket_server_new_ipv6_loopback(pa_mainloop_api *m, uint16_t port, const char *tcpwrap_service) {
     pa_assert(m);
     pa_assert(port > 0);
 
     return pa_socket_server_new_ipv6(m, in6addr_loopback.s6_addr, port, tcpwrap_service);
 }
+#endif
 
 pa_socket_server* pa_socket_server_new_ipv4_any(pa_mainloop_api *m, uint16_t port, const char *tcpwrap_service) {
     pa_assert(m);
@@ -369,12 +373,14 @@ pa_socket_server* pa_socket_server_new_ipv4_any(pa_mainloop_api *m, uint16_t por
     return pa_socket_server_new_ipv4(m, INADDR_ANY, port, tcpwrap_service);
 }
 
+#ifdef HAVE_IPV6
 pa_socket_server* pa_socket_server_new_ipv6_any(pa_mainloop_api *m, uint16_t port, const char *tcpwrap_service) {
     pa_assert(m);
     pa_assert(port > 0);
 
     return pa_socket_server_new_ipv6(m, in6addr_any.s6_addr, port, tcpwrap_service);
 }
+#endif
 
 pa_socket_server* pa_socket_server_new_ipv4_string(pa_mainloop_api *m, const char *name, uint16_t port, const char *tcpwrap_service) {
     struct in_addr ipv4;
@@ -389,6 +395,7 @@ pa_socket_server* pa_socket_server_new_ipv4_string(pa_mainloop_api *m, const cha
     return NULL;
 }
 
+#ifdef HAVE_IPV6
 pa_socket_server* pa_socket_server_new_ipv6_string(pa_mainloop_api *m, const char *name, uint16_t port, const char *tcpwrap_service) {
     struct in6_addr ipv6;
 
@@ -401,6 +408,7 @@ pa_socket_server* pa_socket_server_new_ipv6_string(pa_mainloop_api *m, const cha
 
     return NULL;
 }
+#endif
 
 static void socket_server_free(pa_socket_server*s) {
     pa_assert(s);
@@ -441,6 +449,7 @@ char *pa_socket_server_get_address(pa_socket_server *s, char *c, size_t l) {
     pa_assert(l > 0);
 
     switch (s->type) {
+#ifdef HAVE_IPV6
         case SOCKET_SERVER_IPV6: {
             struct sockaddr_in6 sa;
             socklen_t sa_len = sizeof(sa);
@@ -458,11 +467,13 @@ char *pa_socket_server_get_address(pa_socket_server *s, char *c, size_t l) {
                 pa_snprintf(c, l, "tcp6:%s:%u", fqdn, (unsigned) ntohs(sa.sin6_port));
 
             } else if (memcmp(&in6addr_loopback, &sa.sin6_addr, sizeof(in6addr_loopback)) == 0) {
-                char hn[256];
-                if (!pa_get_host_name(hn, sizeof(hn)))
+                char *id;
+
+                if (!(id = pa_machine_id()))
                     return NULL;
 
-                pa_snprintf(c, l, "{%s}tcp6:localhost:%u", hn, (unsigned) ntohs(sa.sin6_port));
+                pa_snprintf(c, l, "{%s}tcp6:localhost:%u", id, (unsigned) ntohs(sa.sin6_port));
+                pa_xfree(id);
             } else {
                 char ip[INET6_ADDRSTRLEN];
 
@@ -476,6 +487,7 @@ char *pa_socket_server_get_address(pa_socket_server *s, char *c, size_t l) {
 
             return c;
         }
+#endif
 
         case SOCKET_SERVER_IPV4: {
             struct sockaddr_in sa;
@@ -493,11 +505,13 @@ char *pa_socket_server_get_address(pa_socket_server *s, char *c, size_t l) {
 
                 pa_snprintf(c, l, "tcp:%s:%u", fqdn, (unsigned) ntohs(sa.sin_port));
             } else if (sa.sin_addr.s_addr == INADDR_LOOPBACK) {
-                char hn[256];
-                if (!pa_get_host_name(hn, sizeof(hn)))
+                char *id;
+
+                if (!(id = pa_machine_id()))
                     return NULL;
 
-                pa_snprintf(c, l, "{%s}tcp:localhost:%u", hn, (unsigned) ntohs(sa.sin_port));
+                pa_snprintf(c, l, "{%s}tcp:localhost:%u", id, (unsigned) ntohs(sa.sin_port));
+                pa_xfree(id);
             } else {
                 char ip[INET_ADDRSTRLEN];
 
@@ -513,15 +527,16 @@ char *pa_socket_server_get_address(pa_socket_server *s, char *c, size_t l) {
         }
 
         case SOCKET_SERVER_UNIX: {
-            char hn[256];
+            char *id;
 
             if (!s->filename)
                 return NULL;
 
-            if (!pa_get_host_name(hn, sizeof(hn)))
+            if (!(id = pa_machine_id()))
                 return NULL;
 
-            pa_snprintf(c, l, "{%s}unix:%s", hn, s->filename);
+            pa_snprintf(c, l, "{%s}unix:%s", id, s->filename);
+            pa_xfree(id);
             return c;
         }
 

@@ -1,3 +1,127 @@
+pulseaudio (1:0.9.15-1ubuntu1) karmic; urgency=low
+
+  * Merge from unreleased Debian pulseaudio git, remaining changes:
+    - epoch (my stupid fault :S)
+    - Don't build against, and create jack package. Jack is not in main
+    - use linear resampler to work better with lack of PREEMPT in jaunty's
+      -generic kernel config, also change buffer size
+    - Add alsa configuration files to route alsa applications via pulseaudio
+    - Move libasound2-plugins from Recommends to Depends
+    - Add pm-utils sleep hook to suspend (and resume) users' pulseaudio
+      daemons
+    - patch to fix source/sink and suspend-on-idle race
+    - Make initscript more informative in the default case of per-user
+      sessions
+    - create /var/run/pulse, and make restart more robust
+    - add status check for system wide pulseaudio instance
+    - LSB {Required-*,Should-*} should specify hal instead of dbus,
+      since hal is required (and already requires dbus)
+    - indicate that the system pulseaudio instance is being started from the init
+      script
+    - Install more upstream man pages
+    - Link to pacat for parec man page
+    - check whether pulseaudio is running before preloading the padsp library
+    - Add DEB_OPT_FLAG = -O3 as per recommendation from
+      pulseaudio-discuss/2007-December/001017.html
+    - cache /usr/share/sounds/ubuntu/stereo/ wav files on pulseaudio load
+    - disable glitch free (use tsched=0)
+    - Generate a PO template on build
+    - add special case to disable pulseaudio loading if accessibility/speech
+      is being used
+    - the sd wrapper script should not load pulseaudio if pulseaudio is being
+      used as a system service
+    - add a pulseaudio apport hook
+    - fix some typos in README.Debian
+    - demote paprefs to suggests
+    - drop padevchooser(Recommends) and pavucontrol (Suggests)
+    - drop libasyncns-dev build dependency, its in universe
+  * add libudev-dev as a build-dependency
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Tue, 05 May 2009 14:18:20 +1000
+
+pulseaudio (0.9.15-1) UNRELEASED; urgency=low
+
+  * debian/control: Build-Depend on libcap-dev instead of libcap2-dev
+  * New Upstream Version
+  * Update copyright file
+  * Updated pulseaudio-module-hal.install, dbus-util became part of pulsecore
+  * Move debug package to the debug Section
+  * Done make shlibs files for modules in /usr/lib/pulse-0.9.15
+  * Update standards-version to 3.8.1, no further changes
+  * Set priority of pulseaudio-module-raop-dbg to extra
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Thu, 16 Apr 2009 00:44:44 +0100
+
+pulseaudio (0.9.15~test5-1) experimental; urgency=low
+
+  * New Upstream Version
+  * debian/copyright: Updated
+  * debian/control: Build-Depends on libltdl7-dev
+  * debian/control: Build-Depends on libasound2-dev (>= 1.0.19)
+  * debian/rules: Use git format-patch instead of git-format-patch
+  * debian/patches/0001-load-module-gconf-earlier.patch:
+    - Removed. Merged upstream
+  * debian/pulseaudio.install: Update for new modules
+  * debian/pulseaudio-module-x11.install: Update for new modules
+  * Move libpulscore into the pulseaudio package
+  * debian/pulseaudio-module-bluetooth.install: Add the bluetooth-util module
+    library
+  * debian/pulseaudio.install: Add new modules
+  * debian/control: Add bulid-depends on libgtk2.0-dev and libxtst-dev
+  * debian/pulseaudio.shlibs, debian/libpulse0.shlibs: Update shlib files
+  * debian/pulseaudio.install: Add liboss-util.so oss module helper library
+  * debian/control, debian/pulseaudio-module-raop.install: Add RAOP module
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Sun, 22 Mar 2009 23:06:50 +0000
+
+pulseaudio (0.9.14-2) unstable; urgency=low
+
+  [ Sjoerd Simons ]
+  * Build against libcap2-dev (Closes: #489060)
+  * Bump shlibs of libpulse0 (Closes: #514645)
+  * Bump soname of libpulsecore to 9
+  * Wait up to 5 seconds for pulseaudio to stop. Fix suggested by Aron Griffis
+    (Closes: #488754, #498457)
+  * Don't put stop links in rc0 and rc6. Pulse doens't really need it. Patch
+    supplied by James Westby (Closes: #494959)
+  * Make the start option of the init script report the right status. Fix
+    suggested by Aron Griffis (Closes: #488752)
+  * Use per user esound sockets instead of a single one for all users
+
+  [ Baptiste Mille-Mathias ]
+  * debian/control:
+    - create a separate package for bluetooth module (Closes: #513832)
+  * debian/pulseaudio-module-bluetooth.install
+    - put files for the separate bluetooth module package
+  * debian/pulseaudio.install
+    - remove files of the separate bluetooth module package
+
+  [ Sjoerd Simons ]
+  * debian/control: Don't build the bluetooth module on non-linux systems
+    (Closes: #502837)
+  * debian/control: Make the bluetooth module conflict with older pulseaudio
+    versions
+  * Update standards version, no changes needed
+  * debian/copyright: Big update
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Sun, 01 Mar 2009 15:53:27 +0000
+
+pulseaudio (0.9.14-1) experimental; urgency=low
+
+  * New Upstream Version
+  * 0002-load-module-gconf-earlier.patch renamed to
+    0001-load-module-gconf-earlier.patch and updated
+  * 0001-Fix-library-search-path-to-include-lib-and-usr-lib.patch
+    - Removed, no longer applicable
+  * 0003-make-sure-to-use-64bit-rounding-even-on-32bit-machin.patch
+    - Removed, fixed upstream
+  * 0004-properly-remove-dbus-matches-an-filters-when-unloadi.patch
+    - Removed, fixed upstream
+  * debian/patches/series
+    - Updated
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Sun, 01 Feb 2009 12:47:55 +0000
+
 pulseaudio (1:0.9.14-0ubuntu20) jaunty; urgency=low
 
   * debian/01PulseAudio: use pactl instead of pacmd (LP: #202089)

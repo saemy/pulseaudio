@@ -9,7 +9,7 @@
 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2 of the License,
+  by the Free Software Foundation; either version 2.1 of the License,
   or (at your option) any later version.
 
   PulseAudio is distributed in the hope that it will be useful, but
@@ -50,7 +50,7 @@ struct pollfd;
  *
  * -# Prepare - Build a list of file descriptors
  *               that need to be monitored and calculate the next timeout.
- * -# Poll - Execute the actuall poll() system call.
+ * -# Poll - Execute the actual poll() system call.
  * -# Dispatch - Dispatch any events that have fired.
  *
  * When using the main loop, the application can either execute each

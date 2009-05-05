@@ -3,7 +3,7 @@
 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2 of the License,
+  by the Free Software Foundation; either version 2.1 of the License,
   or (at your option) any later version.
 
   PulseAudio is distributed in the hope that it will be useful, but
@@ -46,7 +46,7 @@ static pa_defer_event *de;
 
 static void iocb(pa_mainloop_api*a, pa_io_event *e, int fd, pa_io_event_flags_t f, void *userdata) {
     unsigned char c;
-    read(fd, &c, sizeof(c));
+    (void) read(fd, &c, sizeof(c));
     fprintf(stderr, "IO EVENT: %c\n", c < 32 ? '.' : c);
     a->defer_enable(de, 1);
 }

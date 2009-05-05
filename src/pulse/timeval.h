@@ -26,17 +26,29 @@
 #include <pulse/cdecl.h>
 #include <pulse/gccmacro.h>
 #include <pulse/sample.h>
+#include <pulse/version.h>
 
 /** \file
  * Utility functions for handling timeval calculations */
 
 PA_C_DECL_BEGIN
 
+/** The number of milliseconds in a second */
 #define PA_MSEC_PER_SEC ((pa_usec_t) 1000ULL)
+
+/** The number of microseconds in a second */
 #define PA_USEC_PER_SEC ((pa_usec_t) 1000000ULL)
+
+/** The number of nanoseconds in a second */
 #define PA_NSEC_PER_SEC ((pa_usec_t) 1000000000ULL)
+
+/** The number of microseconds in a millisecond */
 #define PA_USEC_PER_MSEC ((pa_usec_t) 1000ULL)
+
+/** The number of nanoseconds in a millisecond */
 #define PA_NSEC_PER_MSEC ((pa_usec_t) 1000000ULL)
+
+/** The number of nanoseconds in a microsecond */
 #define PA_NSEC_PER_USEC ((pa_usec_t) 1000ULL)
 
 struct timeval;
@@ -48,7 +60,7 @@ struct timeval *pa_gettimeofday(struct timeval *tv);
  * structs. */
 pa_usec_t pa_timeval_diff(const struct timeval *a, const struct timeval *b) PA_GCC_PURE;
 
-/** Compare the two timeval structs and return 0 when equal, negative when a < b, positive otherwse */
+/** Compare the two timeval structs and return 0 when equal, negative when a < b, positive otherwise */
 int pa_timeval_cmp(const struct timeval *a, const struct timeval *b) PA_GCC_PURE;
 
 /** Return the time difference between now and the specified timestamp */

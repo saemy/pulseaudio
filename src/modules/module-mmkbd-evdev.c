@@ -5,7 +5,7 @@
 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
-  by the Free Software Foundation; either version 2 of the License,
+  by the Free Software Foundation; either version 2.1 of the License,
   or (at your option) any later version.
 
   PulseAudio is distributed in the hope that it will be useful, but
@@ -51,17 +51,6 @@ PA_MODULE_LOAD_ONCE(FALSE);
 PA_MODULE_USAGE("device=<evdev device> sink=<sink name>");
 
 #define DEFAULT_DEVICE "/dev/input/event0"
-
-/*
- * This isn't defined in older kernel headers and there is no way of
- * detecting it.
- */
-struct _input_id {
-    __u16 bustype;
-    __u16 vendor;
-    __u16 product;
-    __u16 version;
-};
 
 static const char* const valid_modargs[] = {
     "device",
@@ -109,35 +98,35 @@ static void io_callback(pa_mainloop_api *io, pa_io_event *e, int fd, pa_io_event
             if (volchange != INVALID) {
                 pa_sink *s;
 
-                if (!(s = pa_namereg_get(u->module->core, u->sink_name, PA_NAMEREG_SINK, 1)))
+                if (!(s = pa_namereg_get(u->module->core, u->sink_name, PA_NAMEREG_SINK)))
                     pa_log("Failed to get sink '%s'", u->sink_name);
                 else {
                     int i;
-                    pa_cvolume cv = *pa_sink_get_volume(s, FALSE);
+                    pa_cvolume cv = *pa_sink_get_volume(s, FALSE, FALSE);
 
 #define DELTA (PA_VOLUME_NORM/20)
 
                     switch (volchange) {
                         case UP:
                             for (i = 0; i < cv.channels; i++) {
-                                cv.values[i] += DELTA;
-
-                                if (cv.values[i] > PA_VOLUME_NORM)
-                                    cv.values[i] = PA_VOLUME_NORM;
+                                if (cv.values[i] < PA_VOLUME_MAX - DELTA)
+                                    cv.values[i] += DELTA;
+                                else
+                                    cv.values[i] = PA_VOLUME_MAX;
                             }
 
-                            pa_sink_set_volume(s, &cv);
+                            pa_sink_set_volume(s, &cv, TRUE, TRUE, TRUE);
                             break;
 
                         case DOWN:
                             for (i = 0; i < cv.channels; i++) {
-                                if (cv.values[i] >= DELTA)
+                                if (cv.values[i] > DELTA)
                                     cv.values[i] -= DELTA;
                                 else
                                     cv.values[i] = PA_VOLUME_MUTED;
                             }
 
-                            pa_sink_set_volume(s, &cv);
+                            pa_sink_set_volume(s, &cv, TRUE, TRUE, TRUE);
                             break;
 
                         case MUTE_TOGGLE:
@@ -146,7 +135,7 @@ static void io_callback(pa_mainloop_api *io, pa_io_event *e, int fd, pa_io_event
                             break;
 
                         case INVALID:
-                            ;
+                            pa_assert_not_reached();
                     }
                 }
             }
@@ -169,7 +158,7 @@ int pa__init(pa_module*m) {
     pa_modargs *ma = NULL;
     struct userdata *u;
     int version;
-    struct _input_id input_id;
+    struct input_id input_id;
     char name[256];
     uint8_t evtype_bitmask[EV_MAX/8 + 1];
 
@@ -180,15 +169,15 @@ int pa__init(pa_module*m) {
         goto fail;
     }
 
-    m->userdata = u = pa_xnew(struct userdata,1);
+    m->userdata = u = pa_xnew(struct userdata, 1);
     u->module = m;
     u->io = NULL;
     u->sink_name = pa_xstrdup(pa_modargs_get_value(ma, "sink", NULL));
     u->fd = -1;
     u->fd_type = 0;
 
-    if ((u->fd = open(pa_modargs_get_value(ma, "device", DEFAULT_DEVICE), O_RDONLY)) < 0) {
-        pa_log("failed to open evdev device: %s", pa_cstrerror(errno));
+    if ((u->fd = open(pa_modargs_get_value(ma, "device", DEFAULT_DEVICE), O_RDONLY|O_NOCTTY)) < 0) {
+        pa_log("Failed to open evdev device: %s", pa_cstrerror(errno));
         goto fail;
     }
 
@@ -208,7 +197,7 @@ int pa__init(pa_module*m) {
                 input_id.vendor, input_id.product, input_id.version, input_id.bustype);
 
     memset(name, 0, sizeof(name));
-    if(ioctl(u->fd, EVIOCGNAME(sizeof(name)), name) < 0) {
+    if (ioctl(u->fd, EVIOCGNAME(sizeof(name)), name) < 0) {
         pa_log("EVIOCGNAME failed: %s", pa_cstrerror(errno));
         goto fail;
     }
