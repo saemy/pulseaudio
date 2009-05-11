@@ -27,7 +27,6 @@
 #include <time.h>
 
 #include <pulse/cdecl.h>
-#include <pulse/sample.h>
 #include <pulse/version.h>
 
 /** \file

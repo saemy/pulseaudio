@@ -30,12 +30,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <gdbm.h>
 
 #include <pulse/xmalloc.h>
 #include <pulse/volume.h>
 #include <pulse/timeval.h>
 #include <pulse/util.h>
-#include <pulse/rtclock.h>
 
 #include <pulsecore/core-error.h>
 #include <pulsecore/module.h>
@@ -46,7 +46,6 @@
 #include <pulsecore/sink-input.h>
 #include <pulsecore/source-output.h>
 #include <pulsecore/namereg.h>
-#include <pulsecore/database.h>
 
 #include "module-device-restore-symdef.h"
 
@@ -55,16 +54,14 @@ PA_MODULE_DESCRIPTION("Automatically restore the volume/mute state of devices");
 PA_MODULE_VERSION(PACKAGE_VERSION);
 PA_MODULE_LOAD_ONCE(TRUE);
 PA_MODULE_USAGE(
-        "restore_port=<Save/restore port?> "
         "restore_volume=<Save/restore volumes?> "
         "restore_muted=<Save/restore muted states?>");
 
-#define SAVE_INTERVAL (10 * PA_USEC_PER_SEC)
+#define SAVE_INTERVAL 10
 
 static const char* const valid_modargs[] = {
     "restore_volume",
     "restore_muted",
-    "restore_port",
     NULL
 };
 
@@ -73,82 +70,78 @@ struct userdata {
     pa_module *module;
     pa_subscription *subscription;
     pa_hook_slot
-        *sink_new_hook_slot,
         *sink_fixate_hook_slot,
-        *source_new_hook_slot,
         *source_fixate_hook_slot;
     pa_time_event *save_time_event;
-    pa_database *database;
+    GDBM_FILE gdbm_file;
 
     pa_bool_t restore_volume:1;
     pa_bool_t restore_muted:1;
-    pa_bool_t restore_port:1;
 };
 
-#define ENTRY_VERSION 2
+#define ENTRY_VERSION 1
 
 struct entry {
     uint8_t version;
-    pa_bool_t muted_valid:1, volume_valid:1, port_valid:1;
     pa_bool_t muted:1;
     pa_channel_map channel_map;
     pa_cvolume volume;
-    char port[PA_NAME_MAX];
 } PA_GCC_PACKED;
 
-static void save_time_callback(pa_mainloop_api*a, pa_time_event* e, const struct timeval *t, void *userdata) {
+static void save_time_callback(pa_mainloop_api*a, pa_time_event* e, const struct timeval *tv, void *userdata) {
     struct userdata *u = userdata;
 
     pa_assert(a);
     pa_assert(e);
+    pa_assert(tv);
     pa_assert(u);
 
     pa_assert(e == u->save_time_event);
     u->core->mainloop->time_free(u->save_time_event);
     u->save_time_event = NULL;
 
-    pa_database_sync(u->database);
+    gdbm_sync(u->gdbm_file);
     pa_log_info("Synced.");
 }
 
 static struct entry* read_entry(struct userdata *u, const char *name) {
-    pa_datum key, data;
+    datum key, data;
     struct entry *e;
 
     pa_assert(u);
     pa_assert(name);
 
-    key.data = (char*) name;
-    key.size = strlen(name);
+    key.dptr = (char*) name;
+    key.dsize = (int) strlen(name);
 
-    pa_zero(data);
+    data = gdbm_fetch(u->gdbm_file, key);
 
-    if (!pa_database_get(u->database, &key, &data))
+    if (!data.dptr)
         goto fail;
 
-    if (data.size != sizeof(struct entry)) {
-        pa_log_debug("Database contains entry for device %s of wrong size %lu != %lu. Probably due to upgrade, ignoring.", name, (unsigned long) data.size, (unsigned long) sizeof(struct entry));
+    if (data.dsize != sizeof(struct entry)) {
+        pa_log_debug("Database contains entry for device %s of wrong size %lu != %lu. Probably due to upgrade, ignoring.", name, (unsigned long) data.dsize, (unsigned long) sizeof(struct entry));
         goto fail;
     }
 
-    e = (struct entry*) data.data;
+    e = (struct entry*) data.dptr;
 
     if (e->version != ENTRY_VERSION) {
         pa_log_debug("Version of database entry for device %s doesn't match our version. Probably due to upgrade, ignoring.", name);
         goto fail;
     }
 
-    if (!memchr(e->port, 0, sizeof(e->port))) {
-        pa_log_warn("Database contains entry for device %s with missing NUL byte in port name", name);
+    if (!(pa_cvolume_valid(&e->volume))) {
+        pa_log_warn("Invalid volume stored in database for device %s", name);
         goto fail;
     }
 
-    if (e->volume_valid && !pa_channel_map_valid(&e->channel_map)) {
+    if (!(pa_channel_map_valid(&e->channel_map))) {
         pa_log_warn("Invalid channel map stored in database for device %s", name);
         goto fail;
     }
 
-    if (e->volume_valid && (!pa_cvolume_valid(&e->volume) || !pa_cvolume_compatible_with_channel_map(&e->volume, &e->channel_map))) {
+    if (e->volume.channels != e->channel_map.channels) {
         pa_log_warn("Volume and channel map don't match in database entry for device %s", name);
         goto fail;
     }
@@ -157,41 +150,26 @@ static struct entry* read_entry(struct userdata *u, const char *name) {
 
 fail:
 
-    pa_datum_free(&data);
+    pa_xfree(data.dptr);
     return NULL;
 }
 
 static void trigger_save(struct userdata *u) {
+    struct timeval tv;
+
     if (u->save_time_event)
         return;
 
-    u->save_time_event = pa_core_rttime_new(u->core, pa_rtclock_now() + SAVE_INTERVAL, save_time_callback, u);
-}
-
-static pa_bool_t entries_equal(const struct entry *a, const struct entry *b) {
-    pa_cvolume t;
-
-    if (a->port_valid != b->port_valid ||
-        (a->port_valid && strncmp(a->port, b->port, sizeof(a->port))))
-        return FALSE;
-
-    if (a->muted_valid != b->muted_valid ||
-        (a->muted_valid && (a->muted != b->muted)))
-        return FALSE;
-
-    t = b->volume;
-    if (a->volume_valid != b->volume_valid ||
-        (a->volume_valid && !pa_cvolume_equal(pa_cvolume_remap(&t, &b->channel_map, &a->channel_map), &a->volume)))
-        return FALSE;
-
-    return TRUE;
+    pa_gettimeofday(&tv);
+    tv.tv_sec += SAVE_INTERVAL;
+    u->save_time_event = u->core->mainloop->time_new(u->core->mainloop, &tv, save_time_callback, u);
 }
 
 static void subscribe_callback(pa_core *c, pa_subscription_event_type_t t, uint32_t idx, void *userdata) {
     struct userdata *u = userdata;
     struct entry entry, *old;
     char *name;
-    pa_datum key, data;
+    datum key, data;
 
     pa_assert(c);
     pa_assert(u);
@@ -202,7 +180,7 @@ static void subscribe_callback(pa_core *c, pa_subscription_event_type_t t, uint3
         t != (PA_SUBSCRIPTION_EVENT_SOURCE|PA_SUBSCRIPTION_EVENT_CHANGE))
         return;
 
-    pa_zero(entry);
+    memset(&entry, 0, sizeof(entry));
     entry.version = ENTRY_VERSION;
 
     if ((t & PA_SUBSCRIPTION_EVENT_FACILITY_MASK) == PA_SUBSCRIPTION_EVENT_SINK) {
@@ -212,25 +190,9 @@ static void subscribe_callback(pa_core *c, pa_subscription_event_type_t t, uint3
             return;
 
         name = pa_sprintf_malloc("sink:%s", sink->name);
-
-        if ((old = read_entry(u, name)))
-            entry = *old;
-
-        if (sink->save_volume) {
-            entry.channel_map = sink->channel_map;
-            entry.volume = *pa_sink_get_volume(sink, FALSE);
-            entry.volume_valid = TRUE;
-        }
-
-        if (sink->save_muted) {
-            entry.muted = pa_sink_get_mute(sink, FALSE);
-            entry.muted_valid = TRUE;
-        }
-
-        if (sink->save_port) {
-            pa_strlcpy(entry.port, sink->active_port ? sink->active_port->name : "", sizeof(entry.port));
-            entry.port_valid = TRUE;
-        }
+        entry.channel_map = sink->channel_map;
+        entry.volume = *pa_sink_get_volume(sink, FALSE, TRUE);
+        entry.muted = pa_sink_get_mute(sink, FALSE);
 
     } else {
         pa_source *source;
@@ -241,30 +203,16 @@ static void subscribe_callback(pa_core *c, pa_subscription_event_type_t t, uint3
             return;
 
         name = pa_sprintf_malloc("source:%s", source->name);
-
-        if ((old = read_entry(u, name)))
-            entry = *old;
-
-        if (source->save_volume) {
-            entry.channel_map = source->channel_map;
-            entry.volume = *pa_source_get_volume(source, FALSE);
-            entry.volume_valid = TRUE;
-        }
-
-        if (source->save_muted) {
-            entry.muted = pa_source_get_mute(source, FALSE);
-            entry.muted_valid = TRUE;
-        }
-
-        if (source->save_port) {
-            pa_strlcpy(entry.port, source->active_port ? source->active_port->name : "", sizeof(entry.port));
-            entry.port_valid = TRUE;
-        }
+        entry.channel_map = source->channel_map;
+        entry.volume = *pa_source_get_volume(source, FALSE);
+        entry.muted = pa_source_get_mute(source, FALSE);
     }
 
-    if (old) {
+    if ((old = read_entry(u, name))) {
 
-        if (entries_equal(old, &entry)) {
+        if (pa_cvolume_equal(pa_cvolume_remap(&old->volume, &old->channel_map, &entry.channel_map), &entry.volume) &&
+            !old->muted == !entry.muted) {
+
             pa_xfree(old);
             pa_xfree(name);
             return;
@@ -273,118 +221,48 @@ static void subscribe_callback(pa_core *c, pa_subscription_event_type_t t, uint3
         pa_xfree(old);
     }
 
-    key.data = name;
-    key.size = strlen(name);
+    key.dptr = name;
+    key.dsize = (int) strlen(name);
 
-    data.data = &entry;
-    data.size = sizeof(entry);
+    data.dptr = (void*) &entry;
+    data.dsize = sizeof(entry);
 
-    pa_log_info("Storing volume/mute/port for device %s.", name);
+    pa_log_info("Storing volume/mute for device %s.", name);
 
-    pa_database_set(u->database, &key, &data, TRUE);
+    gdbm_store(u->gdbm_file, key, data, GDBM_REPLACE);
 
     pa_xfree(name);
 
     trigger_save(u);
 }
 
-static pa_hook_result_t sink_new_hook_callback(pa_core *c, pa_sink_new_data *new_data, struct userdata *u) {
-    char *name;
-    struct entry *e;
-
-    pa_assert(c);
-    pa_assert(new_data);
-    pa_assert(u);
-    pa_assert(u->restore_port);
-
-    name = pa_sprintf_malloc("sink:%s", new_data->name);
-
-    if ((e = read_entry(u, name))) {
-
-        if (e->port_valid) {
-            if (!new_data->active_port) {
-                pa_log_info("Restoring port for sink %s.", name);
-                pa_sink_new_data_set_port(new_data, e->port);
-                new_data->save_port = TRUE;
-            } else
-                pa_log_debug("Not restoring port for sink %s, because already set.", name);
-        }
-
-        pa_xfree(e);
-    }
-
-    pa_xfree(name);
-
-    return PA_HOOK_OK;
-}
-
 static pa_hook_result_t sink_fixate_hook_callback(pa_core *c, pa_sink_new_data *new_data, struct userdata *u) {
     char *name;
     struct entry *e;
 
-    pa_assert(c);
     pa_assert(new_data);
-    pa_assert(u);
-    pa_assert(u->restore_volume || u->restore_muted);
 
     name = pa_sprintf_malloc("sink:%s", new_data->name);
 
     if ((e = read_entry(u, name))) {
 
-        if (u->restore_volume && e->volume_valid) {
+        if (u->restore_volume) {
 
             if (!new_data->volume_is_set) {
-                pa_cvolume v;
-
                 pa_log_info("Restoring volume for sink %s.", new_data->name);
-
-                v = e->volume;
-                pa_cvolume_remap(&v, &e->channel_map, &new_data->channel_map);
-                pa_sink_new_data_set_volume(new_data, &v);
-
-                new_data->save_volume = TRUE;
+                pa_sink_new_data_set_volume(new_data, pa_cvolume_remap(&e->volume, &e->channel_map, &new_data->channel_map));
             } else
                 pa_log_debug("Not restoring volume for sink %s, because already set.", new_data->name);
+
         }
 
-        if (u->restore_muted && e->muted_valid) {
+        if (u->restore_muted) {
 
             if (!new_data->muted_is_set) {
                 pa_log_info("Restoring mute state for sink %s.", new_data->name);
                 pa_sink_new_data_set_muted(new_data, e->muted);
-                new_data->save_muted = TRUE;
             } else
                 pa_log_debug("Not restoring mute state for sink %s, because already set.", new_data->name);
-        }
-
-        pa_xfree(e);
-    }
-
-    pa_xfree(name);
-
-    return PA_HOOK_OK;
-}
-
-static pa_hook_result_t source_new_hook_callback(pa_core *c, pa_source_new_data *new_data, struct userdata *u) {
-    char *name;
-    struct entry *e;
-
-    pa_assert(c);
-    pa_assert(new_data);
-    pa_assert(u);
-    pa_assert(u->restore_port);
-
-    name = pa_sprintf_malloc("source:%s", new_data->name);
-
-    if ((e = read_entry(u, name))) {
-
-        if (e->port_valid) {
-            if (!new_data->active_port) {
-                pa_log_info("Restoring port for source %s.", name);
-                pa_source_new_data_set_port(new_data, e->port);
-                new_data->save_port = TRUE;
-            } else
-                pa_log_debug("Not restoring port for source %s, because already set.", name);
         }
 
         pa_xfree(e);
@@ -399,37 +277,26 @@ static pa_hook_result_t source_fixate_hook_callback(pa_core *c, pa_source_new_da
     char *name;
     struct entry *e;
 
-    pa_assert(c);
     pa_assert(new_data);
-    pa_assert(u);
-    pa_assert(u->restore_volume || u->restore_muted);
 
     name = pa_sprintf_malloc("source:%s", new_data->name);
 
     if ((e = read_entry(u, name))) {
 
-        if (u->restore_volume && e->volume_valid) {
+        if (u->restore_volume) {
 
             if (!new_data->volume_is_set) {
-                pa_cvolume v;
-
                 pa_log_info("Restoring volume for source %s.", new_data->name);
-
-                v = e->volume;
-                pa_cvolume_remap(&v, &e->channel_map, &new_data->channel_map);
-                pa_source_new_data_set_volume(new_data, &v);
-
-                new_data->save_volume = TRUE;
+                pa_source_new_data_set_volume(new_data, pa_cvolume_remap(&e->volume, &e->channel_map, &new_data->channel_map));
             } else
                 pa_log_debug("Not restoring volume for source %s, because already set.", new_data->name);
         }
 
-        if (u->restore_muted && e->muted_valid) {
+        if (u->restore_muted) {
 
             if (!new_data->muted_is_set) {
                 pa_log_info("Restoring mute state for source %s.", new_data->name);
                 pa_source_new_data_set_muted(new_data, e->muted);
-                new_data->save_muted = TRUE;
             } else
                 pa_log_debug("Not restoring mute state for source %s, because already set.", new_data->name);
         }
@@ -445,11 +312,12 @@ static pa_hook_result_t source_fixate_hook_callback(pa_core *c, pa_source_new_da
 int pa__init(pa_module*m) {
     pa_modargs *ma = NULL;
     struct userdata *u;
-    char *fname;
+    char *fname, *fn;
     pa_sink *sink;
     pa_source *source;
     uint32_t idx;
-    pa_bool_t restore_volume = TRUE, restore_muted = TRUE, restore_port = TRUE;
+    pa_bool_t restore_volume = TRUE, restore_muted = TRUE;
+    int gdbm_cache_size;
 
     pa_assert(m);
 
@@ -459,42 +327,49 @@ int pa__init(pa_module*m) {
     }
 
     if (pa_modargs_get_value_boolean(ma, "restore_volume", &restore_volume) < 0 ||
-        pa_modargs_get_value_boolean(ma, "restore_muted", &restore_muted) < 0 ||
-        pa_modargs_get_value_boolean(ma, "restore_port", &restore_port) < 0) {
-        pa_log("restore_port=, restore_volume= and restore_muted= expect boolean arguments");
+        pa_modargs_get_value_boolean(ma, "restore_muted", &restore_muted) < 0) {
+        pa_log("restore_volume= and restore_muted= expect boolean arguments");
         goto fail;
     }
 
-    if (!restore_muted && !restore_volume && !restore_port)
-        pa_log_warn("Neither restoring volume, nor restoring muted, nor restoring port enabled!");
+    if (!restore_muted && !restore_volume)
+        pa_log_warn("Neither restoring volume nor restoring muted enabled!");
 
-    m->userdata = u = pa_xnew0(struct userdata, 1);
+    m->userdata = u = pa_xnew(struct userdata, 1);
     u->core = m->core;
     u->module = m;
+    u->save_time_event = NULL;
     u->restore_volume = restore_volume;
     u->restore_muted = restore_muted;
-    u->restore_port = restore_port;
+    u->gdbm_file = NULL;
 
     u->subscription = pa_subscription_new(m->core, PA_SUBSCRIPTION_MASK_SINK|PA_SUBSCRIPTION_MASK_SOURCE, subscribe_callback, u);
-
-    if (restore_port) {
-        u->sink_new_hook_slot = pa_hook_connect(&m->core->hooks[PA_CORE_HOOK_SINK_NEW], PA_HOOK_EARLY, (pa_hook_cb_t) sink_new_hook_callback, u);
-        u->source_new_hook_slot = pa_hook_connect(&m->core->hooks[PA_CORE_HOOK_SOURCE_NEW], PA_HOOK_EARLY, (pa_hook_cb_t) source_new_hook_callback, u);
-    }
 
     if (restore_muted || restore_volume) {
         u->sink_fixate_hook_slot = pa_hook_connect(&m->core->hooks[PA_CORE_HOOK_SINK_FIXATE], PA_HOOK_EARLY, (pa_hook_cb_t) sink_fixate_hook_callback, u);
         u->source_fixate_hook_slot = pa_hook_connect(&m->core->hooks[PA_CORE_HOOK_SOURCE_FIXATE], PA_HOOK_EARLY, (pa_hook_cb_t) source_fixate_hook_callback, u);
     }
 
-    if (!(fname = pa_state_path("device-volumes", TRUE)))
+    /* We include the host identifier in the file name because gdbm
+     * files are CPU dependant, and we don't want things to go wrong
+     * if we are on a multiarch system. */
+
+    fn = pa_sprintf_malloc("device-volumes."CANONICAL_HOST".gdbm");
+    fname = pa_state_path(fn, TRUE);
+    pa_xfree(fn);
+
+    if (!fname)
         goto fail;
 
-    if (!(u->database = pa_database_open(fname, TRUE))) {
-        pa_log("Failed to open volume database '%s': %s", fname, pa_cstrerror(errno));
+    if (!(u->gdbm_file = gdbm_open(fname, 0, GDBM_WRCREAT|GDBM_NOLOCK, 0600, NULL))) {
+        pa_log("Failed to open volume database '%s': %s", fname, gdbm_strerror(gdbm_errno));
         pa_xfree(fname);
         goto fail;
     }
+
+    /* By default the cache of gdbm is rather large, let's reduce it a bit to save memory */
+    gdbm_cache_size = 10;
+    gdbm_setopt(u->gdbm_file, GDBM_CACHESIZE, &gdbm_cache_size, sizeof(gdbm_cache_size));
 
     pa_log_info("Sucessfully opened database file '%s'.", fname);
     pa_xfree(fname);
@@ -532,16 +407,12 @@ void pa__done(pa_module*m) {
         pa_hook_slot_free(u->sink_fixate_hook_slot);
     if (u->source_fixate_hook_slot)
         pa_hook_slot_free(u->source_fixate_hook_slot);
-    if (u->sink_new_hook_slot)
-        pa_hook_slot_free(u->sink_new_hook_slot);
-    if (u->source_new_hook_slot)
-        pa_hook_slot_free(u->source_new_hook_slot);
 
     if (u->save_time_event)
         u->core->mainloop->time_free(u->save_time_event);
 
-    if (u->database)
-        pa_database_close(u->database);
+    if (u->gdbm_file)
+        gdbm_close(u->gdbm_file);
 
     pa_xfree(u);
 }

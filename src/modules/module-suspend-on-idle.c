@@ -25,10 +25,8 @@
 
 #include <pulse/xmalloc.h>
 #include <pulse/timeval.h>
-#include <pulse/rtclock.h>
 
 #include <pulsecore/core.h>
-#include <pulsecore/core-util.h>
 #include <pulsecore/sink-input.h>
 #include <pulsecore/source-output.h>
 #include <pulsecore/modargs.h>
@@ -76,48 +74,41 @@ struct device_info {
     struct userdata *userdata;
     pa_sink *sink;
     pa_source *source;
-    pa_usec_t last_use;
+    struct timeval last_use;
     pa_time_event *time_event;
 };
 
-static void timeout_cb(pa_mainloop_api*a, pa_time_event* e, const struct timeval *t, void *userdata) {
+static void timeout_cb(pa_mainloop_api*a, pa_time_event* e, const struct timeval *tv, void *userdata) {
     struct device_info *d = userdata;
 
     pa_assert(d);
 
     d->userdata->core->mainloop->time_restart(d->time_event, NULL);
 
-    if (d->sink && pa_sink_check_suspend(d->sink) <= 0 && !(d->sink->suspend_cause & PA_SUSPEND_IDLE)) {
+    if (d->sink && pa_sink_check_suspend(d->sink) <= 0 && pa_sink_get_state(d->sink) != PA_SINK_SUSPENDED) {
         pa_log_info("Sink %s idle for too long, suspending ...", d->sink->name);
-        pa_sink_suspend(d->sink, TRUE, PA_SUSPEND_IDLE);
+        pa_sink_suspend(d->sink, TRUE);
     }
 
-    if (d->source && pa_source_check_suspend(d->source) <= 0 && !(d->source->suspend_cause & PA_SUSPEND_IDLE)) {
+    if (d->source && pa_source_check_suspend(d->source) <= 0 && pa_source_get_state(d->source) != PA_SOURCE_SUSPENDED) {
         pa_log_info("Source %s idle for too long, suspending ...", d->source->name);
-        pa_source_suspend(d->source, TRUE, PA_SUSPEND_IDLE);
+        pa_source_suspend(d->source, TRUE);
     }
 }
 
 static void restart(struct device_info *d) {
-    pa_usec_t now;
-    const char *s;
-    uint32_t timeout;
-
+    struct timeval tv;
     pa_assert(d);
-    pa_assert(d->sink || d->source);
 
-    d->last_use = now = pa_rtclock_now();
-
-    s = pa_proplist_gets(d->sink ? d->sink->proplist : d->source->proplist, "module-suspend-on-idle.timeout");
-    if (!s || pa_atou(s, &timeout) < 0)
-        timeout = d->userdata->timeout;
-
-    pa_core_rttime_restart(d->userdata->core, d->time_event, now + timeout * PA_USEC_PER_SEC);
+    pa_gettimeofday(&tv);
+    d->last_use = tv;
+    pa_timeval_add(&tv, d->userdata->timeout*1000000);
+    d->userdata->core->mainloop->time_restart(d->time_event, &tv);
 
     if (d->sink)
-        pa_log_debug("Sink %s becomes idle, timeout in %u seconds.", d->sink->name, timeout);
+        pa_log_debug("Sink %s becomes idle.", d->sink->name);
     if (d->source)
-        pa_log_debug("Source %s becomes idle, timeout in %u seconds.", d->source->name, timeout);
+        pa_log_debug("Source %s becomes idle.", d->source->name);
 }
 
 static void resume(struct device_info *d) {
@@ -126,13 +117,13 @@ static void resume(struct device_info *d) {
     d->userdata->core->mainloop->time_restart(d->time_event, NULL);
 
     if (d->sink) {
-        pa_sink_suspend(d->sink, FALSE, PA_SUSPEND_IDLE);
+        pa_sink_suspend(d->sink, FALSE);
 
         pa_log_debug("Sink %s becomes busy.", d->sink->name);
     }
 
     if (d->source) {
-        pa_source_suspend(d->source, FALSE, PA_SUSPEND_IDLE);
+        pa_source_suspend(d->source, FALSE);
 
         pa_log_debug("Source %s becomes busy.", d->source->name);
     }
@@ -337,7 +328,7 @@ static pa_hook_result_t device_new_hook_cb(pa_core *c, pa_object *o, struct user
     d->userdata = u;
     d->source = source ? pa_source_ref(source) : NULL;
     d->sink = sink ? pa_sink_ref(sink) : NULL;
-    d->time_event = pa_core_rttime_new(c, PA_USEC_INVALID, timeout_cb, d);
+    d->time_event = c->mainloop->time_new(c->mainloop, NULL, timeout_cb, d);
     pa_hashmap_put(u->device_infos, o, d);
 
     if ((d->sink && pa_sink_check_suspend(d->sink) <= 0) ||

@@ -235,7 +235,10 @@ int main(int argc, char *argv[]) {
     setlocale(LC_ALL, "");
     bindtextdomain(GETTEXT_PACKAGE, PULSE_LOCALEDIR);
 
-    bn = pa_path_get_filename(argv[0]);
+    if (!(bn = strrchr(argv[0], '/')))
+        bn = argv[0];
+    else
+        bn++;
 
     while ((c = getopt_long(argc, argv, "s:h", long_options, NULL)) != -1) {
         switch (c) {

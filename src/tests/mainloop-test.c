@@ -26,12 +26,10 @@
 #include <sys/time.h>
 #include <assert.h>
 
-#include <pulse/rtclock.h>
 #include <pulse/timeval.h>
 #include <pulse/gccmacro.h>
 
 #include <pulsecore/core-util.h>
-#include <pulsecore/core-rtclock.h>
 
 #ifdef GLIB_MAIN_LOOP
 
@@ -101,7 +99,9 @@ int main(int argc, char *argv[]) {
     de = a->defer_new(a, dcb, NULL);
     assert(de);
 
-    te = a->time_new(a, pa_timeval_rtstore(&tv, pa_rtclock_now() + 2 * PA_USEC_PER_SEC, TRUE), tcb, NULL);
+    pa_gettimeofday(&tv);
+    tv.tv_sec += 10;
+    te = a->time_new(a, &tv, tcb, NULL);
 
 #if defined(GLIB_MAIN_LOOP)
     g_main_loop_run(glib_main_loop);

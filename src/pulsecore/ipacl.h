@@ -1,5 +1,5 @@
-#ifndef foopulsecoreipaclhfoo
-#define foopulsecoreipaclhfoo
+#ifndef fooparseaddrhfoo
+#define fooparseaddrhfoo
 
 /***
   This file is part of PulseAudio.
