@@ -178,32 +178,8 @@ char *pa_sw_volume_snprint_dB(char *s, size_t l, pa_volume_t v);
 /** Return the average volume of all channels */
 pa_volume_t pa_cvolume_avg(const pa_cvolume *a) PA_GCC_PURE;
 
-/** Return the average volume of all channels that are included in the
- * specified channel map with the specified channel position mask. If
- * cm is NULL this call is identical to pa_cvolume_avg(). If no
- * channel is selected the returned value will be
- * PA_VOLUME_MUTED. \since 0.9.16 */
-pa_volume_t pa_cvolume_avg_mask(const pa_cvolume *a, const pa_channel_map *cm, pa_channel_position_mask_t mask) PA_GCC_PURE;
-
 /** Return the maximum volume of all channels. \since 0.9.12 */
 pa_volume_t pa_cvolume_max(const pa_cvolume *a) PA_GCC_PURE;
-
-/** Return the maximum volume of all channels that are included in the
- * specified channel map with the specified channel position mask. If
- * cm is NULL this call is identical to pa_cvolume_max(). If no
- * channel is selected the returned value will be PA_VOLUME_MUTED.
- * \since 0.9.16 */
-pa_volume_t pa_cvolume_max_mask(const pa_cvolume *a, const pa_channel_map *cm, pa_channel_position_mask_t mask) PA_GCC_PURE;
-
-/** Return the minimum volume of all channels. \since 0.9.16 */
-pa_volume_t pa_cvolume_min(const pa_cvolume *a) PA_GCC_PURE;
-
-/** Return the minimum volume of all channels that are included in the
- * specified channel map with the specified channel position mask. If
- * cm is NULL this call is identical to pa_cvolume_min(). If no
- * channel is selected the returned value will be PA_VOLUME_MUTED.
- * \since 0.9.16 */
-pa_volume_t pa_cvolume_min_mask(const pa_cvolume *a, const pa_channel_map *cm, pa_channel_position_mask_t mask) PA_GCC_PURE;
 
 /** Return TRUE when the passed cvolume structure is valid, FALSE otherwise */
 int pa_cvolume_valid(const pa_cvolume *v) PA_GCC_PURE;
@@ -223,15 +199,8 @@ int pa_cvolume_channels_equal_to(const pa_cvolume *a, pa_volume_t v) PA_GCC_PURE
 pa_volume_t pa_sw_volume_multiply(pa_volume_t a, pa_volume_t b) PA_GCC_CONST;
 
 /** Multiply two per-channel volumes and return the result in
- * *dest. This is only valid for software volumes! a, b and dest may
- * point to the same structure. */
+ * *dest. This is only valid for software volumes! */
 pa_cvolume *pa_sw_cvolume_multiply(pa_cvolume *dest, const pa_cvolume *a, const pa_cvolume *b);
-
-/** Multiply a per-channel volume with a scalar volume and return the
- * result in *dest. This is only valid for software volumes! a
- * and dest may point to the same structure. \since
- * 0.9.16 */
-pa_cvolume *pa_sw_cvolume_multiply_scalar(pa_cvolume *dest, const pa_cvolume *a, pa_volume_t b);
 
 /** Divide two volume specifications, return the result. This uses
  * PA_VOLUME_NORM as neutral element of division. This is only valid
@@ -239,21 +208,14 @@ pa_cvolume *pa_sw_cvolume_multiply_scalar(pa_cvolume *dest, const pa_cvolume *a,
  * will be 0. \since 0.9.13 */
 pa_volume_t pa_sw_volume_divide(pa_volume_t a, pa_volume_t b) PA_GCC_CONST;
 
-/** Divide two per-channel volumes and return the result in
- * *dest. This is only valid for software volumes! a, b
- * and dest may point to the same structure. \since 0.9.13 */
+/** Multiply to per-channel volumes and return the result in
+ * *dest. This is only valid for software volumes! \since 0.9.13 */
 pa_cvolume *pa_sw_cvolume_divide(pa_cvolume *dest, const pa_cvolume *a, const pa_cvolume *b);
 
-/** Divide a per-channel volume by a scalar volume and return the
- * result in *dest. This is only valid for software volumes! a
- * and dest may point to the same structure. \since
- * 0.9.16 */
-pa_cvolume *pa_sw_cvolume_divide_scalar(pa_cvolume *dest, const pa_cvolume *a, pa_volume_t b);
-
-/** Convert a decibel value to a volume (amplitude, not power). This is only valid for software volumes! */
+/** Convert a decibel value to a volume. This is only valid for software volumes! */
 pa_volume_t pa_sw_volume_from_dB(double f) PA_GCC_CONST;
 
-/** Convert a volume to a decibel value (amplitude, not power). This is only valid for software volumes! */
+/** Convert a volume to a decibel value. This is only valid for software volumes! */
 double pa_sw_volume_to_dB(pa_volume_t v) PA_GCC_CONST;
 
 /** Convert a linear factor to a volume. This is only valid for software volumes! */
@@ -265,7 +227,7 @@ double pa_sw_volume_to_linear(pa_volume_t v) PA_GCC_CONST;
 #ifdef INFINITY
 #define PA_DECIBEL_MININFTY ((double) -INFINITY)
 #else
-/** This floor value is used as minus infinity when using pa_volume_{to,from}_dB(). */
+/** This value is used as minus infinity when using pa_volume_{to,from}_dB(). */
 #define PA_DECIBEL_MININFTY ((double) -200.0)
 #endif
 
@@ -320,38 +282,6 @@ pa_cvolume* pa_cvolume_set_fade(pa_cvolume *v, const pa_channel_map *map, float 
  * of all channels equals max. The proportions between the channel
  * volumes are kept. \since 0.9.15 */
 pa_cvolume* pa_cvolume_scale(pa_cvolume *v, pa_volume_t max);
-
-/** Scale the passed pa_cvolume structure so that the maximum volume
- * of all channels selected via cm/mask equals max. This also modifies
- * the volume of those channels that are unmasked. The proportions
- * between the channel volumes are kept. \since 0.9.16 */
-pa_cvolume* pa_cvolume_scale_mask(pa_cvolume *v, pa_volume_t max, pa_channel_map *cm, pa_channel_position_mask_t mask);
-
-/** Set the passed volume to all channels at the specified channel
- * position. Will return the updated volume struct, or NULL if there
- * is no channel at the position specified. You can check if a channel
- * map includes a specific position by calling
- * pa_channel_map_has_position(). \since 0.9.16 */
-pa_cvolume* pa_cvolume_set_position(pa_cvolume *cv, const pa_channel_map *map, pa_channel_position_t t, pa_volume_t v);
-
-/** Get the maximum volume of all channels at the specified channel
- * position. Will return 0 if there is no channel at the position
- * specified. You can check if a channel map includes a specific
- * position by calling pa_channel_map_has_position(). \since 0.9.16 */
-pa_volume_t pa_cvolume_get_position(pa_cvolume *cv, const pa_channel_map *map, pa_channel_position_t t) PA_GCC_PURE;
-
-/** This goes through all channels in a and b and sets the
- * corresponding channel in dest to the greater volume of both. a, b
- * and dest may point to the same structure. \since 0.9.16 */
-pa_cvolume* pa_cvolume_merge(pa_cvolume *dest, const pa_cvolume *a, const pa_cvolume *b);
-
-/** Increase the volume passed in by 'inc'. The proportions between
- * the channels are kept. \since 0.9.16 */
-pa_cvolume* pa_cvolume_inc(pa_cvolume *v, pa_volume_t inc);
-
-/** Increase the volume passed in by 'inc'. The proportions between
- * the channels are kept. \since 0.9.16 */
-pa_cvolume* pa_cvolume_dec(pa_cvolume *v, pa_volume_t dec);
 
 PA_C_DECL_END
 

@@ -52,14 +52,12 @@
 #include <asyncns.h>
 #endif
 
-#include <pulse/rtclock.h>
 #include <pulse/timeval.h>
 #include <pulse/xmalloc.h>
 
 #include <pulsecore/winsock.h>
 #include <pulsecore/core-error.h>
 #include <pulsecore/socket-util.h>
-#include <pulsecore/core-rtclock.h>
 #include <pulsecore/core-util.h>
 #include <pulsecore/socket-util.h>
 #include <pulsecore/log.h>
@@ -422,11 +420,12 @@ fail:
 
 #endif
 
-static void timeout_cb(pa_mainloop_api *m, pa_time_event *e, const struct timeval *t, void *userdata) {
+static void timeout_cb(pa_mainloop_api *m, pa_time_event *e, const struct timeval *tv, void *userdata) {
     pa_socket_client *c = userdata;
 
     pa_assert(m);
     pa_assert(e);
+    pa_assert(tv);
     pa_assert(c);
 
     if (c->fd >= 0) {
@@ -438,16 +437,17 @@ static void timeout_cb(pa_mainloop_api *m, pa_time_event *e, const struct timeva
     do_call(c);
 }
 
-static void start_timeout(pa_socket_client *c, pa_bool_t use_rtclock) {
+static void start_timeout(pa_socket_client *c) {
     struct timeval tv;
-
     pa_assert(c);
     pa_assert(!c->timeout_event);
 
-    c->timeout_event = c->mainloop->time_new(c->mainloop, pa_timeval_rtstore(&tv, pa_rtclock_now() + CONNECT_TIMEOUT * PA_USEC_PER_SEC, use_rtclock), timeout_cb, c);
+    pa_gettimeofday(&tv);
+    pa_timeval_add(&tv, CONNECT_TIMEOUT * PA_USEC_PER_SEC);
+    c->timeout_event = c->mainloop->time_new(c->mainloop, &tv, timeout_cb, c);
 }
 
-pa_socket_client* pa_socket_client_new_string(pa_mainloop_api *m, pa_bool_t use_rtclock, const char*name, uint16_t default_port) {
+pa_socket_client* pa_socket_client_new_string(pa_mainloop_api *m, const char*name, uint16_t default_port) {
     pa_socket_client *c = NULL;
     pa_parsed_address a;
 
@@ -463,7 +463,7 @@ pa_socket_client* pa_socket_client_new_string(pa_mainloop_api *m, pa_bool_t use_
     switch (a.type) {
         case PA_PARSED_ADDRESS_UNIX:
             if ((c = pa_socket_client_new_unix(m, a.path_or_host)))
-                start_timeout(c, use_rtclock);
+                start_timeout(c);
             break;
 
         case PA_PARSED_ADDRESS_TCP4:  /* Fallthrough */
@@ -499,7 +499,7 @@ pa_socket_client* pa_socket_client_new_string(pa_mainloop_api *m, pa_bool_t use_
                 c->asyncns_io_event = m->io_new(m, asyncns_fd(c->asyncns), PA_IO_EVENT_INPUT, asyncns_cb, c);
                 c->asyncns_query = asyncns_getaddrinfo(c->asyncns, a.path_or_host, port, &hints);
                 pa_assert(c->asyncns_query);
-                start_timeout(c, use_rtclock);
+                start_timeout(c);
             }
 #elif defined(HAVE_GETADDRINFO)
             {
@@ -513,7 +513,7 @@ pa_socket_client* pa_socket_client_new_string(pa_mainloop_api *m, pa_bool_t use_
 
                 if (res->ai_addr) {
                     if ((c = pa_socket_client_new_sockaddr(m, res->ai_addr, res->ai_addrlen)))
-                        start_timeout(c, use_rtclock);
+                        start_timeout(c);
                 }
 
                 freeaddrinfo(res);
@@ -546,7 +546,7 @@ pa_socket_client* pa_socket_client_new_string(pa_mainloop_api *m, pa_bool_t use_
                 s.sin_port = htons(a.port);
 
                 if ((c = pa_socket_client_new_sockaddr(m, (struct sockaddr*)&s, sizeof(s))))
-                    start_timeout(c, use_rtclock);
+                    start_timeout(c);
             }
 #endif /* HAVE_LIBASYNCNS */
         }

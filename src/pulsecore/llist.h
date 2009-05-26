@@ -104,7 +104,4 @@
         }                                                               \
     } while (0)
 
-#define PA_LLIST_FOREACH(i,head)                                        \
-    for (i = (head); i; i = i->next)
-
 #endif
