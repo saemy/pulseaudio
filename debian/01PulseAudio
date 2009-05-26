@@ -3,7 +3,7 @@
 . "${PM_FUNCTIONS}"
 
 get_pulse_users() {
-    ps -C pulseaudio -o user=;
+    ps -C pulseaudio -o uid= | tr ' ' '#'
 }
 
 suspend_pulse() {

@@ -1,3 +1,57 @@
+pulseaudio (1:0.9.15-2ubuntu1) karmic; urgency=low
+
+  * Merge from Debian unstable, remaining changes:
+    - epoch (my stupid fault :S)
+    - Don't build against, and create jack package. Jack is not in main
+    - use linear resampler to work better with lack of PREEMPT in jaunty's
+      -generic kernel config, also change buffer size
+    - Add alsa configuration files to route alsa applications via pulseaudio
+    - Move libasound2-plugins from Recommends to Depends
+    - Add pm-utils sleep hook to suspend (and resume) users' pulseaudio
+      daemons
+    - patch to fix source/sink and suspend-on-idle race
+    - Make initscript more informative in the default case of per-user
+      sessions
+    - create /var/run/pulse, and make restart more robust
+    - add status check for system wide pulseaudio instance
+    - LSB {Required-*,Should-*} should specify hal instead of dbus,
+      since hal is required (and already requires dbus)
+    - indicate that the system pulseaudio instance is being started from the init
+      script
+    - Install more upstream man pages
+    - Link to pacat for parec man page
+    - check whether pulseaudio is running before preloading the padsp library
+    - Add DEB_OPT_FLAG = -O3 as per recommendation from
+      pulseaudio-discuss/2007-December/001017.html
+    - cache /usr/share/sounds/ubuntu/stereo/ wav files on pulseaudio load
+    - disable glitch free (use tsched=0)
+    - Generate a PO template on build
+    - add special case to disable pulseaudio loading if accessibility/speech
+      is being used
+    - the sd wrapper script should not load pulseaudio if pulseaudio is being
+      used as a system service
+    - add a pulseaudio apport hook
+    - fix some typos in README.Debian
+    - demote paprefs to suggests
+    - drop padevchooser(Recommends) and pavucontrol (Suggests)
+    - drop libasyncns-dev build dependency, its in universe
+    - add libudev-dev as a build-dependency
+    - Retain libbluetooth-dev build dependency
+  * debian/01Pulseaudio: Harvist users by UID, and not username, to ensure
+    that the script doesn't choak on characters not already considered as
+    used in a username (LP: #374694)
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Tue, 26 May 2009 23:33:42 +0200
+
+pulseaudio (0.9.15-2) unstable; urgency=low
+
+  * debian/control: Add strict dependencies from libpulse-dev to the various
+    libraries (Closes: #525759)
+  * Add local shlib files to ensure the correct dependencies get generated
+    (Closes: #528405)
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Thu, 21 May 2009 00:54:38 +0100
+
 pulseaudio (1:0.9.15-1ubuntu3) karmic; urgency=low
 
   * debian/control: libltdl7-dev -> libltdl-dev
@@ -54,18 +108,24 @@ pulseaudio (1:0.9.15-1ubuntu1) karmic; urgency=low
 
  -- Luke Yelavich <themuso@ubuntu.com>  Tue, 05 May 2009 14:18:20 +1000
 
-pulseaudio (0.9.15-1) UNRELEASED; urgency=low
+pulseaudio (0.9.15-1) unstable; urgency=low
 
   * debian/control: Build-Depend on libcap-dev instead of libcap2-dev
   * New Upstream Version
+  * Fixes building on HPPA (Closes: #520378)
+  * Fixes building with recent libtool (Closes: #522716)
   * Update copyright file
   * Updated pulseaudio-module-hal.install, dbus-util became part of pulsecore
   * Move debug package to the debug Section
   * Done make shlibs files for modules in /usr/lib/pulse-0.9.15
   * Update standards-version to 3.8.1, no further changes
   * Set priority of pulseaudio-module-raop-dbg to extra
+  * Change build-depend on libltdl7-dev to recent versions libltdl-dev
+  * Add Breaks to libpulse0 for old version of pavucontrol
+  * Temporarily disable bluetooth support as the needed bluez version is stuck
+    in the NEW queue
 
- -- Sjoerd Simons <sjoerd@debian.org>  Thu, 16 Apr 2009 00:44:44 +0100
+ -- Sjoerd Simons <sjoerd@debian.org>  Sun, 19 Apr 2009 14:43:41 +0100
 
 pulseaudio (0.9.15~test5-1) experimental; urgency=low
 
