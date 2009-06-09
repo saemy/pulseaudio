@@ -1,0 +1,62 @@
+Index: pulseaudio-0.9.15/src/modules/alsa/alsa-sink.c
+===================================================================
+--- pulseaudio-0.9.15.orig/src/modules/alsa/alsa-sink.c	2009-06-08 01:35:38.000000000 -0400
++++ pulseaudio-0.9.15/src/modules/alsa/alsa-sink.c	2009-06-08 01:35:54.000000000 -0400
+@@ -1146,7 +1146,7 @@
+ 
+ static void sink_get_mute_cb(pa_sink *s) {
+     struct userdata *u = s->userdata;
+-    int err, sw;
++    int err, sw = 0;
+ 
+     pa_assert(u);
+     pa_assert(u->mixer_elem);
+Index: pulseaudio-0.9.15/src/modules/alsa/alsa-source.c
+===================================================================
+--- pulseaudio-0.9.15.orig/src/modules/alsa/alsa-source.c	2009-06-08 01:35:39.000000000 -0400
++++ pulseaudio-0.9.15/src/modules/alsa/alsa-source.c	2009-06-08 01:35:54.000000000 -0400
+@@ -1105,7 +1105,7 @@
+ 
+ static void source_get_mute_cb(pa_source *s) {
+     struct userdata *u = s->userdata;
+-    int err, sw;
++    int err, sw = 0;
+ 
+     pa_assert(u);
+     pa_assert(u->mixer_elem);
+Index: pulseaudio-0.9.15/src/pulsecore/sink.c
+===================================================================
+--- pulseaudio-0.9.15.orig/src/pulsecore/sink.c	2009-06-08 01:35:39.000000000 -0400
++++ pulseaudio-0.9.15/src/pulsecore/sink.c	2009-06-08 01:35:54.000000000 -0400
+@@ -1272,8 +1272,12 @@
+ 
+         pa_assert_se(pa_asyncmsgq_send(s->asyncmsgq, PA_MSGOBJECT(s), PA_SINK_MESSAGE_GET_MUTE, NULL, 0, NULL) == 0);
+ 
+-        if (old_muted != s->muted)
++        if (old_muted != s->muted) {
+             pa_subscription_post(s->core, PA_SUBSCRIPTION_EVENT_SINK|PA_SUBSCRIPTION_EVENT_CHANGE, s->index);
++
++            /* Make sure the soft mute status stays in sync */
++            pa_assert_se(pa_asyncmsgq_send(s->asyncmsgq, PA_MSGOBJECT(s), PA_SINK_MESSAGE_SET_MUTE, NULL, 0, NULL) == 0);
++        }
+     }
+ 
+     return s->muted;
+Index: pulseaudio-0.9.15/src/pulsecore/source.c
+===================================================================
+--- pulseaudio-0.9.15.orig/src/pulsecore/source.c	2009-06-08 01:35:39.000000000 -0400
++++ pulseaudio-0.9.15/src/pulsecore/source.c	2009-06-08 01:35:54.000000000 -0400
+@@ -757,8 +757,12 @@
+ 
+         pa_assert_se(pa_asyncmsgq_send(s->asyncmsgq, PA_MSGOBJECT(s), PA_SOURCE_MESSAGE_GET_MUTE, NULL, 0, NULL) == 0);
+ 
+-        if (old_muted != s->muted)
++        if (old_muted != s->muted) {
+             pa_subscription_post(s->core, PA_SUBSCRIPTION_EVENT_SOURCE|PA_SUBSCRIPTION_EVENT_CHANGE, s->index);
++
++            /* Make sure the soft mute status stays in sync */
++            pa_assert_se(pa_asyncmsgq_send(s->asyncmsgq, PA_MSGOBJECT(s), PA_SOURCE_MESSAGE_SET_MUTE, NULL, 0, NULL) == 0);
++        }
+     }
+ 
+     return s->muted;

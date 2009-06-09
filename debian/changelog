@@ -1,3 +1,70 @@
+pulseaudio (1:0.9.15-3ubuntu1) karmic; urgency=low
+
+  [ Daniel T Chen ]
+  * debian/patches/0001_change_resample_and_buffering.patch: Bump
+    default resampler to ffmpeg. We cannot peg the cpu, and we cannot
+    have audio anomalies, so this change _should_ be regression-free
+    but needs extensive testing (LP: #376374).
+  * debian/patches/0090_fix_sw_mute_desync.patch: Backport from
+    git HEAD to resolve sw vol becoming muted on logout
+    (LP: #315971, #352732)
+
+  [ Luke Yelavich ]
+  * Merge from Debian unstable, remaining changes:
+    - epoch (my stupid fault :S)
+    - Don't build against, and create jack package. Jack is not in main
+    - use ffmpeg resampler to work better with lack of PREEMPT in jaunty's
+      -generic kernel config, also change buffer size
+    - Add alsa configuration files to route alsa applications via pulseaudio
+    - Move libasound2-plugins from Recommends to Depends
+    - Add pm-utils sleep hook to suspend (and resume) users' pulseaudio
+      daemons
+    - patch to fix source/sink and suspend-on-idle race
+    - Make initscript more informative in the default case of per-user
+      sessions
+    - add status check for system wide pulseaudio instance
+    - create /var/run/pulse, and make restart more robust
+    - LSB {Required-*,Should-*} should specify hal instead of dbus,
+      since hal is required (and already requires dbus)
+    - indicate that the system pulseaudio instance is being started from the init
+      script
+    - Install more upstream man pages
+    - Link to pacat for parec man page
+    - check whether pulseaudio is running before preloading the padsp library
+    - Add DEB_OPT_FLAG = -O3 as per recommendation from
+      pulseaudio-discuss/2007-December/001017.html
+    - cache /usr/share/sounds/ubuntu/stereo/ wav files on pulseaudio load
+    - disable glitch free (use tsched=0)
+    - Generate a PO template on build
+    - add special case to disable pulseaudio loading if accessibility/speech
+      is being used
+    - the esd wrapper script should not load pulseaudio if pulseaudio is being
+      used as a system service
+    - add a pulseaudio apport hook
+    - fix some typos in README.Debian
+    - drop padevchooser(Recommends) and pavucontrol (Suggests)
+    - drop libasyncns-dev build dependency, its in universe
+    - add libudev-dev as a build-dependency
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Tue, 09 Jun 2009 10:47:05 +1000
+
+pulseaudio (0.9.15-3) unstable; urgency=low
+
+  * Re-enable bluetooth support (Closes: #530514)
+  * No longer recommend padevchooser and let paprefs be a suggest
+    (Closes: #530810)
+  * 0001-alsa-allow-configuration-of-fallback-device-strings-.patch
+    - Added. Support alsa devices which only have the raw hw device, but no
+      front device even though they can do 2ch stereo (from upstream git)
+  * Add support for the status action in the init script, patch by Peter
+    Eisentraut (Closes: #527333)
+  * Change the libjack0.100.0-dev build-depend to libjack-dev as per request of
+    the debian multimedia maintainers (Closes: #527424)
+  * Prevent the default.pa manpage from being installed as part of the pa
+    locale (Closes: #508874)
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Sun, 07 Jun 2009 22:30:33 +0100
+
 pulseaudio (1:0.9.15-2ubuntu1) karmic; urgency=low
 
   * Merge from Debian unstable, remaining changes:
