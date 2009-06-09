@@ -25,5 +25,8 @@
 #include <pulsecore/macro.h>
 
 void pa_drop_root(void);
+void pa_drop_caps(void);
+void pa_limit_caps(void);
+pa_bool_t pa_have_caps(void);
 
 #endif

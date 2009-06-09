@@ -219,8 +219,7 @@ char *pa_get_binary_name(char *s, size_t l) {
 char *pa_path_get_filename(const char *p) {
     char *fn;
 
-    if (!p)
-        return NULL;
+    pa_assert(p);
 
     if ((fn = strrchr(p, PA_PATH_SEP_CHAR)))
         return fn+1;

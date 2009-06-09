@@ -31,7 +31,6 @@
 
 #include <pulse/xmalloc.h>
 #include <pulse/i18n.h>
-#include <pulse/util.h>
 
 #include <pulsecore/core-util.h>
 #include <pulsecore/strbuf.h>
@@ -110,7 +109,14 @@ static const struct option long_options[] = {
 };
 
 void pa_cmdline_help(const char *argv0) {
+    const char *e;
+
     pa_assert(argv0);
+
+    if ((e = strrchr(argv0, '/')))
+        e++;
+    else
+        e = argv0;
 
     printf(_("%s [options]\n\n"
            "COMMANDS:\n"
@@ -166,8 +172,7 @@ void pa_cmdline_help(const char *argv0) {
            "  -C                                    Open a command line on the running TTY\n"
            "                                        after startup\n\n"
 
-           "  -n                                    Don't load default script file\n"),
-           pa_path_get_filename(argv0));
+           "  -n                                    Don't load default script file\n"), e);
 }
 
 int pa_cmdline_parse(pa_daemon_conf *conf, int argc, char *const argv [], int *d) {

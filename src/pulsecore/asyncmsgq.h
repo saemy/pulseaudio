@@ -66,8 +66,6 @@ void pa_asyncmsgq_done(pa_asyncmsgq *q, int ret);
 int pa_asyncmsgq_wait_for(pa_asyncmsgq *a, int code);
 int pa_asyncmsgq_process_one(pa_asyncmsgq *a);
 
-void pa_asyncmsgq_flush(pa_asyncmsgq *a, pa_bool_t run);
-
 /* For the reading side */
 int pa_asyncmsgq_read_fd(pa_asyncmsgq *q);
 int pa_asyncmsgq_read_before_poll(pa_asyncmsgq *a);
@@ -77,7 +75,5 @@ void pa_asyncmsgq_read_after_poll(pa_asyncmsgq *a);
 int pa_asyncmsgq_write_fd(pa_asyncmsgq *q);
 void pa_asyncmsgq_write_before_poll(pa_asyncmsgq *a);
 void pa_asyncmsgq_write_after_poll(pa_asyncmsgq *a);
-
-pa_bool_t pa_asyncmsgq_dispatching(pa_asyncmsgq *a);
 
 #endif

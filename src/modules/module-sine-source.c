@@ -34,20 +34,19 @@
 #include <sys/ioctl.h>
 #include <sys/poll.h>
 
-#include <pulse/rtclock.h>
-#include <pulse/timeval.h>
 #include <pulse/xmalloc.h>
+#include <pulse/timeval.h>
 
 #include <pulsecore/core-error.h>
 #include <pulsecore/source.h>
 #include <pulsecore/module.h>
-#include <pulsecore/core-rtclock.h>
 #include <pulsecore/core-util.h>
 #include <pulsecore/modargs.h>
 #include <pulsecore/log.h>
 #include <pulsecore/thread.h>
 #include <pulsecore/thread-mq.h>
 #include <pulsecore/rtpoll.h>
+#include <pulsecore/rtclock.h>
 
 #include "module-sine-source-symdef.h"
 
@@ -56,9 +55,8 @@ PA_MODULE_DESCRIPTION("Sine wave generator source");
 PA_MODULE_VERSION(PACKAGE_VERSION);
 PA_MODULE_LOAD_ONCE(FALSE);
 PA_MODULE_USAGE(
-        "source_name=<name for the source> "
-        "source_properties=<properties for the source> "
         "rate=<sample rate> "
+        "source_name=<name for the source> "
         "frequency=<frequency in Hz>");
 
 #define DEFAULT_SOURCE_NAME "sine_input"
@@ -81,9 +79,8 @@ struct userdata {
 };
 
 static const char* const valid_modargs[] = {
-    "source_name",
-    "source_properties",
     "rate",
+    "source_name",
     "frequency",
     NULL
 };
@@ -102,14 +99,14 @@ static int source_process_msg(
         case PA_SOURCE_MESSAGE_SET_STATE:
 
             if (PA_PTR_TO_UINT(data) == PA_SOURCE_RUNNING)
-                u->timestamp = pa_rtclock_now();
+                u->timestamp = pa_rtclock_usec();
 
             break;
 
         case PA_SOURCE_MESSAGE_GET_LATENCY: {
             pa_usec_t now, left_to_fill;
 
-            now = pa_rtclock_now();
+            now = pa_rtclock_usec();
             left_to_fill = u->timestamp > now ? u->timestamp - now : 0ULL;
 
             *((pa_usec_t*) data) = u->block_usec > left_to_fill ? u->block_usec - left_to_fill : 0ULL;
@@ -167,8 +164,9 @@ static void thread_func(void *userdata) {
     pa_log_debug("Thread starting up");
 
     pa_thread_mq_install(&u->thread_mq);
+    pa_rtpoll_install(u->rtpoll);
 
-    u->timestamp = pa_rtclock_now();
+    u->timestamp = pa_rtclock_usec();
 
     for (;;) {
         int ret;
@@ -176,7 +174,7 @@ static void thread_func(void *userdata) {
         if (PA_SOURCE_IS_OPENED(u->source->thread_info.state)) {
             pa_usec_t now;
 
-            now = pa_rtclock_now();
+            now = pa_rtclock_usec();
 
             if (u->timestamp <= now)
                 process_render(u, now);
@@ -250,12 +248,6 @@ int pa__init(pa_module*m) {
     pa_proplist_setf(data.proplist, "sine.hz", "%u", frequency);
     pa_source_new_data_set_sample_spec(&data, &ss);
 
-    if (pa_modargs_get_proplist(ma, "source_properties", data.proplist, PA_UPDATE_REPLACE) < 0) {
-        pa_log("Invalid properties");
-        pa_source_new_data_done(&data);
-        goto fail;
-    }
-
     u->source = pa_source_new(m->core, &data, PA_SOURCE_LATENCY);
     pa_source_new_data_done(&data);
 
@@ -272,7 +264,8 @@ int pa__init(pa_module*m) {
 
     pa_source_set_asyncmsgq(u->source, u->thread_mq.inq);
     pa_source_set_rtpoll(u->source, u->rtpoll);
-    pa_source_set_fixed_latency(u->source, u->block_usec);
+    u->source->fixed_latency = u->block_usec;
+
 
     if (!(u->thread = pa_thread_new(thread_func, u))) {
         pa_log("Failed to create thread.");
