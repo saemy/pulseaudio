@@ -1,3 +1,87 @@
+pulseaudio (1:0.9.15-4ubuntu1) karmic; urgency=low
+
+  [ Daniel T Chen ]
+  * debian/patches/0001_change_resample_and_buffering.patch: Bump
+    default resampler to speex-float-1 due to remaining audio
+    anomalies when playing DVDs (LP: #376374)
+
+  [ Luke Yelavich ]
+  * Merge from Debian unstable, remaining changes:
+    - epoch (my stupid fault :S)
+    - Don't build against, and create jack package. Jack is not in main
+    - use speex-float-1 resampler to work better with lack of PREEMPT in
+      karmic's -generic kernel config, also change buffer size
+    - Add alsa configuration files to route alsa applications via pulseaudio
+    - Move libasound2-plugins from Recommends to Depends
+    - Add pm-utils sleep hook to suspend (and resume) users' pulseaudio
+      daemons
+    - patch to fix source/sink and suspend-on-idle race
+    - Make initscript more informative in the default case of per-user
+      sessions
+    - add status check for system wide pulseaudio instance
+    - create /var/run/pulse, and make restart more robust
+    - LSB {Required-*,Should-*} should specify hal instead of dbus,
+      since hal is required (and already requires dbus)
+    - indicate that the system pulseaudio instance is being started from the init
+      script
+    - Install more upstream man pages
+    - Link to pacat for parec man page
+    - check whether pulseaudio is running before preloading the padsp library
+    - Add DEB_OPT_FLAG = -O3 as per recommendation from
+      pulseaudio-discuss/2007-December/001017.html
+    - cache /usr/share/sounds/ubuntu/stereo/ wav files on pulseaudio load
+    - disable glitch free (use tsched=0)
+    - Generate a PO template on build
+    - add special case to disable pulseaudio loading if accessibility/speech
+      is being used
+    - the esd wrapper script should not load pulseaudio if pulseaudio is being
+      used as a system service
+    - add a pulseaudio apport hook
+    - fix some typos in README.Debian
+    - drop padevchooser(Recommends) and pavucontrol (Suggests)
+    - drop libasyncns-dev build dependency, its in universe
+    - add libudev-dev as a build-dependency
+  * debian/patches/0090-fix-sw-mute-desync.patch: Dropped, as this is included
+    in the recently added patches in Debian.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Mon, 22 Jun 2009 11:17:06 +1000
+
+pulseaudio (0.9.15-4) unstable; urgency=low
+
+  * Synchronize our patches with Mandriva and Fedora (thanks to Colin Guthrie
+    and Lennart Poettering)
+    - 0002-util-if-NULL-is-passed-to-pa_path_get_filename-just-.patch
+    - 0003-alsa-don-t-hit-an-assert-when-invalid-module-argumen.patch
+    - 0004-alsa-fix-wording-we-are-speaking-of-card-profiles-no.patch
+    - 0005-alsa-initialize-buffer-size-before-number-of-periods.patch
+    - 0006-conf-remove-obsolete-module-idle-time-directive-from.patch
+    - 0007-core-make-sure-soft-mute-status-stays-in-sync-with-h.patch
+      + Ensure hw and software mute states stay in sync
+        (Closes: #525572, #522177)
+    - 0008-endian-fix-LE-BE-order-for-24-bit-accessor-functions.patch
+    - 0009-log-print-file-name-only-when-we-have-it.patch
+    - 0010-man-document-24bit-sample-types-in-man-page.patch
+    - 0011-man-document-log-related-daemon.conf-options.patch
+    - 0012-man-document-that-tsched-doesn-t-use-fragment-settin.patch
+    - 0013-mutex-when-we-fail-to-fill-in-mutex-into-static-mute.patch
+    - 0014-oss-don-t-deadlock-when-we-try-to-resume-an-OSS-devi.patch
+    - 0015-simple-protocol-don-t-hit-an-assert-when-we-call-con.patch
+    - 0016-idxset-add-enumeration-macro-PA_IDXSET_FOREACH.patch
+    - 0017-rescue-streams-when-one-stream-move-fails-try-to-con.patch
+    - 0018-sample-correctly-pass-s24-32-formats.patch
+    - 0019-sample-util-fix-iteration-loop-when-adjusting-volume.patch
+    - 0020-sample-util-properly-allocate-silence-block-for-s24-.patch
+    - 0021-sconv-fix-a-few-minor-conversion-issues.patch
+    - 0022-alsa-be-a-bit-more-verbose-when-a-hwparam-call-fails.patch
+    - 0023-rescue-make-we-don-t-end-up-in-an-endless-loop-when-.patch
+    - 0024-core-introduce-pa_-sink-source-_set_fixed_latency.patch
+    - 0025-core-cache-requested-latency-only-when-we-are-runnin.patch
+    - 0026-sample-fix-build-on-BE-archs.patch
+    - 0027-alsa-properly-convert-return-values-of-snd_strerror-.patch
+    - 0028-alsa-remove-debug-code.patch
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Sun, 21 Jun 2009 15:40:33 +0100
+
 pulseaudio (1:0.9.15-3ubuntu1) karmic; urgency=low
 
   [ Daniel T Chen ]

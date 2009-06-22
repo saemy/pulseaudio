@@ -7,7 +7,7 @@ Index: pulseaudio-0.9.14/src/daemon/daemon.conf.in
  ; log-level = notice
  
 -; resample-method = speex-float-3
-+resample-method = ffmpeg
++resample-method = speex-float-1
  ; disable-remixing = no
  ; disable-lfe-remixing = yes
  
