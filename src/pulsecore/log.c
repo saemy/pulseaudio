@@ -38,7 +38,6 @@
 #include <syslog.h>
 #endif
 
-#include <pulse/rtclock.h>
 #include <pulse/utf8.h>
 #include <pulse/xmalloc.h>
 #include <pulse/util.h>
@@ -46,7 +45,7 @@
 
 #include <pulsecore/macro.h>
 #include <pulsecore/core-util.h>
-#include <pulsecore/core-rtclock.h>
+#include <pulsecore/rtclock.h>
 #include <pulsecore/once.h>
 #include <pulsecore/ratelimit.h>
 
@@ -286,7 +285,7 @@ void pa_log_levelv_meta(
 
     if ((_flags & PA_LOG_PRINT_META) && file && line > 0 && func)
         pa_snprintf(location, sizeof(location), "[%s:%i %s()] ", file, line, func);
-    else if ((_flags & (PA_LOG_PRINT_META|PA_LOG_PRINT_FILE)) && file)
+    else if (_flags & (PA_LOG_PRINT_META|PA_LOG_PRINT_FILE))
         pa_snprintf(location, sizeof(location), "%s: ", pa_path_get_filename(file));
     else
         location[0] = 0;
@@ -295,7 +294,7 @@ void pa_log_levelv_meta(
         static pa_usec_t start, last;
         pa_usec_t u, a, r;
 
-        u = pa_rtclock_now();
+        u = pa_rtclock_usec();
 
         PA_ONCE_BEGIN {
             start = u;
@@ -324,7 +323,7 @@ void pa_log_levelv_meta(
 #endif
 
     if (!pa_utf8_valid(text))
-        pa_logl(level, "Invalid UTF-8 string following below:");
+        pa_log_level(level, __FILE__": invalid UTF-8 string following below:");
 
     for (t = text; t; t = n) {
         if ((n = strchr(t, '\n'))) {

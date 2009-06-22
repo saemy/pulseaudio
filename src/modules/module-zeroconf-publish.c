@@ -37,7 +37,6 @@
 #include <pulse/xmalloc.h>
 #include <pulse/util.h>
 
-#include <pulsecore/parseaddr.h>
 #include <pulsecore/sink.h>
 #include <pulsecore/source.h>
 #include <pulsecore/native-common.h>
@@ -48,7 +47,6 @@
 #include <pulsecore/modargs.h>
 #include <pulsecore/avahi-wrap.h>
 #include <pulsecore/endianmacros.h>
-#include <pulsecore/protocol-native.h>
 
 #include "module-zeroconf-publish-symdef.h"
 
@@ -56,6 +54,7 @@ PA_MODULE_AUTHOR("Lennart Poettering");
 PA_MODULE_DESCRIPTION("mDNS/DNS-SD Service Publisher");
 PA_MODULE_VERSION(PACKAGE_VERSION);
 PA_MODULE_LOAD_ONCE(TRUE);
+PA_MODULE_USAGE("port=<IP port number>");
 
 #define SERVICE_TYPE_SINK "_pulse-sink._tcp"
 #define SERVICE_TYPE_SOURCE "_pulse-source._tcp"
@@ -68,6 +67,7 @@ PA_MODULE_LOAD_ONCE(TRUE);
 #define SERVICE_SUBTYPE_SOURCE_NON_MONITOR "_non-monitor._sub."SERVICE_TYPE_SOURCE
 
 static const char* const valid_modargs[] = {
+    "port",
     NULL
 };
 
@@ -88,7 +88,6 @@ struct service {
 struct userdata {
     pa_core *core;
     pa_module *module;
-
     AvahiPoll *avahi_poll;
     AvahiClient *client;
 
@@ -97,15 +96,15 @@ struct userdata {
 
     AvahiEntryGroup *main_entry_group;
 
-    pa_hook_slot *sink_new_slot, *source_new_slot, *sink_unlink_slot, *source_unlink_slot, *sink_changed_slot, *source_changed_slot;
+    uint16_t port;
 
-    pa_native_protocol *native;
+    pa_hook_slot *sink_new_slot, *source_new_slot, *sink_unlink_slot, *source_unlink_slot, *sink_changed_slot, *source_changed_slot;
 };
 
-static void get_service_data(struct service *s, pa_sample_spec *ret_ss, pa_channel_map *ret_map, const char **ret_name, pa_proplist **ret_proplist, enum service_subtype *ret_subtype) {
+static void get_service_data(struct service *s, pa_sample_spec *ret_ss, pa_channel_map *ret_map, const char **ret_name, const char **ret_description, enum service_subtype *ret_subtype) {
     pa_assert(s);
     pa_assert(ret_ss);
-    pa_assert(ret_proplist);
+    pa_assert(ret_description);
     pa_assert(ret_subtype);
 
     if (pa_sink_isinstance(s->device)) {
@@ -114,7 +113,7 @@ static void get_service_data(struct service *s, pa_sample_spec *ret_ss, pa_chann
         *ret_ss = sink->sample_spec;
         *ret_map = sink->channel_map;
         *ret_name = sink->name;
-        *ret_proplist = sink->proplist;
+        *ret_description = pa_strnull(pa_proplist_gets(sink->proplist, PA_PROP_DEVICE_DESCRIPTION));
         *ret_subtype = sink->flags & PA_SINK_HARDWARE ? SUBTYPE_HARDWARE : SUBTYPE_VIRTUAL;
 
     } else if (pa_source_isinstance(s->device)) {
@@ -123,7 +122,7 @@ static void get_service_data(struct service *s, pa_sample_spec *ret_ss, pa_chann
         *ret_ss = source->sample_spec;
         *ret_map = source->channel_map;
         *ret_name = source->name;
-        *ret_proplist = source->proplist;
+        *ret_description = pa_strnull(pa_proplist_gets(source->proplist, PA_PROP_DEVICE_DESCRIPTION));
         *ret_subtype = source->monitor_of ? SUBTYPE_MONITOR : (source->flags & PA_SOURCE_HARDWARE ? SUBTYPE_HARDWARE : SUBTYPE_VIRTUAL);
 
     } else
@@ -132,24 +131,11 @@ static void get_service_data(struct service *s, pa_sample_spec *ret_ss, pa_chann
 
 static AvahiStringList* txt_record_server_data(pa_core *c, AvahiStringList *l) {
     char s[128];
-    char *t;
 
     pa_assert(c);
 
     l = avahi_string_list_add_pair(l, "server-version", PACKAGE_NAME" "PACKAGE_VERSION);
-
-    t = pa_get_user_name_malloc();
-    l = avahi_string_list_add_pair(l, "user-name", t);
-    pa_xfree(t);
-
-    t = pa_machine_id();
-    l = avahi_string_list_add_pair(l, "machine-id", t);
-    pa_xfree(t);
-
-    t = pa_uname_string();
-    l = avahi_string_list_add_pair(l, "uname", t);
-    pa_xfree(t);
-
+    l = avahi_string_list_add_pair(l, "user-name", pa_get_user_name(s, sizeof(s)));
     l = avahi_string_list_add_pair(l, "fqdn", pa_get_fqdn(s, sizeof(s)));
     l = avahi_string_list_add_printf(l, "cookie=0x%08x", c->cookie);
 
@@ -198,35 +184,10 @@ static void service_entry_group_callback(AvahiEntryGroup *g, AvahiEntryGroupStat
 
 static void service_free(struct service *s);
 
-static uint16_t compute_port(struct userdata *u) {
-    pa_strlist *i;
-
-    pa_assert(u);
-
-    for (i = pa_native_protocol_servers(u->native); i; i = pa_strlist_next(i)) {
-        pa_parsed_address a;
-
-        if (pa_parse_address(pa_strlist_data(i), &a) >= 0 &&
-            (a.type == PA_PARSED_ADDRESS_TCP4 ||
-             a.type == PA_PARSED_ADDRESS_TCP6 ||
-             a.type == PA_PARSED_ADDRESS_TCP_AUTO) &&
-            a.port > 0) {
-
-            pa_xfree(a.path_or_host);
-            return a.port;
-        }
-
-        pa_xfree(a.path_or_host);
-    }
-
-    return PA_NATIVE_DEFAULT_PORT;
-}
-
 static int publish_service(struct service *s) {
     int r = -1;
     AvahiStringList *txt = NULL;
-    const char *name = NULL, *t;
-    pa_proplist *proplist = NULL;
+    const char *description = NULL, *name = NULL;
     pa_sample_spec ss;
     pa_channel_map map;
     char cm[PA_CHANNEL_MAP_SNPRINT_MAX];
@@ -253,26 +214,13 @@ static int publish_service(struct service *s) {
 
     txt = txt_record_server_data(s->userdata->core, txt);
 
-    get_service_data(s, &ss, &map, &name, &proplist, &subtype);
+    get_service_data(s, &ss, &map, &name, &description, &subtype);
     txt = avahi_string_list_add_pair(txt, "device", name);
     txt = avahi_string_list_add_printf(txt, "rate=%u", ss.rate);
     txt = avahi_string_list_add_printf(txt, "channels=%u", ss.channels);
     txt = avahi_string_list_add_pair(txt, "format", pa_sample_format_to_string(ss.format));
     txt = avahi_string_list_add_pair(txt, "channel_map", pa_channel_map_snprint(cm, sizeof(cm), &map));
     txt = avahi_string_list_add_pair(txt, "subtype", subtype_text[subtype]);
-
-    if ((t = pa_proplist_gets(proplist, PA_PROP_DEVICE_DESCRIPTION)))
-        txt = avahi_string_list_add_pair(txt, "description", t);
-    if ((t = pa_proplist_gets(proplist, PA_PROP_DEVICE_ICON_NAME)))
-        txt = avahi_string_list_add_pair(txt, "icon-name", t);
-    if ((t = pa_proplist_gets(proplist, PA_PROP_DEVICE_VENDOR_NAME)))
-        txt = avahi_string_list_add_pair(txt, "vendor-name", t);
-    if ((t = pa_proplist_gets(proplist, PA_PROP_DEVICE_PRODUCT_NAME)))
-        txt = avahi_string_list_add_pair(txt, "product-name", t);
-    if ((t = pa_proplist_gets(proplist, PA_PROP_DEVICE_CLASS)))
-        txt = avahi_string_list_add_pair(txt, "class", t);
-    if ((t = pa_proplist_gets(proplist, PA_PROP_DEVICE_FORM_FACTOR)))
-        txt = avahi_string_list_add_pair(txt, "form-factor", t);
 
     if (avahi_entry_group_add_service_strlst(
                 s->entry_group,
@@ -282,7 +230,7 @@ static int publish_service(struct service *s) {
                 pa_sink_isinstance(s->device) ? SERVICE_TYPE_SINK : SERVICE_TYPE_SOURCE,
                 NULL,
                 NULL,
-                compute_port(s->userdata),
+                s->userdata->port,
                 txt) < 0) {
 
         pa_log("avahi_entry_group_add_service_strlst(): %s", avahi_strerror(avahi_client_errno(s->userdata->client)));
@@ -339,7 +287,7 @@ finish:
 
 static struct service *get_service(struct userdata *u, pa_object *device) {
     struct service *s;
-    char *hn, *un;
+    char hn[64], un[64];
     const char *n;
 
     pa_assert(u);
@@ -361,13 +309,11 @@ static struct service *get_service(struct userdata *u, pa_object *device) {
             n = PA_SOURCE(device)->name;
     }
 
-    hn = pa_get_host_name_malloc();
-    un = pa_get_user_name_malloc();
-
-    s->service_name = pa_truncate_utf8(pa_sprintf_malloc("%s@%s: %s", un, hn, n), AVAHI_LABEL_MAX-1);
-
-    pa_xfree(un);
-    pa_xfree(hn);
+    s->service_name = pa_truncate_utf8(pa_sprintf_malloc("%s@%s: %s",
+                                                         pa_get_user_name(un, sizeof(un)),
+                                                         pa_get_host_name(hn, sizeof(hn)),
+                                                         n),
+                                       AVAHI_LABEL_MAX-1);
 
     pa_hashmap_put(u->services, s->device, s);
 
@@ -484,7 +430,7 @@ static int publish_main_service(struct userdata *u) {
                 SERVICE_TYPE_SERVER,
                 NULL,
                 NULL,
-                compute_port(u),
+                u->port,
                 txt) < 0) {
 
         pa_log("avahi_entry_group_add_service_strlst() failed: %s", avahi_strerror(avahi_client_errno(u->client)));
@@ -606,8 +552,9 @@ static void client_callback(AvahiClient *c, AvahiClientState state, void *userda
 int pa__init(pa_module*m) {
 
     struct userdata *u;
+    uint32_t port = PA_NATIVE_DEFAULT_PORT;
     pa_modargs *ma = NULL;
-    char *hn, *un;
+    char hn[256], un[256];
     int error;
 
     if (!(ma = pa_modargs_new(m->argument, valid_modargs))) {
@@ -615,10 +562,15 @@ int pa__init(pa_module*m) {
         goto fail;
     }
 
+    if (pa_modargs_get_value_u32(ma, "port", &port) < 0 || port <= 0 || port > 0xFFFF) {
+        pa_log("Invalid port specified.");
+        goto fail;
+    }
+
     m->userdata = u = pa_xnew(struct userdata, 1);
     u->core = m->core;
     u->module = m;
-    u->native = pa_native_protocol_get(u->core);
+    u->port = (uint16_t) port;
 
     u->avahi_poll = pa_avahi_poll_new(m->core->mainloop);
 
@@ -633,11 +585,7 @@ int pa__init(pa_module*m) {
 
     u->main_entry_group = NULL;
 
-    un = pa_get_user_name_malloc();
-    hn = pa_get_host_name_malloc();
-    u->service_name = pa_truncate_utf8(pa_sprintf_malloc("%s@%s", un, hn), AVAHI_LABEL_MAX-1);
-    pa_xfree(un);
-    pa_xfree(hn);
+    u->service_name = pa_truncate_utf8(pa_sprintf_malloc("%s@%s", pa_get_user_name(un, sizeof(un)), pa_get_host_name(hn, sizeof(hn))), AVAHI_LABEL_MAX);
 
     if (!(u->client = avahi_client_new(u->avahi_poll, AVAHI_CLIENT_NO_FAIL, client_callback, u, &error))) {
         pa_log("avahi_client_new() failed: %s", avahi_strerror(error));
@@ -694,9 +642,6 @@ void pa__done(pa_module*m) {
 
     if (u->avahi_poll)
         pa_avahi_poll_free(u->avahi_poll);
-
-    if (u->native)
-        pa_native_protocol_unref(u->native);
 
     pa_xfree(u->service_name);
     pa_xfree(u);

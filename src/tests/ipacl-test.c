@@ -91,10 +91,8 @@ int main(int argc, char *argv[]) {
     close(fd);
 
 #ifdef HAVE_IPV6
-    if ( (fd = socket(PF_INET6, SOCK_STREAM, 0)) < 0 ) {
-      printf("Unable to open IPv6 socket, IPv6 tests ignored");
-      return 0;
-    }
+    fd = socket(PF_INET6, SOCK_STREAM, 0);
+    assert(fd >= 0);
 
     memset(&sa6, 0, sizeof(sa6));
     sa6.sin6_family = AF_INET6;

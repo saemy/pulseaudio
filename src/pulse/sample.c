@@ -125,10 +125,6 @@ int pa_sample_spec_equal(const pa_sample_spec*a, const pa_sample_spec*b) {
     pa_assert(b);
 
     pa_return_val_if_fail(pa_sample_spec_valid(a), 0);
-
-    if (PA_UNLIKELY(a == b))
-        return 1;
-
     pa_return_val_if_fail(pa_sample_spec_valid(b), 0);
 
     return
@@ -235,46 +231,13 @@ pa_sample_format_t pa_parse_sample_format(const char *format) {
     else if (strcasecmp(format, "s24re") == 0)
         return PA_SAMPLE_S24RE;
     else if (strcasecmp(format, "s24-32le") == 0)
-        return PA_SAMPLE_S24_32LE;
+        return PA_SAMPLE_S24LE;
     else if (strcasecmp(format, "s24-32be") == 0)
-        return PA_SAMPLE_S24_32BE;
+        return PA_SAMPLE_S24BE;
     else if (strcasecmp(format, "s24-32ne") == 0 || strcasecmp(format, "s24-32") == 0)
-        return PA_SAMPLE_S24_32NE;
+        return PA_SAMPLE_S24NE;
     else if (strcasecmp(format, "s24-32re") == 0)
-        return PA_SAMPLE_S24_32RE;
+        return PA_SAMPLE_S24RE;
 
     return -1;
-}
-
-int pa_sample_format_is_le(pa_sample_format_t f) {
-    pa_assert(f >= PA_SAMPLE_U8);
-    pa_assert(f < PA_SAMPLE_MAX);
-
-    switch (f) {
-        case PA_SAMPLE_S16LE:
-        case PA_SAMPLE_S24LE:
-        case PA_SAMPLE_S32LE:
-        case PA_SAMPLE_S24_32LE:
-        case PA_SAMPLE_FLOAT32LE:
-            return 1;
-
-        case PA_SAMPLE_S16BE:
-        case PA_SAMPLE_S24BE:
-        case PA_SAMPLE_S32BE:
-        case PA_SAMPLE_S24_32BE:
-        case PA_SAMPLE_FLOAT32BE:
-            return 0;
-
-        default:
-            return -1;
-    }
-}
-
-int pa_sample_format_is_be(pa_sample_format_t f) {
-    int r;
-
-    if ((r = pa_sample_format_is_le(f)) < 0)
-        return r;
-
-    return !r;
 }

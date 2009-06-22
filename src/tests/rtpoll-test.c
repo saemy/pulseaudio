@@ -26,6 +26,7 @@
 
 #include <pulsecore/log.h>
 #include <pulsecore/rtpoll.h>
+#include <pulsecore/rtsig.h>
 
 static int before(pa_rtpoll_item *i) {
     pa_log("before");
@@ -46,6 +47,10 @@ int main(int argc, char *argv[]) {
     pa_rtpoll_item *i, *w;
     struct pollfd *pollfd;
 
+#ifdef SIGRTMIN
+    pa_rtsig_configure(SIGRTMIN+10, SIGRTMAX);
+#endif
+
     p = pa_rtpoll_new();
 
     i = pa_rtpoll_item_new(p, PA_RTPOLL_EARLY, 1);
@@ -59,6 +64,7 @@ int main(int argc, char *argv[]) {
     w = pa_rtpoll_item_new(p, PA_RTPOLL_NORMAL, 0);
     pa_rtpoll_item_set_before_callback(w, worker);
 
+    pa_rtpoll_install(p);
     pa_rtpoll_set_timer_relative(p, 10000000); /* 10 s */
 
     pa_rtpoll_run(p, 1);
