@@ -1,3 +1,12 @@
+pulseaudio (1:0.9.15-4ubuntu2) karmic; urgency=low
+
+  * SECURITY UPDATE: root escalation from BIND_NOW re-execution.
+    - 0040-do-not-exec-for-bindnow.patch: use -Wl,-z,now instead of
+      performing a racey re-exec.
+    - CVE-2009-1894
+
+ -- Kees Cook <kees@ubuntu.com>  Thu, 16 Jul 2009 10:03:46 -0700
+
 pulseaudio (1:0.9.15-4ubuntu1) karmic; urgency=low
 
   [ Daniel T Chen ]
