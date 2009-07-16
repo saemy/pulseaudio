@@ -130,7 +130,7 @@ static void connection_unlink(connection *c) {
         c->io = NULL;
     }
 
-    pa_idxset_remove_by_data(c->protocol->connections, c, NULL);
+    pa_assert_se(pa_idxset_remove_by_data(c->protocol->connections, c, NULL) == c);
     c->protocol = NULL;
     connection_unref(c);
 }

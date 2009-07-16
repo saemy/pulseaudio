@@ -73,8 +73,7 @@ typedef struct pa_daemon_conf {
         disallow_exit,
         log_meta,
         log_time,
-        flat_volumes,
-        lock_memory;
+        flat_volumes;
     int exit_idle_time,
         scache_idle_time,
         auto_log_target,

@@ -109,7 +109,7 @@ static void update_volume(struct userdata *u) {
         }
 
         pa_log_info("Found %u BT devices, unmuting.", u->n_found);
-        pa_sink_set_mute(s, FALSE, FALSE);
+        pa_sink_set_mute(s, FALSE);
 
     } else if (!u->muted && (u->n_found+u->n_unknown) <= 0) {
         pa_sink *s;
@@ -122,7 +122,7 @@ static void update_volume(struct userdata *u) {
         }
 
         pa_log_info("No BT devices found, muting.");
-        pa_sink_set_mute(s, TRUE, FALSE);
+        pa_sink_set_mute(s, TRUE);
 
     } else
         pa_log_info("%u devices now active, %u with unknown state.", u->n_found, u->n_unknown);

@@ -23,7 +23,6 @@
 #include <config.h>
 #endif
 
-#include <pulse/timeval.h>
 #include <pulse/xmalloc.h>
 
 #include <pulsecore/log.h>
@@ -117,13 +116,14 @@ struct AvahiTimeout {
     void *userdata;
 };
 
-static void timeout_callback(pa_mainloop_api*a, pa_time_event* e, const struct timeval *t, void *userdata) {
-    AvahiTimeout *to = userdata;
+static void timeout_callback(pa_mainloop_api*a, pa_time_event* e, const struct timeval *tv, void *userdata) {
+    AvahiTimeout *t = userdata;
 
     pa_assert(a);
     pa_assert(e);
+    pa_assert(t);
 
-    to->callback(to, to->userdata);
+    t->callback(t, t->userdata);
 }
 
 static AvahiTimeout* timeout_new(const AvahiPoll *api, const struct timeval *tv, AvahiTimeoutCallback callback, void *userdata) {
@@ -145,7 +145,6 @@ static AvahiTimeout* timeout_new(const AvahiPoll *api, const struct timeval *tv,
 }
 
 static void timeout_update(AvahiTimeout *t, const struct timeval *tv) {
-
     pa_assert(t);
 
     if (t->time_event && tv)
