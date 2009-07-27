@@ -1,3 +1,11 @@
+pulseaudio (1:0.9.15-4ubuntu3) karmic; urgency=low
+
+  * debian/01PulseAudio: Mute sinks and sources prior to
+    suspend; unmute sinks and sources after resume (LP: #404986)
+  * debian/patches/series: Reenable glitch-free.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Mon, 27 Jul 2009 22:06:34 -0400
+
 pulseaudio (1:0.9.15-4ubuntu2) karmic; urgency=low
 
   * SECURITY UPDATE: root escalation from BIND_NOW re-execution.

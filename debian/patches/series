@@ -29,7 +29,7 @@
 0029-change-resample-and-buffering.patch
 0030-work-around-suspend-on-idle-source-sink-race.patch
 0031-add-padsp-wrapper-check.patch
-0032-set-tsched0.patch
+#0032-set-tsched0.patch
 0033-load-sample-dir-lazy.patch
 0034-a11y-special-case-disable.patch
 0035-esd-honour-system-pulseaudio.patch
