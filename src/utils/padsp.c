@@ -53,7 +53,6 @@
 #include <pulse/pulseaudio.h>
 #include <pulse/gccmacro.h>
 #include <pulsecore/llist.h>
-#include <pulsecore/core-util.h>
 
 /* On some systems SIOCINQ isn't defined, but FIONREAD is just an alias */
 #if !defined(SIOCINQ) && defined(FIONREAD)
@@ -460,16 +459,15 @@ static void reset_params(fd_info *i) {
 }
 
 static const char *client_name(char *buf, size_t n) {
-    char *p;
+    char p[PATH_MAX];
     const char *e;
 
     if ((e = getenv("PADSP_CLIENT_NAME")))
         return e;
 
-    if ((p = pa_get_binary_name_malloc())) {
+    if (pa_get_binary_name(p, sizeof(p)))
         snprintf(buf, n, "OSS Emulation[%s]", p);
-        pa_xfree(p);
-    } else
+    else
         snprintf(buf, n, "OSS");
 
     return buf;
