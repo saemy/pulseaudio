@@ -26,6 +26,7 @@ usr/lib/pulse-*/modules/module-detect.so
 usr/lib/pulse-*/modules/module-esound-sink.so
 usr/lib/pulse-*/modules/module-http-protocol-tcp.so
 usr/lib/pulse-*/modules/module-http-protocol-unix.so
+usr/lib/pulse-*/modules/module-intended-roles.so
 usr/lib/pulse-*/modules/module-ladspa-sink.so
 usr/lib/pulse-*/modules/module-match.so
 usr/lib/pulse-*/modules/module-mmkbd-evdev.so
@@ -57,5 +58,5 @@ usr/lib/pulse-*/modules/module-cork-music-on-phone.so
 usr/lib/pulse-*/modules/module-sine-source.so
 usr/share/man/man5/default.pa.5
 usr/share/locale
-usr/share/PolicyKit/policy/org.pulseaudio.policy
+usr/share/pulseaudio
 usr/lib/libpulsecore-*.so
