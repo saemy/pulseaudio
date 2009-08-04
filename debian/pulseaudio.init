@@ -1,10 +1,10 @@
 #!/bin/sh -e
 ### BEGIN INIT INFO
 # Provides:          pulseaudio esound
-# Required-Start:    $remote_fs $syslog hal
-# Required-Stop:     $remote_fs $syslog hal
-# Should-Start:      hal
-# Should-Stop:       hal
+# Required-Start:    $remote_fs $syslog udev
+# Required-Stop:     $remote_fs $syslog udev
+# Should-Start:      udev
+# Should-Stop:       udev
 # Default-Start:     2 3 4 5
 # Default-Stop:      1
 # Short-Description: Start the PulseAudio sound server

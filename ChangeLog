@@ -1,4 +1,566 @@
 
+2009-07-28	Lennart Poettering
+	f8873ab: build-sys: bump binary version
+	115d853: i18n: run make-update-po
+	09e57c2: Merge branch 'master' into master-tx
+
+2009-07-25	Lennart Poettering
+	8343360: client: minor modernizations
+	6ce7d20: client: if a child we created was already reaped, assume that it was successful
+
+2009-07-24	Lennart Poettering
+	59659e1: interpol-test: allow configuration of latency
+	211d0f3: client: limit block size for zero-copy operations to mempool block size
+	e7ca058: client: make volume struct const
+	5efb072: alsa: throw timing data away after device resume
+	f676391: autospawn: refuse autospawning if process disabled waitpid()
+	5e24b6d: memblock: try to hit an assert earlier when ref counting doesn't work
+	2bbdf63: udev: explain what happened when inotify_add_watch() returned ENOSPC, rhbz #513571
+	18433c1: alsa: handle correctly if alsa returns us 0 or EAGAIN on snd_pcm_mmap_begin if we didn't call snd_pcm_avail immediately before
+
+2009-07-23	logan
+	835a2ae: Sending translation for Spanish
+
+2009-07-23	Lennart Poettering
+	a81244a: pacat: use zero-copy write calls when playing audio file
+	e02e025: client: include zerocopy write calls in map file
+	c325b93: alsa: don't reset volume/mute when selecting path
+	5a0ef5f: daemon: replace colons by dash in per-machine directory names for compat with weird filesystems
+	ac38c4d: build-sys: add a couple of stub Makefiles
+	1160cad: alsa: control 'Speaker' element as well
+	efe5b65: po: run make update-po
+	638f9a5: Merge branch 'master-tx'
+	88d5749: Merge branch 'master' of ssh://rootserver/home/lennart/git/public/pulseaudio
+	3d6278b: Merge commit 'flameeyes/osx'
+
+2009-07-23	raven
+	097c0cb: Sending translation for Polish
+
+2009-07-23	Wim Taymans
+	3b01d3a: protocol-native: use the right samplerate
+
+2009-07-22	Lennart Poettering
+	41ad33d: Merge branch 'master' of ssh://rootserver/home/lennart/git/public/pulseaudio
+	e3b0ce5: udev: don't fail if /dev/snd is not available right-away
+	2f54b5d: daemon: reset personality, to make the autospawn env cleaup complete
+	7e2afff: alsa: deal properly with IO functions asking us to write 0 bytes
+
+2009-07-20	Lennart Poettering
+	0225ef6: memtrap: clarify that we are not interested in the return value of write()
+	23039af: client: allow zero-copy writing to the stream
+	a2b207e: daemon: before exec'ing ourselves, make sure nobody plays games with /proc/self/exe
+
+2009-07-18	xconde
+	0aca5ad: Sending translation for Catalan
+
+2009-07-17	Diego Elio 'Flameeyes' PettenÃ²
+	d18eb61: Again make sure that the wait() definition is not shadowed.
+	542607f: Make the rtstutter tests mostly pointless without CLOCK_REALTIME.
+	8c85c99: Further simplify on Daniel's patch for bootstrap.sh.
+	0a5257b: Also request Darwin extensions, as they are needed for stuff like NSIG.
+	a6d6718: Request explicitly POSIX.1-2001 for clock_gettime.
+	673112b: Check for support of -z nodelete LD flag, don't use it unconditionally.
+
+2009-07-17	Daniel Mack
+	191c57e: make bootstrap.sh aware of Darwin environment
+
+2009-07-16	Colin Guthrie
+	7e4509f: Merge commit 'flameeyes/master'
+
+2009-07-07	Diego Elio 'Flameeyes' PettenÃ²
+	84200b4: Remove exploitable LD_BIND_NOW hack (CVE-2009-1894).
+
+2009-07-12	Colin Guthrie
+	61fefd6: introspect: Fix two memory issues in port handling code.
+
+2009-07-07	pmkovar
+	cea1b8c: Sending translation for Czech
+
+2009-07-04	Diego Elio 'Flameeyes' PettenÃ²
+	ff252cb: Check for the library containing the backtrace() function.
+
+2009-07-01	Lennart Poettering
+	6fdd584: stream-restore: mark volume changes from instant apply as saved ones
+
+2009-06-29	Marc-AndrÃ© Lureau
+	95d3faa: bluetooth: don't connect on unconnected profile
+
+2009-07-01	Marc-AndrÃ© Lureau
+	e93c6c3: bluetooth: warn on EAGAIN after POLLOUT
+
+2009-07-01	Lennart Poettering
+	7dabe05: memtrap: properly lock access to memtrap changer
+	28e4625: memblock: rearrange locking order
+	efdd3d0: reserve: update from upstream git repo
+	5d4769b: alsa: fix a few comments
+	5bb1883: build-sys: add missing dependency to libcli
+	b174a51: libpulse: minor cleanups
+	a10b7cd: native: don't hit assert when user uploads zero-sized sample
+	cd70d7f: bluetooth: don't busy loop when device is not writable but we want to write
+	c3958aa: bluetooth: handle absence of bluez D-Bus service properly
+
+2009-06-30	Lennart Poettering
+	1104141: reserve: fix build without D-Bus
+
+2009-06-28	Colin Guthrie
+	00c392d: bootstrap: Ship git-version-gen with the tarball.
+	59376b0: introspect: Fix a bug in sink/source info protocol handling related to ports.
+
+2009-06-27	Colin Guthrie
+	a007d47: combine: Do not set (and update) description if the user passed one in during load.
+	7ee1b47: udev: Don't install the udev rules if we're not compiling udev support
+
+2009-06-25	Diego Elio 'Flameeyes' PettenÃ²
+	1ca7603: Add missing headers includes for FreeBSD.
+	bce211e: Rename the flock variable to f_lock.
+	6f44792: Only declare saved_errno when it's going to be used (on Linux).
+	9a2ac32: Rename the wait parameter to wait_op, to avoid shadowing wait().
+	2266a39: Remove the call for pa_rtpoll_install() in the Solaris module.
+	24564af: Fix the moved rtclock.h header in the Solaris module.
+
+2009-06-24	Diego Elio 'Flameeyes' PettenÃ²
+	de40e41: Also alias MAP_ANONYMOUS to MAP_ANON in shm.c, for FreeBSD.
+	2f7bce9: Add a missing sys/stat.h include for FreeBSD to declare umask().
+	fc649ad: Don't try to compile the rtkit sources when dbus is not enabled.
+	ad4e025: Implement mix-test for s24le and s24be sample formats.
+	595f80f: Use static constants to keep the generated sample blocks.
+	080f630: Ignore IPv6 tests, if IPv6 was built in but the system doesn't have it.
+	cd375da: Use the new CC_CHECK_CFLAGS_APPEND macro instead of a manual for.
+	e7c3a12: Properly link module-zeroconf-publish against libnative-protocol.
+	a4703ce: Check for and use flags to reject undefined symbols in libraries.
+	e61795c: Update attributes.m4 file from xine-lib.
+
+2009-06-13	Diego Elio 'Flameeyes' PettenÃ²
+	e832383: Make it more clear that PulseAudio needs libtool 2.2.
+
+2009-06-23	Lennart Poettering
+	2654eb7: sndfile: fix build on BE archs
+	0b52bf4: build-sys: don't make pulseaudio binary suid on install anymore
+	390c275: build-sys: properly drop '-' from major/minor/micro strings
+	b4b1f03: build-sys: teacch git versioning script to not kill - in version strings
+	5651c03: build-sys: drop compat with old git versions so that tarballs for -test1 style evrsions are properly created
+	5b78752: intended-roles: drop quite a few unnecessary includes
+	ef85558: modules: pass properly initialized userdata pointers to various hooks
+	b6d0b0e: intended-roles: properly initialize split state
+	d965000: rtclock: make use of constants when converting between nsec and usec
+	b627d68: intended-roles: fix symdef header inclusion
+	bcae796: build-sys: use pax tar format to allow longer file names
+	da6b156: builds-sys: work around automake 1.11 borkage
+	38e3d83: build-sys: bump udev revision to pull in new rules files
+	882cdfc: rtclock: fix type of PA_TIMEVAL_RTCLOCK
+	9217b47: timeval: don't create the wrong illusion that nsecs should be stored in pa_usec_t
+	f3bbbd0: rtclock: document that we fallback to wallclock time if monotonic time is not supported
+
+2009-06-22	Lennart Poettering
+	f753ef2: rtclock: enable rtclock for our own mainloop implementations
+	3ee2900: rtclock: fix build after merge
+	fc33f7e: Merge most of elmarco/rtclock2
+	048e576: build-sys: dropo shave support, depend on automake's new silent build support instead
+	de5219a: daemon: enable module-intended-roles by default
+	374efbd: Merge branch 'master' of ssh://rootserver/home/lennart/git/public/pulseaudio
+	aa2570c: rescue: make sure module-rescue-streams is used only as last fallback
+	60d36c7: module-stream-restore: recheck stream database on hotplug/unplug and potentially move streams
+	27af460: modules: add module-intended-roles that automatically puts streams marked with a role on devices that are intended for that role
+	c4d90ea: restore: change 'save' flag behaviour to reflect whether an entry shall and/or is in the on-disk databases
+
+2009-06-20	Marc-AndrÃ© Lureau
+	e4d914c: rtclock: fix issues found by Lennart
+
+2009-04-05	Marc-AndrÃ© Lureau
+	0955e3d: Base mainloop on pa_rtclock_now()
+
+2009-04-04	Marc-AndrÃ© Lureau
+	125c528: pulse: move pa_rtclock_now in pulsecommon
+
+2009-06-19	Lennart Poettering
+	32e2cd6: core: get rid of rt sig/timer handling since modern Linux' ppooll() is finally fixed for granularity
+	a62db27: daemon: enable real-time by default
+	06ec5fd: mergo
+
+2009-04-04	Marc-AndrÃ© Lureau
+	5dcdd5e: perl -p -i -e 's/pa_rtclock_usec/pa_rtclock_now/g' `find . -name '*.[ch]'`
+
+2009-06-19	Lennart Poettering
+	9c438bc: daemon: strip all special suid/caps log from our startup code, we'll now rely on RealtimeKit for all high-priority/RT scheduling policy issues
+	bacc5ca: core: use rtkit to acquire high-priority scheduling
+	8474fd7: core: ask RealtimeKit for RT scheduling
+	6ad3855: alsa: synthesize volume values more sensibly for channels that are not controllable in hw
+	b1ea7c0: alsa: document alsa mixer path/profile sets a bit more
+	b70b5ed: alsa: add copyright blobs and comments to all mixer paths/profile sets
+
+2009-06-19	logan
+	f21457e: Sending translation for Spanish
+
+2009-06-19	barney
+	8f81555: Sending translation for German
+
+2009-06-18	Lennart Poettering
+	11d2a7e: alsa: move udev rules file behind the other sound related rules
+	131f76a: alsa: move mixer config files to subdir in /usr/share
+	0fd17c6: alsa: document default profile set a bit better
+	8a5f8f4: alsa: add profile set for Native Instruments 4 DJ
+	348dcd6: alsa: unify alsa log handling and snd_config_update_free_global() handling in one place
+	25e5197: alsa: merge mic boost into volume slider
+	8fe50b0: alsa,core: include mapping name in description strings
+	ca560cc: alsa: add profile set for Native Instruments Audio 8 DJ sound card
+	60df970: alsa: properly count mappings of manually defined profiles
+	b5cea8d: alsa: fix duplicate mapping detection
+	34b4888: alsa: when creating alsa sinks/sources include mapping name in device name to allow profiles mit multiple sinks or multiple sources
+	8d3362c: device-restore: properly check save_muted flag when storing muted state
+	39b37a2: core: be a bit more verbose when registering a sink/source fails
+	4951e08: card,stream-restore: minor cleanups
+	0e4ac56: device-restore: save last used port in database
+	59bd793: card-restore: we don't need to save card data that came from the database
+	d773638: stream-restore: e don't need to save stream data that came from the database
+
+2009-06-18	raven
+	4dccbe3: Sending translation for Polish
+
+2009-06-17	Lennart Poettering
+	53b8703: Merge commit 'origin/master' into master-tx
+	a9f82f1: i18n: update i18n
+	f1ef2f6: Merge commit 'origin/master-tx'
+	75256fb: pactl: show list of supported ports
+	46b8ca2: native-protocol: allow enumerating ports
+	c65ebee: raop: move all raop files to subdir
+	6b2ca09: pactl: implement pactl set-{sink	914ef89: libpulse: implement client side for sink/source port selection commands
+	6d7cf14: native: implement command to change sink/source port
+	bd8e043: bluetooth: return sensible error code in set_profile()
+	334325e: alsa: allow placing device id in alsa device strings at arbitrary positions
+	31575f7: alsa: rework mixer logic
+	e9c70ac: pdispatch: fix s/recieve/receive/ typos
+	1ec33f3: pstream: fix s/recieve/receive/ typos
+	dddb4b0: gdbm: set default block size to 1K
+	279e0d6: card: get rid of description field which is unused
+	4f44fe8: card: make sure to always hand failure code back in some calls
+	325c01b: card: some modernizations
+	dda0f5a: rtp: fix s/recieve/receive/ typo
+	0fa1ddf: core-util: implement pa_maybe_prefix_path()
+	7fa05be: core-util: implement pa_split_spaces_strv()
+	c5dbf75: core-util: implement pa_xstrfreev()
+	7de7b01: conf-parse: implement .include directive
+	083b17b: volume,channelmap: reimplement a couple of calls based on channel masks
+	77901e5: channelmap: define a couple of standard channel masks
+	697b8de: malloc: implement pa_xrenew()
+	4f36cc7: channelmap: make sure a mask is generated is 64 bit int
+	26d5f28: version: fix prefix in PA_CHECK_VERSION macro
+	d993969: channelmap: implement pa_channel_position_from_string()
+	64b0f38: volume: implement functions for multiplicating a cvolume with a scalar
+	c6830bd: hashmap: implement pa_hashmap_last()
+	a1d84e3: hashmap: implement api to iterate a hashmap backwards
+	277e8c5: idxset: implement pa_idxset_copy()
+	0b479ff: daemon: write a warning blurb to syslog when folks use --system mode
+
+2009-06-13	ruigo
+	550b619: Sending translation for Portuguese
+
+2009-06-12	xconde
+	f0f30fb: Sending translation for Catalan
+
+2009-06-12	dennistobar
+	88730fd: Sending translation for Spanish
+
+2009-06-10	Lennart Poettering
+	1e8a374: alsa: fix bad memory access for devices that lack a mixer
+
+2009-06-08	raven
+	a87f8a2: Sending translation for Polish
+
+2009-06-08	Lennart Poettering
+	89e3adf: sample: fix build on BE archs
+	3c4c1f4: udev: reshuffle the properties we read from udev a bit
+	f13bbd5: prop: introduce new PA_PROP_DEVICE_INTENDED_ROLES property
+	12d5382: i18n: update po data
+	983aa5d: Merge commit 'origin/master-tx'
+	e7a6d53: core: replace tabs by spaces
+	587fc2a: core: make sure soft mute status stays in sync with hw mute status
+
+2009-06-08	rajesh
+	cc9354f: Sending translation for po/hi.po
+
+2009-06-07	Lennart Poettering
+	ab5adce: rtstutter: increase log level by default
+
+2009-06-07	ruigo
+	00cc168: Sending translation for Portuguese
+
+2009-05-14	Jyri Sarha
+	8eaea3a: optimization: Optimized pa_sink_render_full.
+
+2009-06-07	Lennart Poettering
+	8adf1d5: man: document that tsched doesn't use fragment settings
+	3aefc45: man: document 24bit sample types in man page
+	5be1cc5: man: document log related daemon.conf options
+	78bccde: conf: remove obsolete module-idle-time directive from default config file/man page
+	a9b38b3: daemon: optionally call mlockall() on startup
+	71ce195: udev: properly initialize userdata to 0
+
+2009-06-06	Lennart Poettering
+	3a118f2: build-sys: bump libsndfile dependency
+	bab4b94: udev: try to unsuspend devices whenever they are closed by other processes
+	d1646f7: core: monitor sources need to inherit the suspend cause from their sinks
+	69eab1e: core: suppress suspending/resume when we are already in the right state
+	496be21: hashmap: introduce PA_HASHMAP_FOREACH macro
+	e84644a: hal,udev: deprecate HAL support in favour of udev
+	8080ab1: udev: add module-udev-detect for discovering and configuring devices
+
+2009-06-06	aalam
+	86f3961: Sending translation for Punjabi
+
+2009-06-05	Lennart Poettering
+	e5dd9df: rtp: remove gcc warning
+	f398407: augment: try to deduce the media role from the menu category
+	561c0af: alsa: monitor device reservation status and resume automatically when device becomes unused
+	00797b8: core: add a suspend cause flags field
+	3af5f8c: reserve: wrap device reservation monitor reference implementation
+	1748fd2: reserve: update reserve.[ch] from upstream git
+
+2009-06-04	Lennart Poettering
+	3e10f3f: tdb: include signal.h before tdb.h for compat reasons
+	4d87475: utils: use pa_path_get_filename() where applicable
+
+2009-05-28	Lennart Poettering
+	8bada74: Merge branch 'master' of ssh://rootserver/home/lennart/git/public/pulseaudio
+	c224aac: modules: introduce PA_MODULE_DEPRECATED() macro for marking modules deprecated
+	1c4393a: modules: add {sink
+2009-05-27	Lennart Poettering
+	6044aab: Merge commit 'flameeyes/master'
+	2088626: null: introduce sink_properties= argument
+	6601e09: simple: set ADJUST_LATENCY by default
+	19d7ced: modargs: introduce pa_modargs_get_proplist()
+
+2009-05-27	jassy
+	8c6c8e5: Sending translation for Punjabi
+
+2009-05-26	Lennart Poettering
+	699bd54: libpulse: introduce PA_CHECK_VERSION macro
+	e8f7eb6: oss: don't deadlock when we try to resume an OSS device that lacks a mixer
+	d2198c9: alsa: fix wording, we are speaking of card profiles, not output profiles
+	5c10b84: sndfile: big rework of libsndfile interfacing code
+
+2009-05-26	jassy
+	ed105ef: Sending translation for Punjabi
+
+2009-05-25	Lennart Poettering
+	759a9d0: core-util: introduce pa_disable_sigpipe()
+	ebce318: cli: allow easy repeating of commands with '/'
+	8b180b6: volume: implement pa_cvolume_{scale	5f2d848: map-file: add missing channel map/cvolume position functions
+	8f23a2e: proplist: add two new generic properties, media.copyright and media.software
+	01fa34b: channelmap: introduce pa_channel_map_mask() and pa_channel_position_mask_t
+	261a483: sample: introduce pa_proplist_setp()
+	346a708: sample: introduce pa_sample_format_is_{le,be,ne,re}()
+	3533599: upnp: s/org.Rygel./org.gnome.UPnP/ following the newest version of the spec
+
+2009-05-24	ruigo
+	911f890: Sending translation for Portuguese
+
+2009-05-24	Lennart Poettering
+	f809284: channelmap: document how apple's/microsoft's channel names map to ours
+
+2009-05-22	Lennart Poettering
+	e2aba15: core-util: fall back to sysconf(_SC_OPEN_MAX) to find maximum file descriptor
+	ce3fbb5: tests: show dB in volume-ui.py
+	000bdb8: volume: change pa_volume_t mapping to cubic
+
+2009-05-21	ruigo
+	4b9aac2: Sending translation for Portuguese
+
+2009-05-20	ruigo
+	0ba756b: Sending translation for po/LINGUAS
+	0e23210: Sending translation for po/pt.po
+
+2009-05-19	Lennart Poettering
+	e7bca90: upnp: s/url/URL/ in GetAll() D-Bus call
+
+2009-05-17	Diego Elio 'Flameeyes' PettenÃ²
+	ce6643e: Use the _ONCE variation of AC_CHECKs where applicable.
+
+2009-05-15	Diego Elio 'Flameeyes' PettenÃ²
+	ff5b7fb: Add missing headers' include to build on FreeBSD 7.1.
+	99f2541: Add missing include directory path for OSS modules.
+	d45c909: When MAP_ANONYMOUS is missing, fallback to MAP_ANON.
+	0de6877: Don't use == for comparison in tests. Fix build with non-bash shells.
+
+2009-05-15	Lennart Poettering
+	862a05f: upnp: update to newest spec
+
+2009-05-14	Lennart Poettering
+	0921b1b: shm: rework alignment when punching memory
+	763954c: upnp: convert all property names to CamelCase to follow D-Bus spec
+	1a39acc: rescue: make we don't end up in an endless loop when we can't move a sink input
+	234c61b: upnp: implement item-count/container-count properties
+	0cb3837: alsa: be a bit more verbose when a hwparam call fails
+	b7e2223: database: port restore modules to new database API
+	003e03d: macro: include string.h because we need it for memset
+	6df14e0: database: add tdb backend
+	46bceed: database: add gdbm backend
+	c69ed91: database: add abstracted database API
+
+2009-05-13	Lennart Poettering
+	905c800: volume: introduce pa_cvolume_{get	28069ef: core: automatically add icons for headsets/headphones/speakers for devices
+
+2009-05-12	Lennart Poettering
+	dfd6b61: alsa: include mixer name in sink/source properties
+	21ab720: http: fix segfault on connection termination
+
+2009-05-12	Marc-AndrÃ© Lureau
+	86caf45: context: don't fail if session bus is not there
+	4c3aef3: suspend-on-idle: add per-device timeout property
+
+2009-05-11	Lennart Poettering
+	a7a7358: git: activate default commit hook
+	37c3620: upnp: rework property handling
+	35b7ce5: upnp: use new rygel @HOSTNAME@ wildcard for server name
+	dc5dce5: upnp: properly issue method not found exception when we don't now it
+	98a6454: upnp: update to newest spec, generate 'Updated' signal
+	6c4c61d: upnp: fix URL of MediaServer spec
+	eb20564: mime: drop additional whitespace from mime types
+
+2009-05-07	Jyri Sarha
+	35faedb: core: Take samples from silence cache rather than write zeros
+	d7b8947: core: optimize pa_sink_render_full()
+
+2009-05-08	Lennart Poettering
+	a714861: channelmap: add pa_channel_map_has_position()
+	7f767e5: core: liberalize 99a6a4 a bit
+	8d9c26e: core: cache requested latency only when we are running, not while we are still constructing
+	99a6a47: core: make sure we fix up flags/monitor flags already in pa_sink_new() instead of pa_sink_put()
+	3766850: core: introduce pa_{sink,source}_set_fixed_latency()
+
+2009-05-08	Jyri Sarha
+	44e566a: bluetooth-device: Add safe guard against BT streaming irregularities.
+
+2009-05-07	Lennart Poettering
+	92a6141: macro: add macros for initializing memory
+
+2009-05-05	troubi51
+	9dd1af6: Sending translation for French
+	dd1cd9e: Sending translation for French
+
+2009-05-03	pmkovar
+	4caa33b: Sending translation for Czech
+
+2009-05-01	Lennart Poettering
+	e0f0821: sconv: fix a few minor conversion issues
+	5caf09d: resampler-test: add tests for 24bit sample formats
+	76caa27: resampler-test: use global PA_FLOAT32_SWAP implementation
+	4bffc78: alsa: initialize buffer size before number of periods to improve compat with some backends
+	d2b5ae5: sample-util: fix iteration loop when adjusting volume of s24 samples
+	3a7b287: sample-util: properly allocate silence block for s24-32 formats
+	076830a: endian: fix LE/BE order for 24 bit accessor functions
+	947bf5d: zeroconf: properly unref native protocol object
+	d4b10d8: sample: correctly pass s24-32 formats
+	4129f51: alsa: don't hit an assert when invalid module arguments are passed
+
+2009-04-30	Lennart Poettering
+	5a2898d: zeroconf: use pa_get_{user	3522b7d: zeroconf: copy more sink/source properties into DNS-SD TXT data
+	407a810: zeroconf: computer native protocol port automatically
+	d696416: headers: minor cleanups
+	5326f5f: rygel: get rid of forgotten debug trap
+	93db3cb: rygel: instead of always handing out wildcard address find out the actual address we are listening on
+	8dfdfd4: http: export information about currently active server strings
+	23a798c: strlist: add new calls pa_strlist_{next	9208b86: parseaddr: add new call pa_is_ip_address()
+
+2009-04-29	Lennart Poettering
+	d5f9057: rygel: make server name configurable
+	c95cc9e: rygel: add module that interfaces with Rygel UPnP
+	390fe02: http: split out mime type handling calls
+	84a92f2: protocol-http: allow listening into sinks/sources via HTTP
+	c215011: ioline: add new calls pa_ioline_detach_iochannel() and pa_ioline_is_drained()
+	a64097a: ioline: add callback that can be called when the ioline object is fully drained
+	4cb6ea2: simple-protocol: don't hit an assert when we call connection_unlink() early
+	0b2d96d: protocol-http: substantial modernizations
+	d871071: alsa: allow configuration of fallback device strings in profiles
+	ad5a1f3: protocol-native,proplist-util: port to pa_get_{user	a8f0d7e: core-util: introduce pa_get_host_name_malloc() and pa_get_user_name_malloc()
+	4abd5fa: memtrap: implicitly page align memory areas
+	bd0e4ce: macro: make pa_page_align roung up instead of down
+	68f3ca9: macro: add new macro pa_align_ptr()
+	8247e45: shm: minor modernizations
+	595c22a: shm: page align shm size when mmap()ing it
+	9745483: strbuf: add new call pa_strbuf_putc()
+	5d39b8d: idxset: add enumeration macro PA_IDXSET_FOREACH
+
+2009-04-28	Lennart Poettering
+	0368d6e: build-system: move x11 and jack modules into subdirectories
+
+2009-04-24	Lennart Poettering
+	908b0e6: build-system: hide .version from git
+	af8f058: build-system: run make update-shave
+
+2009-04-23	Marc-AndrÃ© Lureau
+	35382d6: build: there is no such thing as SHAVE_OUTPUT anymore
+	ebe22ad: build: generate git tarball using git describe
+
+2009-04-22	Lennart Poettering
+	edba78c: start-pulseaudio-x11: don't start a local sound server if a remote sound server is configured
+	ad12d7d: memtrap,aupdate: split atomic update from memtrap into seperate aupdate framework
+
+2009-04-21	Lennart Poettering
+	bb07c16: i18n: run make update-po
+	79c8826: i18n: add missing file to LINGUAS ... again
+	6919424: Merge commit 'origin/master-tx'
+	26383c6: memtrap: add a bit of documentation for memtrap
+	67efc76: memtrap: fix parameter type
+	684b4c1: memtrap: hook up core to memtrap system
+	928adf4: memtrap: make installation of SIGBUS handler explicit to ease integration into libraries
+	7b00861: memtrap: when we fail to handle sigbus say so
+	6224fac: memtrap: add new logic to trap and handle SIGBUS
+	fbbcfae: semaphore: introduce static semaphores
+	391d50c: mutex: add initializer for static mutexes
+	b304a98: mutex: when we fail to fill in mutex into static mutex ptr free it again
+	12065f3: llist: add PA_LLIST_FOREACH
+
+2009-04-20	marionline
+	3c36836: Sending translation for Italian
+
+2009-04-19	mvdz
+	ed10a15: Sending translation for po/uk.po
+
+2009-04-19	Lennart Poettering
+	8fbf626: object: revert to old unref() behaviour
+	eb04d0f: object: fix ref counting of objects on destruction
+	ad2a0ab: alsa: remove debug code
+	98a25c5: alsa: properly convert return values of snd_strerror() to utf8
+	39a26d8: log: use pa_logl() instead of pa_log_level()
+	b9f1af4: log: print file name only when we have it
+	6773d00: util: if NULL is passed to pa_path_get_filename() just hand it through
+
+2009-04-15	Erich Boleyn
+	b03a650: reserve-device: allow building without D-Bus
+
+2009-04-17	Finn Thain
+	1c0667d: solaris: 0.9.15 solaris module build failure
+
+2009-04-18	Lennart Poettering
+	12c5afe: object: keep refcount at 1 while destructing objects
+	ad447d1: core-util: handle EINTR already inside of pa_read/pa_write
+
+2009-04-18	beckerde
+	4ec5375: Sending translation for Spanish
+
+2009-04-18	fab
+	0093379: Sending translation for po/LINGUAS
+	ae3caa6: Sending translation for po/de_CH.po
+	8a1938c: Sending translation for German
+
+2009-04-04	Marc-AndrÃ© Lureau
+	099b328: bluetoth-device: be less strict on CONNECTED state to switch profile
+
+2009-04-17	Marc-AndrÃ© Lureau
+	344eea4: pulse/context: when NOFAIL, don't try_next_connection() if c->client
+
+2009-04-17	Lennart Poettering
+	d775cf6: rescue-streams: when one stream move fails try to continue with the remaining ones
+
+2009-04-15	warrink
+	83e7186: Sending translation for Dutch
+
+2009-04-14	warrink
+	0846b68: Sending translation for Dutch
+
+2009-04-14	raven
+	5faacd8: Sending translation for Polish
+
 2009-04-14	Lennart Poettering
 	ca9cd14: add a few missing initializations
 	40d71e1: explcitly ignore return values of some functions marked with gcc's warn_unused_result attribute

@@ -1,0 +1,18 @@
+diff -urN pulseaudio-0.9.16~test1/po/POTFILES.in pulseaudio-0.9.16~test1.new/po/POTFILES.in
+--- pulseaudio-0.9.16~test1/po/POTFILES.in	2009-06-08 08:35:57.000000000 +1000
++++ pulseaudio-0.9.16~test1.new/po/POTFILES.in	2009-07-01 15:52:05.000000000 +1000
+@@ -149,14 +147,12 @@
+ src/pulsecore/semaphore-win32.c
+ src/daemon/cpulimit.c
+ src/daemon/ltdl-bind-now.c
+-src/daemon/polkit.c
+ src/daemon/main.c
+ src/daemon/cmdline.c
+ src/daemon/dumpmodules.c
+ src/daemon/daemon-conf.c
+ src/daemon/caps.c
+ src/daemon/pulseaudio.desktop.in
+-src/daemon/org.pulseaudio.policy.in
+ src/pulse/channelmap.c
+ src/pulse/error.c
+ src/pulse/proplist.c

@@ -1,3 +1,87 @@
+pulseaudio (1:0.9.16~test3-0ubuntu1) karmic; urgency=low
+
+  * New upstream release
+  * debian/pulseaudio.postinst:
+    - Do not create the pulse-rt group any more
+    - Do not make the pulseaudio binary suid root
+  * debian/pulseaudio.postrm: Do not try to remove the pulse-rt group
+  * debian/pulseaudio.preinst: Remove the pulse-rt group on upgrade
+  * debian/control:
+    - Suggest rtkit
+    - Renamed pulseaudio-module-hal and pulseaudio-module-hal-dbg to
+      pulseaudio-module-udev and pulseaudio-module-udev-dbg respectively
+    - pulseaudio-module-udev replaces pulseaudio-module-hal
+    - Bumped libudev-dev requirement to >= 143
+    - Added build dependencies libICE-dev, libxi-dev, x11proto-core-dev
+    - Add new package for the rygel-media-server module
+    - Tighten libasound2-dev and libsndfile1-dev dependencies
+  * debian/pulseaudio.init: Change all hal references to udev
+  * debian/patches/0008-clean-out-old-files.patch: Remove non-existant files
+    from POTFILES.in, patch sent upstream
+  * Merge from Debian unstable, remaining changes:
+    - epoch (my stupid fault :S)
+    - Don't build against, and create jack package. Jack is not in main
+    - use speex-float-1 resampler to work better with lack of PREEMPT in
+      karmic's -generic kernel config, also change buffer size
+    - Add alsa configuration files to route alsa applications via pulseaudio
+    - Move libasound2-plugins from Recommends to Depends
+    - Add pm-utils sleep hook to suspend (and resume) users' pulseaudio
+      daemons
+    - patch to fix source/sink and suspend-on-idle race
+    - Make initscript more informative in the default case of per-user
+      sessions
+    - add status check for system wide pulseaudio instance
+    - create /var/run/pulse, and make restart more robust
+    - LSB {Required-*,Should-*} should specify hal instead of dbus,
+      since hal is required (and already requires dbus)
+    - indicate that the system pulseaudio instance is being started from the init
+      script
+    - Install more upstream man pages
+    - Link to pacat for parec man page
+    - check whether pulseaudio is running before preloading the padsp library
+    - Add DEB_OPT_FLAG = -O3 as per recommendation from
+      pulseaudio-discuss/2007-December/001017.html
+    - cache /usr/share/sounds/ubuntu/stereo/ wav files on pulseaudio load
+    - Generate a PO template on build
+    - add special case to disable pulseaudio loading if accessibility/speech
+      is being used
+    - the esd wrapper script should not load pulseaudio if pulseaudio is being
+      used as a system service
+    - add a pulseaudio apport hook
+    - fix some typos in README.Debian
+    - drop padevchooser(Recommends) and pavucontrol (Suggests)
+    - drop libasyncns-dev build dependency, its in universe
+    - add libudev-dev as a build-dependency
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Tue, 04 Aug 2009 11:46:25 +0100
+
+pulseaudio (0.9.16~test2~20090726git59659e1db-1) experimental; urgency=low
+
+  * New Upstream Version
+  * Ack NMU (Was fixed upstream in this version) (Closes: #537351)
+  * Remove all patches, everything was merged upstream :)
+  * debian/copyright: updated
+  * debian/pulseaudio.install: Don't install the PolicyKit config file
+  * debian/control: Removed build-dep on libpolkit-dbus-dev
+  * Update various shlibs files to use 0.9.16
+  * debian/pulseaudio.install: Install pulseaudio shared config files
+  * debian/pulseaudio.instal: Add module-intended-roles
+  * debian/control: Make pulseaudio-module-raop-dbg depend on
+    pulseaudio-module-raop
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Tue, 28 Jul 2009 14:00:27 +0200
+
+pulseaudio (0.9.15-4.1) unstable; urgency=high
+
+  * Non-maintainer upload by the Security Team.
+  * Fix race condition when reading /proc/self/exe and reloading the binary
+    that leads to arbitrary code execution as pulseaudio is suid root
+    + Use LDFLAGS to preload DSOs
+    + regenerate autofoo
+    (CVE-2009-1894; Closes: #537351).
+
+ -- Nico Golde <nion@debian.org>  Fri, 24 Jul 2009 18:02:24 +0200
+
 pulseaudio (1:0.9.15-4ubuntu3) karmic; urgency=low
 
   * debian/01PulseAudio: Mute sinks and sources prior to
@@ -49,7 +133,8 @@ pulseaudio (1:0.9.15-4ubuntu1) karmic; urgency=low
     - cache /usr/share/sounds/ubuntu/stereo/ wav files on pulseaudio load
     - disable glitch free (use tsched=0)
     - Generate a PO template on build
-    - add special case to disable pulseaudio loading if accessibility/speech
+    - add special case to disable pulseaud  * debian/patches/0090-fix-sw-mute-desync.patch: Dropped, as this is included
+    in the recently added patches in Debian.io loading if accessibility/speech
       is being used
     - the esd wrapper script should not load pulseaudio if pulseaudio is being
       used as a system service

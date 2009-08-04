@@ -7,6 +7,12 @@ case "$1" in
         rm /etc/xdg/autostart/pulseaudio.desktop
       fi
     fi
+
+    if dpkg --compare-versions "$2" lt "1:0.9.16~test1-0ubuntu1~ppa2"; then
+      if getent group pulse-rt > /dev/null ; then
+        delgroup --quiet --system pulse-rt > /dev/null || true
+      fi
+    fi
   ;;
   abort-upgrade)
   ;;

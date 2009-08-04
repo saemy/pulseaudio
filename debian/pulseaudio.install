@@ -1,11 +1,9 @@
 etc/pulse/default.pa
 etc/pulse/system.pa
 etc/pulse/daemon.conf
-etc/X11/Xsession.d/70pulseaudio
+etc/xdg/autostart/pulseaudio.desktop
 usr/bin/pulseaudio
-usr/bin/pulse-session
 usr/bin/start-pulseaudio-x11
-usr/lib/pm-utils/sleep.d/01PulseAudio
 usr/lib/pulse-*/modules/libalsa-util.so
 usr/lib/pulse-*/modules/libcli.so
 usr/lib/pulse-*/modules/libprotocol-cli.so
@@ -28,13 +26,13 @@ usr/lib/pulse-*/modules/module-detect.so
 usr/lib/pulse-*/modules/module-esound-sink.so
 usr/lib/pulse-*/modules/module-http-protocol-tcp.so
 usr/lib/pulse-*/modules/module-http-protocol-unix.so
+usr/lib/pulse-*/modules/module-intended-roles.so
 usr/lib/pulse-*/modules/module-ladspa-sink.so
 usr/lib/pulse-*/modules/module-match.so
 usr/lib/pulse-*/modules/module-mmkbd-evdev.so
 usr/lib/pulse-*/modules/module-native-protocol-fd.so
 usr/lib/pulse-*/modules/module-native-protocol-tcp.so
 usr/lib/pulse-*/modules/module-native-protocol-unix.so
-usr/share/alsa/*.conf
 usr/share/lintian/overrides/pulseaudio
 usr/lib/pulse-*/modules/module-null-sink.so
 usr/lib/pulse-*/modules/module-oss.so
@@ -60,6 +58,5 @@ usr/lib/pulse-*/modules/module-cork-music-on-phone.so
 usr/lib/pulse-*/modules/module-sine-source.so
 usr/share/man/man5/default.pa.5
 usr/share/locale
-usr/share/PolicyKit/policy/org.pulseaudio.policy
+usr/share/pulseaudio
 usr/lib/libpulsecore-*.so
-usr/share/apport/package-hooks/source_pulseaudio.py

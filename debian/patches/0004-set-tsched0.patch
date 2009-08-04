@@ -1,0 +1,12 @@
+diff -urN pulseaudio-0.9.16~test1/src/daemon/default.pa.in pulseaudio-0.9.16~test1.new/src/daemon/default.pa.in
+--- pulseaudio-0.9.16~test1/src/daemon/default.pa.in	2009-06-23 06:54:03.000000000 +1000
++++ pulseaudio-0.9.16~test1.new/src/daemon/default.pa.in	2009-07-01 15:06:56.000000000 +1000
+@@ -50,7 +50,7 @@
+ 
+ ### Automatically load driver modules depending on the hardware available
+ .ifexists module-udev-detect@PA_SOEXT@
+-load-module module-udev-detect
++load-module module-udev-detect tsched=0
+ .else
+ ### Alternatively use the static hardware detection module (for systems that
+ ### lack udev support)
