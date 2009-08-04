@@ -494,14 +494,13 @@ int pa_scache_add_directory_lazy(pa_core *c, const char *pathname) {
         struct dirent *e;
 
         while ((e = readdir(dir))) {
-            char *p;
+            char p[PATH_MAX];
 
             if (e->d_name[0] == '.')
                 continue;
 
-            p = pa_sprintf_malloc("%s" PA_PATH_SEP "%s", pathname, e->d_name);
+            pa_snprintf(p, sizeof(p), "%s/%s", pathname, e->d_name);
             add_file(c, p);
-            pa_xfree(p);
         }
 
         closedir(dir);

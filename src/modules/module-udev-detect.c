@@ -39,9 +39,6 @@ PA_MODULE_AUTHOR("Lennart Poettering");
 PA_MODULE_DESCRIPTION("Detect available audio hardware and load matching drivers");
 PA_MODULE_VERSION(PACKAGE_VERSION);
 PA_MODULE_LOAD_ONCE(TRUE);
-PA_MODULE_USAGE(
-        "tsched=<enable system timer based scheduling mode?> "
-        "ignore_dB=<ignore dB information from the device?>");
 
 struct device {
     char *path;
@@ -53,9 +50,7 @@ struct device {
 struct userdata {
     pa_core *core;
     pa_hashmap *devices;
-
-    pa_bool_t use_tsched:1;
-    pa_bool_t ignore_dB:1;
+    pa_bool_t use_tsched;
 
     struct udev* udev;
     struct udev_monitor *monitor;
@@ -67,7 +62,6 @@ struct userdata {
 
 static const char* const valid_modargs[] = {
     "tsched",
-    "ignore_dB",
     NULL
 };
 
@@ -146,14 +140,12 @@ static void card_changed(struct userdata *u, struct udev_device *dev) {
     args = pa_sprintf_malloc("device_id=\"%s\" "
                              "name=\"%s\" "
                              "card_name=\"%s\" "
-                             "tsched=%s "
-                             "ignore_dB=%s "
+                             "tsched=%i "
                              "card_properties=\"module-udev-detect.discovered=1\"",
                              path_get_card_id(path),
                              n,
                              card_name,
-                             pa_yes_no(u->use_tsched),
-                             pa_yes_no(u->ignore_dB));
+                             (int) u->use_tsched);
 
     pa_log_debug("Loading module-alsa-card with arguments '%s'", args);
     m = pa_module_load(u->core, "module-alsa-card", args);
@@ -372,7 +364,6 @@ int pa__init(pa_module *m) {
     struct udev_enumerate *enumerate = NULL;
     struct udev_list_entry *item = NULL, *first = NULL;
     int fd;
-    pa_bool_t use_tsched = TRUE, ignore_dB = FALSE;
 
     pa_assert(m);
 
@@ -384,19 +375,13 @@ int pa__init(pa_module *m) {
     m->userdata = u = pa_xnew0(struct userdata, 1);
     u->core = m->core;
     u->devices = pa_hashmap_new(pa_idxset_string_hash_func, pa_idxset_string_compare_func);
+    u->use_tsched = TRUE;
     u->inotify_fd = -1;
 
-    if (pa_modargs_get_value_boolean(ma, "tsched", &use_tsched) < 0) {
-        pa_log("Failed to parse tsched= argument.");
+    if (pa_modargs_get_value_boolean(ma, "tsched", &u->use_tsched) < 0) {
+        pa_log("Failed to parse tsched argument.");
         goto fail;
     }
-    u->use_tsched = use_tsched;
-
-    if (pa_modargs_get_value_boolean(ma, "ignore_dB", &ignore_dB) < 0) {
-        pa_log("Failed to parse ignore_dB= argument.");
-        goto fail;
-    }
-    u->ignore_dB = ignore_dB;
 
     if (!(u->udev = udev_new())) {
         pa_log("Failed to initialize udev library.");

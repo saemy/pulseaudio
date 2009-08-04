@@ -765,22 +765,23 @@ static pa_time_event* find_next_time_event(pa_mainloop *m) {
 
 static int calc_next_timeout(pa_mainloop *m) {
     pa_time_event *t;
-    pa_usec_t clock_now;
+    pa_usec_t usec;
 
     if (!m->n_enabled_time_events)
         return -1;
 
-    pa_assert_se(t = find_next_time_event(m));
+    t = find_next_time_event(m);
+    pa_assert(t);
 
-    if (t->time <= 0)
+    if (t->time == 0)
         return 0;
 
-    clock_now = pa_rtclock_now();
+    usec = t->time - pa_rtclock_now();
 
-    if (t->time <= clock_now)
+    if (usec <= 0)
         return 0;
 
-    return (int) ((t->time - clock_now) / 1000); /* in milliseconds */
+    return (int) (usec / 1000); /* in milliseconds */
 }
 
 static int dispatch_timeout(pa_mainloop *m) {

@@ -55,15 +55,9 @@ static pa_mutex *mutex;
 static unsigned n_ref = 0;
 static int lock_fd = -1;
 static pa_mutex *lock_fd_mutex = NULL;
-static pa_thread *thread = NULL;
+static pa_bool_t taken = FALSE;
+static pa_thread *thread;
 static int pipe_fd[2] = { -1, -1 };
-
-static enum {
-    STATE_IDLE,
-    STATE_OWNING,
-    STATE_TAKEN,
-    STATE_FAILED
-} state = STATE_IDLE;
 
 static void destroy_mutex(void) PA_GCC_DESTRUCTOR;
 
@@ -73,16 +67,15 @@ static int ref(void) {
 
         pa_assert(pipe_fd[0] >= 0);
         pa_assert(pipe_fd[1] >= 0);
-        pa_assert(lock_fd_mutex);
 
         n_ref++;
 
         return 0;
     }
 
-    pa_assert(!lock_fd_mutex);
-    pa_assert(state == STATE_IDLE);
     pa_assert(lock_fd < 0);
+    pa_assert(!lock_fd_mutex);
+    pa_assert(!taken);
     pa_assert(!thread);
     pa_assert(pipe_fd[0] < 0);
     pa_assert(pipe_fd[1] < 0);
@@ -90,13 +83,13 @@ static int ref(void) {
     if (pipe(pipe_fd) < 0)
         return -1;
 
+    lock_fd_mutex = pa_mutex_new(FALSE, FALSE);
+
     pa_make_fd_cloexec(pipe_fd[0]);
     pa_make_fd_cloexec(pipe_fd[1]);
 
     pa_make_fd_nonblock(pipe_fd[1]);
     pa_make_fd_nonblock(pipe_fd[0]);
-
-    lock_fd_mutex = pa_mutex_new(FALSE, FALSE);
 
     n_ref = 1;
     return 0;
@@ -114,18 +107,15 @@ static void unref(pa_bool_t after_fork) {
     if (n_ref > 0)
         return;
 
+    pa_assert(!taken);
+
     if (thread) {
         pa_thread_free(thread);
         thread = NULL;
     }
 
     pa_mutex_lock(lock_fd_mutex);
-
-    pa_assert(state != STATE_TAKEN);
-
-    if (state == STATE_OWNING) {
-
-        pa_assert(lock_fd >= 0);
+    if (lock_fd >= 0) {
 
         if (after_fork)
             pa_close(lock_fd);
@@ -137,12 +127,10 @@ static void unref(pa_bool_t after_fork) {
 
             pa_unlock_lockfile(lf, lock_fd);
             pa_xfree(lf);
+
+            lock_fd = -1;
         }
     }
-
-    lock_fd = -1;
-    state = STATE_IDLE;
-
     pa_mutex_unlock(lock_fd_mutex);
 
     pa_mutex_free(lock_fd_mutex);
@@ -217,24 +205,15 @@ static void thread_func(void *u) {
 
     if (!(lf = pa_runtime_path(AUTOSPAWN_LOCK))) {
         pa_log_warn(_("Cannot access autospawn lock."));
-        goto fail;
+        goto finish;
     }
 
     if ((fd = pa_lock_lockfile(lf)) < 0)
-        goto fail;
+        goto finish;
 
     pa_mutex_lock(lock_fd_mutex);
-    pa_assert(state == STATE_IDLE);
+    pa_assert(lock_fd < 0);
     lock_fd = fd;
-    state = STATE_OWNING;
-    pa_mutex_unlock(lock_fd_mutex);
-
-    goto finish;
-
-fail:
-    pa_mutex_lock(lock_fd_mutex);
-    pa_assert(state == STATE_IDLE);
-    state = STATE_FAILED;
     pa_mutex_unlock(lock_fd_mutex);
 
 finish:
@@ -259,9 +238,11 @@ static void create_mutex(void) {
 }
 
 static void destroy_mutex(void) {
+
     if (mutex)
         pa_mutex_free(mutex);
 }
+
 
 int pa_autospawn_lock_init(void) {
     int ret = -1;
@@ -292,18 +273,13 @@ int pa_autospawn_lock_acquire(pa_bool_t block) {
 
         empty_pipe();
 
-        if (state == STATE_OWNING) {
-            state = STATE_TAKEN;
+        if (lock_fd >= 0 && !taken) {
+            taken = TRUE;
             ret = 1;
             break;
         }
 
-        if (state == STATE_FAILED) {
-            ret = -1;
-            break;
-        }
-
-        if (state == STATE_IDLE)
+        if (lock_fd < 0)
             if (start_thread() < 0)
                 break;
 
@@ -334,8 +310,8 @@ void pa_autospawn_lock_release(void) {
     pa_mutex_lock(mutex);
     pa_assert(n_ref >= 1);
 
-    pa_assert(state == STATE_TAKEN);
-    state = STATE_OWNING;
+    pa_assert(taken);
+    taken = FALSE;
 
     ping();
 

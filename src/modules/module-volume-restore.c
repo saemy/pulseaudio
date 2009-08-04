@@ -48,7 +48,6 @@ static const char* const valid_modargs[] = {
 int pa__init(pa_module*m) {
     pa_modargs *ma = NULL;
     pa_bool_t restore_device = TRUE, restore_volume = TRUE;
-    pa_module *n;
     char *t;
 
     pa_assert(m);
@@ -67,15 +66,13 @@ int pa__init(pa_module*m) {
     pa_log_warn("We will now load module-stream-restore. Please make sure to remove module-volume-restore from your configuration.");
 
     t = pa_sprintf_malloc("restore_volume=%s restore_device=%s", pa_yes_no(restore_volume), pa_yes_no(restore_device));
-    n = pa_module_load(m->core, "module-stream-restore", t);
+    pa_module_load(m->core, "module-stream-restore", t);
     pa_xfree(t);
 
-    if (n)
-        pa_module_unload_request(m, TRUE);
+    pa_module_unload_request(m, TRUE);
 
     pa_modargs_free(ma);
-
-    return n ? 0 : -1;
+    return 0;
 
 fail:
     if (ma)

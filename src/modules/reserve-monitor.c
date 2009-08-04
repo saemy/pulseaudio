@@ -38,7 +38,6 @@ struct rm_monitor {
 
 	char *device_name;
 	char *service_name;
-	char *match;
 
 	DBusConnection *connection;
 
@@ -52,18 +51,12 @@ struct rm_monitor {
 
 #define SERVICE_PREFIX "org.freedesktop.ReserveDevice1."
 
-#define SERVICE_FILTER				\
-	"type='signal',"			\
-	"sender='" DBUS_SERVICE_DBUS "',"	\
-	"interface='" DBUS_INTERFACE_DBUS "',"	\
-	"member='NameOwnerChanged',"		\
-	"arg0='%s'"
-
 static DBusHandlerResult filter_handler(
 	DBusConnection *c,
 	DBusMessage *s,
 	void *userdata) {
 
+	DBusMessage *reply;
 	rm_monitor *m;
 	DBusError error;
 
@@ -104,10 +97,31 @@ static DBusHandlerResult filter_handler(
 		}
 	}
 
+	return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+
 invalid:
+	if (!(reply = dbus_message_new_error(
+		      s,
+		      DBUS_ERROR_INVALID_ARGS,
+		      "Invalid arguments")))
+		goto oom;
+
+	if (!dbus_connection_send(c, reply, NULL))
+		goto oom;
+
+	dbus_message_unref(reply);
+
 	dbus_error_free(&error);
 
-	return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+	return DBUS_HANDLER_RESULT_HANDLED;
+
+oom:
+	if (reply)
+		dbus_message_unref(reply);
+
+	dbus_error_free(&error);
+
+	return DBUS_HANDLER_RESULT_NEED_MEMORY;
 }
 
 int rm_watch(
@@ -161,13 +175,11 @@ int rm_watch(
 
 	m->filtering = 1;
 
-	if (!(m->match = malloc(sizeof(SERVICE_FILTER) - 2 + strlen(m->service_name)))) {
-		r = -ENOMEM;
-		goto fail;
-	}
-
-	sprintf(m->match, SERVICE_FILTER, m->service_name);
-	dbus_bus_add_match(m->connection, m->match, error);
+	dbus_bus_add_match(m->connection,
+			   "type='signal',"
+			   "sender='" DBUS_SERVICE_DBUS "',"
+			   "interface='" DBUS_INTERFACE_DBUS "',"
+			   "member='NameOwnerChanged'", error);
 
 	if (dbus_error_is_set(error)) {
 		r = -EIO;
@@ -208,8 +220,10 @@ void rm_release(rm_monitor *m) {
 	if (m->matching)
 		dbus_bus_remove_match(
 			m->connection,
-			m->match,
-			NULL);
+			"type='signal',"
+			"sender='" DBUS_SERVICE_DBUS "',"
+			"interface='" DBUS_INTERFACE_DBUS "',"
+			"member='NameOwnerChanged'", NULL);
 
 	if (m->filtering)
 		dbus_connection_remove_filter(
@@ -219,7 +233,6 @@ void rm_release(rm_monitor *m) {
 
 	free(m->device_name);
 	free(m->service_name);
-	free(m->match);
 
 	if (m->connection)
 		dbus_connection_unref(m->connection);

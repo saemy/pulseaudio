@@ -65,6 +65,10 @@
 #include <dbus/dbus.h>
 #endif
 
+#ifdef __linux__
+#include <sys/personality.h>
+#endif
+
 #include <pulse/mainloop.h>
 #include <pulse/mainloop-signal.h>
 #include <pulse/timeval.h>
@@ -109,7 +113,7 @@ int allow_severity = LOG_INFO;
 int deny_severity = LOG_WARNING;
 #endif
 
-#ifdef HAVE_OSS_WRAPPER
+#ifdef HAVE_OSS
 /* padsp looks for this symbol in the running process and disables
  * itself if it finds it and it is set to 7 (which is actually a bit
  * mask). For details see padsp. */
@@ -442,12 +446,15 @@ int main(int argc, char *argv[]) {
      * context we have been started. Let's cleanup our execution
      * context as good as possible */
 
-    pa_reset_personality();
+#ifdef __linux__
+    if (personality(PER_LINUX) < 0)
+        pa_log_warn("Uh, personality() failed: %s", pa_cstrerror(errno));
+#endif
+
     pa_drop_root();
     pa_close_all(passed_fd, -1);
     pa_reset_sigs(-1);
     pa_unblock_sigs(-1);
-    pa_reset_priority();
 
     setlocale(LC_ALL, "");
     pa_init_i18n();

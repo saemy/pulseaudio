@@ -65,8 +65,6 @@
 #define TSCHED_MIN_SLEEP_USEC (10*PA_USEC_PER_MSEC)          /* 10ms */
 #define TSCHED_MIN_WAKEUP_USEC (4*PA_USEC_PER_MSEC)          /* 4ms */
 
-#define VOLUME_ACCURACY (PA_VOLUME_NORM/100)
-
 struct userdata {
     pa_core *core;
     pa_module *module;
@@ -334,9 +332,6 @@ static int try_recover(struct userdata *u, const char *call, int err) {
 
     if (err == -EPIPE)
         pa_log_debug("%s: Buffer overrun!", call);
-
-    if (err == -ESTRPIPE)
-        pa_log_debug("%s: System suspended!", call);
 
     if ((err = snd_pcm_recover(u->pcm_handle, err, 1)) < 0) {
         pa_log("%s: %s", call, pa_alsa_strerror(err));
@@ -989,11 +984,15 @@ static void source_get_volume_cb(pa_source *s) {
     if (pa_cvolume_equal(&u->hardware_volume, &r))
         return;
 
-    s->volume = u->hardware_volume = r;
+    s->virtual_volume = u->hardware_volume = r;
 
-    /* Hmm, so the hardware volume changed, let's reset our software volume */
-    if (u->mixer_path->has_dB)
-        pa_source_set_soft_volume(s, NULL);
+    if (u->mixer_path->has_dB) {
+        pa_cvolume reset;
+
+        /* Hmm, so the hardware volume changed, let's reset our software volume */
+        pa_cvolume_reset(&reset, s->sample_spec.channels);
+        pa_source_set_soft_volume(s, &reset);
+    }
 }
 
 static void source_set_volume_cb(pa_source *s) {
@@ -1006,7 +1005,7 @@ static void source_set_volume_cb(pa_source *s) {
     pa_assert(u->mixer_handle);
 
     /* Shift up by the base volume */
-    pa_sw_cvolume_divide_scalar(&r, &s->volume, s->base_volume);
+    pa_sw_cvolume_divide_scalar(&r, &s->virtual_volume, s->base_volume);
 
     if (pa_alsa_path_set_volume(u->mixer_path, u->mixer_handle, &s->channel_map, &r) < 0)
         return;
@@ -1017,26 +1016,13 @@ static void source_set_volume_cb(pa_source *s) {
     u->hardware_volume = r;
 
     if (u->mixer_path->has_dB) {
-        pa_cvolume new_soft_volume;
-        pa_bool_t accurate_enough;
 
         /* Match exactly what the user requested by software */
-        pa_sw_cvolume_divide(&new_soft_volume, &s->volume, &u->hardware_volume);
+        pa_sw_cvolume_divide(&s->soft_volume, &s->virtual_volume, &u->hardware_volume);
 
-        /* If the adjustment to do in software is only minimal we
-         * can skip it. That saves us CPU at the expense of a bit of
-         * accuracy */
-        accurate_enough =
-            (pa_cvolume_min(&new_soft_volume) >= (PA_VOLUME_NORM - VOLUME_ACCURACY)) &&
-            (pa_cvolume_max(&new_soft_volume) <= (PA_VOLUME_NORM + VOLUME_ACCURACY));
-
-        pa_log_debug("Requested volume: %s", pa_cvolume_snprint(t, sizeof(t), &s->volume));
+        pa_log_debug("Requested volume: %s", pa_cvolume_snprint(t, sizeof(t), &s->virtual_volume));
         pa_log_debug("Got hardware volume: %s", pa_cvolume_snprint(t, sizeof(t), &u->hardware_volume));
-        pa_log_debug("Calculated software volume: %s (accurate-enough=%s)", pa_cvolume_snprint(t, sizeof(t), &new_soft_volume),
-                     pa_yes_no(accurate_enough));
-
-        if (!accurate_enough)
-            s->soft_volume = new_soft_volume;
+        pa_log_debug("Calculated software volume: %s", pa_cvolume_snprint(t, sizeof(t), &s->soft_volume));
 
     } else {
         pa_log_debug("Wrote hardware volume: %s", pa_cvolume_snprint(t, sizeof(t), &r));
@@ -1044,7 +1030,7 @@ static void source_set_volume_cb(pa_source *s) {
         /* We can't match exactly what the user requested, hence let's
          * at least tell the user about it */
 
-        s->volume = r;
+        s->virtual_volume = r;
     }
 }
 

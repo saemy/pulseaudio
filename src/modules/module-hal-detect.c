@@ -55,16 +55,14 @@ PA_MODULE_AUTHOR("Shahms King");
 PA_MODULE_DESCRIPTION("Detect available audio hardware and load matching drivers");
 PA_MODULE_VERSION(PACKAGE_VERSION);
 PA_MODULE_LOAD_ONCE(TRUE);
-#if defined(HAVE_ALSA) && defined(HAVE_OSS_OUTPUT)
+#if defined(HAVE_ALSA) && defined(HAVE_OSS)
 PA_MODULE_USAGE("api=<alsa or oss> "
-                "tsched=<enable system timer based scheduling mode?>"
-                "subdevices=<init all subdevices>");
+                "tsched=<enable system timer based scheduling mode?>");
 #elif defined(HAVE_ALSA)
 PA_MODULE_USAGE("api=<alsa> "
                 "tsched=<enable system timer based scheduling mode?>");
-#elif defined(HAVE_OSS_OUTPUT)
-PA_MODULE_USAGE("api=<oss>"
-                "subdevices=<init all subdevices>");
+#elif defined(HAVE_OSS)
+PA_MODULE_USAGE("api=<oss>");
 #endif
 PA_MODULE_DEPRECATED("Please use module-udev-detect instead of module-hal-detect!");
 
@@ -84,9 +82,6 @@ struct userdata {
 #ifdef HAVE_ALSA
     pa_bool_t use_tsched;
 #endif
-#ifdef HAVE_OSS_OUTPUT
-    pa_bool_t init_subdevs;
-#endif
 };
 
 #define CAPABILITY_ALSA "alsa"
@@ -96,9 +91,6 @@ static const char* const valid_modargs[] = {
     "api",
 #ifdef HAVE_ALSA
     "tsched",
-#endif
-#ifdef HAVE_OSS_OUTPUT
-    "subdevices",
 #endif
     NULL
 };
@@ -270,9 +262,9 @@ fail:
 
 #endif
 
-#ifdef HAVE_OSS_OUTPUT
+#ifdef HAVE_OSS
 
-static pa_bool_t hal_oss_device_is_pcm(LibHalContext *context, const char *udi, pa_bool_t init_subdevices) {
+static pa_bool_t hal_oss_device_is_pcm(LibHalContext *context, const char *udi) {
     char *class = NULL, *dev = NULL, *e;
     int device;
     pa_bool_t r = FALSE;
@@ -302,7 +294,7 @@ static pa_bool_t hal_oss_device_is_pcm(LibHalContext *context, const char *udi, 
 
     /* We only care for the main device */
     device = libhal_device_get_property_int(context, udi, "oss.device", &error);
-    if (dbus_error_is_set(&error) || (device != 0 && init_subdevices == FALSE))
+    if (dbus_error_is_set(&error) || device != 0)
         goto finish;
 
     r = TRUE;
@@ -332,7 +324,7 @@ static int hal_device_load_oss(struct userdata *u, const char *udi, struct devic
     pa_assert(d);
 
     /* We only care for OSS PCM devices */
-    if (!hal_oss_device_is_pcm(u->context, udi, u->init_subdevs))
+    if (!hal_oss_device_is_pcm(u->context, udi))
         goto fail;
 
     /* We store only one entry per card, hence we look for the originating device */
@@ -402,7 +394,7 @@ static struct device* hal_device_add(struct userdata *u, const char *udi) {
     if (pa_streq(u->capability, CAPABILITY_ALSA))
         r = hal_device_load_alsa(u, udi,  d);
 #endif
-#ifdef HAVE_OSS_OUTPUT
+#ifdef HAVE_OSS
     if (pa_streq(u->capability, CAPABILITY_OSS))
         r = hal_device_load_oss(u, udi, d);
 #endif
@@ -623,6 +615,8 @@ static DBusHandlerResult filter_cb(DBusConnection *bus, DBusMessage *message, vo
 
         }
 
+        return DBUS_HANDLER_RESULT_HANDLED;
+
     } else if (dbus_message_is_signal(message, "org.pulseaudio.Server", "DirtyGiveUpMessage")) {
         /* We use this message to avoid a dirty race condition when we
            get an ACLAdded message before the previously owning PA
@@ -666,6 +660,7 @@ static DBusHandlerResult filter_cb(DBusConnection *bus, DBusMessage *message, vo
             /* Yes, we don't check the UDI for validity, but hopefully HAL will */
             device_added_cb(u->context, udi);
 
+        return DBUS_HANDLER_RESULT_HANDLED;
     }
 
 finish:
@@ -758,7 +753,7 @@ int pa__init(pa_module*m) {
     api = pa_modargs_get_value(ma, "api", "oss");
 #endif
 
-#ifdef HAVE_OSS_OUTPUT
+#ifdef HAVE_OSS
     if (pa_streq(api, "oss"))
         u->capability = CAPABILITY_OSS;
 #endif
@@ -767,13 +762,6 @@ int pa__init(pa_module*m) {
         pa_log_error("Invalid API specification.");
         goto fail;
     }
-
-#ifdef HAVE_OSS_OUTPUT
-    if (pa_modargs_get_value_boolean(ma, "subdevices", &u->init_subdevs) < 0) {
-        pa_log("Failed to parse subdevices= argument.");
-        goto fail;
-    }
-#endif
 
     if (!(u->connection = pa_dbus_bus_get(m->core, DBUS_BUS_SYSTEM, &error)) || dbus_error_is_set(&error)) {
         pa_log_error("Unable to contact DBUS system bus: %s: %s", error.name, error.message);
