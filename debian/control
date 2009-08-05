@@ -415,7 +415,7 @@ Description: Rygel Media Server output module for PulseAudio sound server
  .
  This module enables PulseAudio to stream audio to the Rygel Media Server.
 
-Package: pulseaudio-module-rygel-media-server--dbg
+Package: pulseaudio-module-rygel-media-server-dbg
 Architecture: any
 Priority: extra
 Section: debug

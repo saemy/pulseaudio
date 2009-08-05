@@ -1,3 +1,11 @@
+pulseaudio (1:0.9.16~test4-0ubuntu1) karmic; urgency=low
+
+  * New upstream release
+  * debian/patches/0008-clean-out-old-files.patch: Dropped, applied upstream
+  * debian/control: Fix pulseaudio-module-rygel-media-server debug package name
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Wed, 05 Aug 2009 12:02:18 +0100
+
 pulseaudio (1:0.9.16~test3-0ubuntu1) karmic; urgency=low
 
   * New upstream release

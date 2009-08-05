@@ -1,4 +1,49 @@
 
+2009-08-05	Lennart Poettering
+	8483de4: simple: bump libpulse-simple library revision
+	ff52588: smoother: readd #ifdef protection
+	2cab6a2: simple: check for == RUNNING instead of != DONE when waiting for operations
+	5bbeb51: simple: split data/length validity checks into two
+	53fcf3a: simple: call pa_context_disconnect() just to be sure
+	a73c615: simple: always loop around pa_threaded_mainloop_wait() to handle spurious wakeups properly
+	b553e72: simple: use pa_xnew0 instead of manual reset to 0
+	a4bc41a: simple: use PA_xxx_IS_GOOD for state checks
+
+2009-08-04	Luke Yelavich
+	5e61111: POTFILES - Remove references to more non-existant files in the source tree
+
+2009-08-04	Lennart Poettering
+	9b2534b: alsa: properly treat ESTRPIPE as system suspend
+
+2009-08-03	Lennart Poettering
+	3e2ab9b: client: extend documentation on pa_operation_cancel() a bit
+	a44cb64: build-sys: take preset CFLAGS into account
+
+2009-08-02	Lubomir Rintel
+	34f31f6: Recover stream when it's suspended upon rewind
+
+2009-08-01	Lennart Poettering
+	2778220: autospawn: if creating the lock file fails, pass error code cleanly back to main process
+	49fd8ee: core-util: replace remaining fixed size destination string functions by _malloc() versions
+	c6ea9fe: core-util: rework pa_strlcpy() to not rely on strncpy()
+	e5c2256: pipe: replace PIPE_BUF macro pa pa_pipe_buf call
+
+2009-07-31	Lennart Poettering
+	0113e72: hal: add option to initialize all subdevices of an OSS device
+	478f325: client: documented that pa_stream_drain() may only have a single operation active at a time
+	2952f28: client: fix documentation for threaded mainloop
+
+2009-07-01	Alam Arias
+	66db0c8: update pulse-daemon.conf.5.xml.in about realtime-scheduling
+	6d0c5a1: update pulse-daemon.conf.5.xml.in about exit-idle-time
+
+2009-07-31	Lennart Poettering
+	39aa1cf: alsa: revert to first set number of periods, then set buffer size
+	c14f6c1: tunnel: don't assert on misaligned reads, closes #597 and rhbz #496310
+
+2009-07-30	Lennart Poettering
+	4f5e2b7: threaded-mainloop: loop around pa_cond_wait() invocation in pa_threaded_mainloop_signal()
+
 2009-07-28	Lennart Poettering
 	f8873ab: build-sys: bump binary version
 	115d853: i18n: run make-update-po
