@@ -60,3 +60,5 @@ usr/share/man/man5/default.pa.5
 usr/share/locale
 usr/share/pulseaudio
 usr/lib/libpulsecore-*.so
+usr/lib/pm-utils/sleep.d/01PulseAudio
+lib/udev/rules.d

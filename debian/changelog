@@ -1,3 +1,12 @@
+pulseaudio (1:0.9.16~test4-0ubuntu2) karmic; urgency=low
+
+  * debian/pulseaudio.install:
+    - Re-add the pm-utils script that was inadvertantly left out with the
+      previous Debian merge
+    - Add udev rules from upstream, needed for particular sound hardware
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Thu, 06 Aug 2009 18:49:12 +0100
+
 pulseaudio (1:0.9.16~test4-0ubuntu1) karmic; urgency=low
 
   * New upstream release
