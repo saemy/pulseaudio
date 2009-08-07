@@ -1,3 +1,10 @@
+pulseaudio (1:0.9.16~test4-0ubuntu4) karmic; urgency=low
+
+  * debian/pulseaudio.install: ...and also re-add droped apport hook, and
+    alsa configuration files
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Fri, 07 Aug 2009 10:05:51 +0100
+
 pulseaudio (1:0.9.16~test4-0ubuntu3) karmic; urgency=low
 
   * debian/pulseaudio.install: Also re-add pulse-session wrapper script
