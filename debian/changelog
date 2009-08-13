@@ -1,3 +1,15 @@
+pulseaudio (1:0.9.16~test4-0ubuntu6) karmic; urgency=low
+
+  * Correct changelog entry for 1:0.9.16~test4-0ubuntu5
+    (5fcb8a3c0838a4ecdb00a0af09b6e1a358b114d0 was _not_
+    applied)
+  * Resync proper 0050-backport-git-post-test4.patch
+    from the ~ubuntu-audio-dev PPA branch
+  * debian/control: Drop libgdbm-dev; use tdb-dev instead
+    since it's upstream's approach
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Thu, 13 Aug 2009 22:49:07 -0400
+
 pulseaudio (1:0.9.16~test4-0ubuntu5) karmic; urgency=low
 
   [ Daniel T Chen ]
@@ -16,7 +28,6 @@ pulseaudio (1:0.9.16~test4-0ubuntu5) karmic; urgency=low
     + 27b8cd783c2aedb23af8f88fc88632d5c4f387fd
     + 5921324fd3c16e2b3d38d07b200febd90835f169
     + 286ab2f19370c7a0041897435614b2c6aadc8e70
-    + 5fcb8a3c0838a4ecdb00a0af09b6e1a358b114d0
     + 17d57415f5abad5b7c30301227054b4c899bc705
 
   [ Luke Yelavich ]

@@ -12,7 +12,7 @@ Build-Depends: debhelper (>= 5), cdbs, quilt, m4, libltdl-dev,
     libavahi-client-dev, libwrap0-dev,
     liblircclient-dev, libgconf2-dev, libatomic-ops-dev, libspeexdsp-dev (>= 1.2~rc1),
     libbluetooth-dev (>= 3.0) [!kfreebsd-i386 !kfreebsd-amd64 !hurd-i386],
-    libgdbm-dev, intltool, libgtk2.0-dev, libxtst-dev, libssl-dev, libudev-dev (>= 143),
+    tdb-dev, intltool, libgtk2.0-dev, libxtst-dev, libssl-dev, libudev-dev (>= 143),
     libice-dev, libxi-dev, x11proto-core-dev
 Standards-Version: 3.8.1
 Vcs-Git: git://git.debian.org/git/pkg-pulseaudio/pulseaudio.git
