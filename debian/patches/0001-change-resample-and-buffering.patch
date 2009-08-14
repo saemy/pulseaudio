@@ -1,19 +1,19 @@
-Index: pulseaudio-0.9.14/src/daemon/daemon.conf.in
+Index: pulseaudio-0.9.16~test4/src/daemon/daemon.conf.in
 ===================================================================
---- pulseaudio-0.9.14.orig/src/daemon/daemon.conf.in	2009-03-07 05:01:11.000000000 -0500
-+++ pulseaudio-0.9.14/src/daemon/daemon.conf.in	2009-03-07 05:01:54.000000000 -0500
-@@ -46,7 +46,7 @@
- ; log-target = auto
- ; log-level = notice
+--- pulseaudio-0.9.16~test4.orig/src/daemon/daemon.conf.in	2009-08-12 18:09:01.000000000 -0400
++++ pulseaudio-0.9.16~test4/src/daemon/daemon.conf.in	2009-08-12 18:16:01.000000000 -0400
+@@ -50,7 +50,7 @@
+ ; log-time = no
+ ; log-backtrace = 0
  
 -; resample-method = speex-float-3
 +resample-method = speex-float-1
  ; disable-remixing = no
  ; disable-lfe-remixing = yes
  
-@@ -72,5 +72,5 @@
- ; default-sample-rate = 44100
+@@ -77,5 +77,5 @@
  ; default-sample-channels = 2
+ ; default-channel-map = front-left,front-right
  
 -; default-fragments = 4
 -; default-fragment-size-msec = 25

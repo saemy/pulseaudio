@@ -1,3 +1,29 @@
+pulseaudio (1:0.9.16~test4-0ubuntu5) karmic; urgency=low
+
+  [ Daniel T Chen ]
+  * 0050-backport-git-post-test4.patch: Add the following changesets
+    from git (can be dropped with -test5):
+    + 51b3899348bf29dd88b56691aeea9f57895dfd14
+    + 7d4916379bbf05384ad199004949cc220822aa5f
+    + 23a294c97e62e0bee9b17b1f8ad20a39e1ba15da
+    + d27e26dca0b492b1906b42b2d0f7decd38ed8ae3
+    + 462cdf44b7fe36768c836c90761f6b8153290517
+    + e8340345f6a102cd03b6676576bcd3879ead7aad
+    + 8998cba6839a46f11daec411c83a1b35723c5117
+    + facae1f27504983d7eff7c7c3ffa864f7e002272
+    + 9f53aa5546e7bf9246546c6dda5637d50679483c
+    + ef176ecb62a8f04bd14ca37e7c2a40469f0bb8ba
+    + 27b8cd783c2aedb23af8f88fc88632d5c4f387fd
+    + 5921324fd3c16e2b3d38d07b200febd90835f169
+    + 286ab2f19370c7a0041897435614b2c6aadc8e70
+    + 5fcb8a3c0838a4ecdb00a0af09b6e1a358b114d0
+    + 17d57415f5abad5b7c30301227054b4c899bc705
+
+  [ Luke Yelavich ]
+  * debian/pulseaudio.install: Also add previously dropped 70pulseaudio file
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Fri, 14 Aug 2009 10:29:16 +1000
+
 pulseaudio (1:0.9.16~test4-0ubuntu4) karmic; urgency=low
 
   * debian/pulseaudio.install: ...and also re-add droped apport hook, and

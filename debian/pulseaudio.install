@@ -2,6 +2,7 @@ etc/pulse/default.pa
 etc/pulse/system.pa
 etc/pulse/daemon.conf
 etc/xdg/autostart/pulseaudio.desktop
+etc/X11/Xsession.d/70pulseaudio
 usr/bin/pulseaudio
 usr/bin/pulse-session
 usr/bin/start-pulseaudio-x11
