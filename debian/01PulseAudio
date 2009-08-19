@@ -3,7 +3,7 @@
 . "${PM_FUNCTIONS}"
 
 get_pulse_users() {
-    ps -C pulseaudio -o uid= | tr ' ' '#'
+    ps -C pulseaudio -o uid= | tr -d ' '
 }
 
 get_pulse_sinks() {
@@ -17,24 +17,24 @@ get_pulse_sources() {
 suspend_pulse() {
     for i in $(get_pulse_users); do
         for j in $(get_pulse_sinks); do
-            echo set-sink-mute $j true | sudo -H -u $i pacmd &> /dev/null
+            echo set-sink-mute $j true | sudo -H -u \#$i pacmd &> /dev/null
         done
         for j in $(get_pulse_sources); do
-            echo set-source-mute $j true | sudo -H -u $i pacmd &> /dev/null
+            echo set-source-mute $j true | sudo -H -u \#$i pacmd &> /dev/null
         done
-        echo suspend true | sudo -H -u $i pacmd &> /dev/null
+        echo suspend true | sudo -H -u \#$i pacmd &> /dev/null
     done
 }
 
 resume_pulse() {
     for i in $(get_pulse_users); do
         for j in $(get_pulse_sinks); do
-            echo set-sink-mute $j false | sudo -H -u $i pacmd &> /dev/null
+            echo set-sink-mute $j false | sudo -H -u \#$i pacmd &> /dev/null
         done
         for j in $(get_pulse_sources); do
-            echo set-source-mute $j false | sudo -H -u $i pacmd &> /dev/null
+            echo set-source-mute $j false | sudo -H -u \#$i pacmd &> /dev/null
         done
-        echo suspend false | sudo -H -u $i pacmd &> /dev/null
+        echo suspend false | sudo -H -u \#$i pacmd &> /dev/null
     done
 }
 

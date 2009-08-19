@@ -1,7 +1,7 @@
 Index: pulseaudio-0.9.16~test4/man/pulse-client.conf.5.xml.in
 ===================================================================
---- pulseaudio-0.9.16~test4.orig/man/pulse-client.conf.5.xml.in	2009-08-12 18:29:26.000000000 -0400
-+++ pulseaudio-0.9.16~test4/man/pulse-client.conf.5.xml.in	2009-08-13 18:57:47.000000000 -0400
+--- pulseaudio-0.9.16~test4.orig/man/pulse-client.conf.5.xml.in	2009-08-16 18:13:49.000000000 -0400
++++ pulseaudio-0.9.16~test4/man/pulse-client.conf.5.xml.in	2009-08-17 15:57:37.000000000 -0400
 @@ -92,9 +92,9 @@
      </option>
  
@@ -16,8 +16,8 @@ Index: pulseaudio-0.9.16~test4/man/pulse-client.conf.5.xml.in
      <option>
 Index: pulseaudio-0.9.16~test4/man/pulse-daemon.conf.5.xml.in
 ===================================================================
---- pulseaudio-0.9.16~test4.orig/man/pulse-daemon.conf.5.xml.in	2009-08-12 18:29:26.000000000 -0400
-+++ pulseaudio-0.9.16~test4/man/pulse-daemon.conf.5.xml.in	2009-08-13 18:57:47.000000000 -0400
+--- pulseaudio-0.9.16~test4.orig/man/pulse-daemon.conf.5.xml.in	2009-08-16 18:13:48.000000000 -0400
++++ pulseaudio-0.9.16~test4/man/pulse-daemon.conf.5.xml.in	2009-08-17 15:57:37.000000000 -0400
 @@ -65,20 +65,21 @@
      </option>
  
@@ -114,11 +114,13 @@ Index: pulseaudio-0.9.16~test4/man/pulse-daemon.conf.5.xml.in
  
 Index: pulseaudio-0.9.16~test4/src/daemon/caps.c
 ===================================================================
---- pulseaudio-0.9.16~test4.orig/src/daemon/caps.c	2009-08-12 18:29:27.000000000 -0400
-+++ pulseaudio-0.9.16~test4/src/daemon/caps.c	2009-08-13 18:57:47.000000000 -0400
-@@ -58,11 +58,8 @@
+--- pulseaudio-0.9.16~test4.orig/src/daemon/caps.c	2009-08-16 18:13:49.000000000 -0400
++++ pulseaudio-0.9.16~test4/src/daemon/caps.c	2009-08-17 15:57:37.000000000 -0400
+@@ -57,24 +57,29 @@
+ 
  #ifdef HAVE_GETUID
      uid_t uid;
++    gid_t gid;
  
 +    pa_log_debug(_("Cleaning up privileges."));
      uid = getuid();
@@ -126,10 +128,29 @@ Index: pulseaudio-0.9.16~test4/src/daemon/caps.c
 -        return;
 -
 -    pa_log_info(_("Dropping root privileges."));
++    gid = getgid();
  
  #if defined(HAVE_SETRESUID)
      pa_assert_se(setresuid(uid, uid, uid) >= 0);
-@@ -82,7 +79,7 @@
++    pa_assert_se(setresgid(gid, gid, gid) >= 0);
+ #elif defined(HAVE_SETREUID)
+     pa_assert_se(setreuid(uid, uid) >= 0);
++    pa_assert_se(setregid(gid, gid) >= 0);
+ #else
+     pa_assert_se(setuid(uid) >= 0);
+     pa_assert_se(seteuid(uid) >= 0);
++    pa_assert_se(setgid(gid) >= 0);
++    pa_assert_se(setegid(gid) >= 0);
+ #endif
+ 
+     pa_assert_se(getuid() == uid);
+     pa_assert_se(geteuid() == uid);
++    pa_assert_se(getgid() == gid);
++    pa_assert_se(getegid() == gid);
+ #endif
+ 
+ #ifdef HAVE_SYS_PRCTL_H
+@@ -82,7 +87,7 @@
  #endif
  
  #ifdef HAVE_SYS_CAPABILITY_H
@@ -140,8 +161,8 @@ Index: pulseaudio-0.9.16~test4/src/daemon/caps.c
          pa_assert_se(cap_clear(caps) == 0);
 Index: pulseaudio-0.9.16~test4/src/daemon/daemon-conf.c
 ===================================================================
---- pulseaudio-0.9.16~test4.orig/src/daemon/daemon-conf.c	2009-08-12 18:29:27.000000000 -0400
-+++ pulseaudio-0.9.16~test4/src/daemon/daemon-conf.c	2009-08-13 18:57:47.000000000 -0400
+--- pulseaudio-0.9.16~test4.orig/src/daemon/daemon-conf.c	2009-08-16 18:13:49.000000000 -0400
++++ pulseaudio-0.9.16~test4/src/daemon/daemon-conf.c	2009-08-17 15:57:37.000000000 -0400
 @@ -441,11 +441,15 @@
          { "high-priority",              pa_config_parse_bool,     &c->high_priority, NULL },
          { "realtime-scheduling",        pa_config_parse_bool,     &c->realtime_scheduling, NULL },
@@ -198,8 +219,8 @@ Index: pulseaudio-0.9.16~test4/src/daemon/daemon-conf.c
      pa_strbuf_printf(s, "default-sample-channels = %u\n", c->default_sample_spec.channels);
 Index: pulseaudio-0.9.16~test4/src/daemon/daemon.conf.in
 ===================================================================
---- pulseaudio-0.9.16~test4.orig/src/daemon/daemon.conf.in	2009-08-13 18:57:46.000000000 -0400
-+++ pulseaudio-0.9.16~test4/src/daemon/daemon.conf.in	2009-08-13 18:57:47.000000000 -0400
+--- pulseaudio-0.9.16~test4.orig/src/daemon/daemon.conf.in	2009-08-17 15:57:37.000000000 -0400
++++ pulseaudio-0.9.16~test4/src/daemon/daemon.conf.in	2009-08-17 15:57:37.000000000 -0400
 @@ -21,14 +21,14 @@
  
  ; daemonize = no
@@ -232,8 +253,8 @@ Index: pulseaudio-0.9.16~test4/src/daemon/daemon.conf.in
  
 Index: pulseaudio-0.9.16~test4/src/daemon/main.c
 ===================================================================
---- pulseaudio-0.9.16~test4.orig/src/daemon/main.c	2009-08-12 18:29:27.000000000 -0400
-+++ pulseaudio-0.9.16~test4/src/daemon/main.c	2009-08-13 18:57:47.000000000 -0400
+--- pulseaudio-0.9.16~test4.orig/src/daemon/main.c	2009-08-16 18:13:49.000000000 -0400
++++ pulseaudio-0.9.16~test4/src/daemon/main.c	2009-08-17 15:57:37.000000000 -0400
 @@ -65,10 +65,6 @@
  #include <dbus/dbus.h>
  #endif
@@ -265,8 +286,8 @@ Index: pulseaudio-0.9.16~test4/src/daemon/main.c
      pa_init_i18n();
 Index: pulseaudio-0.9.16~test4/src/modules/alsa/alsa-mixer.c
 ===================================================================
---- pulseaudio-0.9.16~test4.orig/src/modules/alsa/alsa-mixer.c	2009-08-12 18:29:27.000000000 -0400
-+++ pulseaudio-0.9.16~test4/src/modules/alsa/alsa-mixer.c	2009-08-13 18:57:47.000000000 -0400
+--- pulseaudio-0.9.16~test4.orig/src/modules/alsa/alsa-mixer.c	2009-08-16 18:13:49.000000000 -0400
++++ pulseaudio-0.9.16~test4/src/modules/alsa/alsa-mixer.c	2009-08-17 15:57:37.000000000 -0400
 @@ -2838,9 +2838,9 @@
  
      if (bonus) {
@@ -281,8 +302,8 @@ Index: pulseaudio-0.9.16~test4/src/modules/alsa/alsa-mixer.c
      return 0;
 Index: pulseaudio-0.9.16~test4/src/modules/alsa/mixer/paths/analog-output.conf.common
 ===================================================================
---- pulseaudio-0.9.16~test4.orig/src/modules/alsa/mixer/paths/analog-output.conf.common	2009-08-12 18:29:27.000000000 -0400
-+++ pulseaudio-0.9.16~test4/src/modules/alsa/mixer/paths/analog-output.conf.common	2009-08-13 18:57:47.000000000 -0400
+--- pulseaudio-0.9.16~test4.orig/src/modules/alsa/mixer/paths/analog-output.conf.common	2009-08-16 18:13:49.000000000 -0400
++++ pulseaudio-0.9.16~test4/src/modules/alsa/mixer/paths/analog-output.conf.common	2009-08-17 15:57:37.000000000 -0400
 @@ -104,8 +104,8 @@
  
  [Option External Amplifier:on]
@@ -296,8 +317,8 @@ Index: pulseaudio-0.9.16~test4/src/modules/alsa/mixer/paths/analog-output.conf.c
 +priority = 0
 Index: pulseaudio-0.9.16~test4/src/modules/bluetooth/module-bluetooth-device.c
 ===================================================================
---- pulseaudio-0.9.16~test4.orig/src/modules/bluetooth/module-bluetooth-device.c	2009-08-12 18:29:27.000000000 -0400
-+++ pulseaudio-0.9.16~test4/src/modules/bluetooth/module-bluetooth-device.c	2009-08-13 18:57:46.000000000 -0400
+--- pulseaudio-0.9.16~test4.orig/src/modules/bluetooth/module-bluetooth-device.c	2009-08-16 18:13:49.000000000 -0400
++++ pulseaudio-0.9.16~test4/src/modules/bluetooth/module-bluetooth-device.c	2009-08-17 15:57:37.000000000 -0400
 @@ -1446,12 +1446,12 @@
              if (u->sink && dbus_message_is_signal(m, "org.bluez.Headset", "SpeakerGainChanged")) {
  
@@ -315,8 +336,8 @@ Index: pulseaudio-0.9.16~test4/src/modules/bluetooth/module-bluetooth-device.c
      }
 Index: pulseaudio-0.9.16~test4/src/modules/module-ladspa-sink.c
 ===================================================================
---- pulseaudio-0.9.16~test4.orig/src/modules/module-ladspa-sink.c	2009-08-12 18:29:27.000000000 -0400
-+++ pulseaudio-0.9.16~test4/src/modules/module-ladspa-sink.c	2009-08-13 18:57:47.000000000 -0400
+--- pulseaudio-0.9.16~test4.orig/src/modules/module-ladspa-sink.c	2009-08-16 18:13:49.000000000 -0400
++++ pulseaudio-0.9.16~test4/src/modules/module-ladspa-sink.c	2009-08-17 15:57:37.000000000 -0400
 @@ -178,6 +178,9 @@
      if (!u->sink || !PA_SINK_IS_OPENED(u->sink->thread_info.state))
          return -1;
@@ -329,8 +350,8 @@ Index: pulseaudio-0.9.16~test4/src/modules/module-ladspa-sink.c
  
 Index: pulseaudio-0.9.16~test4/src/modules/module-remap-sink.c
 ===================================================================
---- pulseaudio-0.9.16~test4.orig/src/modules/module-remap-sink.c	2009-08-12 18:29:27.000000000 -0400
-+++ pulseaudio-0.9.16~test4/src/modules/module-remap-sink.c	2009-08-13 18:57:47.000000000 -0400
+--- pulseaudio-0.9.16~test4.orig/src/modules/module-remap-sink.c	2009-08-16 18:13:49.000000000 -0400
++++ pulseaudio-0.9.16~test4/src/modules/module-remap-sink.c	2009-08-17 15:57:37.000000000 -0400
 @@ -148,6 +148,9 @@
      if (!u->sink || !PA_SINK_IS_OPENED(u->sink->thread_info.state))
          return -1;
@@ -343,8 +364,8 @@ Index: pulseaudio-0.9.16~test4/src/modules/module-remap-sink.c
  }
 Index: pulseaudio-0.9.16~test4/src/modules/module-tunnel.c
 ===================================================================
---- pulseaudio-0.9.16~test4.orig/src/modules/module-tunnel.c	2009-08-12 18:29:27.000000000 -0400
-+++ pulseaudio-0.9.16~test4/src/modules/module-tunnel.c	2009-08-13 18:57:46.000000000 -0400
+--- pulseaudio-0.9.16~test4.orig/src/modules/module-tunnel.c	2009-08-16 18:13:49.000000000 -0400
++++ pulseaudio-0.9.16~test4/src/modules/module-tunnel.c	2009-08-17 15:57:37.000000000 -0400
 @@ -1165,10 +1165,10 @@
          pa_cvolume_equal(&volume, &u->sink->virtual_volume))
          return;
@@ -360,8 +381,8 @@ Index: pulseaudio-0.9.16~test4/src/modules/module-tunnel.c
  
 Index: pulseaudio-0.9.16~test4/src/modules/module-volume-restore.c
 ===================================================================
---- pulseaudio-0.9.16~test4.orig/src/modules/module-volume-restore.c	2009-08-12 18:29:27.000000000 -0400
-+++ pulseaudio-0.9.16~test4/src/modules/module-volume-restore.c	2009-08-13 18:57:47.000000000 -0400
+--- pulseaudio-0.9.16~test4.orig/src/modules/module-volume-restore.c	2009-08-16 18:13:49.000000000 -0400
++++ pulseaudio-0.9.16~test4/src/modules/module-volume-restore.c	2009-08-17 15:57:37.000000000 -0400
 @@ -48,6 +48,7 @@
  int pa__init(pa_module*m) {
      pa_modargs *ma = NULL;
@@ -391,8 +412,8 @@ Index: pulseaudio-0.9.16~test4/src/modules/module-volume-restore.c
      if (ma)
 Index: pulseaudio-0.9.16~test4/src/pulse/client-conf.c
 ===================================================================
---- pulseaudio-0.9.16~test4.orig/src/pulse/client-conf.c	2009-08-12 18:29:26.000000000 -0400
-+++ pulseaudio-0.9.16~test4/src/pulse/client-conf.c	2009-08-13 18:57:47.000000000 -0400
+--- pulseaudio-0.9.16~test4.orig/src/pulse/client-conf.c	2009-08-16 18:13:49.000000000 -0400
++++ pulseaudio-0.9.16~test4/src/pulse/client-conf.c	2009-08-17 15:57:37.000000000 -0400
 @@ -92,16 +92,17 @@
  
      /* Prepare the configuration parse table */
@@ -423,8 +444,8 @@ Index: pulseaudio-0.9.16~test4/src/pulse/client-conf.c
      if (filename) {
 Index: pulseaudio-0.9.16~test4/src/pulse/client.conf.in
 ===================================================================
---- pulseaudio-0.9.16~test4.orig/src/pulse/client.conf.in	2009-08-12 18:29:26.000000000 -0400
-+++ pulseaudio-0.9.16~test4/src/pulse/client.conf.in	2009-08-13 18:57:47.000000000 -0400
+--- pulseaudio-0.9.16~test4.orig/src/pulse/client.conf.in	2009-08-16 18:13:49.000000000 -0400
++++ pulseaudio-0.9.16~test4/src/pulse/client.conf.in	2009-08-17 15:57:37.000000000 -0400
 @@ -29,5 +29,5 @@
  
  ; cookie-file =
@@ -434,8 +455,8 @@ Index: pulseaudio-0.9.16~test4/src/pulse/client.conf.in
  ; shm-size-bytes = 0 # setting this 0 will use the system-default, usually 64 MiB
 Index: pulseaudio-0.9.16~test4/src/pulse/context.c
 ===================================================================
---- pulseaudio-0.9.16~test4.orig/src/pulse/context.c	2009-08-12 18:29:26.000000000 -0400
-+++ pulseaudio-0.9.16~test4/src/pulse/context.c	2009-08-13 18:57:47.000000000 -0400
+--- pulseaudio-0.9.16~test4.orig/src/pulse/context.c	2009-08-16 18:13:49.000000000 -0400
++++ pulseaudio-0.9.16~test4/src/pulse/context.c	2009-08-17 15:57:37.000000000 -0400
 @@ -707,10 +707,13 @@
          if (c->spawn_api.atfork)
              c->spawn_api.atfork();
@@ -453,8 +474,8 @@ Index: pulseaudio-0.9.16~test4/src/pulse/context.c
  
 Index: pulseaudio-0.9.16~test4/src/pulse/mainloop.c
 ===================================================================
---- pulseaudio-0.9.16~test4.orig/src/pulse/mainloop.c	2009-08-12 18:29:26.000000000 -0400
-+++ pulseaudio-0.9.16~test4/src/pulse/mainloop.c	2009-08-13 18:57:47.000000000 -0400
+--- pulseaudio-0.9.16~test4.orig/src/pulse/mainloop.c	2009-08-16 18:13:49.000000000 -0400
++++ pulseaudio-0.9.16~test4/src/pulse/mainloop.c	2009-08-17 15:57:37.000000000 -0400
 @@ -765,23 +765,22 @@
  
  static int calc_next_timeout(pa_mainloop *m) {
@@ -487,8 +508,8 @@ Index: pulseaudio-0.9.16~test4/src/pulse/mainloop.c
  static int dispatch_timeout(pa_mainloop *m) {
 Index: pulseaudio-0.9.16~test4/src/pulsecore/conf-parser.c
 ===================================================================
---- pulseaudio-0.9.16~test4.orig/src/pulsecore/conf-parser.c	2009-08-12 18:29:27.000000000 -0400
-+++ pulseaudio-0.9.16~test4/src/pulsecore/conf-parser.c	2009-08-13 18:57:47.000000000 -0400
+--- pulseaudio-0.9.16~test4.orig/src/pulsecore/conf-parser.c	2009-08-16 18:13:49.000000000 -0400
++++ pulseaudio-0.9.16~test4/src/pulsecore/conf-parser.c	2009-08-17 15:57:37.000000000 -0400
 @@ -278,6 +278,30 @@
      return 0;
  }
@@ -522,8 +543,8 @@ Index: pulseaudio-0.9.16~test4/src/pulsecore/conf-parser.c
  
 Index: pulseaudio-0.9.16~test4/src/pulsecore/conf-parser.h
 ===================================================================
---- pulseaudio-0.9.16~test4.orig/src/pulsecore/conf-parser.h	2009-08-12 18:29:27.000000000 -0400
-+++ pulseaudio-0.9.16~test4/src/pulsecore/conf-parser.h	2009-08-13 18:57:47.000000000 -0400
+--- pulseaudio-0.9.16~test4.orig/src/pulsecore/conf-parser.h	2009-08-16 18:13:49.000000000 -0400
++++ pulseaudio-0.9.16~test4/src/pulsecore/conf-parser.h	2009-08-17 15:57:37.000000000 -0400
 @@ -47,6 +47,7 @@
  int pa_config_parse_unsigned(const char *filename, unsigned line, const char *section, const char *lvalue, const char *rvalue, void *data, void *userdata);
  int pa_config_parse_size(const char *filename, unsigned line, const char *section, const char *lvalue, const char *rvalue, void *data, void *userdata);
@@ -534,8 +555,8 @@ Index: pulseaudio-0.9.16~test4/src/pulsecore/conf-parser.h
  #endif
 Index: pulseaudio-0.9.16~test4/src/pulsecore/core-util.c
 ===================================================================
---- pulseaudio-0.9.16~test4.orig/src/pulsecore/core-util.c	2009-08-12 18:29:26.000000000 -0400
-+++ pulseaudio-0.9.16~test4/src/pulsecore/core-util.c	2009-08-13 18:57:47.000000000 -0400
+--- pulseaudio-0.9.16~test4.orig/src/pulsecore/core-util.c	2009-08-16 18:13:49.000000000 -0400
++++ pulseaudio-0.9.16~test4/src/pulsecore/core-util.c	2009-08-17 15:57:37.000000000 -0400
 @@ -101,6 +101,10 @@
  #include "rtkit.h"
  #endif
@@ -562,8 +583,8 @@ Index: pulseaudio-0.9.16~test4/src/pulsecore/core-util.c
 +}
 Index: pulseaudio-0.9.16~test4/src/pulsecore/core-util.h
 ===================================================================
---- pulseaudio-0.9.16~test4.orig/src/pulsecore/core-util.h	2009-08-12 18:29:26.000000000 -0400
-+++ pulseaudio-0.9.16~test4/src/pulsecore/core-util.h	2009-08-13 18:57:47.000000000 -0400
+--- pulseaudio-0.9.16~test4.orig/src/pulsecore/core-util.h	2009-08-16 18:13:49.000000000 -0400
++++ pulseaudio-0.9.16~test4/src/pulsecore/core-util.h	2009-08-17 15:57:37.000000000 -0400
 @@ -241,4 +241,6 @@
  /* Returns size of the specified pipe or 4096 on failure */
  size_t pa_pipe_buf(int fd);
@@ -573,8 +594,8 @@ Index: pulseaudio-0.9.16~test4/src/pulsecore/core-util.h
  #endif
 Index: pulseaudio-0.9.16~test4/src/pulsecore/memblock.c
 ===================================================================
---- pulseaudio-0.9.16~test4.orig/src/pulsecore/memblock.c	2009-08-12 18:29:26.000000000 -0400
-+++ pulseaudio-0.9.16~test4/src/pulsecore/memblock.c	2009-08-13 18:57:47.000000000 -0400
+--- pulseaudio-0.9.16~test4.orig/src/pulsecore/memblock.c	2009-08-16 18:13:49.000000000 -0400
++++ pulseaudio-0.9.16~test4/src/pulsecore/memblock.c	2009-08-17 15:57:37.000000000 -0400
 @@ -258,7 +258,8 @@
              slot = (struct mempool_slot*) ((uint8_t*) p->memory.ptr + (p->block_size * (size_t) idx));
  
@@ -587,8 +608,8 @@ Index: pulseaudio-0.9.16~test4/src/pulsecore/memblock.c
          }
 Index: pulseaudio-0.9.16~test4/src/pulsecore/sink.c
 ===================================================================
---- pulseaudio-0.9.16~test4.orig/src/pulsecore/sink.c	2009-08-12 18:29:27.000000000 -0400
-+++ pulseaudio-0.9.16~test4/src/pulsecore/sink.c	2009-08-13 18:57:46.000000000 -0400
+--- pulseaudio-0.9.16~test4.orig/src/pulsecore/sink.c	2009-08-16 18:13:49.000000000 -0400
++++ pulseaudio-0.9.16~test4/src/pulsecore/sink.c	2009-08-17 15:57:38.000000000 -0400
 @@ -665,11 +665,14 @@
  void pa_sink_process_rewind(pa_sink *s, size_t nbytes) {
      pa_sink_input *i;
@@ -686,8 +707,8 @@ Index: pulseaudio-0.9.16~test4/src/pulsecore/sink.c
  }
 Index: pulseaudio-0.9.16~test4/src/pulsecore/sink.h
 ===================================================================
---- pulseaudio-0.9.16~test4.orig/src/pulsecore/sink.h	2009-08-12 18:29:26.000000000 -0400
-+++ pulseaudio-0.9.16~test4/src/pulsecore/sink.h	2009-08-13 18:57:46.000000000 -0400
+--- pulseaudio-0.9.16~test4.orig/src/pulsecore/sink.h	2009-08-16 18:13:49.000000000 -0400
++++ pulseaudio-0.9.16~test4/src/pulsecore/sink.h	2009-08-17 15:57:38.000000000 -0400
 @@ -267,8 +267,8 @@
  void pa_sink_attach(pa_sink *s);
  
@@ -701,8 +722,8 @@ Index: pulseaudio-0.9.16~test4/src/pulsecore/sink.h
  pa_bool_t pa_device_init_icon(pa_proplist *p, pa_bool_t is_sink);
 Index: pulseaudio-0.9.16~test4/src/pulsecore/source.c
 ===================================================================
---- pulseaudio-0.9.16~test4.orig/src/pulsecore/source.c	2009-08-12 18:29:26.000000000 -0400
-+++ pulseaudio-0.9.16~test4/src/pulsecore/source.c	2009-08-13 18:57:47.000000000 -0400
+--- pulseaudio-0.9.16~test4.orig/src/pulsecore/source.c	2009-08-16 18:13:49.000000000 -0400
++++ pulseaudio-0.9.16~test4/src/pulsecore/source.c	2009-08-17 15:57:38.000000000 -0400
 @@ -592,15 +592,15 @@
      pa_source_assert_ref(s);
      pa_assert(PA_SOURCE_IS_LINKED(s->thread_info.state));
@@ -788,8 +809,8 @@ Index: pulseaudio-0.9.16~test4/src/pulsecore/source.c
  }
 Index: pulseaudio-0.9.16~test4/src/pulsecore/source.h
 ===================================================================
---- pulseaudio-0.9.16~test4.orig/src/pulsecore/source.h	2009-08-12 18:29:27.000000000 -0400
-+++ pulseaudio-0.9.16~test4/src/pulsecore/source.h	2009-08-13 18:57:47.000000000 -0400
+--- pulseaudio-0.9.16~test4.orig/src/pulsecore/source.h	2009-08-16 18:13:49.000000000 -0400
++++ pulseaudio-0.9.16~test4/src/pulsecore/source.h	2009-08-17 15:57:38.000000000 -0400
 @@ -237,8 +237,8 @@
  void pa_source_attach(pa_source *s);
  
@@ -803,8 +824,8 @@ Index: pulseaudio-0.9.16~test4/src/pulsecore/source.h
  
 Index: pulseaudio-0.9.16~test4/src/pulsecore/start-child.c
 ===================================================================
---- pulseaudio-0.9.16~test4.orig/src/pulsecore/start-child.c	2009-08-12 18:29:27.000000000 -0400
-+++ pulseaudio-0.9.16~test4/src/pulsecore/start-child.c	2009-08-13 18:57:47.000000000 -0400
+--- pulseaudio-0.9.16~test4.orig/src/pulsecore/start-child.c	2009-08-16 18:13:49.000000000 -0400
++++ pulseaudio-0.9.16~test4/src/pulsecore/start-child.c	2009-08-17 15:57:38.000000000 -0400
 @@ -68,23 +68,24 @@
      } else {
          /* child */
@@ -837,3 +858,299 @@ Index: pulseaudio-0.9.16~test4/src/pulsecore/start-child.c
  
  #ifdef PR_SET_PDEATHSIG
          /* On Linux we can use PR_SET_PDEATHSIG to have the helper
+Index: pulseaudio-0.9.16~test4/src/pulse/volume.c
+===================================================================
+--- pulseaudio-0.9.16~test4.orig/src/pulse/volume.c	2009-08-16 18:13:49.000000000 -0400
++++ pulseaudio-0.9.16~test4/src/pulse/volume.c	2009-08-17 16:09:56.000000000 -0400
+@@ -205,9 +205,12 @@
+      *
+      * http://www.robotplanet.dk/audio/audio_gui_design/
+      * http://lists.linuxaudio.org/pipermail/linux-audio-dev/2009-May/thread.html#23151
++     *
++     * We make sure that the conversion to linear and back yields the
++     * same volume value! That's why we need the lround() below!
+      */
+ 
+-    return (pa_volume_t) (cbrt(v) * PA_VOLUME_NORM);
++    return (pa_volume_t) lround(cbrt(v) * PA_VOLUME_NORM);
+ }
+ 
+ double pa_sw_volume_to_linear(pa_volume_t v) {
+@@ -812,3 +815,21 @@
+ 
+     return v;
+ }
++
++pa_cvolume* pa_cvolume_merge(pa_cvolume *dest, const pa_cvolume *a, const pa_cvolume *b) {
++    unsigned i;
++
++    pa_assert(dest);
++    pa_assert(a);
++    pa_assert(b);
++
++    pa_return_val_if_fail(pa_cvolume_valid(a), NULL);
++    pa_return_val_if_fail(pa_cvolume_valid(b), NULL);
++
++    for (i = 0; i < a->channels && i < b->channels; i++)
++        dest->values[i] = PA_MAX(a->values[i], b->values[i]);
++
++    dest->channels = (uint8_t) i;
++
++    return dest;
++}
+Index: pulseaudio-0.9.16~test4/src/pulsecore/protocol-native.c
+===================================================================
+--- pulseaudio-0.9.16~test4.orig/src/pulsecore/protocol-native.c	2009-08-16 18:13:49.000000000 -0400
++++ pulseaudio-0.9.16~test4/src/pulsecore/protocol-native.c	2009-08-17 15:57:38.000000000 -0400
+@@ -3323,6 +3323,7 @@
+     pa_source *source = NULL;
+     pa_sink_input *si = NULL;
+     const char *name = NULL;
++    const char *client_name;
+ 
+     pa_native_connection_assert_ref(c);
+     pa_assert(t);
+@@ -3369,12 +3370,20 @@
+ 
+     CHECK_VALIDITY(c->pstream, si || sink || source, tag, PA_ERR_NOENTITY);
+ 
+-    if (sink)
++    client_name = pa_strnull(pa_proplist_gets(c->client->proplist, PA_PROP_APPLICATION_PROCESS_BINARY));
++
++    if (sink) {
++        pa_log("Client %s changes volume of sink %s.", client_name, sink->name);
+         pa_sink_set_volume(sink, &volume, TRUE, TRUE, TRUE, TRUE);
+-    else if (source)
++    } else if (source) {
++        pa_log("Client %s changes volume of sink %s.", client_name, source->name);
+         pa_source_set_volume(source, &volume, TRUE);
+-    else if (si)
++    } else if (si) {
++        pa_log("Client %s changes volume of sink %s.",
++                     client_name,
++                     pa_strnull(pa_proplist_gets(si->proplist, PA_PROP_MEDIA_NAME)));
+         pa_sink_input_set_volume(si, &volume, TRUE, TRUE);
++    }
+ 
+     pa_pstream_send_simple_ack(c->pstream, tag);
+ }
+Index: pulseaudio-0.9.16~test4/src/pulsecore/resampler.c
+===================================================================
+--- pulseaudio-0.9.16~test4.orig/src/pulsecore/resampler.c	2009-08-16 18:13:49.000000000 -0400
++++ pulseaudio-0.9.16~test4/src/pulsecore/resampler.c	2009-08-17 15:57:38.000000000 -0400
+@@ -347,13 +347,17 @@
+ size_t pa_resampler_request(pa_resampler *r, size_t out_length) {
+     pa_assert(r);
+ 
+-    return (((out_length / r->o_fz)*r->i_ss.rate)/r->o_ss.rate) * r->i_fz;
++    /* Let's round up here */
++
++    return (((((out_length + r->o_fz-1) / r->o_fz) * r->i_ss.rate) + r->o_ss.rate-1) / r->o_ss.rate) * r->i_fz;
+ }
+ 
+ size_t pa_resampler_result(pa_resampler *r, size_t in_length) {
+     pa_assert(r);
+ 
+-    return (((in_length / r->i_fz)*r->o_ss.rate)/r->i_ss.rate) * r->o_fz;
++    /* Let's round up here */
++
++    return (((((in_length + r->i_fz-1) / r->i_fz) * r->o_ss.rate) + r->i_ss.rate-1) / r->i_ss.rate) * r->o_fz;
+ }
+ 
+ size_t pa_resampler_max_block_size(pa_resampler *r) {
+Index: pulseaudio-0.9.16~test4/src/pulsecore/thread-mq.c
+===================================================================
+--- pulseaudio-0.9.16~test4.orig/src/pulsecore/thread-mq.c	2009-08-16 18:13:49.000000000 -0400
++++ pulseaudio-0.9.16~test4/src/pulsecore/thread-mq.c	2009-08-17 15:57:38.000000000 -0400
+@@ -104,6 +104,13 @@
+ void pa_thread_mq_done(pa_thread_mq *q) {
+     pa_assert(q);
+ 
++    /* Since we are called from main context we can be sure that the
++     * inq is empty. However, the outq might still contain messages
++     * for the main loop, which we need to dispatch (e.g. release
++     * msgs, other stuff). Hence do so. */
++
++    pa_asyncmsgq_flush(q->outq, TRUE);
++
+     q->mainloop->io_free(q->read_event);
+     q->mainloop->io_free(q->write_event);
+     q->read_event = q->write_event = NULL;
+Index: pulseaudio-0.9.16~test4/src/tests/voltest.c
+===================================================================
+--- pulseaudio-0.9.16~test4.orig/src/tests/voltest.c	2009-08-16 18:13:49.000000000 -0400
++++ pulseaudio-0.9.16~test4/src/tests/voltest.c	2009-08-17 15:57:38.000000000 -0400
+@@ -1,8 +1,33 @@
++/***
++  This file is part of PulseAudio.
++
++  PulseAudio is free software; you can redistribute it and/or modify
++  it under the terms of the GNU Lesser General Public License as published
++  by the Free Software Foundation; either version 2.1 of the License,
++  or (at your option) any later version.
++
++  PulseAudio is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with PulseAudio; if not, write to the Free Software
++  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
++  USA.
++***/
++
++#ifdef HAVE_CONFIG_H
++#include <config.h>
++#endif
++
+ #include <stdio.h>
+ 
+ #include <pulse/volume.h>
+ #include <pulse/gccmacro.h>
+ 
++#include <pulsecore/macro.h>
++
+ int main(int argc, char *argv[]) {
+     pa_volume_t v;
+     pa_cvolume cv;
+@@ -60,5 +85,16 @@
+                 printf("After: volume: [%s]; balance: %2.1f (intended: %2.1f) %s\n", pa_cvolume_snprint(s, sizeof(s), &r), k, b, k < b-.05 || k > b+.5 ? "MISMATCH" : "");
+             }
+ 
++    for (v = PA_VOLUME_MUTED; v <= PA_VOLUME_NORM*2; v += 1) {
++
++        double l = pa_sw_volume_to_linear(v);
++        pa_volume_t k = pa_sw_volume_from_linear(l);
++        double db = pa_sw_volume_to_dB(v);
++        pa_volume_t r = pa_sw_volume_from_dB(db);
++
++        pa_assert(k == v);
++        pa_assert(r == v);
++    }
++
+     return 0;
+ }
+Index: pulseaudio-0.9.16~test4/src/pulsecore/asyncmsgq.c
+===================================================================
+--- pulseaudio-0.9.16~test4.orig/src/pulsecore/asyncmsgq.c	2009-08-16 18:13:49.000000000 -0400
++++ pulseaudio-0.9.16~test4/src/pulsecore/asyncmsgq.c	2009-08-17 15:57:38.000000000 -0400
+@@ -26,14 +26,16 @@
+ #include <unistd.h>
+ #include <errno.h>
+ 
++#include <pulse/xmalloc.h>
++
+ #include <pulsecore/atomic.h>
++#include <pulsecore/macro.h>
+ #include <pulsecore/log.h>
+ #include <pulsecore/thread.h>
+ #include <pulsecore/semaphore.h>
+ #include <pulsecore/macro.h>
+ #include <pulsecore/core-util.h>
+ #include <pulsecore/flist.h>
+-#include <pulse/xmalloc.h>
+ 
+ #include "asyncmsgq.h"
+ 
+@@ -76,7 +78,7 @@
+     struct asyncmsgq_item *i;
+     pa_assert(a);
+ 
+-    while ((i = pa_asyncq_pop(a->asyncq, 0))) {
++    while ((i = pa_asyncq_pop(a->asyncq, FALSE))) {
+ 
+         pa_assert(!i->semaphore);
+ 
+@@ -246,7 +248,7 @@
+         pa_memchunk chunk;
+         int ret;
+ 
+-        if (pa_asyncmsgq_get(a, &o, &c, &data, &offset, &chunk, 1) < 0)
++        if (pa_asyncmsgq_get(a, &o, &c, &data, &offset, &chunk, TRUE) < 0)
+             return -1;
+ 
+         ret = pa_asyncmsgq_dispatch(o, c, data, offset, &chunk);
+@@ -269,7 +271,7 @@
+ 
+     pa_assert(PA_REFCNT_VALUE(a) > 0);
+ 
+-    if (pa_asyncmsgq_get(a, &object, &code, &data, &offset, &chunk, 0) < 0)
++    if (pa_asyncmsgq_get(a, &object, &code, &data, &offset, &chunk, FALSE) < 0)
+         return 0;
+ 
+     pa_asyncmsgq_ref(a);
+@@ -323,3 +325,29 @@
+ 
+     return 0;
+ }
++
++void pa_asyncmsgq_flush(pa_asyncmsgq *a, pa_bool_t run) {
++    pa_assert(PA_REFCNT_VALUE(a) > 0);
++
++    for (;;) {
++        pa_msgobject *object;
++        int code;
++        void *data;
++        int64_t offset;
++        pa_memchunk chunk;
++        int ret;
++
++        if (pa_asyncmsgq_get(a, &object, &code, &data, &offset, &chunk, FALSE) < 0)
++            return;
++
++        if (!run) {
++            pa_asyncmsgq_done(a, -1);
++            continue;
++        }
++
++        pa_asyncmsgq_ref(a);
++        ret = pa_asyncmsgq_dispatch(object, code, data, offset, &chunk);
++        pa_asyncmsgq_done(a, ret);
++        pa_asyncmsgq_unref(a);
++    }
++}
+Index: pulseaudio-0.9.16~test4/src/pulsecore/asyncmsgq.h
+===================================================================
+--- pulseaudio-0.9.16~test4.orig/src/pulsecore/asyncmsgq.h	2009-08-16 18:13:49.000000000 -0400
++++ pulseaudio-0.9.16~test4/src/pulsecore/asyncmsgq.h	2009-08-17 15:57:38.000000000 -0400
+@@ -66,6 +66,8 @@
+ int pa_asyncmsgq_wait_for(pa_asyncmsgq *a, int code);
+ int pa_asyncmsgq_process_one(pa_asyncmsgq *a);
+ 
++void pa_asyncmsgq_flush(pa_asyncmsgq *a, pa_bool_t run);
++
+ /* For the reading side */
+ int pa_asyncmsgq_read_fd(pa_asyncmsgq *q);
+ int pa_asyncmsgq_read_before_poll(pa_asyncmsgq *a);
+Index: pulseaudio-0.9.16~test4/src/pulsecore/memblockq.c
+===================================================================
+--- pulseaudio-0.9.16~test4.orig/src/pulsecore/memblockq.c	2009-08-16 18:13:49.000000000 -0400
++++ pulseaudio-0.9.16~test4/src/pulsecore/memblockq.c	2009-08-17 15:57:38.000000000 -0400
+@@ -692,6 +692,12 @@
+     return bq->minreq;
+ }
+ 
++size_t pa_memblockq_get_maxrewind(pa_memblockq *bq) {
++    pa_assert(bq);
++
++    return bq->maxrewind;
++}
++
+ int64_t pa_memblockq_get_read_index(pa_memblockq *bq) {
+     pa_assert(bq);
+ 
+Index: pulseaudio-0.9.16~test4/src/pulsecore/memblockq.h
+===================================================================
+--- pulseaudio-0.9.16~test4.orig/src/pulsecore/memblockq.h	2009-08-16 18:13:49.000000000 -0400
++++ pulseaudio-0.9.16~test4/src/pulsecore/memblockq.h	2009-08-17 15:57:38.000000000 -0400
+@@ -141,6 +141,9 @@
+ /* Returns the minimal request value */
+ size_t pa_memblockq_get_minreq(pa_memblockq *bq);
+ 
++/* Returns the maximal rewind value */
++size_t pa_memblockq_get_maxrewind(pa_memblockq *bq);
++
+ /* Return the base unit in bytes */
+ size_t pa_memblockq_get_base(pa_memblockq *bq);
+ 

@@ -1,3 +1,19 @@
+pulseaudio (1:0.9.16~test5-0ubuntu1) karmic; urgency=low
+
+  * New upstream release
+  * debian/patches/0050-backport-git-post-test4.patch: drop
+  * debian/patches/0050-revert-pacmd-poll-argv.patch: revert pacmd
+    changesets due to excessive cpu usage (poll()) with resume:
+    - aae7054b1c442e62cc1154d15a4b7a569d60d8f4
+    - 5fcb8a3c0838a4ecdb00a0af09b6e1a358b114d0
+  * debian/01PulseAudio: Escape hash when passed to sudo -u
+    (LP: #414385). Thanks, Christoph Kurrat and Dana Goyette!
+  * debian/pulseaudio.init: Add NetworkManager to
+    Should-St{art,op} to fix sink/source publishing with Avahi
+    (LP: #413443). Thanks, Martin-Éric Racine!
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Wed, 19 Aug 2009 17:43:48 -0400
+
 pulseaudio (1:0.9.16~test4-0ubuntu6) karmic; urgency=low
 
   * Correct changelog entry for 1:0.9.16~test4-0ubuntu5
