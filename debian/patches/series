@@ -5,3 +5,5 @@
 0006-a11y-special-case-disable.patch
 0007-esd-honour-system-pulseaudio.patch
 0050-revert-pacmd-poll-argv.patch
+0051-leave-hp-enabled.patch
+0052-reduce-lib-linking.patch

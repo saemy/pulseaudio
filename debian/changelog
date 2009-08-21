@@ -1,3 +1,21 @@
+pulseaudio (1:0.9.16~test5-0ubuntu2) karmic; urgency=low
+
+  [ Daniel T Chen ]
+  * debian/patches/0051-leave-hp-enabled.patch: Leave
+    headphones enabled in the default analog mixer profiles
+
+  [ Luke Yelavich ]
+  * debian/patches/0052-reduce-lib-linking.patch: Reduce the number of
+    libraries that the libpulse libraries are linked against as much as
+    possible, to lessen the work needed to make bi-arch libpulse packages
+    in the future
+  * Remove pulseaudio.desktop once again, as the a11y special case is
+    not being honoured, and we have the Xsession.d script to start pulse
+    for us, to avoid any races with other apps wanting to play sounds on
+    session startup
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Fri, 21 Aug 2009 15:48:31 +1000
+
 pulseaudio (1:0.9.16~test5-0ubuntu1) karmic; urgency=low
 
   * New upstream release
