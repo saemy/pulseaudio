@@ -1,3 +1,19 @@
+pulseaudio (1:0.9.16~test6-3-g57e1-0ubuntu1) karmic; urgency=low
+
+  [ Daniel T Chen ]
+  * New git snapshot of origin/master (0.9.16~test6-3-g57e1)
+  * debian/patches/:
+    + 0050-revert-pacmd-poll-argv.patch: Retain, still seeing
+      excessive cpu usage with resume
+    - 0051-leave-hp-enabled.patch: Drop, applied upstream
+    + 0051-reduce-lib-linking.patch: Refresh and rename previous
+      0052-reduce.. so that minimal changes are made
+
+  [ Luke Yelavich ]
+  * debian/control: Promote rtkit from suggests to recommends
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Tue, 25 Aug 2009 09:44:32 +1000
+
 pulseaudio (1:0.9.16~test5-0ubuntu2) karmic; urgency=low
 
   [ Daniel T Chen ]

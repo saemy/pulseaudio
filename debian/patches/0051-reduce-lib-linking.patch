@@ -1,0 +1,44 @@
+Index: pulseaudio-0.9.16~test6-3-g57e1/src/Makefile.am
+===================================================================
+--- pulseaudio-0.9.16~test6-3-g57e1.orig/src/Makefile.am	2009-08-24 18:44:49.000000000 -0400
++++ pulseaudio-0.9.16~test6-3-g57e1/src/Makefile.am	2009-08-24 18:46:20.000000000 -0400
+@@ -659,7 +659,7 @@
+ if HAVE_X11
+ libpulsecommon_@PA_MAJORMINORMICRO@_la_SOURCES += pulsecore/x11prop.c pulsecore/x11prop.h
+ libpulsecommon_@PA_MAJORMINORMICRO@_la_CFLAGS += $(X11_CFLAGS)
+-libpulsecommon_@PA_MAJORMINORMICRO@_la_LDFLAGS += $(X11_LIBS)
++libpulsecommon_@PA_MAJORMINORMICRO@_la_LDFLAGS += -lX11
+ endif
+ 
+ if HAVE_LIBASYNCNS
+@@ -768,7 +768,7 @@
+ if HAVE_X11
+ libpulse_la_SOURCES += pulse/client-conf-x11.c pulse/client-conf-x11.h
+ libpulse_la_CFLAGS += $(X11_CFLAGS)
+-libpulse_la_LDFLAGS += $(X11_LIBS)
++libpulse_la_LDFLAGS += -lX11
+ endif
+ 
+ libpulse_simple_la_SOURCES = pulse/simple.c pulse/simple.h
+Index: pulseaudio-0.9.16~test6-3-g57e1/src/Makefile.in
+===================================================================
+--- pulseaudio-0.9.16~test6-3-g57e1.orig/src/Makefile.in	2009-08-24 18:44:50.000000000 -0400
++++ pulseaudio-0.9.16~test6-3-g57e1/src/Makefile.in	2009-08-24 18:46:50.000000000 -0400
+@@ -117,7 +117,7 @@
+ 
+ @HAVE_X11_TRUE@am__append_12 = pulsecore/x11prop.c pulsecore/x11prop.h
+ @HAVE_X11_TRUE@am__append_13 = $(X11_CFLAGS)
+-@HAVE_X11_TRUE@am__append_14 = $(X11_LIBS)
++@HAVE_X11_TRUE@am__append_14 = -lX11
+ @HAVE_LIBASYNCNS_TRUE@am__append_15 = $(LIBASYNCNS_CFLAGS)
+ @HAVE_LIBASYNCNS_TRUE@am__append_16 = $(LIBASYNCNS_LIBS)
+ @OS_IS_WIN32_TRUE@am__append_17 = pulsecore/dllmain.c
+@@ -141,7 +141,7 @@
+ 
+ @HAVE_X11_TRUE@am__append_25 = pulse/client-conf-x11.c pulse/client-conf-x11.h
+ @HAVE_X11_TRUE@am__append_26 = $(X11_CFLAGS)
+-@HAVE_X11_TRUE@am__append_27 = $(X11_LIBS)
++@HAVE_X11_TRUE@am__append_27 = -lX11
+ 
+ ###################################
+ #         OSS emulation           #
