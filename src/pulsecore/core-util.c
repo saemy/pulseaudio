@@ -116,6 +116,7 @@
 #include <pulsecore/thread.h>
 #include <pulsecore/strbuf.h>
 #include <pulsecore/usergroup.h>
+#include <pulsecore/strlist.h>
 
 #include "core-util.h"
 
@@ -123,6 +124,8 @@
 #ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
 #endif
+
+static pa_strlist *recorded_env = NULL;
 
 #ifdef OS_IS_WIN32
 
@@ -609,6 +612,11 @@ static int set_scheduler(int rtprio) {
         return -1;
     }
 
+    /* We need to disable exit on disconnect because otherwise
+     * dbus_shutdown will kill us. See
+     * https://bugs.freedesktop.org/show_bug.cgi?id=16924 */
+    dbus_connection_set_exit_on_disconnect(bus, FALSE);
+
     r = rtkit_make_realtime(bus, 0, rtprio);
     dbus_connection_unref(bus);
 
@@ -676,6 +684,11 @@ static int set_nice(int nice_level) {
         errno = -EIO;
         return -1;
     }
+
+    /* We need to disable exit on disconnect because otherwise
+     * dbus_shutdown will kill us. See
+     * https://bugs.freedesktop.org/show_bug.cgi?id=16924 */
+    dbus_connection_set_exit_on_disconnect(bus, FALSE);
 
     r = rtkit_make_high_priority(bus, 0, nice_level);
     dbus_connection_unref(bus);
@@ -1877,16 +1890,16 @@ char *pa_make_path_absolute(const char *p) {
 static char *get_path(const char *fn, pa_bool_t prependmid, pa_bool_t rt) {
     char *rtp;
 
-    if (pa_is_path_absolute(fn))
-        return pa_xstrdup(fn);
-
     rtp = rt ? pa_get_runtime_dir() : pa_get_state_dir();
-
-    if (!rtp)
-        return NULL;
 
     if (fn) {
         char *r;
+
+        if (pa_is_path_absolute(fn))
+            return pa_xstrdup(fn);
+
+        if (!rtp)
+            return NULL;
 
         if (prependmid) {
             char *mid;
@@ -2451,7 +2464,36 @@ void pa_set_env(const char *key, const char *value) {
     pa_assert(key);
     pa_assert(value);
 
+    /* This is not thread-safe */
+
     putenv(pa_sprintf_malloc("%s=%s", key, value));
+}
+
+void pa_set_env_and_record(const char *key, const char *value) {
+    pa_assert(key);
+    pa_assert(value);
+
+    /* This is not thread-safe */
+
+    pa_set_env(key, value);
+    recorded_env = pa_strlist_prepend(recorded_env, key);
+}
+
+void pa_unset_env_recorded(void) {
+
+    /* This is not thread-safe */
+
+    for (;;) {
+        char *s;
+
+        recorded_env = pa_strlist_pop(recorded_env, &s);
+
+        if (!s)
+            break;
+
+        unsetenv(s);
+        pa_xfree(s);
+    }
 }
 
 pa_bool_t pa_in_system_mode(void) {

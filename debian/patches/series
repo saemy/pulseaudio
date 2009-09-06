@@ -6,3 +6,6 @@
 0007-esd-honour-system-pulseaudio.patch
 0050-revert-pacmd-poll-argv.patch
 0051-reduce-lib-linking.patch
+0052-disable-cpu-limit.patch
+0053-add-input-sources.patch
+0054-use-sse2-volume.patch

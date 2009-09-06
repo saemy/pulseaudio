@@ -1,3 +1,20 @@
+pulseaudio (1:0.9.16~test7-14-g7ca81-0ubuntu1) karmic; urgency=low
+
+  * New git snapshot of origin/master (0.9.16~test7-14-g7ca81)
+    fixes LP: #419658, #422451, #424127
+  * debian/pulseaudio.install: add module-loopback
+  * debian/control: remove liboil*-dev build-dependency thanks to
+    included ASM optimisations
+  * debian/copyright: update; we've added module-loopback
+  * debian/patches/0052-disable-cpu-limit.patch: Disable cpu limit as
+    per 812be327836c93492ad389333bcc037566141eb8
+  * debian/patches/0053-add-input-sources.patch: Add internal mic and
+    docking station as per 8cd635bc614834c13d0f1c586d472b4a52b98664
+  * debian/patches/0054-use-sse2-volume.patch: Only use if SSE2 is
+    available. This is a workaround for LP: #418448, thanks "knarf"!
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Sun, 06 Sep 2009 14:23:15 -0400
+
 pulseaudio (1:0.9.16~test6-3-g57e1-0ubuntu2) karmic; urgency=low
 
   * add -march=armv6 to compiler flags on armel, recent upstream changes

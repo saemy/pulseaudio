@@ -66,7 +66,7 @@
 #define TSCHED_WATERMARK_INC_STEP_USEC (10*PA_USEC_PER_MSEC)       /* 10ms  */
 #define TSCHED_WATERMARK_DEC_STEP_USEC (5*PA_USEC_PER_MSEC)        /* 5ms */
 #define TSCHED_WATERMARK_VERIFY_AFTER_USEC (20*PA_USEC_PER_SEC)    /* 20s */
-#define TSCHED_WATERMARK_INC_THRESHOLD_USEC (1*PA_USEC_PER_MSEC)   /* 3ms */
+#define TSCHED_WATERMARK_INC_THRESHOLD_USEC (0*PA_USEC_PER_MSEC)   /* 0ms */
 #define TSCHED_WATERMARK_DEC_THRESHOLD_USEC (100*PA_USEC_PER_MSEC) /* 100ms */
 #define TSCHED_WATERMARK_STEP_USEC (10*PA_USEC_PER_MSEC)           /* 10ms */
 
@@ -406,6 +406,7 @@ static int try_recover(struct userdata *u, const char *call, int err) {
 static size_t check_left_to_record(struct userdata *u, size_t n_bytes, pa_bool_t on_timeout) {
     size_t left_to_record;
     size_t rec_space = u->hwbuf_size - u->hwbuf_unused;
+    pa_bool_t overrun = FALSE;
 
     /* We use <= instead of < for this check here because an overrun
      * only happens after the last sample was processed, not already when
@@ -418,6 +419,7 @@ static size_t check_left_to_record(struct userdata *u, size_t n_bytes, pa_bool_t
 
         /* We got a dropout. What a mess! */
         left_to_record = 0;
+        overrun = TRUE;
 
 #ifdef DEBUG_TIMING
         PA_DEBUG_TRAP;
@@ -434,7 +436,7 @@ static size_t check_left_to_record(struct userdata *u, size_t n_bytes, pa_bool_t
     if (u->use_tsched) {
         pa_bool_t reset_not_before = TRUE;
 
-        if (left_to_record < u->watermark_inc_threshold)
+        if (overrun || left_to_record < u->watermark_inc_threshold)
             increase_watermark(u);
         else if (left_to_record > u->watermark_dec_threshold) {
             reset_not_before = FALSE;

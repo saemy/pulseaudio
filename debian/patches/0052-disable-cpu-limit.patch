@@ -1,0 +1,44 @@
+Index: pulseaudio-0.9.16~test7-14-g7ca81/man/pulse-daemon.conf.5.xml.in
+===================================================================
+--- pulseaudio-0.9.16~test7-14-g7ca81.orig/man/pulse-daemon.conf.5.xml.in	2009-09-03 23:09:01.000000000 -0400
++++ pulseaudio-0.9.16~test7-14-g7ca81/man/pulse-daemon.conf.5.xml.in	2009-09-03 23:09:08.000000000 -0400
+@@ -133,11 +133,11 @@
+     </option>
+ 
+     <option>
+-      <p><opt>cpu-limit=</opt> If disabled d not install the CPU load
++      <p><opt>cpu-limit=</opt> If disabled do not install the CPU load
+       limiter, even on platforms where it is supported. This option is
+       useful when debugging/profiling PulseAudio to disable disturbing
+       SIGXCPU signals. Takes a boolean argument, defaults to
+-      <opt>yes</opt>. The <opt>--no-cpu-limit</opt> command line
++      <opt>no</opt>. The <opt>--no-cpu-limit</opt> command line
+       argument takes precedence.</p>
+     </option>
+ 
+Index: pulseaudio-0.9.16~test7-14-g7ca81/src/daemon/daemon-conf.c
+===================================================================
+--- pulseaudio-0.9.16~test7-14-g7ca81.orig/src/daemon/daemon-conf.c	2009-09-03 23:09:01.000000000 -0400
++++ pulseaudio-0.9.16~test7-14-g7ca81/src/daemon/daemon-conf.c	2009-09-03 23:09:08.000000000 -0400
+@@ -83,7 +83,7 @@
+     .config_file = NULL,
+     .use_pid_file = TRUE,
+     .system_instance = FALSE,
+-    .no_cpu_limit = FALSE,
++    .no_cpu_limit = TRUE,
+     .disable_shm = FALSE,
+     .lock_memory = FALSE,
+     .default_n_fragments = 4,
+Index: pulseaudio-0.9.16~test7-14-g7ca81/src/daemon/daemon.conf.in
+===================================================================
+--- pulseaudio-0.9.16~test7-14-g7ca81.orig/src/daemon/daemon.conf.in	2009-09-03 23:09:01.000000000 -0400
++++ pulseaudio-0.9.16~test7-14-g7ca81/src/daemon/daemon.conf.in	2009-09-03 23:09:08.000000000 -0400
+@@ -28,7 +28,7 @@
+ ; enable-shm = yes
+ ; shm-size-bytes = 0 # setting this 0 will use the system-default, usually 64 MiB
+ ; lock-memory = no
+-; cpu-limit = yes
++; cpu-limit = no
+ 
+ ; high-priority = yes
+ ; nice-level = -11

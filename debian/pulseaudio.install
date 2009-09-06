@@ -34,6 +34,7 @@ usr/lib/pulse-*/modules/module-mmkbd-evdev.so
 usr/lib/pulse-*/modules/module-native-protocol-fd.so
 usr/lib/pulse-*/modules/module-native-protocol-tcp.so
 usr/lib/pulse-*/modules/module-native-protocol-unix.so
+usr/lib/pulse-*/modules/module-loopback.so
 usr/share/alsa
 usr/share/apport
 usr/share/lintian/overrides/pulseaudio
