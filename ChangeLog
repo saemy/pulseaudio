@@ -1,4 +1,4 @@
-2009-08-24  gettextize  <bug-gnu-gettext@gnu.org>
+2009-09-02  gettextize  <bug-gnu-gettext@gnu.org>
 
 	* Makefile.am (EXTRA_DIST): Add config.rpath, m4/ChangeLog.
 	* configure.ac (AC_CONFIG_FILES): Add po/Makefile.in.

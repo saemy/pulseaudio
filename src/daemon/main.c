@@ -259,9 +259,14 @@ static int change_user(void) {
     pa_set_env("HOME", PA_SYSTEM_RUNTIME_PATH);
 
     /* Relevant for pa_runtime_path() */
-    pa_set_env("PULSE_RUNTIME_PATH", PA_SYSTEM_RUNTIME_PATH);
-    pa_set_env("PULSE_CONFIG_PATH", PA_SYSTEM_CONFIG_PATH);
-    pa_set_env("PULSE_STATE_PATH", PA_SYSTEM_STATE_PATH);
+    if (!getenv("PULSE_RUNTIME_PATH"))
+        pa_set_env("PULSE_RUNTIME_PATH", PA_SYSTEM_RUNTIME_PATH);
+
+    if (!getenv("PULSE_CONFIG_PATH"))
+        pa_set_env("PULSE_CONFIG_PATH", PA_SYSTEM_CONFIG_PATH);
+
+    if (!getenv("PULSE_STATE_PATH"))
+        pa_set_env("PULSE_STATE_PATH", PA_SYSTEM_STATE_PATH);
 
     pa_log_info(_("Successfully dropped root privileges."));
 
@@ -701,7 +706,7 @@ int main(int argc, char *argv[]) {
 #endif
     }
 
-    pa_set_env("PULSE_INTERNAL", "1");
+    pa_set_env_and_record("PULSE_INTERNAL", "1");
     pa_assert_se(chdir("/") == 0);
     umask(0022);
 
@@ -716,7 +721,7 @@ int main(int argc, char *argv[]) {
         if (change_user() < 0)
             goto finish;
 
-    pa_set_env("PULSE_SYSTEM", conf->system_instance ? "1" : "0");
+    pa_set_env_and_record("PULSE_SYSTEM", conf->system_instance ? "1" : "0");
 
     pa_log_info(_("This is PulseAudio %s"), PACKAGE_VERSION);
     pa_log_debug(_("Compilation host: %s"), CANONICAL_HOST);
@@ -823,8 +828,10 @@ int main(int argc, char *argv[]) {
 
     pa_memtrap_install();
 
-    pa_cpu_init_x86();
-    pa_cpu_init_arm();
+    if (!getenv("PULSE_NO_SIMD")) {
+        pa_cpu_init_x86();
+        pa_cpu_init_arm();
+    }
 
     pa_assert_se(mainloop = pa_mainloop_new());
 
@@ -962,6 +969,9 @@ finish:
 
     if (valid_pid_file)
         pa_pid_file_remove();
+
+    /* This has no real purpose except making things valgrind-clean */
+    pa_unset_env_recorded();
 
 #ifdef OS_IS_WIN32
     WSACleanup();
