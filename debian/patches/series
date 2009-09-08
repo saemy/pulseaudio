@@ -8,4 +8,5 @@
 0051-reduce-lib-linking.patch
 0052-disable-cpu-limit.patch
 0053-add-input-sources.patch
-0054-use-sse2-volume.patch
+0054-volume-libpulse-backported-fixes.patch
+0055-llvm-clang-analyzer-fixes.patch

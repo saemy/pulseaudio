@@ -1,0 +1,803 @@
+Index: pulseaudio-0.9.16~test7-14-g7ca81/src/modules/alsa/alsa-mixer.c
+===================================================================
+--- pulseaudio-0.9.16~test7-14-g7ca81.orig/src/modules/alsa/alsa-mixer.c	2009-09-08 18:19:33.000000000 -0400
++++ pulseaudio-0.9.16~test7-14-g7ca81/src/modules/alsa/alsa-mixer.c	2009-09-08 18:20:07.000000000 -0400
+@@ -2889,7 +2889,7 @@
+     else
+         name = pa_sprintf_malloc("input:%s", n->name);
+ 
+-    if ((p = pa_hashmap_get(ps->profiles, name))) {
++    if (pa_hashmap_get(ps->profiles, name)) {
+         pa_xfree(name);
+         return;
+     }
+Index: pulseaudio-0.9.16~test7-14-g7ca81/src/modules/alsa/alsa-sink.c
+===================================================================
+--- pulseaudio-0.9.16~test7-14-g7ca81.orig/src/modules/alsa/alsa-sink.c	2009-09-08 18:19:33.000000000 -0400
++++ pulseaudio-0.9.16~test7-14-g7ca81/src/modules/alsa/alsa-sink.c	2009-09-08 18:20:07.000000000 -0400
+@@ -656,6 +656,7 @@
+         snd_pcm_sframes_t n;
+         size_t n_bytes;
+         int r;
++        pa_bool_t after_avail = TRUE;
+ 
+         if (PA_UNLIKELY((n = pa_alsa_safe_avail(u->pcm_handle, u->hwbuf_size, &u->sink->sample_spec)) < 0)) {
+ 
+@@ -710,7 +711,6 @@
+         for (;;) {
+             snd_pcm_sframes_t frames;
+             void *p;
+-            pa_bool_t after_avail = TRUE;
+ 
+ /*         pa_log_debug("%lu frames to write", (unsigned long) frames); */
+ 
+@@ -1638,7 +1638,7 @@
+     const char *dev_id = NULL;
+     pa_sample_spec ss, requested_ss;
+     pa_channel_map map;
+-    uint32_t nfrags, hwbuf_size, frag_size, tsched_size, tsched_watermark;
++    uint32_t nfrags, frag_size, tsched_size, tsched_watermark;
+     snd_pcm_uframes_t period_frames, tsched_frames;
+     size_t frame_size;
+     pa_bool_t use_mmap = TRUE, b, use_tsched = TRUE, d, ignore_dB = FALSE;
+@@ -1673,7 +1673,6 @@
+         goto fail;
+     }
+ 
+-    hwbuf_size = frag_size * nfrags;
+     period_frames = frag_size/frame_size;
+     tsched_frames = tsched_size/frame_size;
+ 
+Index: pulseaudio-0.9.16~test7-14-g7ca81/src/modules/alsa/alsa-source.c
+===================================================================
+--- pulseaudio-0.9.16~test7-14-g7ca81.orig/src/modules/alsa/alsa-source.c	2009-09-08 18:19:33.000000000 -0400
++++ pulseaudio-0.9.16~test7-14-g7ca81/src/modules/alsa/alsa-source.c	2009-09-08 18:20:07.000000000 -0400
+@@ -1483,7 +1483,7 @@
+     const char *dev_id = NULL;
+     pa_sample_spec ss, requested_ss;
+     pa_channel_map map;
+-    uint32_t nfrags, hwbuf_size, frag_size, tsched_size, tsched_watermark;
++    uint32_t nfrags, frag_size, tsched_size, tsched_watermark;
+     snd_pcm_uframes_t period_frames, tsched_frames;
+     size_t frame_size;
+     pa_bool_t use_mmap = TRUE, b, use_tsched = TRUE, d, ignore_dB = FALSE;
+@@ -1518,7 +1518,6 @@
+         goto fail;
+     }
+ 
+-    hwbuf_size = frag_size * nfrags;
+     period_frames = frag_size/frame_size;
+     tsched_frames = tsched_size/frame_size;
+ 
+Index: pulseaudio-0.9.16~test7-14-g7ca81/src/modules/alsa/alsa-util.c
+===================================================================
+--- pulseaudio-0.9.16~test7-14-g7ca81.orig/src/modules/alsa/alsa-util.c	2009-09-08 18:19:33.000000000 -0400
++++ pulseaudio-0.9.16~test7-14-g7ca81/src/modules/alsa/alsa-util.c	2009-09-08 18:20:07.000000000 -0400
+@@ -900,7 +900,7 @@
+     snd_ctl_card_info_alloca(&info);
+ 
+     if ((err = snd_ctl_open(&ctl, name, 0)) < 0) {
+-        pa_log_warn("Error opening low-level control device '%s'", name);
++        pa_log_warn("Error opening low-level control device '%s': %s", name, snd_strerror(err));
+         return;
+     }
+ 
+Index: pulseaudio-0.9.16~test7-14-g7ca81/src/modules/bluetooth/module-bluetooth-device.c
+===================================================================
+--- pulseaudio-0.9.16~test7-14-g7ca81.orig/src/modules/bluetooth/module-bluetooth-device.c	2009-09-08 18:19:33.000000000 -0400
++++ pulseaudio-0.9.16~test7-14-g7ca81/src/modules/bluetooth/module-bluetooth-device.c	2009-09-08 18:20:07.000000000 -0400
+@@ -221,9 +221,7 @@
+     pa_assert(u);
+     pa_assert(u->service_fd >= 0);
+     pa_assert(msg);
+-
+-    if (room <= 0)
+-        room = BT_SUGGESTED_BUFFER_SIZE;
++    pa_assert(room >= sizeof(*msg));
+ 
+     pa_log_debug("Trying to receive message from audio service...");
+ 
+@@ -236,6 +234,11 @@
+         return -1;
+     }
+ 
++    if (msg->length > room) {
++        pa_log_error("Not enough room.");
++        return -1;
++    }
++
+     /* Secondly, read the payload */
+     if (msg->length > sizeof(*msg)) {
+ 
+Index: pulseaudio-0.9.16~test7-14-g7ca81/src/modules/hal-util.c
+===================================================================
+--- pulseaudio-0.9.16~test7-14-g7ca81.orig/src/modules/hal-util.c	2009-09-08 18:19:33.000000000 -0400
++++ pulseaudio-0.9.16~test7-14-g7ca81/src/modules/hal-util.c	2009-09-08 18:20:07.000000000 -0400
+@@ -65,7 +65,7 @@
+         goto finish;
+     }
+ 
+-    if (!(udis = libhal_find_device_by_capability(hal, "sound", &n, &error)) < 0) {
++    if (!(udis = libhal_find_device_by_capability(hal, "sound", &n, &error))) {
+         pa_log_error("Couldn't find devices: %s: %s", error.name, error.message);
+         goto finish;
+     }
+Index: pulseaudio-0.9.16~test7-14-g7ca81/src/modules/module-hal-detect.c
+===================================================================
+--- pulseaudio-0.9.16~test7-14-g7ca81.orig/src/modules/module-hal-detect.c	2009-09-08 18:19:33.000000000 -0400
++++ pulseaudio-0.9.16~test7-14-g7ca81/src/modules/module-hal-detect.c	2009-09-08 18:20:07.000000000 -0400
+@@ -435,9 +435,7 @@
+         int i;
+ 
+         for (i = 0; i < n; i++) {
+-            struct device *d;
+-
+-            if ((d = hal_device_add(u, udis[i]))) {
++            if (hal_device_add(u, udis[i])) {
+                 count++;
+                 pa_log_debug("Loaded device %s", udis[i]);
+             } else
+Index: pulseaudio-0.9.16~test7-14-g7ca81/src/modules/module-tunnel.c
+===================================================================
+--- pulseaudio-0.9.16~test7-14-g7ca81.orig/src/modules/module-tunnel.c	2009-09-08 18:19:34.000000000 -0400
++++ pulseaudio-0.9.16~test7-14-g7ca81/src/modules/module-tunnel.c	2009-09-08 18:20:07.000000000 -0400
+@@ -332,7 +332,7 @@
+ 
+ static void command_stream_buffer_attr_changed(pa_pdispatch *pd, uint32_t command, uint32_t tag, pa_tagstruct *t, void *userdata) {
+     struct userdata *u = userdata;
+-    uint32_t channel, maxlength, tlength, fragsize, prebuf, minreq;
++    uint32_t channel, maxlength, tlength = 0, fragsize, prebuf, minreq;
+     pa_usec_t usec;
+ 
+     pa_assert(pd);
+@@ -1097,7 +1097,7 @@
+     uint32_t idx, owner_module, client, sink;
+     pa_usec_t buffer_usec, sink_usec;
+     const char *name, *driver, *resample_method;
+-    pa_bool_t mute;
++    pa_bool_t mute = FALSE;
+     pa_sample_spec sample_spec;
+     pa_channel_map channel_map;
+     pa_cvolume volume;
+@@ -1345,12 +1345,11 @@
+ /* Called from main context */
+ static void start_subscribe(struct userdata *u) {
+     pa_tagstruct *t;
+-    uint32_t tag;
+     pa_assert(u);
+ 
+     t = pa_tagstruct_new(NULL, 0);
+     pa_tagstruct_putu32(t, PA_COMMAND_SUBSCRIBE);
+-    pa_tagstruct_putu32(t, tag = u->ctag++);
++    pa_tagstruct_putu32(t, u->ctag++);
+     pa_tagstruct_putu32(t, PA_SUBSCRIPTION_MASK_SERVER|
+ #ifdef TUNNEL_SINK
+                         PA_SUBSCRIPTION_MASK_SINK_INPUT|PA_SUBSCRIPTION_MASK_SINK
+@@ -1526,7 +1525,7 @@
+ 
+     reply = pa_tagstruct_new(NULL, 0);
+     pa_tagstruct_putu32(reply, PA_COMMAND_SET_CLIENT_NAME);
+-    pa_tagstruct_putu32(reply, tag = u->ctag++);
++    pa_tagstruct_putu32(reply, u->ctag++);
+ 
+     if (u->version >= 13) {
+         pa_proplist *pl;
+@@ -1753,7 +1752,6 @@
+ static void sink_set_volume(pa_sink *sink) {
+     struct userdata *u;
+     pa_tagstruct *t;
+-    uint32_t tag;
+ 
+     pa_assert(sink);
+     u = sink->userdata;
+@@ -1761,7 +1759,7 @@
+ 
+     t = pa_tagstruct_new(NULL, 0);
+     pa_tagstruct_putu32(t, PA_COMMAND_SET_SINK_INPUT_VOLUME);
+-    pa_tagstruct_putu32(t, tag = u->ctag++);
++    pa_tagstruct_putu32(t, u->ctag++);
+     pa_tagstruct_putu32(t, u->device_index);
+     pa_tagstruct_put_cvolume(t, &sink->real_volume);
+     pa_pstream_send_tagstruct(u->pstream, t);
+@@ -1771,7 +1769,6 @@
+ static void sink_set_mute(pa_sink *sink) {
+     struct userdata *u;
+     pa_tagstruct *t;
+-    uint32_t tag;
+ 
+     pa_assert(sink);
+     u = sink->userdata;
+@@ -1782,7 +1779,7 @@
+ 
+     t = pa_tagstruct_new(NULL, 0);
+     pa_tagstruct_putu32(t, PA_COMMAND_SET_SINK_INPUT_MUTE);
+-    pa_tagstruct_putu32(t, tag = u->ctag++);
++    pa_tagstruct_putu32(t, u->ctag++);
+     pa_tagstruct_putu32(t, u->device_index);
+     pa_tagstruct_put_boolean(t, !!sink->muted);
+     pa_pstream_send_tagstruct(u->pstream, t);
+Index: pulseaudio-0.9.16~test7-14-g7ca81/src/modules/raop/base64.c
+===================================================================
+--- pulseaudio-0.9.16~test7-14-g7ca81.orig/src/modules/raop/base64.c	2009-09-08 18:19:34.000000000 -0400
++++ pulseaudio-0.9.16~test7-14-g7ca81/src/modules/raop/base64.c	2009-09-08 18:20:07.000000000 -0400
+@@ -57,7 +57,6 @@
+ 
+     p = s = pa_xnew(char, size * 4 / 3 + 4);
+     q = (const unsigned char *) data;
+-    i = 0;
+     for (i = 0; i < size;) {
+         c = q[i++];
+         c *= 256;
+Index: pulseaudio-0.9.16~test7-14-g7ca81/src/modules/rtp/rtsp_client.c
+===================================================================
+--- pulseaudio-0.9.16~test7-14-g7ca81.orig/src/modules/rtp/rtsp_client.c	2009-09-08 18:19:34.000000000 -0400
++++ pulseaudio-0.9.16~test7-14-g7ca81/src/modules/rtp/rtsp_client.c	2009-09-08 18:20:07.000000000 -0400
+@@ -456,6 +456,8 @@
+     l = pa_iochannel_write(c->io, hdrs, strlen(hdrs));
+     pa_xfree(hdrs);
+ 
++    /* FIXME: this is broken, not necessarily all bytes are written */
++
+     return 0;
+ }
+ 
+Index: pulseaudio-0.9.16~test7-14-g7ca81/src/modules/x11/module-x11-publish.c
+===================================================================
+--- pulseaudio-0.9.16~test7-14-g7ca81.orig/src/modules/x11/module-x11-publish.c	2009-09-08 18:19:34.000000000 -0400
++++ pulseaudio-0.9.16~test7-14-g7ca81/src/modules/x11/module-x11-publish.c	2009-09-08 18:20:07.000000000 -0400
+@@ -90,7 +90,7 @@
+ 
+         l = pa_strlist_reverse(l);
+         s = pa_strlist_tostring(l);
+-        l = pa_strlist_reverse(l);
++        pa_strlist_reverse(l);
+ 
+         pa_x11_set_prop(pa_x11_wrapper_get_display(u->x11_wrapper), "PULSE_SERVER", s);
+         pa_xfree(s);
+Index: pulseaudio-0.9.16~test7-14-g7ca81/src/pulse/utf8.c
+===================================================================
+--- pulseaudio-0.9.16~test7-14-g7ca81.orig/src/pulse/utf8.c	2009-09-08 18:19:34.000000000 -0400
++++ pulseaudio-0.9.16~test7-14-g7ca81/src/pulse/utf8.c	2009-09-08 18:20:07.000000000 -0400
+@@ -120,10 +120,8 @@
+                 size = 4;
+                 min = (1 << 16);
+                 val = (uint32_t) (*p & 0x07);
+-            } else {
+-                size = 1;
++            } else
+                 goto error;
+-            }
+ 
+             p++;
+             if (!is_continuation_char(*p))
+@@ -150,12 +148,9 @@
+ 
+             if (o) {
+                 memcpy(o, last, (size_t) size);
+-                o += size - 1;
++                o += size;
+             }
+ 
+-            if (o)
+-                o++;
+-
+             continue;
+ 
+ error:
+Index: pulseaudio-0.9.16~test7-14-g7ca81/src/pulse/volume.c
+===================================================================
+--- pulseaudio-0.9.16~test7-14-g7ca81.orig/src/pulse/volume.c	2009-09-08 18:19:34.000000000 -0400
++++ pulseaudio-0.9.16~test7-14-g7ca81/src/pulse/volume.c	2009-09-08 18:20:07.000000000 -0400
+@@ -155,7 +155,7 @@
+ 
+ pa_volume_t pa_cvolume_max_mask(const pa_cvolume *a, const pa_channel_map *cm, pa_channel_position_mask_t mask) {
+     pa_volume_t m = PA_VOLUME_MUTED;
+-    unsigned c, n;
++    unsigned c;
+ 
+     pa_assert(a);
+ 
+@@ -164,7 +164,7 @@
+ 
+     pa_return_val_if_fail(pa_cvolume_compatible_with_channel_map(a, cm), PA_VOLUME_MUTED);
+ 
+-    for (c = n = 0; c < a->channels; c++) {
++    for (c = 0; c < a->channels; c++) {
+ 
+         if (!(PA_CHANNEL_POSITION_MASK(cm->map[c]) & mask))
+             continue;
+@@ -178,7 +178,7 @@
+ 
+ pa_volume_t pa_cvolume_min_mask(const pa_cvolume *a, const pa_channel_map *cm, pa_channel_position_mask_t mask) {
+     pa_volume_t m = PA_VOLUME_MAX;
+-    unsigned c, n;
++    unsigned c;
+ 
+     pa_assert(a);
+ 
+@@ -187,7 +187,7 @@
+ 
+     pa_return_val_if_fail(pa_cvolume_compatible_with_channel_map(a, cm), PA_VOLUME_MUTED);
+ 
+-    for (c = n = 0; c < a->channels; c++) {
++    for (c = 0; c < a->channels; c++) {
+ 
+         if (!(PA_CHANNEL_POSITION_MASK(cm->map[c]) & mask))
+             continue;
+Index: pulseaudio-0.9.16~test7-14-g7ca81/src/pulsecore/cli-command.c
+===================================================================
+--- pulseaudio-0.9.16~test7-14-g7ca81.orig/src/pulsecore/cli-command.c	2009-09-08 18:19:34.000000000 -0400
++++ pulseaudio-0.9.16~test7-14-g7ca81/src/pulsecore/cli-command.c	2009-09-08 18:20:07.000000000 -0400
+@@ -1549,7 +1549,7 @@
+     pa_sink *sink;
+     pa_source *source;
+     pa_card *card;
+-    int nl;
++    pa_bool_t nl;
+     uint32_t idx;
+     char txt[256];
+     time_t now;
+@@ -1567,7 +1567,7 @@
+     pa_strbuf_printf(buf, "### Configuration dump generated at %s\n", ctime(&now));
+ #endif
+ 
+-    for (m = pa_idxset_first(c->modules, &idx); m; m = pa_idxset_next(c->modules, &idx)) {
++    PA_IDXSET_FOREACH(m, c->modules, idx) {
+ 
+         pa_strbuf_printf(buf, "load-module %s", m->name);
+ 
+@@ -1577,13 +1577,12 @@
+         pa_strbuf_puts(buf, "\n");
+     }
+ 
+-    nl = 0;
+-
+-    for (sink = pa_idxset_first(c->sinks, &idx); sink; sink = pa_idxset_next(c->sinks, &idx)) {
++    nl = FALSE;
++    PA_IDXSET_FOREACH(sink, c->sinks, idx) {
+ 
+         if (!nl) {
+             pa_strbuf_puts(buf, "\n");
+-            nl = 1;
++            nl = TRUE;
+         }
+ 
+         pa_strbuf_printf(buf, "set-sink-volume %s 0x%03x\n", sink->name, pa_cvolume_max(pa_sink_get_volume(sink, FALSE)));
+@@ -1591,11 +1590,12 @@
+         pa_strbuf_printf(buf, "suspend-sink %s %s\n", sink->name, pa_yes_no(pa_sink_get_state(sink) == PA_SINK_SUSPENDED));
+     }
+ 
+-    for (source = pa_idxset_first(c->sources, &idx); source; source = pa_idxset_next(c->sources, &idx)) {
++    nl = FALSE;
++    PA_IDXSET_FOREACH(source, c->sources, idx) {
+ 
+         if (!nl) {
+             pa_strbuf_puts(buf, "\n");
+-            nl = 1;
++            nl = TRUE;
+         }
+ 
+         pa_strbuf_printf(buf, "set-source-volume %s 0x%03x\n", source->name, pa_cvolume_max(pa_source_get_volume(source, FALSE)));
+@@ -1603,32 +1603,32 @@
+         pa_strbuf_printf(buf, "suspend-source %s %s\n", source->name, pa_yes_no(pa_source_get_state(source) == PA_SOURCE_SUSPENDED));
+     }
+ 
+-    for (card = pa_idxset_first(c->cards, &idx); card; card = pa_idxset_next(c->cards, &idx)) {
++    nl = FALSE;
++    PA_IDXSET_FOREACH(card, c->cards, idx) {
+ 
+         if (!nl) {
+             pa_strbuf_puts(buf, "\n");
+-            nl = 1;
++            nl = TRUE;
+         }
+ 
+         if (card->active_profile)
+             pa_strbuf_printf(buf, "set-card-profile %s %s\n", card->name, card->active_profile->name);
+     }
+ 
+-    nl = 0;
+-
++    nl = FALSE;
+     if ((sink = pa_namereg_get_default_sink(c))) {
+         if (!nl) {
+             pa_strbuf_puts(buf, "\n");
+-            nl = 1;
++            nl = TRUE;
+         }
++
+         pa_strbuf_printf(buf, "set-default-sink %s\n", sink->name);
+     }
+ 
+     if ((source = pa_namereg_get_default_source(c))) {
+-        if (!nl) {
++        if (!nl)
+             pa_strbuf_puts(buf, "\n");
+-            nl = 1;
+-        }
++
+         pa_strbuf_printf(buf, "set-default-source %s\n", source->name);
+     }
+ 
+@@ -1813,8 +1813,6 @@
+ 
+     ret = pa_cli_command_execute_file_stream(c, f, buf, fail);
+ 
+-    ret = 0;
+-
+ fail:
+     if (f)
+         fclose(f);
+Index: pulseaudio-0.9.16~test7-14-g7ca81/src/pulsecore/conf-parser.c
+===================================================================
+--- pulseaudio-0.9.16~test7-14-g7ca81.orig/src/pulsecore/conf-parser.c	2009-09-08 18:19:34.000000000 -0400
++++ pulseaudio-0.9.16~test7-14-g7ca81/src/pulsecore/conf-parser.c	2009-09-08 18:20:07.000000000 -0400
+@@ -113,7 +113,7 @@
+         return 0;
+ 
+     if (pa_startswith(b, ".include ")) {
+-        char *path, *fn;
++        char *path = NULL, *fn;
+         int r;
+ 
+         fn = strip(b+9);
+Index: pulseaudio-0.9.16~test7-14-g7ca81/src/pulsecore/core-util.c
+===================================================================
+--- pulseaudio-0.9.16~test7-14-g7ca81.orig/src/pulsecore/core-util.c	2009-09-08 18:19:35.000000000 -0400
++++ pulseaudio-0.9.16~test7-14-g7ca81/src/pulsecore/core-util.c	2009-09-08 18:20:07.000000000 -0400
+@@ -591,13 +591,13 @@
+     sp.sched_priority = rtprio;
+ 
+ #ifdef SCHED_RESET_ON_FORK
+-    if ((r = pthread_setschedparam(pthread_self(), SCHED_RR|SCHED_RESET_ON_FORK, &sp)) == 0) {
++    if (pthread_setschedparam(pthread_self(), SCHED_RR|SCHED_RESET_ON_FORK, &sp) == 0) {
+         pa_log_debug("SCHED_RR|SCHED_RESET_ON_FORK worked.");
+         return 0;
+     }
+ #endif
+ 
+-    if ((r = pthread_setschedparam(pthread_self(), SCHED_RR, &sp)) == 0) {
++    if (pthread_setschedparam(pthread_self(), SCHED_RR, &sp) == 0) {
+         pa_log_debug("SCHED_RR worked.");
+         return 0;
+     }
+@@ -786,7 +786,6 @@
+ /* Try to parse a boolean string value.*/
+ int pa_parse_boolean(const char *v) {
+     const char *expr;
+-    int r;
+     pa_assert(v);
+ 
+     /* First we check language independant */
+@@ -798,12 +797,12 @@
+     /* And then we check language dependant */
+     if ((expr = nl_langinfo(YESEXPR)))
+         if (expr[0])
+-            if ((r = pa_match(expr, v)) > 0)
++            if (pa_match(expr, v) > 0)
+                 return 1;
+ 
+     if ((expr = nl_langinfo(NOEXPR)))
+         if (expr[0])
+-            if ((r = pa_match(expr, v)) > 0)
++            if (pa_match(expr, v) > 0)
+                 return 0;
+ 
+     errno = EINVAL;
+@@ -1195,7 +1194,7 @@
+ 
+ /* Create a temporary lock file and lock it. */
+ int pa_lock_lockfile(const char *fn) {
+-    int fd = -1;
++    int fd;
+     pa_assert(fn);
+ 
+     for (;;) {
+@@ -1238,8 +1237,6 @@
+             fd = -1;
+             goto fail;
+         }
+-
+-        fd = -1;
+     }
+ 
+     return fd;
+@@ -2407,7 +2404,7 @@
+         p[i++] = except;
+ 
+         while ((sig = va_arg(ap, int)) >= 0)
+-            sig = p[i++];
++            p[i++] = sig;
+     }
+     p[i] = -1;
+ 
+Index: pulseaudio-0.9.16~test7-14-g7ca81/src/pulsecore/flist.c
+===================================================================
+--- pulseaudio-0.9.16~test7-14-g7ca81.orig/src/pulsecore/flist.c	2009-09-08 18:19:35.000000000 -0400
++++ pulseaudio-0.9.16~test7-14-g7ca81/src/pulsecore/flist.c	2009-09-08 18:20:07.000000000 -0400
+@@ -130,15 +130,22 @@
+ }
+ 
+ int pa_flist_push(pa_flist*l, void *p) {
+-    unsigned idx, n, len;
++    unsigned idx, n;
+     pa_atomic_ptr_t*cells;
++#ifdef PROFILE
++    unsigned len;
++#endif
+ 
+     pa_assert(l);
+     pa_assert(p);
+ 
+     cells = PA_FLIST_CELLS(l);
+ 
+-    n = len = l->size + N_EXTRA_SCAN - (unsigned) pa_atomic_load(&l->length);
++    n = l->size + N_EXTRA_SCAN - (unsigned) pa_atomic_load(&l->length);
++
++#ifdef PROFILE
++    len = n;
++#endif
+ 
+     _Y;
+     idx = reduce(l, (unsigned) pa_atomic_load(&l->write_idx));
+@@ -171,14 +178,21 @@
+ }
+ 
+ void* pa_flist_pop(pa_flist*l) {
+-    unsigned idx, len, n;
++    unsigned idx, n;
+     pa_atomic_ptr_t *cells;
++#ifdef PROFILE
++    unsigned len;
++#endif
+ 
+     pa_assert(l);
+ 
+     cells = PA_FLIST_CELLS(l);
+ 
+-    n = len = (unsigned) pa_atomic_load(&l->length) + N_EXTRA_SCAN;
++    n = (unsigned) pa_atomic_load(&l->length) + N_EXTRA_SCAN;
++
++#ifdef PROFILE
++    len = n;
++#endif
+ 
+     _Y;
+     idx = reduce(l, (unsigned) pa_atomic_load(&l->read_idx));
+Index: pulseaudio-0.9.16~test7-14-g7ca81/src/pulsecore/memtrap.c
+===================================================================
+--- pulseaudio-0.9.16~test7-14-g7ca81.orig/src/pulsecore/memtrap.c	2009-09-08 18:19:35.000000000 -0400
++++ pulseaudio-0.9.16~test7-14-g7ca81/src/pulsecore/memtrap.c	2009-09-08 18:20:07.000000000 -0400
+@@ -200,13 +200,13 @@
+         goto unlock;
+ 
+     memtrap_unlink(m, j);
+-    j = pa_aupdate_write_swap(aupdate);
++    pa_aupdate_write_swap(aupdate);
+ 
+     m->start = (void*) start;
+     m->size = size;
+     pa_atomic_store(&m->bad, 0);
+ 
+-    j = pa_aupdate_write_swap(aupdate);
++    pa_assert_se(pa_aupdate_write_swap(aupdate) == j);
+     memtrap_link(m, j);
+ 
+ unlock:
+Index: pulseaudio-0.9.16~test7-14-g7ca81/src/pulsecore/pid.c
+===================================================================
+--- pulseaudio-0.9.16~test7-14-g7ca81.orig/src/pulsecore/pid.c	2009-09-08 18:19:35.000000000 -0400
++++ pulseaudio-0.9.16~test7-14-g7ca81/src/pulsecore/pid.c	2009-09-08 18:20:07.000000000 -0400
+@@ -81,7 +81,7 @@
+ }
+ 
+ static int open_pid_file(const char *fn, int mode) {
+-    int fd = -1;
++    int fd;
+ 
+     pa_assert(fn);
+ 
+@@ -123,8 +123,6 @@
+             fd = -1;
+             goto fail;
+         }
+-
+-        fd = -1;
+     }
+ 
+     return fd;
+Index: pulseaudio-0.9.16~test7-14-g7ca81/src/pulsecore/protocol-esound.c
+===================================================================
+--- pulseaudio-0.9.16~test7-14-g7ca81.orig/src/pulsecore/protocol-esound.c	2009-09-08 18:19:35.000000000 -0400
++++ pulseaudio-0.9.16~test7-14-g7ca81/src/pulsecore/protocol-esound.c	2009-09-08 18:20:07.000000000 -0400
+@@ -771,7 +771,6 @@
+ 
+     memcpy(&rvolume, data, sizeof(uint32_t));
+     rvolume = PA_MAYBE_UINT32_SWAP(c->swap_byte_order, rvolume);
+-    data = (const char*)data + sizeof(uint32_t);
+ 
+     if ((conn = pa_idxset_get_by_index(c->protocol->connections, idx)) && conn->sink_input) {
+         pa_cvolume volume;
+@@ -809,7 +808,6 @@
+ 
+     memcpy(&rvolume, data, sizeof(uint32_t));
+     rvolume = PA_MAYBE_UINT32_SWAP(c->swap_byte_order, rvolume);
+-    data = (const char*)data + sizeof(uint32_t);
+ 
+     volume.values[0] = (lvolume*PA_VOLUME_NORM)/ESD_VOLUME_BASE;
+     volume.values[1] = (rvolume*PA_VOLUME_NORM)/ESD_VOLUME_BASE;
+@@ -1123,7 +1121,7 @@
+         ssize_t r;
+         size_t l;
+         void *p;
+-        size_t space;
++        size_t space = 0;
+ 
+         pa_assert(c->input_memblockq);
+ 
+Index: pulseaudio-0.9.16~test7-14-g7ca81/src/pulsecore/protocol-native.c
+===================================================================
+--- pulseaudio-0.9.16~test7-14-g7ca81.orig/src/pulsecore/protocol-native.c	2009-09-08 18:19:35.000000000 -0400
++++ pulseaudio-0.9.16~test7-14-g7ca81/src/pulsecore/protocol-native.c	2009-09-08 18:20:07.000000000 -0400
+@@ -628,7 +628,6 @@
+ 
+     record_stream *s;
+     pa_source_output *source_output = NULL;
+-    size_t base;
+     pa_source_output_new_data data;
+ 
+     pa_assert(c);
+@@ -682,7 +681,7 @@
+             0,
+             s->buffer_attr.maxlength,
+             0,
+-            base = pa_frame_size(&source_output->sample_spec),
++            pa_frame_size(&source_output->sample_spec),
+             1,
+             0,
+             0,
+@@ -2274,6 +2273,8 @@
+     ret = pa_core_exit(c->protocol->core, FALSE, 0);
+     CHECK_VALIDITY(c->pstream, ret >= 0, tag, PA_ERR_ACCESS);
+ 
++    pa_log_debug("Client %s asks us to terminate.", pa_strnull(pa_proplist_gets(c->client->proplist, PA_PROP_APPLICATION_PROCESS_BINARY)));
++
+     pa_pstream_send_simple_ack(c->pstream, tag); /* nonsense */
+ }
+ 
+Index: pulseaudio-0.9.16~test7-14-g7ca81/src/pulsecore/protocol-simple.c
+===================================================================
+--- pulseaudio-0.9.16~test7-14-g7ca81.orig/src/pulsecore/protocol-simple.c	2009-09-08 18:19:35.000000000 -0400
++++ pulseaudio-0.9.16~test7-14-g7ca81/src/pulsecore/protocol-simple.c	2009-09-08 18:20:07.000000000 -0400
+@@ -154,7 +154,7 @@
+     ssize_t r;
+     size_t l;
+     void *p;
+-    size_t space;
++    size_t space = 0;
+ 
+     connection_assert_ref(c);
+ 
+Index: pulseaudio-0.9.16~test7-14-g7ca81/src/pulsecore/sink-input.c
+===================================================================
+--- pulseaudio-0.9.16~test7-14-g7ca81.orig/src/pulsecore/sink-input.c	2009-09-08 18:19:35.000000000 -0400
++++ pulseaudio-0.9.16~test7-14-g7ca81/src/pulsecore/sink-input.c	2009-09-08 18:20:07.000000000 -0400
+@@ -1152,7 +1152,6 @@
+ /* Called from main context */
+ int pa_sink_input_start_move(pa_sink_input *i) {
+     pa_source_output *o, *p = NULL;
+-    pa_sink *origin;
+     int r;
+ 
+     pa_sink_input_assert_ref(i);
+@@ -1166,8 +1165,6 @@
+     if ((r = pa_hook_fire(&i->core->hooks[PA_CORE_HOOK_SINK_INPUT_MOVE_START], i)) < 0)
+         return r;
+ 
+-    origin = i->sink;
+-
+     /* Kill directly connected outputs */
+     while ((o = pa_idxset_first(i->direct_outputs, NULL))) {
+         pa_assert(o != p);
+Index: pulseaudio-0.9.16~test7-14-g7ca81/src/pulsecore/socket-client.c
+===================================================================
+--- pulseaudio-0.9.16~test7-14-g7ca81.orig/src/pulsecore/socket-client.c	2009-09-08 18:19:35.000000000 -0400
++++ pulseaudio-0.9.16~test7-14-g7ca81/src/pulsecore/socket-client.c	2009-09-08 18:20:07.000000000 -0400
+@@ -202,8 +202,6 @@
+ }
+ 
+ static int do_connect(pa_socket_client *c, const struct sockaddr *sa, socklen_t len) {
+-    int r;
+-
+     pa_assert(c);
+     pa_assert(PA_REFCNT_VALUE(c) >= 1);
+     pa_assert(sa);
+@@ -211,7 +209,7 @@
+ 
+     pa_make_fd_nonblock(c->fd);
+ 
+-    if ((r = connect(c->fd, sa, len)) < 0) {
++    if (connect(c->fd, sa, len) < 0) {
+ #ifdef OS_IS_WIN32
+         if (WSAGetLastError() != EWOULDBLOCK) {
+             pa_log_debug("connect(): %d", WSAGetLastError());
+Index: pulseaudio-0.9.16~test7-14-g7ca81/src/tests/stripnul.c
+===================================================================
+--- pulseaudio-0.9.16~test7-14-g7ca81.orig/src/tests/stripnul.c	2009-09-08 18:19:36.000000000 -0400
++++ pulseaudio-0.9.16~test7-14-g7ca81/src/tests/stripnul.c	2009-09-08 18:20:07.000000000 -0400
+@@ -31,7 +31,7 @@
+ int main(int argc, char *argv[]) {
+     FILE *i, *o;
+     size_t granularity;
+-    pa_bool_t found;
++    pa_bool_t found = FALSE;
+     uint8_t *zero;
+ 
+     pa_assert_se(argc >= 2);
+Index: pulseaudio-0.9.16~test7-14-g7ca81/src/utils/pacat.c
+===================================================================
+--- pulseaudio-0.9.16~test7-14-g7ca81.orig/src/utils/pacat.c	2009-09-08 18:19:36.000000000 -0400
++++ pulseaudio-0.9.16~test7-14-g7ca81/src/utils/pacat.c	2009-09-08 18:20:07.000000000 -0400
+@@ -406,7 +406,6 @@
+             break;
+ 
+         case PA_CONTEXT_READY: {
+-            int r;
+             pa_buffer_attr buffer_attr;
+ 
+             pa_assert(c);
+@@ -443,13 +442,13 @@
+ 
+             if (mode == PLAYBACK) {
+                 pa_cvolume cv;
+-                if ((r = pa_stream_connect_playback(stream, device, latency > 0 ? &buffer_attr : NULL, flags, volume_is_set ? pa_cvolume_set(&cv, sample_spec.channels, volume) : NULL, NULL)) < 0) {
++                if (pa_stream_connect_playback(stream, device, latency > 0 ? &buffer_attr : NULL, flags, volume_is_set ? pa_cvolume_set(&cv, sample_spec.channels, volume) : NULL, NULL) < 0) {
+                     pa_log(_("pa_stream_connect_playback() failed: %s"), pa_strerror(pa_context_errno(c)));
+                     goto fail;
+                 }
+ 
+             } else {
+-                if ((r = pa_stream_connect_record(stream, device, latency > 0 ? &buffer_attr : NULL, flags)) < 0) {
++                if (pa_stream_connect_record(stream, device, latency > 0 ? &buffer_attr : NULL, flags) < 0) {
+                     pa_log(_("pa_stream_connect_record() failed: %s"), pa_strerror(pa_context_errno(c)));
+                     goto fail;
+                 }
+@@ -768,7 +767,6 @@
+ 
+             case ARG_STREAM_NAME: {
+                 char *t;
+-                t = pa_locale_to_utf8(optarg);
+ 
+                 if (!(t = pa_locale_to_utf8(optarg)) ||
+                     pa_proplist_sets(proplist, PA_PROP_MEDIA_NAME, t) < 0) {
+Index: pulseaudio-0.9.16~test7-14-g7ca81/src/utils/padsp.c
+===================================================================
+--- pulseaudio-0.9.16~test7-14-g7ca81.orig/src/utils/padsp.c	2009-09-08 18:19:36.000000000 -0400
++++ pulseaudio-0.9.16~test7-14-g7ca81/src/utils/padsp.c	2009-09-08 18:20:07.000000000 -0400
+@@ -1821,7 +1821,7 @@
+ 
+     pa_threaded_mainloop_unlock(i->mainloop);
+ 
+-    return 0;
++    return r;
+ }
+ 
+ static int dsp_trigger(fd_info *i) {
+@@ -1864,7 +1864,7 @@
+ 
+     pa_threaded_mainloop_unlock(i->mainloop);
+ 
+-    return 0;
++    return r;
+ }
+ 
+ static int dsp_cork(fd_info *i, pa_stream *s, int b) {
+@@ -1902,7 +1902,7 @@
+ 
+     pa_threaded_mainloop_unlock(i->mainloop);
+ 
+-    return 0;
++    return r;
+ }
+ 
+ static int dsp_ioctl(fd_info *i, unsigned long request, void*argp, int *_errno) {

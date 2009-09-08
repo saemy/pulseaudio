@@ -1,3 +1,29 @@
+pulseaudio (1:0.9.16~test7-14-g7ca81-0ubuntu2) karmic; urgency=low
+
+  * debian/control: Fix missing pulseaudio-module-rygel-media-server
+    Depends thanks to lintian
+  * debian/patches/0054-use-sse2-volume.patch:
+    - Remove, resolved differently upstream (see below)
+  * debian/patches/0054-volume-libpulse-backported-fixes.patch:
+    + Add fixes from git HEAD:
+      e6a666d8d5fffbc9847b51b35349b88d74970079 (PA_BYTES_SNPRINT_MAX)
+      5cf0c1e544a5fce97d514c793256b2e301277136 (rearrange functions)
+      508c462841fd087528649ed1ca3646363387bb5d:
+         b5ac3839e18524524fa3e0da7ec68dbce16e8203 (remap/vol only SSE2)
+         723499439f575f744f07c85a42b47d95cdc98de6 (init SSE2)
+      3bbc5e6a4d0211d8cedd2fe6698c2e2c07d1c4b9 (add PA_VOLUME_INVALID)
+      cc6c4fe91f916451bbea9073619c11a6b122b684 (check pa_volume_t args)
+      9755bfa58af0c27b478d5d8cc56013527a6f660b (drop expensive checks)
+      d000dd6f4b976894558613f69bdad2974cce7d1e (NULL chan map consist.)
+      41a0dc1e9987ae00b605fd88bf887becbdf097d5 (log invalid fade/bal)
+      08a4d57ce2f20173ea8a90e597a3ebcd28398242 (ok NULL proplist inv.)
+  * debian/patches/0055-llvm-clang-analyzer-fixes.patch:
+    + Add fixes from git HEAD:
+      f5046759cdd72daf5ba3b31c9dfc7b8d5be6bc9b..
+      7cc100d9e1d7093da44c8c83cbf61bb8c6000d9a
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Tue, 08 Sep 2009 18:21:00 -0400
+
 pulseaudio (1:0.9.16~test7-14-g7ca81-0ubuntu1) karmic; urgency=low
 
   * New git snapshot of origin/master (0.9.16~test7-14-g7ca81)
