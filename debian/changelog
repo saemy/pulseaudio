@@ -1,3 +1,43 @@
+pulseaudio (0.9.16-1) unstable; urgency=low
+
+  * New upstream release
+  * debian/copyright: updated
+  * debian/control: Remove the liboil build-dep
+  * debian/libpulse0.shlibs: Bump to >= 0.9.16
+  * debian/pulseaudio.postinst: No longer make pulseaudio suid and no longer
+    create the pulse-rt group. Setting realtime priorities is now handled by
+    rtkit.
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Thu, 10 Sep 2009 21:53:15 +0100
+
+pulseaudio (0.9.16~test5-1) experimental; urgency=low
+
+  * New Upstream Version
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Sat, 22 Aug 2009 21:59:34 +0100
+
+pulseaudio (0.9.16~test4-1) experimental; urgency=low
+
+  * New Upstream Version
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Sun, 09 Aug 2009 18:24:46 +0100
+
+pulseaudio (0.9.16~test2~20090726git59659e1db-1) experimental; urgency=low
+
+  * New Upstream Version
+  * Ack NMU (Was fixed upstream in this version) (Closes: #537351)
+  * Remove all patches, everything was merged upstream :)
+  * debian/copyright: updated
+  * debian/pulseaudio.install: Don't install the PolicyKit config file
+  * debian/control: Removed build-dep on libpolkit-dbus-dev
+  * Update various shlibs files to use 0.9.16
+  * debian/pulseaudio.install: Install pulseaudio shared config files
+  * debian/pulseaudio.instal: Add module-intended-roles
+  * debian/control: Make pulseaudio-module-raop-dbg depend on
+    pulseaudio-module-raop
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Tue, 28 Jul 2009 14:00:27 +0200
+
 pulseaudio (0.9.15-4.1) unstable; urgency=high
 
   * Non-maintainer upload by the Security Team.

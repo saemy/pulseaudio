@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include <pulse/rtclock.h>
 #include <pulse/timeval.h>
 #include <pulse/version.h>
 #include <pulse/utf8.h>
@@ -61,7 +62,7 @@
 #include "protocol-native.h"
 
 /* Kick a client if it doesn't authenticate within this time */
-#define AUTH_TIMEOUT 60
+#define AUTH_TIMEOUT (60 * PA_USEC_PER_SEC)
 
 /* Don't accept more connection than this */
 #define MAX_CONNECTIONS 64
@@ -97,17 +98,15 @@ typedef struct record_stream {
     pa_usec_t current_source_latency;
 } record_stream;
 
-PA_DECLARE_CLASS(record_stream);
 #define RECORD_STREAM(o) (record_stream_cast(o))
-static PA_DEFINE_CHECK_TYPE(record_stream, pa_msgobject);
+PA_DEFINE_PRIVATE_CLASS(record_stream, pa_msgobject);
 
 typedef struct output_stream {
     pa_msgobject parent;
 } output_stream;
 
-PA_DECLARE_CLASS(output_stream);
 #define OUTPUT_STREAM(o) (output_stream_cast(o))
-static PA_DEFINE_CHECK_TYPE(output_stream, pa_msgobject);
+PA_DEFINE_PRIVATE_CLASS(output_stream, pa_msgobject);
 
 typedef struct playback_stream {
     output_stream parent;
@@ -137,9 +136,8 @@ typedef struct playback_stream {
     uint64_t playing_for, underrun_for;
 } playback_stream;
 
-PA_DECLARE_CLASS(playback_stream);
 #define PLAYBACK_STREAM(o) (playback_stream_cast(o))
-static PA_DEFINE_CHECK_TYPE(playback_stream, output_stream);
+PA_DEFINE_PRIVATE_CLASS(playback_stream, output_stream);
 
 typedef struct upload_stream {
     output_stream parent;
@@ -155,9 +153,8 @@ typedef struct upload_stream {
     pa_proplist *proplist;
 } upload_stream;
 
-PA_DECLARE_CLASS(upload_stream);
 #define UPLOAD_STREAM(o) (upload_stream_cast(o))
-static PA_DEFINE_CHECK_TYPE(upload_stream, output_stream);
+PA_DEFINE_PRIVATE_CLASS(upload_stream, output_stream);
 
 struct pa_native_connection {
     pa_msgobject parent;
@@ -175,9 +172,8 @@ struct pa_native_connection {
     pa_time_event *auth_timeout_event;
 };
 
-PA_DECLARE_CLASS(pa_native_connection);
 #define PA_NATIVE_CONNECTION(o) (pa_native_connection_cast(o))
-static PA_DEFINE_CHECK_TYPE(pa_native_connection, pa_msgobject);
+PA_DEFINE_PRIVATE_CLASS(pa_native_connection, pa_msgobject);
 
 struct pa_native_protocol {
     PA_REFCNT_DECLARE;
@@ -284,6 +280,7 @@ static void command_update_proplist(pa_pdispatch *pd, uint32_t command, uint32_t
 static void command_remove_proplist(pa_pdispatch *pd, uint32_t command, uint32_t tag, pa_tagstruct *t, void *userdata);
 static void command_extension(pa_pdispatch *pd, uint32_t command, uint32_t tag, pa_tagstruct *t, void *userdata);
 static void command_set_card_profile(pa_pdispatch *pd, uint32_t command, uint32_t tag, pa_tagstruct *t, void *userdata);
+static void command_set_sink_or_source_port(pa_pdispatch *pd, uint32_t command, uint32_t tag, pa_tagstruct *t, void *userdata);
 
 static const pa_pdispatch_cb_t command_table[PA_COMMAND_MAX] = {
     [PA_COMMAND_ERROR] = NULL,
@@ -379,6 +376,9 @@ static const pa_pdispatch_cb_t command_table[PA_COMMAND_MAX] = {
     [PA_COMMAND_REMOVE_CLIENT_PROPLIST] = command_remove_proplist,
 
     [PA_COMMAND_SET_CARD_PROFILE] = command_set_card_profile,
+
+    [PA_COMMAND_SET_SINK_PORT] = command_set_sink_or_source_port,
+    [PA_COMMAND_SET_SOURCE_PORT] = command_set_sink_or_source_port,
 
     [PA_COMMAND_EXTENSION] = command_extension
 };
@@ -628,7 +628,6 @@ static record_stream* record_stream_new(
 
     record_stream *s;
     pa_source_output *source_output = NULL;
-    size_t base;
     pa_source_output_new_data data;
 
     pa_assert(c);
@@ -648,8 +647,9 @@ static record_stream* record_stream_new(
     pa_source_output_new_data_set_channel_map(&data, map);
     if (peak_detect)
         data.resample_method = PA_RESAMPLER_PEAKS;
+    data.flags = flags;
 
-    *ret = -pa_source_output_new(&source_output, c->protocol->core, &data, flags);
+    *ret = -pa_source_output_new(&source_output, c->protocol->core, &data);
 
     pa_source_output_new_data_done(&data);
 
@@ -681,7 +681,7 @@ static record_stream* record_stream_new(
             0,
             s->buffer_attr.maxlength,
             0,
-            base = pa_frame_size(&source_output->sample_spec),
+            pa_frame_size(&source_output->sample_spec),
             1,
             0,
             0,
@@ -757,6 +757,7 @@ static int playback_stream_process_msg(pa_msgobject *o, int code, void*userdata,
         return -1;
 
     switch (code) {
+
         case PLAYBACK_STREAM_MESSAGE_REQUEST_DATA: {
             pa_tagstruct *t;
             int l = 0;
@@ -825,24 +826,26 @@ static int playback_stream_process_msg(pa_msgobject *o, int code, void*userdata,
             pa_pstream_send_simple_ack(s->connection->pstream, PA_PTR_TO_UINT(userdata));
             break;
 
-        case PLAYBACK_STREAM_MESSAGE_UPDATE_TLENGTH: {
-            pa_tagstruct *t;
+        case PLAYBACK_STREAM_MESSAGE_UPDATE_TLENGTH:
 
             s->buffer_attr.tlength = (uint32_t) offset;
 
-            t = pa_tagstruct_new(NULL, 0);
-            pa_tagstruct_putu32(t, PA_COMMAND_PLAYBACK_BUFFER_ATTR_CHANGED);
-            pa_tagstruct_putu32(t, (uint32_t) -1); /* tag */
-            pa_tagstruct_putu32(t, s->index);
-            pa_tagstruct_putu32(t, s->buffer_attr.maxlength);
-            pa_tagstruct_putu32(t, s->buffer_attr.tlength);
-            pa_tagstruct_putu32(t, s->buffer_attr.prebuf);
-            pa_tagstruct_putu32(t, s->buffer_attr.minreq);
-            pa_tagstruct_put_usec(t, s->configured_sink_latency);
-            pa_pstream_send_tagstruct(s->connection->pstream, t);
+            if (s->connection->version >= 15) {
+                pa_tagstruct *t;
+
+                t = pa_tagstruct_new(NULL, 0);
+                pa_tagstruct_putu32(t, PA_COMMAND_PLAYBACK_BUFFER_ATTR_CHANGED);
+                pa_tagstruct_putu32(t, (uint32_t) -1); /* tag */
+                pa_tagstruct_putu32(t, s->index);
+                pa_tagstruct_putu32(t, s->buffer_attr.maxlength);
+                pa_tagstruct_putu32(t, s->buffer_attr.tlength);
+                pa_tagstruct_putu32(t, s->buffer_attr.prebuf);
+                pa_tagstruct_putu32(t, s->buffer_attr.minreq);
+                pa_tagstruct_put_usec(t, s->configured_sink_latency);
+                pa_pstream_send_tagstruct(s->connection->pstream, t);
+            }
 
             break;
-        }
     }
 
     return 0;
@@ -1049,8 +1052,9 @@ static playback_stream* playback_stream_new(
     if (muted_set)
         pa_sink_input_new_data_set_muted(&data, muted);
     data.sync_base = ssync ? ssync->sink_input : NULL;
+    data.flags = flags;
 
-    *ret = -pa_sink_input_new(&sink_input, c->protocol->core, &data, flags);
+    *ret = -pa_sink_input_new(&sink_input, c->protocol->core, &data);
 
     pa_sink_input_new_data_done(&data);
 
@@ -1125,6 +1129,12 @@ static void playback_stream_request_bytes(playback_stream *s) {
 
     m = pa_memblockq_pop_missing(s->memblockq);
 
+    /* pa_log("request_bytes(%lu) (tlength=%lu minreq=%lu length=%lu)", */
+    /*        (unsigned long) m, */
+    /*        pa_memblockq_get_tlength(s->memblockq), */
+    /*        pa_memblockq_get_minreq(s->memblockq), */
+    /*        pa_memblockq_get_length(s->memblockq)); */
+
     if (m <= 0)
         return;
 
@@ -1137,7 +1147,6 @@ static void playback_stream_request_bytes(playback_stream *s) {
         (previous_missing < (int) minreq && previous_missing + (int) m >= (int) minreq))
         pa_asyncmsgq_post(pa_thread_mq_get()->outq, PA_MSGOBJECT(s), PLAYBACK_STREAM_MESSAGE_REQUEST_DATA, NULL, 0, NULL, NULL);
 }
-
 
 /* Called from main context */
 static void playback_stream_send_killed(playback_stream *p) {
@@ -1283,7 +1292,8 @@ static void handle_seek(playback_stream *s, int64_t indexw) {
 
             pa_log_debug("Requesting rewind due to end of underrun.");
             pa_sink_input_request_rewind(s->sink_input,
-                                         (size_t) (s->sink_input->thread_info.underrun_for == (size_t) -1 ? 0 : s->sink_input->thread_info.underrun_for),
+                                         (size_t) (s->sink_input->thread_info.underrun_for == (uint64_t) -1 ? 0 :
+                                                   s->sink_input->thread_info.underrun_for),
                                          FALSE, TRUE, FALSE);
         }
 
@@ -1340,7 +1350,9 @@ static int sink_input_process_msg(pa_msgobject *o, int code, void *userdata, int
 /*             pa_log("sink input post: %lu %lli", (unsigned long) chunk->length, (long long) windex); */
 
             if (pa_memblockq_push_align(s->memblockq, chunk) < 0) {
-                pa_log_warn("Failed to push data into queue");
+
+                if (pa_log_ratelimit())
+                    pa_log_warn("Failed to push data into queue");
                 pa_asyncmsgq_post(pa_thread_mq_get()->outq, PA_MSGOBJECT(s), PLAYBACK_STREAM_MESSAGE_OVERFLOW, NULL, 0, NULL, NULL);
                 pa_memblockq_seek(s->memblockq, (int64_t) chunk->length, PA_SEEK_RELATIVE, TRUE);
             }
@@ -1612,6 +1624,9 @@ static void sink_input_moving_cb(pa_sink_input *i, pa_sink *dest) {
     s = PLAYBACK_STREAM(i->userdata);
     playback_stream_assert_ref(s);
 
+    if (!dest)
+        return;
+
     fix_playback_buffer_attr(s);
     pa_memblockq_apply_attr(s->memblockq, &s->buffer_attr);
     pa_memblockq_get_attr(s->memblockq, &s->buffer_attr);
@@ -1747,6 +1762,9 @@ static void source_output_moving_cb(pa_source_output *o, pa_source *dest) {
     s = RECORD_STREAM(o->userdata);
     record_stream_assert_ref(s);
 
+    if (!dest)
+        return;
+
     fix_record_buffer_attr_pre(s);
     pa_memblockq_set_maxlength(s->memblockq, s->buffer_attr.maxlength);
     pa_memblockq_get_attr(s->memblockq, &s->buffer_attr);
@@ -1851,7 +1869,7 @@ static void command_create_playback_stream(pa_pdispatch *pd, uint32_t command, u
     }
 
     CHECK_VALIDITY(c->pstream, c->authorized, tag, PA_ERR_ACCESS);
-    CHECK_VALIDITY(c->pstream, !sink_name || pa_namereg_is_valid_name(sink_name), tag, PA_ERR_INVALID);
+    CHECK_VALIDITY(c->pstream, !sink_name || pa_namereg_is_valid_name_or_wildcard(sink_name, PA_NAMEREG_SINK), tag, PA_ERR_INVALID);
     CHECK_VALIDITY(c->pstream, sink_index == PA_INVALID_INDEX || !sink_name, tag, PA_ERR_INVALID);
     CHECK_VALIDITY(c->pstream, !sink_name || sink_index == PA_INVALID_INDEX, tag, PA_ERR_INVALID);
     CHECK_VALIDITY(c->pstream, pa_channel_map_valid(&map), tag, PA_ERR_INVALID);
@@ -1946,7 +1964,7 @@ static void command_create_playback_stream(pa_pdispatch *pd, uint32_t command, u
         (no_move ?  PA_SINK_INPUT_DONT_MOVE : 0) |
         (variable_rate ?  PA_SINK_INPUT_VARIABLE_RATE : 0) |
         (dont_inhibit_auto_suspend ? PA_SINK_INPUT_DONT_INHIBIT_AUTO_SUSPEND : 0) |
-        (fail_on_suspend ? PA_SINK_INPUT_FAIL_ON_SUSPEND : 0);
+        (fail_on_suspend ? PA_SINK_INPUT_NO_CREATE_ON_SUSPEND|PA_SINK_INPUT_KILL_ON_SUSPEND : 0);
 
     /* Only since protocol version 15 there's a seperate muted_set
      * flag. For older versions we synthesize it here */
@@ -2100,7 +2118,7 @@ static void command_create_record_stream(pa_pdispatch *pd, uint32_t command, uin
     }
 
     CHECK_VALIDITY(c->pstream, c->authorized, tag, PA_ERR_ACCESS);
-    CHECK_VALIDITY(c->pstream, !source_name || pa_namereg_is_valid_name(source_name), tag, PA_ERR_INVALID);
+    CHECK_VALIDITY(c->pstream, !source_name || pa_namereg_is_valid_name_or_wildcard(source_name, PA_NAMEREG_SOURCE), tag, PA_ERR_INVALID);
     CHECK_VALIDITY(c->pstream, source_index == PA_INVALID_INDEX || !source_name, tag, PA_ERR_INVALID);
     CHECK_VALIDITY(c->pstream, !source_name || source_index == PA_INVALID_INDEX, tag, PA_ERR_INVALID);
     CHECK_VALIDITY(c->pstream, pa_sample_spec_valid(&ss), tag, PA_ERR_INVALID);
@@ -2202,7 +2220,7 @@ static void command_create_record_stream(pa_pdispatch *pd, uint32_t command, uin
         (no_move ?  PA_SOURCE_OUTPUT_DONT_MOVE : 0) |
         (variable_rate ?  PA_SOURCE_OUTPUT_VARIABLE_RATE : 0) |
         (dont_inhibit_auto_suspend ? PA_SOURCE_OUTPUT_DONT_INHIBIT_AUTO_SUSPEND : 0) |
-        (fail_on_suspend ? PA_SOURCE_OUTPUT_FAIL_ON_SUSPEND : 0);
+        (fail_on_suspend ? PA_SOURCE_OUTPUT_NO_CREATE_ON_SUSPEND|PA_SOURCE_OUTPUT_KILL_ON_SUSPEND : 0);
 
     s = record_stream_new(c, source, &ss, &map, peak_detect, &attr, flags, p, adjust_latency, direct_on_input, early_requests, &ret);
     pa_proplist_free(p);
@@ -2256,6 +2274,8 @@ static void command_exit(pa_pdispatch *pd, uint32_t command, uint32_t tag, pa_ta
     CHECK_VALIDITY(c->pstream, c->authorized, tag, PA_ERR_ACCESS);
     ret = pa_core_exit(c->protocol->core, FALSE, 0);
     CHECK_VALIDITY(c->pstream, ret >= 0, tag, PA_ERR_ACCESS);
+
+    pa_log_debug("Client %s asks us to terminate.", pa_strnull(pa_proplist_gets(c->client->proplist, PA_PROP_APPLICATION_PROCESS_BINARY)));
 
     pa_pstream_send_simple_ack(c->pstream, tag); /* nonsense */
 }
@@ -2446,7 +2466,7 @@ static void command_lookup(pa_pdispatch *pd, uint32_t command, uint32_t tag, pa_
     }
 
     CHECK_VALIDITY(c->pstream, c->authorized, tag, PA_ERR_ACCESS);
-    CHECK_VALIDITY(c->pstream, name && pa_namereg_is_valid_name(name), tag, PA_ERR_INVALID);
+    CHECK_VALIDITY(c->pstream, name && pa_namereg_is_valid_name_or_wildcard(name, command == PA_COMMAND_LOOKUP_SINK ? PA_NAMEREG_SINK : PA_NAMEREG_SOURCE), tag, PA_ERR_INVALID);
 
     if (command == PA_COMMAND_LOOKUP_SINK) {
         pa_sink *sink;
@@ -2545,7 +2565,7 @@ static void command_get_playback_latency(pa_pdispatch *pd, uint32_t command, uin
     reply = reply_new(tag);
     pa_tagstruct_put_usec(reply,
                           s->current_sink_latency +
-                          pa_bytes_to_usec(s->render_memblockq_length, &s->sink_input->sample_spec));
+                          pa_bytes_to_usec(s->render_memblockq_length, &s->sink_input->sink->sample_spec));
     pa_tagstruct_put_usec(reply, 0);
     pa_tagstruct_put_boolean(reply,
                              s->playing_for > 0 &&
@@ -2684,7 +2704,9 @@ static void command_finish_upload_stream(pa_pdispatch *pd, uint32_t command, uin
     CHECK_VALIDITY(c->pstream, s, tag, PA_ERR_NOENTITY);
     CHECK_VALIDITY(c->pstream, upload_stream_isinstance(s), tag, PA_ERR_NOENTITY);
 
-    if (pa_scache_add_item(c->protocol->core, s->name, &s->sample_spec, &s->channel_map, &s->memchunk, s->proplist, &idx) < 0)
+    if (!s->memchunk.memblock)
+        pa_pstream_send_error(c->pstream, tag, PA_ERR_TOOLARGE);
+    else if (pa_scache_add_item(c->protocol->core, s->name, &s->sample_spec, &s->channel_map, &s->memchunk, s->proplist, &idx) < 0)
         pa_pstream_send_error(c->pstream, tag, PA_ERR_INTERNAL);
     else
         pa_pstream_send_simple_ack(c->pstream, tag);
@@ -2715,7 +2737,7 @@ static void command_play_sample(pa_pdispatch *pd, uint32_t command, uint32_t tag
         return;
     }
 
-    CHECK_VALIDITY(c->pstream, !sink_name || pa_namereg_is_valid_name(sink_name), tag, PA_ERR_INVALID);
+    CHECK_VALIDITY(c->pstream, !sink_name || pa_namereg_is_valid_name_or_wildcard(sink_name, PA_NAMEREG_SINK), tag, PA_ERR_INVALID);
     CHECK_VALIDITY(c->pstream, sink_index == PA_INVALID_INDEX || !sink_name, tag, PA_ERR_INVALID);
     CHECK_VALIDITY(c->pstream, !sink_name || sink_index == PA_INVALID_INDEX, tag, PA_ERR_INVALID);
     CHECK_VALIDITY(c->pstream, name && pa_namereg_is_valid_name(name), tag, PA_ERR_INVALID);
@@ -2819,7 +2841,7 @@ static void sink_fill_tagstruct(pa_native_connection *c, pa_tagstruct *t, pa_sin
         PA_TAG_SAMPLE_SPEC, &fixed_ss,
         PA_TAG_CHANNEL_MAP, &sink->channel_map,
         PA_TAG_U32, sink->module ? sink->module->index : PA_INVALID_INDEX,
-        PA_TAG_CVOLUME, pa_sink_get_volume(sink, FALSE, FALSE),
+        PA_TAG_CVOLUME, pa_sink_get_volume(sink, FALSE),
         PA_TAG_BOOLEAN, pa_sink_get_mute(sink, FALSE),
         PA_TAG_U32, sink->monitor_source ? sink->monitor_source->index : PA_INVALID_INDEX,
         PA_TAG_STRING, sink->monitor_source ? sink->monitor_source->name : NULL,
@@ -2840,6 +2862,23 @@ static void sink_fill_tagstruct(pa_native_connection *c, pa_tagstruct *t, pa_sin
         pa_tagstruct_putu32(t, pa_sink_get_state(sink));
         pa_tagstruct_putu32(t, sink->n_volume_steps);
         pa_tagstruct_putu32(t, sink->card ? sink->card->index : PA_INVALID_INDEX);
+    }
+
+    if (c->version >= 16) {
+        pa_tagstruct_putu32(t, sink->ports ? pa_hashmap_size(sink->ports) : 0);
+
+        if (sink->ports) {
+            void *state;
+            pa_device_port *p;
+
+            PA_HASHMAP_FOREACH(p, sink->ports, state) {
+                pa_tagstruct_puts(t, p->name);
+                pa_tagstruct_puts(t, p->description);
+                pa_tagstruct_putu32(t, p->priority);
+            }
+        }
+
+        pa_tagstruct_puts(t, sink->active_port ? sink->active_port->name : NULL);
     }
 }
 
@@ -2880,6 +2919,24 @@ static void source_fill_tagstruct(pa_native_connection *c, pa_tagstruct *t, pa_s
         pa_tagstruct_putu32(t, pa_source_get_state(source));
         pa_tagstruct_putu32(t, source->n_volume_steps);
         pa_tagstruct_putu32(t, source->card ? source->card->index : PA_INVALID_INDEX);
+    }
+
+    if (c->version >= 16) {
+
+        pa_tagstruct_putu32(t, source->ports ? pa_hashmap_size(source->ports) : 0);
+
+        if (source->ports) {
+            void *state;
+            pa_device_port *p;
+
+            PA_HASHMAP_FOREACH(p, source->ports, state) {
+                pa_tagstruct_puts(t, p->name);
+                pa_tagstruct_puts(t, p->description);
+                pa_tagstruct_putu32(t, p->priority);
+            }
+        }
+
+        pa_tagstruct_puts(t, source->active_port ? source->active_port->name : NULL);
     }
 }
 
@@ -3054,7 +3111,12 @@ static void command_get_info(pa_pdispatch *pd, uint32_t command, uint32_t tag, p
     }
 
     CHECK_VALIDITY(c->pstream, c->authorized, tag, PA_ERR_ACCESS);
-    CHECK_VALIDITY(c->pstream, !name || pa_namereg_is_valid_name(name), tag, PA_ERR_INVALID);
+    CHECK_VALIDITY(c->pstream, !name ||
+                   (command == PA_COMMAND_GET_SINK_INFO &&
+                    pa_namereg_is_valid_name_or_wildcard(name, PA_NAMEREG_SINK)) ||
+                   (command == PA_COMMAND_GET_SOURCE_INFO &&
+                    pa_namereg_is_valid_name_or_wildcard(name, PA_NAMEREG_SOURCE)) ||
+                   pa_namereg_is_valid_name(name), tag, PA_ERR_INVALID);
     CHECK_VALIDITY(c->pstream, idx != PA_INVALID_INDEX || name, tag, PA_ERR_INVALID);
     CHECK_VALIDITY(c->pstream, idx == PA_INVALID_INDEX || !name, tag, PA_ERR_INVALID);
     CHECK_VALIDITY(c->pstream, !name || idx == PA_INVALID_INDEX, tag, PA_ERR_INVALID);
@@ -3182,10 +3244,10 @@ static void command_get_info_list(pa_pdispatch *pd, uint32_t command, uint32_t t
 static void command_get_server_info(pa_pdispatch *pd, uint32_t command, uint32_t tag, pa_tagstruct *t, void *userdata) {
     pa_native_connection *c = PA_NATIVE_CONNECTION(userdata);
     pa_tagstruct *reply;
-    char txt[256];
     pa_sink *def_sink;
     pa_source *def_source;
     pa_sample_spec fixed_ss;
+    char *h, *u;
 
     pa_native_connection_assert_ref(c);
     pa_assert(t);
@@ -3200,8 +3262,14 @@ static void command_get_server_info(pa_pdispatch *pd, uint32_t command, uint32_t
     reply = reply_new(tag);
     pa_tagstruct_puts(reply, PACKAGE_NAME);
     pa_tagstruct_puts(reply, PACKAGE_VERSION);
-    pa_tagstruct_puts(reply, pa_get_user_name(txt, sizeof(txt)));
-    pa_tagstruct_puts(reply, pa_get_host_name(txt, sizeof(txt)));
+
+    u = pa_get_user_name_malloc();
+    pa_tagstruct_puts(reply, u);
+    pa_xfree(u);
+
+    h = pa_get_host_name_malloc();
+    pa_tagstruct_puts(reply, h);
+    pa_xfree(h);
 
     fixup_sample_spec(c, &fixed_ss, &c->protocol->core->default_sample_spec);
     pa_tagstruct_put_sample_spec(reply, &fixed_ss);
@@ -3275,6 +3343,7 @@ static void command_set_volume(
     pa_source *source = NULL;
     pa_sink_input *si = NULL;
     const char *name = NULL;
+    const char *client_name;
 
     pa_native_connection_assert_ref(c);
     pa_assert(t);
@@ -3289,7 +3358,7 @@ static void command_set_volume(
     }
 
     CHECK_VALIDITY(c->pstream, c->authorized, tag, PA_ERR_ACCESS);
-    CHECK_VALIDITY(c->pstream, !name || pa_namereg_is_valid_name(name), tag, PA_ERR_INVALID);
+    CHECK_VALIDITY(c->pstream, !name || pa_namereg_is_valid_name_or_wildcard(name, command == PA_COMMAND_SET_SINK_VOLUME ? PA_NAMEREG_SINK : PA_NAMEREG_SOURCE), tag, PA_ERR_INVALID);
     CHECK_VALIDITY(c->pstream, idx != PA_INVALID_INDEX || name, tag, PA_ERR_INVALID);
     CHECK_VALIDITY(c->pstream, idx == PA_INVALID_INDEX || !name, tag, PA_ERR_INVALID);
     CHECK_VALIDITY(c->pstream, !name || idx == PA_INVALID_INDEX, tag, PA_ERR_INVALID);
@@ -3321,12 +3390,26 @@ static void command_set_volume(
 
     CHECK_VALIDITY(c->pstream, si || sink || source, tag, PA_ERR_NOENTITY);
 
-    if (sink)
-        pa_sink_set_volume(sink, &volume, TRUE, TRUE, TRUE);
-    else if (source)
-        pa_source_set_volume(source, &volume);
-    else if (si)
+    client_name = pa_strnull(pa_proplist_gets(c->client->proplist, PA_PROP_APPLICATION_PROCESS_BINARY));
+
+    if (sink) {
+        CHECK_VALIDITY(c->pstream, volume.channels == 1 || pa_cvolume_compatible(&volume, &sink->sample_spec), tag, PA_ERR_INVALID);
+
+        pa_log_debug("Client %s changes volume of sink %s.", client_name, sink->name);
+        pa_sink_set_volume(sink, &volume, TRUE, TRUE);
+    } else if (source) {
+        CHECK_VALIDITY(c->pstream, volume.channels == 1 || pa_cvolume_compatible(&volume, &source->sample_spec), tag, PA_ERR_INVALID);
+
+        pa_log_debug("Client %s changes volume of source %s.", client_name, source->name);
+        pa_source_set_volume(source, &volume, TRUE);
+    } else if (si) {
+        CHECK_VALIDITY(c->pstream, volume.channels == 1 || pa_cvolume_compatible(&volume, &si->sample_spec), tag, PA_ERR_INVALID);
+
+        pa_log_debug("Client %s changes volume of sink input %s.",
+                     client_name,
+                     pa_strnull(pa_proplist_gets(si->proplist, PA_PROP_MEDIA_NAME)));
         pa_sink_input_set_volume(si, &volume, TRUE, TRUE);
+    }
 
     pa_pstream_send_simple_ack(c->pstream, tag);
 }
@@ -3344,7 +3427,7 @@ static void command_set_mute(
     pa_sink *sink = NULL;
     pa_source *source = NULL;
     pa_sink_input *si = NULL;
-    const char *name = NULL;
+    const char *name = NULL, *client_name;
 
     pa_native_connection_assert_ref(c);
     pa_assert(t);
@@ -3359,7 +3442,7 @@ static void command_set_mute(
     }
 
     CHECK_VALIDITY(c->pstream, c->authorized, tag, PA_ERR_ACCESS);
-    CHECK_VALIDITY(c->pstream, !name || pa_namereg_is_valid_name(name), tag, PA_ERR_INVALID);
+    CHECK_VALIDITY(c->pstream, !name || pa_namereg_is_valid_name_or_wildcard(name, command == PA_COMMAND_SET_SINK_MUTE ? PA_NAMEREG_SINK : PA_NAMEREG_SOURCE), tag, PA_ERR_INVALID);
     CHECK_VALIDITY(c->pstream, idx != PA_INVALID_INDEX || name, tag, PA_ERR_INVALID);
     CHECK_VALIDITY(c->pstream, idx == PA_INVALID_INDEX || !name, tag, PA_ERR_INVALID);
     CHECK_VALIDITY(c->pstream, !name || idx == PA_INVALID_INDEX, tag, PA_ERR_INVALID);
@@ -3367,7 +3450,6 @@ static void command_set_mute(
     switch (command) {
 
         case PA_COMMAND_SET_SINK_MUTE:
-
             if (idx != PA_INVALID_INDEX)
                 sink = pa_idxset_get_by_index(c->protocol->core->sinks, idx);
             else
@@ -3393,12 +3475,20 @@ static void command_set_mute(
 
     CHECK_VALIDITY(c->pstream, si || sink || source, tag, PA_ERR_NOENTITY);
 
-    if (sink)
-        pa_sink_set_mute(sink, mute);
-    else if (source)
-        pa_source_set_mute(source, mute);
-    else if (si)
+    client_name = pa_strnull(pa_proplist_gets(c->client->proplist, PA_PROP_APPLICATION_PROCESS_BINARY));
+
+    if (sink) {
+        pa_log_debug("Client %s changes mute of sink %s.", client_name, sink->name);
+        pa_sink_set_mute(sink, mute, TRUE);
+    } else if (source) {
+        pa_log_debug("Client %s changes mute of source %s.", client_name, source->name);
+        pa_source_set_mute(source, mute, TRUE);
+    } else if (si) {
+        pa_log_debug("Client %s changes mute of sink input %s.",
+                     client_name,
+                     pa_strnull(pa_proplist_gets(si->proplist, PA_PROP_MEDIA_NAME)));
         pa_sink_input_set_mute(si, mute, TRUE);
+    }
 
     pa_pstream_send_simple_ack(c->pstream, tag);
 }
@@ -4017,7 +4107,7 @@ static void command_move_stream(pa_pdispatch *pd, uint32_t command, uint32_t tag
     CHECK_VALIDITY(c->pstream, c->authorized, tag, PA_ERR_ACCESS);
     CHECK_VALIDITY(c->pstream, idx != PA_INVALID_INDEX, tag, PA_ERR_INVALID);
 
-    CHECK_VALIDITY(c->pstream, !name_device || pa_namereg_is_valid_name(name_device), tag, PA_ERR_INVALID);
+    CHECK_VALIDITY(c->pstream, !name_device || pa_namereg_is_valid_name_or_wildcard(name_device, command == PA_COMMAND_MOVE_SINK_INPUT ? PA_NAMEREG_SINK : PA_NAMEREG_SOURCE), tag, PA_ERR_INVALID);
     CHECK_VALIDITY(c->pstream, idx_device != PA_INVALID_INDEX || name_device, tag, PA_ERR_INVALID);
     CHECK_VALIDITY(c->pstream, idx_device == PA_INVALID_INDEX || !name_device, tag, PA_ERR_INVALID);
     CHECK_VALIDITY(c->pstream, !name_device || idx_device == PA_INVALID_INDEX, tag, PA_ERR_INVALID);
@@ -4081,7 +4171,7 @@ static void command_suspend(pa_pdispatch *pd, uint32_t command, uint32_t tag, pa
     }
 
     CHECK_VALIDITY(c->pstream, c->authorized, tag, PA_ERR_ACCESS);
-    CHECK_VALIDITY(c->pstream, !name || pa_namereg_is_valid_name(name) || *name == 0, tag, PA_ERR_INVALID);
+    CHECK_VALIDITY(c->pstream, !name || pa_namereg_is_valid_name_or_wildcard(name, command == PA_COMMAND_SUSPEND_SINK ? PA_NAMEREG_SINK : PA_NAMEREG_SOURCE) || *name == 0, tag, PA_ERR_INVALID);
     CHECK_VALIDITY(c->pstream, idx != PA_INVALID_INDEX || name, tag, PA_ERR_INVALID);
     CHECK_VALIDITY(c->pstream, idx == PA_INVALID_INDEX || !name, tag, PA_ERR_INVALID);
     CHECK_VALIDITY(c->pstream, !name || idx == PA_INVALID_INDEX, tag, PA_ERR_INVALID);
@@ -4092,7 +4182,7 @@ static void command_suspend(pa_pdispatch *pd, uint32_t command, uint32_t tag, pa
 
             pa_log_debug("%s all sinks", b ? "Suspending" : "Resuming");
 
-            if (pa_sink_suspend_all(c->protocol->core, b) < 0) {
+            if (pa_sink_suspend_all(c->protocol->core, b, PA_SUSPEND_USER) < 0) {
                 pa_pstream_send_error(c->pstream, tag, PA_ERR_INVALID);
                 return;
             }
@@ -4106,7 +4196,7 @@ static void command_suspend(pa_pdispatch *pd, uint32_t command, uint32_t tag, pa
 
             CHECK_VALIDITY(c->pstream, sink, tag, PA_ERR_NOENTITY);
 
-            if (pa_sink_suspend(sink, b) < 0) {
+            if (pa_sink_suspend(sink, b, PA_SUSPEND_USER) < 0) {
                 pa_pstream_send_error(c->pstream, tag, PA_ERR_INVALID);
                 return;
             }
@@ -4119,7 +4209,7 @@ static void command_suspend(pa_pdispatch *pd, uint32_t command, uint32_t tag, pa
 
             pa_log_debug("%s all sources", b ? "Suspending" : "Resuming");
 
-            if (pa_source_suspend_all(c->protocol->core, b) < 0) {
+            if (pa_source_suspend_all(c->protocol->core, b, PA_SUSPEND_USER) < 0) {
                 pa_pstream_send_error(c->pstream, tag, PA_ERR_INVALID);
                 return;
             }
@@ -4134,7 +4224,7 @@ static void command_suspend(pa_pdispatch *pd, uint32_t command, uint32_t tag, pa
 
             CHECK_VALIDITY(c->pstream, source, tag, PA_ERR_NOENTITY);
 
-            if (pa_source_suspend(source, b) < 0) {
+            if (pa_source_suspend(source, b, PA_SUSPEND_USER) < 0) {
                 pa_pstream_send_error(c->pstream, tag, PA_ERR_INVALID);
                 return;
             }
@@ -4189,6 +4279,7 @@ static void command_set_card_profile(pa_pdispatch *pd, uint32_t command, uint32_
     uint32_t idx = PA_INVALID_INDEX;
     const char *name = NULL, *profile = NULL;
     pa_card *card = NULL;
+    int ret;
 
     pa_native_connection_assert_ref(c);
     pa_assert(t);
@@ -4214,9 +4305,67 @@ static void command_set_card_profile(pa_pdispatch *pd, uint32_t command, uint32_
 
     CHECK_VALIDITY(c->pstream, card, tag, PA_ERR_NOENTITY);
 
-    if (pa_card_set_profile(card, profile, TRUE) < 0) {
-        pa_pstream_send_error(c->pstream, tag, PA_ERR_INVALID);
+    if ((ret = pa_card_set_profile(card, profile, TRUE)) < 0) {
+        pa_pstream_send_error(c->pstream, tag, -ret);
         return;
+    }
+
+    pa_pstream_send_simple_ack(c->pstream, tag);
+}
+
+static void command_set_sink_or_source_port(pa_pdispatch *pd, uint32_t command, uint32_t tag, pa_tagstruct *t, void *userdata) {
+    pa_native_connection *c = PA_NATIVE_CONNECTION(userdata);
+    uint32_t idx = PA_INVALID_INDEX;
+    const char *name = NULL, *port = NULL;
+    int ret;
+
+    pa_native_connection_assert_ref(c);
+    pa_assert(t);
+
+    if (pa_tagstruct_getu32(t, &idx) < 0 ||
+        pa_tagstruct_gets(t, &name) < 0 ||
+        pa_tagstruct_gets(t, &port) < 0 ||
+        !pa_tagstruct_eof(t)) {
+        protocol_error(c);
+        return;
+    }
+
+    CHECK_VALIDITY(c->pstream, c->authorized, tag, PA_ERR_ACCESS);
+    CHECK_VALIDITY(c->pstream, !name || pa_namereg_is_valid_name_or_wildcard(name, command == PA_COMMAND_SET_SINK_PORT ? PA_NAMEREG_SINK : PA_NAMEREG_SOURCE), tag, PA_ERR_INVALID);
+    CHECK_VALIDITY(c->pstream, idx != PA_INVALID_INDEX || name, tag, PA_ERR_INVALID);
+    CHECK_VALIDITY(c->pstream, idx == PA_INVALID_INDEX || !name, tag, PA_ERR_INVALID);
+    CHECK_VALIDITY(c->pstream, !name || idx == PA_INVALID_INDEX, tag, PA_ERR_INVALID);
+
+    if (command == PA_COMMAND_SET_SINK_PORT) {
+        pa_sink *sink;
+
+        if (idx != PA_INVALID_INDEX)
+            sink = pa_idxset_get_by_index(c->protocol->core->sinks, idx);
+        else
+            sink = pa_namereg_get(c->protocol->core, name, PA_NAMEREG_SINK);
+
+        CHECK_VALIDITY(c->pstream, sink, tag, PA_ERR_NOENTITY);
+
+        if ((ret = pa_sink_set_port(sink, port, TRUE)) < 0) {
+            pa_pstream_send_error(c->pstream, tag, -ret);
+            return;
+        }
+    } else {
+        pa_source *source;
+
+        pa_assert(command = PA_COMMAND_SET_SOURCE_PORT);
+
+        if (idx != PA_INVALID_INDEX)
+            source = pa_idxset_get_by_index(c->protocol->core->sources, idx);
+        else
+            source = pa_namereg_get(c->protocol->core, name, PA_NAMEREG_SOURCE);
+
+        CHECK_VALIDITY(c->pstream, source, tag, PA_ERR_NOENTITY);
+
+        if ((ret = pa_source_set_port(source, port, TRUE)) < 0) {
+            pa_pstream_send_error(c->pstream, tag, -ret);
+            return;
+        }
     }
 
     pa_pstream_send_simple_ack(c->pstream, tag);
@@ -4375,11 +4524,10 @@ static void client_send_event_cb(pa_client *client, const char*event, pa_proplis
 
 /*** module entry points ***/
 
-static void auth_timeout(pa_mainloop_api*m, pa_time_event *e, const struct timeval *tv, void *userdata) {
+static void auth_timeout(pa_mainloop_api*m, pa_time_event *e, const struct timeval *t, void *userdata) {
     pa_native_connection *c = PA_NATIVE_CONNECTION(userdata);
 
     pa_assert(m);
-    pa_assert(tv);
     pa_native_connection_assert_ref(c);
     pa_assert(c->auth_timeout_event == e);
 
@@ -4437,12 +4585,9 @@ void pa_native_protocol_connect(pa_native_protocol *p, pa_iochannel *io, pa_nati
         c->authorized = TRUE;
     }
 
-    if (!c->authorized) {
-        struct timeval tv;
-        pa_gettimeofday(&tv);
-        tv.tv_sec += AUTH_TIMEOUT;
-        c->auth_timeout_event = p->core->mainloop->time_new(p->core->mainloop, &tv, auth_timeout, c);
-    } else
+    if (!c->authorized)
+        c->auth_timeout_event = pa_core_rttime_new(p->core, pa_rtclock_now() + AUTH_TIMEOUT, auth_timeout, c);
+    else
         c->auth_timeout_event = NULL;
 
     c->is_local = pa_iochannel_socket_is_local(io);
@@ -4461,7 +4606,7 @@ void pa_native_protocol_connect(pa_native_protocol *p, pa_iochannel *io, pa_nati
     pa_pstream_set_revoke_callback(c->pstream, pstream_revoke_callback, c);
     pa_pstream_set_release_callback(c->pstream, pstream_release_callback, c);
 
-    c->pdispatch = pa_pdispatch_new(p->core->mainloop, command_table, PA_COMMAND_MAX);
+    c->pdispatch = pa_pdispatch_new(p->core->mainloop, TRUE, command_table, PA_COMMAND_MAX);
 
     c->record_streams = pa_idxset_new(NULL, NULL);
     c->output_streams = pa_idxset_new(NULL, NULL);
@@ -4720,4 +4865,10 @@ pa_pstream* pa_native_connection_get_pstream(pa_native_connection *c) {
     pa_native_connection_assert_ref(c);
 
     return c->pstream;
+}
+
+pa_client* pa_native_connection_get_client(pa_native_connection *c) {
+   pa_native_connection_assert_ref(c);
+
+   return c->client;
 }

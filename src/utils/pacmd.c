@@ -25,7 +25,7 @@
 
 #include <assert.h>
 #include <signal.h>
-#include <sys/select.h>
+#include <sys/poll.h>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <errno.h>
@@ -38,11 +38,20 @@
 #include <pulse/xmalloc.h>
 #include <pulse/i18n.h>
 
+#include <pulsecore/macro.h>
 #include <pulsecore/core-util.h>
 #include <pulsecore/log.h>
 #include <pulsecore/pid.h>
 
 int main(int argc, char*argv[]) {
+
+    enum {
+        WATCH_STDIN,
+        WATCH_STDOUT,
+        WATCH_SOCKET,
+        N_WATCH
+    };
+
     pid_t pid ;
     int fd = -1;
     int ret = 1, i;
@@ -51,12 +60,13 @@ int main(int argc, char*argv[]) {
     size_t ibuf_index, ibuf_length, obuf_index, obuf_length;
     char *cli;
     pa_bool_t ibuf_eof, obuf_eof, ibuf_closed, obuf_closed;
+    struct pollfd pollfd[N_WATCH];
 
     setlocale(LC_ALL, "");
     bindtextdomain(GETTEXT_PACKAGE, PULSE_LOCALEDIR);
 
     if (pa_pid_file_check_running(&pid, "pulseaudio") < 0) {
-        pa_log("No PulseAudio daemon running, or not running as session daemon.");
+        pa_log(_("No PulseAudio daemon running, or not running as session daemon."));
         goto fail;
     }
 
@@ -65,7 +75,7 @@ int main(int argc, char*argv[]) {
         goto fail;
     }
 
-    memset(&sa, 0, sizeof(sa));
+    pa_zero(sa);
     sa.sun_family = AF_UNIX;
 
     if (!(cli = pa_runtime_path("cli")))
@@ -106,7 +116,7 @@ int main(int argc, char*argv[]) {
             size_t k;
 
             k = PA_MIN(sizeof(ibuf) - ibuf_length, strlen(argv[i]));
-            memcpy(ibuf + ibuf_length, argv[1], k);
+            memcpy(ibuf + ibuf_length, argv[i], k);
             ibuf_length += k;
 
             if (ibuf_length < sizeof(ibuf)) {
@@ -118,38 +128,45 @@ int main(int argc, char*argv[]) {
         ibuf_eof = TRUE;
     }
 
-    for (;;) {
-        fd_set ifds, ofds;
+    pa_zero(pollfd);
 
+    pollfd[WATCH_STDIN].fd = STDIN_FILENO;
+    pollfd[WATCH_STDOUT].fd = STDOUT_FILENO;
+    pollfd[WATCH_SOCKET].fd = fd;
+
+    for (;;) {
         if (ibuf_eof &&
             obuf_eof &&
             ibuf_length <= 0 &&
             obuf_length <= 0)
             break;
 
-        FD_ZERO(&ifds);
-        FD_ZERO(&ofds);
+        pollfd[WATCH_STDIN].events = pollfd[WATCH_STDOUT].events = pollfd[WATCH_SOCKET].events = 0;
 
         if (obuf_length > 0)
-            FD_SET(1, &ofds);
+            pollfd[WATCH_STDOUT].events |= POLLOUT;
         else if (!obuf_eof)
-            FD_SET(fd, &ifds);
+            pollfd[WATCH_SOCKET].events |= POLLIN;
 
         if (ibuf_length > 0)
-            FD_SET(fd, &ofds);
+            pollfd[WATCH_SOCKET].events |= POLLOUT;
         else if (!ibuf_eof)
-            FD_SET(0, &ifds);
+            pollfd[WATCH_STDIN].events |= POLLIN;
 
-        if (select(FD_SETSIZE, &ifds, &ofds, NULL, NULL) < 0) {
-            pa_log(_("select(): %s"), strerror(errno));
+        if (poll(pollfd, N_WATCH, -1) < 0) {
+
+            if (errno == EINTR)
+                continue;
+
+            pa_log(_("poll(): %s"), strerror(errno));
             goto fail;
         }
 
-        if (FD_ISSET(0, &ifds)) {
+        if (pollfd[WATCH_STDIN].revents & POLLIN) {
             ssize_t r;
-            assert(!ibuf_length);
+            pa_assert(!ibuf_length);
 
-            if ((r = read(0, ibuf, sizeof(ibuf))) <= 0) {
+            if ((r = pa_read(STDIN_FILENO, ibuf, sizeof(ibuf), NULL)) <= 0) {
                 if (r < 0) {
                     pa_log(_("read(): %s"), strerror(errno));
                     goto fail;
@@ -162,11 +179,11 @@ int main(int argc, char*argv[]) {
             }
         }
 
-        if (FD_ISSET(fd, &ifds)) {
+        if (pollfd[WATCH_SOCKET].revents & POLLIN) {
             ssize_t r;
-            assert(!obuf_length);
+            pa_assert(!obuf_length);
 
-            if ((r = read(fd, obuf, sizeof(obuf))) <= 0) {
+            if ((r = pa_read(fd, obuf, sizeof(obuf), NULL)) <= 0) {
                 if (r < 0) {
                     pa_log(_("read(): %s"), strerror(errno));
                     goto fail;
@@ -179,25 +196,30 @@ int main(int argc, char*argv[]) {
             }
         }
 
-        if (FD_ISSET(1, &ofds)) {
+        if (pollfd[WATCH_STDOUT].revents & POLLHUP) {
+            obuf_eof = TRUE;
+            obuf_length = 0;
+        } else if (pollfd[WATCH_STDOUT].revents & POLLOUT) {
             ssize_t r;
-            assert(obuf_length);
+            pa_assert(obuf_length);
 
-            if ((r = write(1, obuf + obuf_index, obuf_length)) < 0) {
+            if ((r = pa_write(STDOUT_FILENO, obuf + obuf_index, obuf_length, NULL)) < 0) {
                 pa_log(_("write(): %s"), strerror(errno));
                 goto fail;
             }
 
             obuf_length -= (size_t) r;
             obuf_index += obuf_index;
-
         }
 
-        if (FD_ISSET(fd, &ofds)) {
+        if (pollfd[WATCH_SOCKET].revents & POLLHUP) {
+            ibuf_eof = TRUE;
+            ibuf_length = 0;
+        } if (pollfd[WATCH_SOCKET].revents & POLLOUT) {
             ssize_t r;
-            assert(ibuf_length);
+            pa_assert(ibuf_length);
 
-            if ((r = write(fd, ibuf + ibuf_index, ibuf_length)) < 0) {
+            if ((r = pa_write(fd, ibuf + ibuf_index, ibuf_length, NULL)) < 0) {
                 pa_log(_("write(): %s"), strerror(errno));
                 goto fail;
             }
@@ -207,14 +229,14 @@ int main(int argc, char*argv[]) {
         }
 
         if (ibuf_length <= 0 && ibuf_eof && !ibuf_closed) {
-            close(0);
+            pa_close(STDIN_FILENO);
             shutdown(fd, SHUT_WR);
             ibuf_closed = TRUE;
         }
 
         if (obuf_length <= 0 && obuf_eof && !obuf_closed) {
             shutdown(fd, SHUT_RD);
-            close(1);
+            pa_close(STDOUT_FILENO);
             obuf_closed = TRUE;
         }
     }
