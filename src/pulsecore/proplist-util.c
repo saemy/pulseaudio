@@ -168,28 +168,30 @@ void pa_init_proplist(pa_proplist *p) {
     }
 
     if (!pa_proplist_contains(p, PA_PROP_APPLICATION_PROCESS_USER)) {
-        char t[64];
-        if (pa_get_user_name(t, sizeof(t))) {
-            char *c = pa_utf8_filter(t);
-            pa_proplist_sets(p, PA_PROP_APPLICATION_PROCESS_USER, c);
-            pa_xfree(c);
+        char *u;
+
+        if ((u = pa_get_user_name_malloc())) {
+            pa_proplist_sets(p, PA_PROP_APPLICATION_PROCESS_USER, u);
+            pa_xfree(u);
         }
     }
 
     if (!pa_proplist_contains(p, PA_PROP_APPLICATION_PROCESS_HOST)) {
-        char t[64];
-        if (pa_get_host_name(t, sizeof(t))) {
-            char *c = pa_utf8_filter(t);
-            pa_proplist_sets(p, PA_PROP_APPLICATION_PROCESS_HOST, c);
-            pa_xfree(c);
+        char *h;
+
+        if ((h = pa_get_host_name_malloc())) {
+            pa_proplist_sets(p, PA_PROP_APPLICATION_PROCESS_HOST, h);
+            pa_xfree(h);
         }
     }
 
     if (!pa_proplist_contains(p, PA_PROP_APPLICATION_PROCESS_BINARY)) {
-        char t[PATH_MAX];
-        if (pa_get_binary_name(t, sizeof(t))) {
+        char *t;
+
+        if ((t = pa_get_binary_name_malloc())) {
             char *c = pa_utf8_filter(t);
             pa_proplist_sets(p, PA_PROP_APPLICATION_PROCESS_BINARY, c);
+            pa_xfree(t);
             pa_xfree(c);
         }
     }

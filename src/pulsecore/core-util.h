@@ -80,9 +80,6 @@ int pa_make_realtime(int rtprio);
 int pa_raise_priority(int nice_level);
 void pa_reset_priority(void);
 
-pa_bool_t pa_can_realtime(void);
-pa_bool_t pa_can_high_priority(void);
-
 int pa_parse_boolean(const char *s) PA_GCC_PURE;
 
 static inline const char *pa_yes_no(pa_bool_t b) {
@@ -129,6 +126,8 @@ char* pa_find_config_file(const char *global, const char *local, const char *env
 
 char *pa_get_runtime_dir(void);
 char *pa_get_state_dir(void);
+char *pa_get_home_dir_malloc(void);
+char *pa_get_binary_name_malloc(void);
 char *pa_runtime_path(const char *fn);
 char *pa_state_path(const char *fn, pa_bool_t prepend_machine_id);
 
@@ -196,10 +195,15 @@ int pa_reset_sigs(int except, ...);
 int pa_reset_sigsv(const int except[]);
 
 void pa_set_env(const char *key, const char *value);
+void pa_set_env_and_record(const char *key, const char *value);
+void pa_unset_env_recorded(void);
 
 pa_bool_t pa_in_system_mode(void);
 
 #define pa_streq(a,b) (!strcmp((a),(b)))
+
+char *pa_get_host_name_malloc(void);
+char *pa_get_user_name_malloc(void);
 
 char *pa_machine_id(void);
 char *pa_session_id(void);
@@ -223,5 +227,26 @@ char *pa_replace(const char*s, const char*a, const char *b);
 char *pa_unescape(char *p);
 
 char *pa_realpath(const char *path);
+
+void pa_disable_sigpipe(void);
+
+void pa_xfreev(void**a);
+
+static inline void pa_xstrfreev(char **a) {
+    pa_xfreev((void**) a);
+}
+
+char **pa_split_spaces_strv(const char *s);
+
+char* pa_maybe_prefix_path(const char *path, const char *prefix);
+
+/* Returns size of the specified pipe or 4096 on failure */
+size_t pa_pipe_buf(int fd);
+
+void pa_reset_personality(void);
+
+#if defined(__linux__) && !defined(__OPTIMIZE__)
+pa_bool_t pa_run_from_build_tree(void);
+#endif
 
 #endif
