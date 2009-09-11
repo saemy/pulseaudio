@@ -1,3 +1,24 @@
+pulseaudio (1:0.9.16-0ubuntu1) karmic; urgency=low
+
+  [ Daniel T Chen ]
+  * debian/patches/0090-use-volume-ignore-for-analog-output.patch:
+    + Realign volume control behaviour with existing Ubuntu releases,
+      i.e., disable volume = merge and use volume = ignore for
+      analog output
+
+  [ Luke Yelavich ]
+  * New upstream release
+  * debian/patches/0057-introspect-version-fixes.patch (LP: #426210),
+    debian/patches/0056-alsa-rework.patch,
+    debian/patches/0055-llvm-clang-analyzer-fixes.patch,
+    0054-volume-libpulse-backported-fixes.patch,
+    0053-add-input-sources.patch,
+    debian/patches/0052-disable-cpu-limit.patch: Dropped, all applied upstream
+  * debian/patches/0051-reduce-lib-linking.patch: Drop, since we are not going
+    to be doing bi-arch pulseaudio packages for karmic
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Fri, 11 Sep 2009 09:24:39 +1000
+
 pulseaudio (1:0.9.16~test7-14-g7ca81-0ubuntu2) karmic; urgency=low
 
   * debian/control: Fix missing pulseaudio-module-rygel-media-server
