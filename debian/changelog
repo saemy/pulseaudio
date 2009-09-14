@@ -1,3 +1,14 @@
+pulseaudio (1:0.9.17-0ubuntu1) karmic; urgency=low
+
+  [ Daniel T Chen ]
+  * New upstream release
+
+  [ Luke Yelavich ]
+  * debian/rules: refer to the 0.9.17 directory
+  * bump shlibs
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Mon, 14 Sep 2009 10:01:24 +1000
+
 pulseaudio (1:0.9.16-0ubuntu1) karmic; urgency=low
 
   [ Daniel T Chen ]
