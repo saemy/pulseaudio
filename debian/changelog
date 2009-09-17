@@ -1,3 +1,16 @@
+pulseaudio (1:0.9.17-0ubuntu2) karmic; urgency=low
+
+  * debian/patches/:
+    + 0051-fix-sigfpe-mcalign.patch: Handle div by zero attempts
+      (LP: #412224)
+    + 0052-backport-56b6e18030.patch: Backport fixes from git HEAD
+      (56b6e18030b5a467946bd0a5803ec119efccdc8a)
+    + 0053-fix-output-element.patch: Fix misspelling of Surround
+    + 0054-mute-iec958-optical-raw-for-audigyX.patch: Mute
+      IEC958 Optical Raw by default (LP: #400629, #408370)
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Thu, 17 Sep 2009 19:57:15 -0400
+
 pulseaudio (1:0.9.17-0ubuntu1) karmic; urgency=low
 
   [ Daniel T Chen ]

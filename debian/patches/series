@@ -6,3 +6,7 @@
 0007-esd-honour-system-pulseaudio.patch
 0050-revert-pacmd-poll-argv.patch
 0090-use-volume-ignore-for-analog-output.patch
+0051-fix-sigfpe-mcalign.patch
+0052-backport-56b6e18030.patch
+0053-fix-output-element.patch
+0054-mute-iec958-optical-raw-for-audigyX.patch
