@@ -1,3 +1,9 @@
+pulseaudio (1:0.9.18-0ubuntu2) karmic; urgency=low
+
+  * Remove epoch again, fixes FTBFs.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Mon, 21 Sep 2009 11:12:00 +1000
+
 pulseaudio (1:0.9.18-0ubuntu1) karmic; urgency=low
 
   [ Daniel T Chen ]
