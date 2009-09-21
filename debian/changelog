@@ -1,3 +1,29 @@
+pulseaudio (1:0.9.18-0ubuntu1) karmic; urgency=low
+
+  [ Daniel T Chen ]
+  * New upstream bugfix release
+  * debian/patches/:
+    - 0052-backport-56b6e18030.patch: Drop
+    - 0053-fix-output-element.patch: Drop, applied upstream
+    - 0090-use-volume-ignore-for-analog-output.patch: Stop applying
+      this patch. Too many people are confused as to why PCM isn't
+      being changed when they adjust PA's volume.
+    + 0060-backport-c194d.patch: Backport fixes from 0.9.18-stable
+      branch (to changeset c194db71b0ff853b4f46df26e135edf63b215451)
+    + 0090-disable-flat-volumes.patch: Many people seem uncomfortable
+      with PA's new default volume adjustment routine, so disable it
+      in favour of the existing behaviour known in previous Ubuntu
+      releases. The downside is that the user again has many knobs to
+      fiddle; the upside is that applications can no longer drop the
+      volume floor. This addresses LP: #403859, #433209.
+
+  [ Luke Yelavich ]
+  * debian/pulse-alsa.conf: Expose the pulse device to the ALSA name hint API.
+    Thanks to David Henningsson <launchpad.web@epost.diwic.se> for the patch.
+  * Add epoch to shlibs version definitions.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Mon, 21 Sep 2009 10:28:25 +1000
+
 pulseaudio (1:0.9.17-0ubuntu2) karmic; urgency=low
 
   * debian/patches/:
