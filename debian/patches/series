@@ -10,3 +10,4 @@
 0054-mute-iec958-optical-raw-for-audigyX.patch
 0090-disable-flat-volumes.patch
 0060-backport-c194d.patch
+0052-revert-sse2-optimize.patch

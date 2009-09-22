@@ -1,3 +1,11 @@
+pulseaudio (1:0.9.18-0ubuntu3) karmic; urgency=low
+
+  * debian/patches/:
+    + 0052-revert-sse2-optimize.patch: Revert 3d5a57 causing audio
+      anomalies (LP: #428619)
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Tue, 22 Sep 2009 22:19:42 -0400
+
 pulseaudio (1:0.9.18-0ubuntu2) karmic; urgency=low
 
   * Remove epoch again, fixes FTBFs.
