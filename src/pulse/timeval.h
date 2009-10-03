@@ -40,20 +40,26 @@ PA_C_DECL_BEGIN
 #define PA_USEC_PER_SEC ((pa_usec_t) 1000000ULL)
 
 /** The number of nanoseconds in a second */
-#define PA_NSEC_PER_SEC ((pa_usec_t) 1000000000ULL)
+#define PA_NSEC_PER_SEC ((unsigned long long) 1000000000ULL)
 
 /** The number of microseconds in a millisecond */
 #define PA_USEC_PER_MSEC ((pa_usec_t) 1000ULL)
 
 /** The number of nanoseconds in a millisecond */
-#define PA_NSEC_PER_MSEC ((pa_usec_t) 1000000ULL)
+#define PA_NSEC_PER_MSEC ((unsigned long long) 1000000ULL)
 
 /** The number of nanoseconds in a microsecond */
-#define PA_NSEC_PER_USEC ((pa_usec_t) 1000ULL)
+#define PA_NSEC_PER_USEC ((unsigned long long) 1000ULL)
+
+/** Invalid time in usec. \since 0.9.15 */
+#define PA_USEC_INVALID ((pa_usec_t) -1)
+
+/** Biggest time in usec. \since 0.9.18 */
+#define PA_USEC_MAX ((pa_usec_t) -2)
 
 struct timeval;
 
-/** Return the current timestamp, just like UNIX gettimeofday() */
+/** Return the current wallclock timestamp, just like UNIX gettimeofday(). */
 struct timeval *pa_gettimeofday(struct timeval *tv);
 
 /** Calculate the difference between the two specified timeval

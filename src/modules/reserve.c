@@ -1,3 +1,5 @@
+/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: t -*-*/
+
 /***
   Copyright 2009 Lennart Poettering
 
@@ -43,15 +45,14 @@ struct rd_device {
 
 	DBusConnection *connection;
 
-	int owning:1;
-	int registered:1;
-	int filtering:1;
-	int gave_up:1;
+	unsigned owning:1;
+	unsigned registered:1;
+	unsigned filtering:1;
+	unsigned gave_up:1;
 
 	rd_request_cb_t request_cb;
 	void *userdata;
 };
-
 
 #define SERVICE_PREFIX "org.freedesktop.ReserveDevice1."
 #define OBJECT_PREFIX "/org/freedesktop/ReserveDevice1/"
@@ -290,13 +291,13 @@ static DBusHandlerResult filter_handler(
 	DBusMessage *m,
 	void *userdata) {
 
-	DBusMessage *reply;
 	rd_device *d;
 	DBusError error;
 
 	dbus_error_init(&error);
 
 	d = userdata;
+	assert(d->ref >= 1);
 
 	if (dbus_message_is_signal(m, "org.freedesktop.DBus", "NameLost")) {
 		const char *name;
@@ -321,35 +322,13 @@ static DBusHandlerResult filter_handler(
 				rd_release(d);
 			}
 
-			return DBUS_HANDLER_RESULT_HANDLED;
 		}
 	}
 
-	return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
-
 invalid:
-	if (!(reply = dbus_message_new_error(
-		      m,
-		      DBUS_ERROR_INVALID_ARGS,
-		      "Invalid arguments")))
-		goto oom;
-
-	if (!dbus_connection_send(c, reply, NULL))
-		goto oom;
-
-	dbus_message_unref(reply);
-
 	dbus_error_free(&error);
 
-	return DBUS_HANDLER_RESULT_HANDLED;
-
-oom:
-	if (reply)
-		dbus_message_unref(reply);
-
-	dbus_error_free(&error);
-
-	return DBUS_HANDLER_RESULT_NEED_MEMORY;
+	return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 }
 
 
@@ -560,7 +539,7 @@ void rd_release(
 
 	assert(d->ref > 0);
 
-	if (--d->ref)
+	if (--d->ref > 0)
 		return;
 
 
@@ -575,17 +554,11 @@ void rd_release(
 			d->connection,
 			d->object_path);
 
-	if (d->owning) {
-		DBusError error;
-		dbus_error_init(&error);
-
+	if (d->owning)
 		dbus_bus_release_name(
 			d->connection,
 			d->service_name,
-			&error);
-
-		dbus_error_free(&error);
-	}
+			NULL);
 
 	free(d->device_name);
 	free(d->application_name);

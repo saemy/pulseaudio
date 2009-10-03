@@ -125,6 +125,8 @@ static int pa_cli_command_update_source_proplist(pa_core *c, pa_tokenizer *t, pa
 static int pa_cli_command_update_sink_input_proplist(pa_core *c, pa_tokenizer *t, pa_strbuf *buf, pa_bool_t *fail);
 static int pa_cli_command_update_source_output_proplist(pa_core *c, pa_tokenizer *t, pa_strbuf *buf, pa_bool_t *fail);
 static int pa_cli_command_card_profile(pa_core *c, pa_tokenizer *t, pa_strbuf *buf, pa_bool_t *fail);
+static int pa_cli_command_sink_port(pa_core *c, pa_tokenizer *t, pa_strbuf *buf, pa_bool_t *fail);
+static int pa_cli_command_source_port(pa_core *c, pa_tokenizer *t, pa_strbuf *buf, pa_bool_t *fail);
 
 /* A method table for all available commands */
 
@@ -176,10 +178,12 @@ static const struct command commands[] = {
     { "suspend-source",          pa_cli_command_suspend_source,     "Suspend source (args: index|name, bool)", 3},
     { "suspend",                 pa_cli_command_suspend,            "Suspend all sinks and all sources (args: bool)", 2},
     { "set-card-profile",        pa_cli_command_card_profile,       "Change the profile of a card (args: index, name)", 3},
+    { "set-sink-port",           pa_cli_command_sink_port,          "Change the port of a sink (args: index, name)", 3},
+    { "set-source-port",         pa_cli_command_source_port,        "Change the port of a source (args: index, name)", 3},
     { "set-log-level",           pa_cli_command_log_level,          "Change the log level (args: numeric level)", 2},
     { "set-log-meta",            pa_cli_command_log_meta,           "Show source code location in log messages (args: bool)", 2},
     { "set-log-time",            pa_cli_command_log_time,           "Show timestamps in log messages (args: bool)", 2},
-    { "set-log-backtrace",       pa_cli_command_log_backtrace,      "Show bakctrace in log messages (args: frames)", 2},
+    { "set-log-backtrace",       pa_cli_command_log_backtrace,      "Show backtrace in log messages (args: frames)", 2},
     { NULL, NULL, NULL, 0 }
 };
 
@@ -324,7 +328,7 @@ static int pa_cli_command_source_outputs(pa_core *c, pa_tokenizer *t, pa_strbuf 
 static int pa_cli_command_stat(pa_core *c, pa_tokenizer *t, pa_strbuf *buf, pa_bool_t *fail) {
     char ss[PA_SAMPLE_SPEC_SNPRINT_MAX];
     char cm[PA_CHANNEL_MAP_SNPRINT_MAX];
-    char s[256];
+    char bytes[PA_BYTES_SNPRINT_MAX];
     const pa_mempool_stat *stat;
     unsigned k;
     pa_sink *def_sink;
@@ -348,22 +352,22 @@ static int pa_cli_command_stat(pa_core *c, pa_tokenizer *t, pa_strbuf *buf, pa_b
 
     pa_strbuf_printf(buf, "Memory blocks currently allocated: %u, size: %s.\n",
                      (unsigned) pa_atomic_load(&stat->n_allocated),
-                     pa_bytes_snprint(s, sizeof(s), (unsigned) pa_atomic_load(&stat->allocated_size)));
+                     pa_bytes_snprint(bytes, sizeof(bytes), (unsigned) pa_atomic_load(&stat->allocated_size)));
 
     pa_strbuf_printf(buf, "Memory blocks allocated during the whole lifetime: %u, size: %s.\n",
                      (unsigned) pa_atomic_load(&stat->n_accumulated),
-                     pa_bytes_snprint(s, sizeof(s), (unsigned) pa_atomic_load(&stat->accumulated_size)));
+                     pa_bytes_snprint(bytes, sizeof(bytes), (unsigned) pa_atomic_load(&stat->accumulated_size)));
 
     pa_strbuf_printf(buf, "Memory blocks imported from other processes: %u, size: %s.\n",
                      (unsigned) pa_atomic_load(&stat->n_imported),
-                     pa_bytes_snprint(s, sizeof(s), (unsigned) pa_atomic_load(&stat->imported_size)));
+                     pa_bytes_snprint(bytes, sizeof(bytes), (unsigned) pa_atomic_load(&stat->imported_size)));
 
     pa_strbuf_printf(buf, "Memory blocks exported to other processes: %u, size: %s.\n",
                      (unsigned) pa_atomic_load(&stat->n_exported),
-                     pa_bytes_snprint(s, sizeof(s), (unsigned) pa_atomic_load(&stat->exported_size)));
+                     pa_bytes_snprint(bytes, sizeof(bytes), (unsigned) pa_atomic_load(&stat->exported_size)));
 
     pa_strbuf_printf(buf, "Total sample cache size: %s.\n",
-                     pa_bytes_snprint(s, sizeof(s), (unsigned) pa_scache_total_size(c)));
+                     pa_bytes_snprint(bytes, sizeof(bytes), (unsigned) pa_scache_total_size(c)));
 
     pa_strbuf_printf(buf, "Default sample spec: %s\n",
                      pa_sample_spec_snprint(ss, sizeof(ss), &c->default_sample_spec));
@@ -483,6 +487,8 @@ static int pa_cli_command_describe(pa_core *c, pa_tokenizer *t, pa_strbuf *buf, 
             if (i->usage)
                 pa_strbuf_printf(buf, "Usage: %s\n", i->usage);
             pa_strbuf_printf(buf, "Load Once: %s\n", pa_yes_no(i->load_once));
+            if (i->deprecated)
+                pa_strbuf_printf(buf, "Warning, deprecated: %s\n", i->deprecated);
         }
 
         pa_modinfo_free(i);
@@ -523,8 +529,8 @@ static int pa_cli_command_sink_volume(pa_core *c, pa_tokenizer *t, pa_strbuf *bu
         return -1;
     }
 
-    pa_cvolume_set(&cvolume, sink->sample_spec.channels, volume);
-    pa_sink_set_volume(sink, &cvolume, TRUE, TRUE, TRUE);
+    pa_cvolume_set(&cvolume, 1, volume);
+    pa_sink_set_volume(sink, &cvolume, TRUE, TRUE);
     return 0;
 }
 
@@ -565,7 +571,7 @@ static int pa_cli_command_sink_input_volume(pa_core *c, pa_tokenizer *t, pa_strb
         return -1;
     }
 
-    pa_cvolume_set(&cvolume, si->sample_spec.channels, volume);
+    pa_cvolume_set(&cvolume, 1, volume);
     pa_sink_input_set_volume(si, &cvolume, TRUE, TRUE);
     return 0;
 }
@@ -601,8 +607,8 @@ static int pa_cli_command_source_volume(pa_core *c, pa_tokenizer *t, pa_strbuf *
         return -1;
     }
 
-    pa_cvolume_set(&cvolume, source->sample_spec.channels, volume);
-    pa_source_set_volume(source, &cvolume);
+    pa_cvolume_set(&cvolume, 1, volume);
+    pa_source_set_volume(source, &cvolume, TRUE);
     return 0;
 }
 
@@ -636,7 +642,7 @@ static int pa_cli_command_sink_mute(pa_core *c, pa_tokenizer *t, pa_strbuf *buf,
         return -1;
     }
 
-    pa_sink_set_mute(sink, mute);
+    pa_sink_set_mute(sink, mute, TRUE);
     return 0;
 }
 
@@ -670,7 +676,7 @@ static int pa_cli_command_source_mute(pa_core *c, pa_tokenizer *t, pa_strbuf *bu
         return -1;
     }
 
-    pa_source_set_mute(source, mute);
+    pa_source_set_mute(source, mute, TRUE);
     return 0;
 }
 
@@ -1276,7 +1282,7 @@ static int pa_cli_command_suspend_sink(pa_core *c, pa_tokenizer *t, pa_strbuf *b
         return -1;
     }
 
-    if ((r = pa_sink_suspend(sink, suspend)) < 0)
+    if ((r = pa_sink_suspend(sink, suspend, PA_SUSPEND_USER)) < 0)
         pa_strbuf_printf(buf, "Failed to resume/suspend sink: %s\n", pa_strerror(r));
 
     return 0;
@@ -1312,7 +1318,7 @@ static int pa_cli_command_suspend_source(pa_core *c, pa_tokenizer *t, pa_strbuf 
         return -1;
     }
 
-    if ((r = pa_source_suspend(source, suspend)) < 0)
+    if ((r = pa_source_suspend(source, suspend, PA_SUSPEND_USER)) < 0)
         pa_strbuf_printf(buf, "Failed to resume/suspend source: %s\n", pa_strerror(r));
 
     return 0;
@@ -1337,10 +1343,10 @@ static int pa_cli_command_suspend(pa_core *c, pa_tokenizer *t, pa_strbuf *buf, p
         return -1;
     }
 
-    if ((r = pa_sink_suspend_all(c, suspend)) < 0)
+    if ((r = pa_sink_suspend_all(c, suspend, PA_SUSPEND_USER)) < 0)
         pa_strbuf_printf(buf, "Failed to resume/suspend all sinks: %s\n", pa_strerror(r));
 
-    if ((r = pa_source_suspend_all(c, suspend)) < 0)
+    if ((r = pa_source_suspend_all(c, suspend, PA_SUSPEND_USER)) < 0)
         pa_strbuf_printf(buf, "Failed to resume/suspend all sources: %s\n", pa_strerror(r));
 
     return 0;
@@ -1474,12 +1480,76 @@ static int pa_cli_command_card_profile(pa_core *c, pa_tokenizer *t, pa_strbuf *b
     return 0;
 }
 
+static int pa_cli_command_sink_port(pa_core *c, pa_tokenizer *t, pa_strbuf *buf, pa_bool_t *fail) {
+    const char *n, *p;
+    pa_sink *sink;
+
+    pa_core_assert_ref(c);
+    pa_assert(t);
+    pa_assert(buf);
+    pa_assert(fail);
+
+    if (!(n = pa_tokenizer_get(t, 1))) {
+        pa_strbuf_puts(buf, "You need to specify a sink either by its name or its index.\n");
+        return -1;
+    }
+
+    if (!(p = pa_tokenizer_get(t, 2))) {
+        pa_strbuf_puts(buf, "You need to specify a profile by its name.\n");
+        return -1;
+    }
+
+    if (!(sink = pa_namereg_get(c, n, PA_NAMEREG_SINK))) {
+        pa_strbuf_puts(buf, "No sink found by this name or index.\n");
+        return -1;
+    }
+
+    if (pa_sink_set_port(sink, p, TRUE) < 0) {
+        pa_strbuf_printf(buf, "Failed to set sink port to '%s'.\n", p);
+        return -1;
+    }
+
+    return 0;
+}
+
+static int pa_cli_command_source_port(pa_core *c, pa_tokenizer *t, pa_strbuf *buf, pa_bool_t *fail) {
+    const char *n, *p;
+    pa_source *source;
+
+    pa_core_assert_ref(c);
+    pa_assert(t);
+    pa_assert(buf);
+    pa_assert(fail);
+
+    if (!(n = pa_tokenizer_get(t, 1))) {
+        pa_strbuf_puts(buf, "You need to specify a source either by its name or its index.\n");
+        return -1;
+    }
+
+    if (!(p = pa_tokenizer_get(t, 2))) {
+        pa_strbuf_puts(buf, "You need to specify a profile by its name.\n");
+        return -1;
+    }
+
+    if (!(source = pa_namereg_get(c, n, PA_NAMEREG_SOURCE))) {
+        pa_strbuf_puts(buf, "No source found by this name or index.\n");
+        return -1;
+    }
+
+    if (pa_source_set_port(source, p, TRUE) < 0) {
+        pa_strbuf_printf(buf, "Failed to set source port to '%s'.\n", p);
+        return -1;
+    }
+
+    return 0;
+}
+
 static int pa_cli_command_dump(pa_core *c, pa_tokenizer *t, pa_strbuf *buf, pa_bool_t *fail) {
     pa_module *m;
     pa_sink *sink;
     pa_source *source;
     pa_card *card;
-    int nl;
+    pa_bool_t nl;
     uint32_t idx;
     char txt[256];
     time_t now;
@@ -1497,7 +1567,7 @@ static int pa_cli_command_dump(pa_core *c, pa_tokenizer *t, pa_strbuf *buf, pa_b
     pa_strbuf_printf(buf, "### Configuration dump generated at %s\n", ctime(&now));
 #endif
 
-    for (m = pa_idxset_first(c->modules, &idx); m; m = pa_idxset_next(c->modules, &idx)) {
+    PA_IDXSET_FOREACH(m, c->modules, idx) {
 
         pa_strbuf_printf(buf, "load-module %s", m->name);
 
@@ -1507,58 +1577,58 @@ static int pa_cli_command_dump(pa_core *c, pa_tokenizer *t, pa_strbuf *buf, pa_b
         pa_strbuf_puts(buf, "\n");
     }
 
-    nl = 0;
-
-    for (sink = pa_idxset_first(c->sinks, &idx); sink; sink = pa_idxset_next(c->sinks, &idx)) {
+    nl = FALSE;
+    PA_IDXSET_FOREACH(sink, c->sinks, idx) {
 
         if (!nl) {
             pa_strbuf_puts(buf, "\n");
-            nl = 1;
+            nl = TRUE;
         }
 
-        pa_strbuf_printf(buf, "set-sink-volume %s 0x%03x\n", sink->name, pa_cvolume_avg(pa_sink_get_volume(sink, FALSE, TRUE)));
+        pa_strbuf_printf(buf, "set-sink-volume %s 0x%03x\n", sink->name, pa_cvolume_max(pa_sink_get_volume(sink, FALSE)));
         pa_strbuf_printf(buf, "set-sink-mute %s %s\n", sink->name, pa_yes_no(pa_sink_get_mute(sink, FALSE)));
         pa_strbuf_printf(buf, "suspend-sink %s %s\n", sink->name, pa_yes_no(pa_sink_get_state(sink) == PA_SINK_SUSPENDED));
     }
 
-    for (source = pa_idxset_first(c->sources, &idx); source; source = pa_idxset_next(c->sources, &idx)) {
+    nl = FALSE;
+    PA_IDXSET_FOREACH(source, c->sources, idx) {
 
         if (!nl) {
             pa_strbuf_puts(buf, "\n");
-            nl = 1;
+            nl = TRUE;
         }
 
-        pa_strbuf_printf(buf, "set-source-volume %s 0x%03x\n", source->name, pa_cvolume_avg(pa_source_get_volume(source, FALSE)));
+        pa_strbuf_printf(buf, "set-source-volume %s 0x%03x\n", source->name, pa_cvolume_max(pa_source_get_volume(source, FALSE)));
         pa_strbuf_printf(buf, "set-source-mute %s %s\n", source->name, pa_yes_no(pa_source_get_mute(source, FALSE)));
         pa_strbuf_printf(buf, "suspend-source %s %s\n", source->name, pa_yes_no(pa_source_get_state(source) == PA_SOURCE_SUSPENDED));
     }
 
-    for (card = pa_idxset_first(c->cards, &idx); card; card = pa_idxset_next(c->cards, &idx)) {
+    nl = FALSE;
+    PA_IDXSET_FOREACH(card, c->cards, idx) {
 
         if (!nl) {
             pa_strbuf_puts(buf, "\n");
-            nl = 1;
+            nl = TRUE;
         }
 
         if (card->active_profile)
             pa_strbuf_printf(buf, "set-card-profile %s %s\n", card->name, card->active_profile->name);
     }
 
-    nl = 0;
-
+    nl = FALSE;
     if ((sink = pa_namereg_get_default_sink(c))) {
         if (!nl) {
             pa_strbuf_puts(buf, "\n");
-            nl = 1;
+            nl = TRUE;
         }
+
         pa_strbuf_printf(buf, "set-default-sink %s\n", sink->name);
     }
 
     if ((source = pa_namereg_get_default_source(c))) {
-        if (!nl) {
+        if (!nl)
             pa_strbuf_puts(buf, "\n");
-            nl = 1;
-        }
+
         pa_strbuf_printf(buf, "set-default-source %s\n", source->name);
     }
 
@@ -1742,8 +1812,6 @@ int pa_cli_command_execute_file(pa_core *c, const char *fn, pa_strbuf *buf, pa_b
     }
 
     ret = pa_cli_command_execute_file_stream(c, f, buf, fail);
-
-    ret = 0;
 
 fail:
     if (f)

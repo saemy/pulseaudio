@@ -39,6 +39,12 @@ PA_C_DECL_BEGIN
 /** For streams: localized media artist if applicable, formatted as UTF-8. e.g. "Guns'N'Roses" */
 #define PA_PROP_MEDIA_ARTIST                   "media.artist"
 
+/** For streams: localized media copyright string if applicable, formatted as UTF-8. e.g. "Evil Record Corp." */
+#define PA_PROP_MEDIA_COPYRIGHT                "media.copyright"
+
+/** For streams: localized media generator software string if applicable, formatted as UTF-8. e.g. "Foocrop AudioFrobnicator" */
+#define PA_PROP_MEDIA_SOFTWARE                 "media.software"
+
 /** For streams: media language if applicable, in standard POSIX format. e.g. "de_DE" */
 #define PA_PROP_MEDIA_LANGUAGE                 "media.language"
 
@@ -90,6 +96,27 @@ PA_C_DECL_BEGIN
 
 /** For streams that belong to a window on the screen: an XDG icon name for the window. e.g. "totem" */
 #define PA_PROP_WINDOW_ICON_NAME               "window.icon_name"
+
+/** For streams that belong to a window on the screen: absolute horizontal window position on the screen, integer formatted as text string. e.g. "865". \since 0.9.17 */
+#define PA_PROP_WINDOW_X                       "window.x"
+
+/** For streams that belong to a window on the screen: absolute vertical window position on the screen, integer formatted as text string. e.g. "343". \since 0.9.17 */
+#define PA_PROP_WINDOW_Y                       "window.y"
+
+/** For streams that belong to a window on the screen: window width on the screen, integer formatted as text string. e.g. "365". \since 0.9.17 */
+#define PA_PROP_WINDOW_WIDTH                   "window.width"
+
+/** For streams that belong to a window on the screen: window height on the screen, integer formatted as text string. e.g. "643". \since 0.9.17 */
+#define PA_PROP_WINDOW_HEIGHT                  "window.height"
+
+/** For streams that belong to a window on the screen: relative position of the window center on the screen, float formatted as text string, ranging from 0.0 (left side of the screen) to 1.0 (right side of the screen). e.g. "0.65". \since 0.9.17 */
+#define PA_PROP_WINDOW_HPOS                    "window.hpos"
+
+/** For streams that belong to a window on the screen: relative position of the window center on the screen, float formatted as text string, ranging from 0.0 (top of the screen) to 1.0 (bottom of the screen). e.g. "0.43". \since 0.9.17 */
+#define PA_PROP_WINDOW_VPOS                    "window.vpos"
+
+/** For streams that belong to a window on the screen: if the windowing system supports multiple desktops, a comma seperated list of indexes of the desktops this window is visible on. If this property is an empty string, it is visible on all desktops (i.e. 'sticky'). The first desktop is 0. e.g. "0,2,3" \since 0.9.18 */
+#define PA_PROP_WINDOW_DESKTOP                 "window.desktop"
 
 /** For streams that belong to an X11 window on the screen: the X11 display string. e.g. ":0.0" */
 #define PA_PROP_WINDOW_X11_DISPLAY             "window.x11.display"
@@ -191,7 +218,7 @@ PA_C_DECL_BEGIN
 /** For filter devices: master device id if applicable. */
 #define PA_PROP_DEVICE_MASTER_DEVICE           "device.master_device"
 
-/** For devices: buffer size in bytes, integer formatted as string.. */
+/** For devices: buffer size in bytes, integer formatted as string. */
 #define PA_PROP_DEVICE_BUFFERING_BUFFER_SIZE   "device.buffering.buffer_size"
 
 /** For devices: fragment size in bytes, integer formatted as string. */
@@ -199,6 +226,9 @@ PA_C_DECL_BEGIN
 
 /** For devices: profile identifier for the profile this devices is in. e.g. "analog-stereo", "analog-surround-40", "iec958-stereo", ...*/
 #define PA_PROP_DEVICE_PROFILE_NAME            "device.profile.name"
+
+/** For devices: intended use. A comma seperated list of roles (see PA_PROP_MEDIA_ROLE) this device is particularly well suited for, due to latency, quality or form factor. \since 0.9.16 */
+#define PA_PROP_DEVICE_INTENDED_ROLES          "device.intended_roles"
 
 /** For devices: human readable one-line description of the profile this device is in. e.g. "Analog Stereo", ... */
 #define PA_PROP_DEVICE_PROFILE_DESCRIPTION     "device.profile.description"
@@ -230,6 +260,14 @@ void pa_proplist_free(pa_proplist* p);
  * internal copy of the data passed is made. Will accept only valid
  * UTF-8. \since 0.9.11 */
 int pa_proplist_sets(pa_proplist *p, const char *key, const char *value);
+
+/** Append a new string entry to the property list, possibly
+ * overwriting an already existing entry with the same key. An
+ * internal copy of the data passed is made. Will accept only valid
+ * UTF-8. The string passed in must contain a '='. Left hand side of
+ * the '=' is used as key name, the right hand side as string
+ * data. \since 0.9.16 */
+int pa_proplist_setp(pa_proplist *p, const char *pair);
 
 /** Append a new string entry to the property list, possibly
  * overwriting an already existing entry with the same key. An

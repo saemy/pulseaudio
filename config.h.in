@@ -95,6 +95,9 @@
 /* Define to 1 if you have the `fork' function. */
 #undef HAVE_FORK
 
+/* Have gdbm? */
+#undef HAVE_GDBM
+
 /* Define to 1 if you have the <gdbm.h> header file. */
 #undef HAVE_GDBM_H
 
@@ -142,6 +145,9 @@
 
 /* Have HAL. */
 #undef HAVE_HAL
+
+/* Have HAL compatibility. */
+#undef HAVE_HAL_COMPAT
 
 /* Define if you have the iconv() function and it works. */
 #undef HAVE_ICONV
@@ -224,14 +230,14 @@
 /* Have OpenSSL */
 #undef HAVE_OPENSSL
 
-/* Have OSS? */
-#undef HAVE_OSS
+/* Have OSS output? */
+#undef HAVE_OSS_OUTPUT
+
+/* Have OSS wrapper (padsp)? */
+#undef HAVE_OSS_WRAPPER
 
 /* Define to 1 if you have the `pipe' function. */
 #undef HAVE_PIPE
-
-/* Have PolicyKit */
-#undef HAVE_POLKIT
 
 /* Define to 1 if you have the <poll.h> header file. */
 #undef HAVE_POLL_H
@@ -304,6 +310,9 @@
 
 /* Have SIGXCPU? */
 #undef HAVE_SIGXCPU
+
+/* Have simple? */
+#undef HAVE_SIMPLEDB
 
 /* Define to 1 if you have the `sleep' function. */
 #undef HAVE_SLEEP
@@ -404,6 +413,9 @@
 /* Define to 1 if you have the <sys/wait.h> header file. */
 #undef HAVE_SYS_WAIT_H
 
+/* Have tdb? */
+#undef HAVE_TDB
+
 /* Have UDEV. */
 #undef HAVE_UDEV
 
@@ -446,9 +458,6 @@
 /* Define INADDR_NONE if not found in <netinet/in.h> */
 #undef INADDR_NONE
 
-/* I know the API is subject to change. */
-#undef LIBUDEV_I_KNOW_THE_API_IS_SUBJECT_TO_CHANGE
-
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
    */
 #undef LT_OBJDIR
@@ -485,9 +494,6 @@
 
 /* The CFLAGS used during compilation */
 #undef PA_CFLAGS
-
-/* Realtime group */
-#undef PA_REALTIME_GROUP
 
 /* Group for the PulseAudio system daemon */
 #undef PA_SYSTEM_GROUP
@@ -562,6 +568,9 @@
 # endif
 #endif
 
+/* Needed to get NSIG on Mac OS X */
+#undef _DARWIN_C_SOURCE
+
 /* Number of bits in a file offset, on hosts where this is settable. */
 #undef _FILE_OFFSET_BITS
 
@@ -574,6 +583,9 @@
 /* Define to 2 if the system does not provide POSIX.1 features except with
    this defined. */
 #undef _POSIX_1_SOURCE
+
+/* Needed to get clock_gettime on Mac OS X */
+#undef _POSIX_C_SOURCE
 
 /* Define to 1 if you need to in order for `stat' and other things to work. */
 #undef _POSIX_SOURCE

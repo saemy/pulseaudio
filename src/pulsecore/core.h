@@ -27,6 +27,16 @@
 
 typedef struct pa_core pa_core;
 
+/* This is a bitmask that encodes the cause why a sink/source is
+ * suspended. */
+typedef enum pa_suspend_cause {
+    PA_SUSPEND_USER = 1,         /* Exposed to the user via some protocol */
+    PA_SUSPEND_APPLICATION = 2,  /* Used by the device reservation logic */
+    PA_SUSPEND_IDLE = 4,         /* Used by module-suspend-on-idle */
+    PA_SUSPEND_SESSION = 8,      /* Used by module-hal for mark inactive sessions */
+    PA_SUSPEND_ALL = 0xFFFF      /* Magic cause that can be used to resume forcibly */
+} pa_suspend_cause_t;
+
 #include <pulsecore/idxset.h>
 #include <pulsecore/hashmap.h>
 #include <pulsecore/memblock.h>
@@ -73,7 +83,6 @@ typedef enum pa_core_hook {
     PA_CORE_HOOK_SINK_INPUT_MOVE_FAIL,
     PA_CORE_HOOK_SINK_INPUT_STATE_CHANGED,
     PA_CORE_HOOK_SINK_INPUT_PROPLIST_CHANGED,
-    PA_CORE_HOOK_SINK_INPUT_SET_VOLUME,
     PA_CORE_HOOK_SINK_INPUT_SEND_EVENT,
     PA_CORE_HOOK_SOURCE_OUTPUT_NEW,
     PA_CORE_HOOK_SOURCE_OUTPUT_FIXATE,
@@ -156,7 +165,7 @@ struct pa_core {
     pa_hook hooks[PA_CORE_HOOK_MAX];
 };
 
-PA_DECLARE_CLASS(pa_core);
+PA_DECLARE_PUBLIC_CLASS(pa_core);
 #define PA_CORE(o) pa_core_cast(o)
 
 enum {
@@ -172,5 +181,9 @@ void pa_core_check_idle(pa_core *c);
 int pa_core_exit(pa_core *c, pa_bool_t force, int retval);
 
 void pa_core_maybe_vacuum(pa_core *c);
+
+/* wrapper for c->mainloop->time_*() RT time events */
+pa_time_event* pa_core_rttime_new(pa_core *c, pa_usec_t usec, pa_time_event_cb_t cb, void *userdata);
+void pa_core_rttime_restart(pa_core *c, pa_time_event *e, pa_usec_t usec);
 
 #endif

@@ -147,12 +147,6 @@
  * server. A pa_context object wraps a connection to a PulseAudio
  * server using its native protocol. */
 
-/** \example pacat.c
- * A playback and recording tool using the asynchronous API */
-
-/** \example paplay.c
- * A sound file playback tool using the asynchronous API, based on libsndfile */
-
 PA_C_DECL_BEGIN
 
 /** An opaque connection context to a daemon */
@@ -259,6 +253,13 @@ pa_operation *pa_context_proplist_remove(pa_context *c, const char *const keys[]
  * identified in the server with. This is useful for usage with the
  * introspection functions, such as pa_context_get_client_info(). \since 0.9.11 */
 uint32_t pa_context_get_index(pa_context *s);
+
+/** Create a new timer event source for the specified time (wrapper
+    for mainloop->time_new). \since 0.9.16 */
+pa_time_event* pa_context_rttime_new(pa_context *c, pa_usec_t usec, pa_time_event_cb_t cb, void *userdata);
+/** Restart a running or expired timer event source (wrapper
+    for mainloop->time_restart). \since 0.9.16 */
+void pa_context_rttime_restart(pa_context *c, pa_time_event *e, pa_usec_t usec);
 
 PA_C_DECL_END
 
