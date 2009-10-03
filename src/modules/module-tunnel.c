@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <pulse/rtclock.h>
 #include <pulse/timeval.h>
 #include <pulse/util.h>
 #include <pulse/version.h>
@@ -50,10 +51,11 @@
 #include <pulsecore/time-smoother.h>
 #include <pulsecore/thread.h>
 #include <pulsecore/thread-mq.h>
-#include <pulsecore/rtclock.h>
+#include <pulsecore/core-rtclock.h>
 #include <pulsecore/core-error.h>
 #include <pulsecore/proplist-util.h>
 #include <pulsecore/auth-cookie.h>
+#include <pulsecore/mcalign.h>
 
 #ifdef TUNNEL_SINK
 #include "module-tunnel-sink-symdef.h"
@@ -64,24 +66,26 @@
 #ifdef TUNNEL_SINK
 PA_MODULE_DESCRIPTION("Tunnel module for sinks");
 PA_MODULE_USAGE(
+        "sink_name=<name for the local sink> "
+        "sink_properties=<properties for the local sink> "
         "server=<address> "
         "sink=<remote sink name> "
         "cookie=<filename> "
         "format=<sample format> "
         "channels=<number of channels> "
         "rate=<sample rate> "
-        "sink_name=<name for the local sink> "
         "channel_map=<channel map>");
 #else
 PA_MODULE_DESCRIPTION("Tunnel module for sources");
 PA_MODULE_USAGE(
+        "source_name=<name for the local source> "
+        "source_properties=<properties for the local source> "
         "server=<address> "
         "source=<remote source name> "
         "cookie=<filename> "
         "format=<sample format> "
         "channels=<number of channels> "
         "rate=<sample rate> "
-        "source_name=<name for the local source> "
         "channel_map=<channel map>");
 #endif
 
@@ -97,9 +101,11 @@ static const char* const valid_modargs[] = {
     "rate",
 #ifdef TUNNEL_SINK
     "sink_name",
+    "sink_properties",
     "sink",
 #else
     "source_name",
+    "source_properties",
     "source",
 #endif
     "channel_map",
@@ -108,7 +114,7 @@ static const char* const valid_modargs[] = {
 
 #define DEFAULT_TIMEOUT 5
 
-#define LATENCY_INTERVAL 10
+#define LATENCY_INTERVAL (10*PA_USEC_PER_SEC)
 
 #define MIN_NETWORK_LATENCY_USEC (8*PA_USEC_PER_MSEC)
 
@@ -189,6 +195,7 @@ struct userdata {
 #else
     char *source_name;
     pa_source *source;
+    pa_mcalign *mcalign;
 #endif
 
     pa_auth_cookie *auth_cookie;
@@ -325,7 +332,7 @@ static void command_moved(pa_pdispatch *pd,  uint32_t command,  uint32_t tag, pa
 
 static void command_stream_buffer_attr_changed(pa_pdispatch *pd, uint32_t command, uint32_t tag, pa_tagstruct *t, void *userdata) {
     struct userdata *u = userdata;
-    uint32_t channel, maxlength, tlength, fragsize, prebuf, minreq;
+    uint32_t channel, maxlength, tlength = 0, fragsize, prebuf, minreq;
     pa_usec_t usec;
 
     pa_assert(pd);
@@ -391,7 +398,7 @@ static void check_smoother_status(struct userdata *u, pa_bool_t past)  {
 
     pa_assert(u);
 
-    x = pa_rtclock_usec();
+    x = pa_rtclock_now();
 
     /* Correct by the time the requested issued needs to travel to the
      * other side.  This is a valid thread-safe access, because the
@@ -496,7 +503,7 @@ static int sink_process_msg(pa_msgobject *o, int code, void *data, int64_t offse
             pa_usec_t yl, yr, *usec = data;
 
             yl = pa_bytes_to_usec((uint64_t) u->counter, &u->sink->sample_spec);
-            yr = pa_smoother_get(u->smoother, pa_rtclock_usec());
+            yr = pa_smoother_get(u->smoother, pa_rtclock_now());
 
             *usec = yl > yr ? yl - yr : 0;
             return 0;
@@ -529,7 +536,7 @@ static int sink_process_msg(pa_msgobject *o, int code, void *data, int64_t offse
             else
                 y = 0;
 
-            pa_smoother_put(u->smoother, pa_rtclock_usec(), y);
+            pa_smoother_put(u->smoother, pa_rtclock_now(), y);
 
             /* We can access this freely here, since the main thread is waiting for us */
             u->thread_transport_usec = u->transport_usec;
@@ -603,20 +610,29 @@ static int source_process_msg(pa_msgobject *o, int code, void *data, int64_t off
             pa_usec_t yr, yl, *usec = data;
 
             yl = pa_bytes_to_usec((uint64_t) u->counter, &PA_SOURCE(o)->sample_spec);
-            yr = pa_smoother_get(u->smoother, pa_rtclock_usec());
+            yr = pa_smoother_get(u->smoother, pa_rtclock_now());
 
             *usec = yr > yl ? yr - yl : 0;
             return 0;
         }
 
-        case SOURCE_MESSAGE_POST:
+        case SOURCE_MESSAGE_POST: {
+            pa_memchunk c;
 
-            if (PA_SOURCE_IS_OPENED(u->source->thread_info.state))
-                pa_source_post(u->source, chunk);
+            pa_mcalign_push(u->mcalign, chunk);
 
-            u->counter += (int64_t) chunk->length;
+            while (pa_mcalign_pop(u->mcalign, &c) >= 0) {
+
+                if (PA_SOURCE_IS_OPENED(u->source->thread_info.state))
+                    pa_source_post(u->source, &c);
+
+                pa_memblock_unref(c.memblock);
+
+                u->counter += (int64_t) c.length;
+            }
 
             return 0;
+        }
 
         case SOURCE_MESSAGE_REMOTE_SUSPEND:
 
@@ -629,7 +645,7 @@ static int source_process_msg(pa_msgobject *o, int code, void *data, int64_t off
             y = pa_bytes_to_usec((uint64_t) u->counter, &u->source->sample_spec);
             y += (pa_usec_t) offset;
 
-            pa_smoother_put(u->smoother, pa_rtclock_usec(), y);
+            pa_smoother_put(u->smoother, pa_rtclock_now(), y);
 
             /* We can access this freely here, since the main thread is waiting for us */
             u->thread_transport_usec = u->transport_usec;
@@ -679,7 +695,6 @@ static void thread_func(void *userdata) {
     pa_log_debug("Thread starting up");
 
     pa_thread_mq_install(&u->thread_mq);
-    pa_rtpoll_install(u->rtpoll);
 
     for (;;) {
         int ret;
@@ -726,7 +741,7 @@ static void command_request(pa_pdispatch *pd, uint32_t command,  uint32_t tag, p
     }
 
     if (channel != u->channel) {
-        pa_log("Recieved data for invalid channel");
+        pa_log("Received data for invalid channel");
         goto fail;
     }
 
@@ -874,9 +889,8 @@ static void request_latency(struct userdata *u) {
 }
 
 /* Called from main context */
-static void timeout_callback(pa_mainloop_api *m, pa_time_event*e,  const struct timeval *tv, void *userdata) {
+static void timeout_callback(pa_mainloop_api *m, pa_time_event *e, const struct timeval *t, void *userdata) {
     struct userdata *u = userdata;
-    struct timeval ntv;
 
     pa_assert(m);
     pa_assert(e);
@@ -884,9 +898,7 @@ static void timeout_callback(pa_mainloop_api *m, pa_time_event*e,  const struct 
 
     request_latency(u);
 
-    pa_gettimeofday(&ntv);
-    ntv.tv_sec += LATENCY_INTERVAL;
-    m->time_restart(e, &ntv);
+    pa_core_rttime_restart(u->core, e, pa_rtclock_now() + LATENCY_INTERVAL);
 }
 
 /* Called from main context */
@@ -1057,6 +1069,33 @@ static void sink_info_cb(pa_pdispatch *pd, uint32_t command,  uint32_t tag, pa_t
         }
     }
 
+    if (u->version >= 16) {
+        uint32_t n_ports;
+        const char *s;
+
+        if (pa_tagstruct_getu32(t, &n_ports)) {
+            pa_log("Parse failure");
+            goto fail;
+        }
+
+        for (uint32_t j = 0; j < n_ports; j++) {
+            uint32_t priority;
+
+            if (pa_tagstruct_gets(t, &s) < 0 || /* name */
+                pa_tagstruct_gets(t, &s) < 0 || /* description */
+                pa_tagstruct_getu32(t, &priority) < 0) {
+
+                pa_log("Parse failure");
+                goto fail;
+            }
+        }
+
+        if (pa_tagstruct_gets(t, &s) < 0) { /* active port */
+            pa_log("Parse failure");
+            goto fail;
+        }
+    }
+
     if (!pa_tagstruct_eof(t)) {
         pa_log("Packet too long");
         goto fail;
@@ -1085,7 +1124,7 @@ static void sink_input_info_cb(pa_pdispatch *pd, uint32_t command,  uint32_t tag
     uint32_t idx, owner_module, client, sink;
     pa_usec_t buffer_usec, sink_usec;
     const char *name, *driver, *resample_method;
-    pa_bool_t mute;
+    pa_bool_t mute = FALSE;
     pa_sample_spec sample_spec;
     pa_channel_map channel_map;
     pa_cvolume volume;
@@ -1150,7 +1189,7 @@ static void sink_input_info_cb(pa_pdispatch *pd, uint32_t command,  uint32_t tag
     pa_assert(u->sink);
 
     if ((u->version < 11 || !!mute == !!u->sink->muted) &&
-        pa_cvolume_equal(&volume, &u->sink->virtual_volume))
+        pa_cvolume_equal(&volume, &u->sink->real_volume))
         return;
 
     pa_sink_volume_changed(u->sink, &volume);
@@ -1228,6 +1267,33 @@ static void source_info_cb(pa_pdispatch *pd, uint32_t command,  uint32_t tag, pa
             pa_tagstruct_getu32(t, &n_volume_steps) < 0 ||
             pa_tagstruct_getu32(t, &card) < 0) {
 
+            pa_log("Parse failure");
+            goto fail;
+        }
+    }
+
+    if (u->version >= 16) {
+        uint32_t n_ports;
+        const char *s;
+
+        if (pa_tagstruct_getu32(t, &n_ports)) {
+            pa_log("Parse failure");
+            goto fail;
+        }
+
+        for (uint32_t j = 0; j < n_ports; j++) {
+            uint32_t priority;
+
+            if (pa_tagstruct_gets(t, &s) < 0 || /* name */
+                pa_tagstruct_gets(t, &s) < 0 || /* description */
+                pa_tagstruct_getu32(t, &priority) < 0) {
+
+                pa_log("Parse failure");
+                goto fail;
+            }
+        }
+
+        if (pa_tagstruct_gets(t, &s) < 0) { /* active port */
             pa_log("Parse failure");
             goto fail;
         }
@@ -1333,12 +1399,11 @@ static void command_subscribe_event(pa_pdispatch *pd,  uint32_t command,  uint32
 /* Called from main context */
 static void start_subscribe(struct userdata *u) {
     pa_tagstruct *t;
-    uint32_t tag;
     pa_assert(u);
 
     t = pa_tagstruct_new(NULL, 0);
     pa_tagstruct_putu32(t, PA_COMMAND_SUBSCRIBE);
-    pa_tagstruct_putu32(t, tag = u->ctag++);
+    pa_tagstruct_putu32(t, u->ctag++);
     pa_tagstruct_putu32(t, PA_SUBSCRIPTION_MASK_SERVER|
 #ifdef TUNNEL_SINK
                         PA_SUBSCRIPTION_MASK_SINK_INPUT|PA_SUBSCRIPTION_MASK_SINK
@@ -1353,7 +1418,6 @@ static void start_subscribe(struct userdata *u) {
 /* Called from main context */
 static void create_stream_callback(pa_pdispatch *pd, uint32_t command,  uint32_t tag, pa_tagstruct *t, void *userdata) {
     struct userdata *u = userdata;
-    struct timeval ntv;
 #ifdef TUNNEL_SINK
     uint32_t bytes;
 #endif
@@ -1435,9 +1499,7 @@ static void create_stream_callback(pa_pdispatch *pd, uint32_t command,  uint32_t
     request_info(u);
 
     pa_assert(!u->time_event);
-    pa_gettimeofday(&ntv);
-    ntv.tv_sec += LATENCY_INTERVAL;
-    u->time_event = u->core->mainloop->time_new(u->core->mainloop, &ntv, timeout_callback, u);
+    u->time_event = pa_core_rttime_new(u->core, pa_rtclock_now() + LATENCY_INTERVAL, timeout_callback, u);
 
     request_latency(u);
 
@@ -1517,7 +1579,7 @@ static void setup_complete_callback(pa_pdispatch *pd, uint32_t command, uint32_t
 
     reply = pa_tagstruct_new(NULL, 0);
     pa_tagstruct_putu32(reply, PA_COMMAND_SET_CLIENT_NAME);
-    pa_tagstruct_putu32(reply, tag = u->ctag++);
+    pa_tagstruct_putu32(reply, u->ctag++);
 
     if (u->version >= 13) {
         pa_proplist *pl;
@@ -1671,7 +1733,7 @@ static void pstream_memblock_callback(pa_pstream *p, uint32_t channel, int64_t o
     pa_assert(u);
 
     if (channel != u->channel) {
-        pa_log("Recieved memory block on bad channel.");
+        pa_log("Received memory block on bad channel.");
         pa_module_unload_request(u->module, TRUE);
         return;
     }
@@ -1702,7 +1764,7 @@ static void on_connection(pa_socket_client *sc, pa_iochannel *io, void *userdata
     }
 
     u->pstream = pa_pstream_new(u->core->mainloop, io, u->core->mempool);
-    u->pdispatch = pa_pdispatch_new(u->core->mainloop, command_table, PA_COMMAND_MAX);
+    u->pdispatch = pa_pdispatch_new(u->core->mainloop, TRUE, command_table, PA_COMMAND_MAX);
 
     pa_pstream_set_die_callback(u->pstream, pstream_die_callback, u);
     pa_pstream_set_recieve_packet_callback(u->pstream, pstream_packet_callback, u);
@@ -1744,7 +1806,6 @@ static void on_connection(pa_socket_client *sc, pa_iochannel *io, void *userdata
 static void sink_set_volume(pa_sink *sink) {
     struct userdata *u;
     pa_tagstruct *t;
-    uint32_t tag;
 
     pa_assert(sink);
     u = sink->userdata;
@@ -1752,9 +1813,9 @@ static void sink_set_volume(pa_sink *sink) {
 
     t = pa_tagstruct_new(NULL, 0);
     pa_tagstruct_putu32(t, PA_COMMAND_SET_SINK_INPUT_VOLUME);
-    pa_tagstruct_putu32(t, tag = u->ctag++);
+    pa_tagstruct_putu32(t, u->ctag++);
     pa_tagstruct_putu32(t, u->device_index);
-    pa_tagstruct_put_cvolume(t, &sink->virtual_volume);
+    pa_tagstruct_put_cvolume(t, &sink->real_volume);
     pa_pstream_send_tagstruct(u->pstream, t);
 }
 
@@ -1762,7 +1823,6 @@ static void sink_set_volume(pa_sink *sink) {
 static void sink_set_mute(pa_sink *sink) {
     struct userdata *u;
     pa_tagstruct *t;
-    uint32_t tag;
 
     pa_assert(sink);
     u = sink->userdata;
@@ -1773,7 +1833,7 @@ static void sink_set_mute(pa_sink *sink) {
 
     t = pa_tagstruct_new(NULL, 0);
     pa_tagstruct_putu32(t, PA_COMMAND_SET_SINK_INPUT_MUTE);
-    pa_tagstruct_putu32(t, tag = u->ctag++);
+    pa_tagstruct_putu32(t, u->ctag++);
     pa_tagstruct_putu32(t, u->device_index);
     pa_tagstruct_put_boolean(t, !!sink->muted);
     pa_pstream_send_tagstruct(u->pstream, t);
@@ -1821,7 +1881,7 @@ int pa__init(pa_module*m) {
             TRUE,
             TRUE,
             10,
-            pa_rtclock_usec(),
+            pa_rtclock_now(),
             FALSE);
     u->ctag = 1;
     u->device_index = u->channel = PA_INVALID_INDEX;
@@ -1849,7 +1909,7 @@ int pa__init(pa_module*m) {
         goto fail;
     }
 
-    if (!(u->client = pa_socket_client_new_string(m->core->mainloop, u->server_name, PA_NATIVE_DEFAULT_PORT))) {
+    if (!(u->client = pa_socket_client_new_string(m->core->mainloop, TRUE, u->server_name, PA_NATIVE_DEFAULT_PORT))) {
         pa_log("Failed to connect to server '%s'", u->server_name);
         goto fail;
     }
@@ -1872,6 +1932,12 @@ int pa__init(pa_module*m) {
     pa_proplist_sets(data.proplist, "tunnel.remote.server", u->server_name);
     if (u->sink_name)
         pa_proplist_sets(data.proplist, "tunnel.remote.sink", u->sink_name);
+
+    if (pa_modargs_get_proplist(ma, "sink_properties", data.proplist, PA_UPDATE_REPLACE) < 0) {
+        pa_log("Invalid properties");
+        pa_sink_new_data_done(&data);
+        goto fail;
+    }
 
     u->sink = pa_sink_new(m->core, &data, PA_SINK_NETWORK|PA_SINK_LATENCY|PA_SINK_HW_VOLUME_CTRL|PA_SINK_HW_MUTE_CTRL);
     pa_sink_new_data_done(&data);
@@ -1911,6 +1977,12 @@ int pa__init(pa_module*m) {
     if (u->source_name)
         pa_proplist_sets(data.proplist, "tunnel.remote.source", u->source_name);
 
+    if (pa_modargs_get_proplist(ma, "source_properties", data.proplist, PA_UPDATE_REPLACE) < 0) {
+        pa_log("Invalid properties");
+        pa_source_new_data_done(&data);
+        goto fail;
+    }
+
     u->source = pa_source_new(m->core, &data, PA_SOURCE_NETWORK|PA_SOURCE_LATENCY);
     pa_source_new_data_done(&data);
 
@@ -1927,6 +1999,8 @@ int pa__init(pa_module*m) {
 
     pa_source_set_asyncmsgq(u->source, u->thread_mq.inq);
     pa_source_set_rtpoll(u->source, u->rtpoll);
+
+    u->mcalign = pa_mcalign_new(pa_frame_size(&u->source->sample_spec));
 #endif
 
     pa_xfree(dn);
@@ -2019,6 +2093,11 @@ void pa__done(pa_module*m) {
 
     if (u->time_event)
         u->core->mainloop->time_free(u->time_event);
+
+#ifndef TUNNEL_SINK
+    if (u->mcalign)
+        pa_mcalign_free(u->mcalign);
+#endif
 
 #ifdef TUNNEL_SINK
     pa_xfree(u->sink_name);

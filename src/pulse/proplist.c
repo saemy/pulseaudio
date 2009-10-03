@@ -140,6 +140,21 @@ static int proplist_setn(pa_proplist *p, const char *key, size_t key_length, con
     return 0;
 }
 
+/** Will accept only valid UTF-8 */
+int pa_proplist_setp(pa_proplist *p, const char *pair) {
+    const char *t;
+
+    pa_assert(p);
+    pa_assert(pair);
+
+    if (!(t = strchr(pair, '=')))
+        return -1;
+
+    return proplist_setn(p,
+                         pair, t - pair,
+                         t + 1, strchr(pair, 0) - t - 1);
+}
+
 static int proplist_sethex(pa_proplist *p, const char *key, size_t key_length, const char *value, size_t value_length) {
     struct property *prop;
     pa_bool_t add = FALSE;
@@ -236,7 +251,7 @@ int pa_proplist_set(pa_proplist *p, const char *key, const void *data, size_t nb
 
     pa_assert(p);
     pa_assert(key);
-    pa_assert(data);
+    pa_assert(data || nbytes == 0);
 
     if (!property_name_valid(key))
         return -1;
@@ -249,7 +264,8 @@ int pa_proplist_set(pa_proplist *p, const char *key, const void *data, size_t nb
         pa_xfree(prop->value);
 
     prop->value = pa_xmalloc(nbytes+1);
-    memcpy(prop->value, data, nbytes);
+    if (nbytes > 0)
+        memcpy(prop->value, data, nbytes);
     ((char*) prop->value)[nbytes] = 0;
     prop->nbytes = nbytes;
 

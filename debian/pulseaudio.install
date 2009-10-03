@@ -1,6 +1,7 @@
 etc/pulse/default.pa
 etc/pulse/system.pa
 etc/pulse/daemon.conf
+etc/dbus-1/system.d/pulseaudio-system.conf
 etc/xdg/autostart/pulseaudio.desktop
 usr/bin/pulseaudio
 usr/bin/start-pulseaudio-x11
@@ -26,13 +27,13 @@ usr/lib/pulse-*/modules/module-detect.so
 usr/lib/pulse-*/modules/module-esound-sink.so
 usr/lib/pulse-*/modules/module-http-protocol-tcp.so
 usr/lib/pulse-*/modules/module-http-protocol-unix.so
+usr/lib/pulse-*/modules/module-intended-roles.so
 usr/lib/pulse-*/modules/module-ladspa-sink.so
 usr/lib/pulse-*/modules/module-match.so
 usr/lib/pulse-*/modules/module-mmkbd-evdev.so
 usr/lib/pulse-*/modules/module-native-protocol-fd.so
 usr/lib/pulse-*/modules/module-native-protocol-tcp.so
 usr/lib/pulse-*/modules/module-native-protocol-unix.so
-usr/share/lintian/overrides/pulseaudio
 usr/lib/pulse-*/modules/module-null-sink.so
 usr/lib/pulse-*/modules/module-oss.so
 usr/lib/pulse-*/modules/liboss-util.so
@@ -55,7 +56,10 @@ usr/lib/pulse-*/modules/module-augment-properties.so
 usr/lib/pulse-*/modules/module-card-restore.so
 usr/lib/pulse-*/modules/module-cork-music-on-phone.so
 usr/lib/pulse-*/modules/module-sine-source.so
+usr/lib/pulse-*/modules/module-udev-detect.so
+usr/lib/pulse-*/modules/module-loopback.so
 usr/share/man/man5/default.pa.5
 usr/share/locale
-usr/share/PolicyKit/policy/org.pulseaudio.policy
+usr/share/pulseaudio
 usr/lib/libpulsecore-*.so
+usr/share/lintian/overrides/pulseaudio
