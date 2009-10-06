@@ -1,3 +1,33 @@
+pulseaudio (1:0.9.19-0ubuntu1) karmic; urgency=low
+
+  * New upstream bugfix release
+  * debian/:
+    . {libpulse0,pulseaudio}.shlibs:
+    . shlibs{,_pulseaudio}.local:
+    . rules: Update for new release
+  * debian
+    + pulseaudio.dirs:
+    . patches/0006-a11y-special-case-disable.patch:
+    . pulse-session: Use a system-wide flag to assist in fixing
+      alsactl store race.
+  * debian/patches/:
+    - 0060-backport-c194d.patch: Drop, subsumed by new release
+    + 0053-fix-sigsegv-module-bluetooth-device.patch: Don't strcmp
+      uninitialized memory (LP: #437293)
+    + 0055-backport-alsa-bt-position-fixes-b3592a1.patch: Apply the
+      following changesets from origin/master HEAD for fixes:
+      40c1ca76c48147c7648e1f1a72cc2c747f3d0c9b,
+      7b682c969025845f75cbc74a9f830ad2dec8a415,
+      c96d2d1117a7e59b351358c8cdd79ef465ddbd49,
+      b3592a160f0d2a28605048a81c0261bf7c45acbb
+    + 0091-dont-load-cork-music-on-phone.patch: Disable for Karmic;
+      it's confusing users (LP: #437638)
+  * Previous uploads resolved Launchpad bug reports:
+    - LP: #434003 (crashed with SIGILL in pa_smoother_translate() )
+    - LP: #437638 (cpulimit.c: Received request to terminate)
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Tue, 06 Oct 2009 18:40:38 -0400
+
 pulseaudio (1:0.9.18-0ubuntu3) karmic; urgency=low
 
   * debian/patches/:

@@ -1,0 +1,13 @@
+Index: pulseaudio-0.9.19/src/daemon/default.pa.in
+===================================================================
+--- pulseaudio-0.9.19.orig/src/daemon/default.pa.in	2009-10-03 11:09:03.000000000 -0400
++++ pulseaudio-0.9.19/src/daemon/default.pa.in	2009-10-03 11:09:45.000000000 -0400
+@@ -115,7 +115,7 @@
+ load-module module-position-event-sounds
+ 
+ ### Cork music streams when a phone stream is active
+-load-module module-cork-music-on-phone
++#load-module module-cork-music-on-phone
+ 
+ # X11 modules should not be started from default.pa so that one daemon
+ # can be shared by multiple sessions.

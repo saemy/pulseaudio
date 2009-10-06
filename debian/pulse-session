@@ -8,6 +8,7 @@ test -f /etc/default/pulseaudio && . /etc/default/pulseaudio
 
 if [ -x /usr/bin/start-pulseaudio-x11 ] && \
    [ $PULSEAUDIO_SYSTEM_START -eq 0 ] && \
+   [ ! -f /var/lib/pulseaudio/pulse_a11y_nostart ] && \
    [ ! -f $HOME/.pulse_a11y_nostart ]; then
 	/usr/bin/start-pulseaudio-x11
 fi
