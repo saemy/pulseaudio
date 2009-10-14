@@ -1,3 +1,10 @@
+pulseaudio (1:0.9.19-0ubuntu2) karmic; urgency=low
+
+  * debian/control: Drop rtkit from recommends, as the kernel patches have
+    not landed in karmic, so rtkit is currently useless.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Wed, 14 Oct 2009 12:02:50 +1100
+
 pulseaudio (1:0.9.19-0ubuntu1) karmic; urgency=low
 
   * New upstream bugfix release
