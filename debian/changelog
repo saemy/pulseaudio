@@ -1,3 +1,16 @@
+pulseaudio (1:0.9.19-0ubuntu3) karmic; urgency=low
+
+  [ Tony Espy ]
+  * debian/control: Add a Conflicts for rtkit so we force removal, and
+    hence get more testing coverage between now and Karmic final (LP: #452458).
+
+  [ Daniel T Chen ]
+  * debian/patches/0056-ignore-sound-class-modem.patch:
+    + Apply patch from Whoopie to fix initialization of devices with
+      modem subdevices (LP: #394500, #450222)
+
+ -- Tony Espy <espy@ubuntu.com>  Thu, 15 Oct 2009 15:33:02 -0400
+
 pulseaudio (1:0.9.19-0ubuntu2) karmic; urgency=low
 
   * debian/control: Drop rtkit from recommends, as the kernel patches have
