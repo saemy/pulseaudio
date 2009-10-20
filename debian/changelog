@@ -1,3 +1,12 @@
+pulseaudio (1:0.9.19-0ubuntu4) karmic; urgency=low
+
+  * Remove 0053-fix-sigsegv-module-bluetooth-device.patch, as it did
+    more harm than good (reopens LP #437293).
+  * debian/01PulseAudio: Fix bashisms, and make suspend/resume actually
+    work with sudo -H -u (LP: #432096, #450461).
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Tue, 20 Oct 2009 10:29:04 -0400
+
 pulseaudio (1:0.9.19-0ubuntu3) karmic; urgency=low
 
   [ Tony Espy ]

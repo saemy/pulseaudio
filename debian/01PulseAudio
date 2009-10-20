@@ -6,35 +6,27 @@ get_pulse_users() {
     ps -C pulseaudio -o uid= | tr -d ' '
 }
 
-get_pulse_sinks() {
-    echo list-sinks | pacmd | awk '/\* index:/ {print $3}'
-}
-
-get_pulse_sources() {
-    echo list-sources | pacmd | awk '/\* index:/ {print $3}'
-}
-
 suspend_pulse() {
     for i in $(get_pulse_users); do
-        for j in $(get_pulse_sinks); do
-            echo set-sink-mute $j true | sudo -H -u \#$i pacmd &> /dev/null
+        for j in $(echo list-sinks | sudo -H -u \#$i pacmd | awk '/\* index:/ {print $3}'); do
+            echo set-sink-mute $j true | sudo -H -u \#$i pacmd > /dev/null 2>&1
         done
-        for j in $(get_pulse_sources); do
-            echo set-source-mute $j true | sudo -H -u \#$i pacmd &> /dev/null
+        for j in $(echo list-sources | sudo -H -u \#$i pacmd | awk '/\* index:/ {print $3}'); do
+            echo set-source-mute $j true | sudo -H -u \#$i pacmd > /dev/null 2>&1
         done
-        echo suspend true | sudo -H -u \#$i pacmd &> /dev/null
+        echo suspend true | sudo -H -u \#$i pacmd > /dev/null 2>&1
     done
 }
 
 resume_pulse() {
     for i in $(get_pulse_users); do
-        for j in $(get_pulse_sinks); do
-            echo set-sink-mute $j false | sudo -H -u \#$i pacmd &> /dev/null
+        for j in $(echo list-sinks | sudo -H -u \#$i pacmd | awk '/\* index:/ {print $3}'); do
+            echo set-sink-mute $j false | sudo -H -u \#$i pacmd > /dev/null 2>&1
         done
-        for j in $(get_pulse_sources); do
-            echo set-source-mute $j false | sudo -H -u \#$i pacmd &> /dev/null
+        for j in $(echo list-sources | sudo -H -u \#$i pacmd | awk '/\* index:/ {print $3}'); do
+            echo set-source-mute $j false | sudo -H -u \#$i pacmd > /dev/null 2>&1
         done
-        echo suspend false | sudo -H -u \#$i pacmd &> /dev/null
+        echo suspend false | sudo -H -u \#$i pacmd > /dev/null 2>&1
     done
 }
 
