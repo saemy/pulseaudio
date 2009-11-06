@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: git trunk\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2009-09-29 23:47+0200\n"
-"PO-Revision-Date: 2009-11-09 15:16+0200\n"
+"PO-Revision-Date: 2009-09-15 13:24+0300\n"
 "Last-Translator: Ville-Pekka Vainio <vpivaini@cs.helsinki.fi>\n"
 "Language-Team: Finnish <laatu@lokalisointi.org>\n"
 "MIME-Version: 1.0\n"
@@ -2378,122 +2378,133 @@ msgstr "PulseAudio-äänipalvelin"
 #: ../src/modules/module-rygel-media-server.c:569
 #: ../src/modules/module-rygel-media-server.c:583
 msgid "Output Devices"
-msgstr "Ulostulolaitteet"
+msgstr ""
 
 #: ../src/modules/module-rygel-media-server.c:570
 #: ../src/modules/module-rygel-media-server.c:584
+#, fuzzy
 msgid "Input Devices"
-msgstr "Sisääntulolaitteet"
+msgstr "Sisääntulo %s"
 
 #: ../src/modules/module-rygel-media-server.c:774
 msgid "Audio on @HOSTNAME@"
-msgstr "Ääni koneella @HOSTNAME@"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1701
+#, fuzzy
 msgid "Input"
-msgstr "Sisääntulo"
+msgstr "Sisääntulo %s"
 
 #: ../src/modules/alsa/alsa-mixer.c:1702
 msgid "Docking Station Input"
-msgstr "Telakan sisääntulo"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1703
 msgid "Docking Station Microphone"
-msgstr "Telakan mikrofoni"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1704
 msgid "Line-In"
-msgstr "Linjasisääntulo"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1705
 msgid "Microphone"
-msgstr "Mikrofoni"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1706
 msgid "External Microphone"
-msgstr "Ulkoinen mikrofoni"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1707
+#, fuzzy
 msgid "Internal Microphone"
-msgstr "Sisäinen mikrofoni"
+msgstr "Sisäinen äänentoisto"
 
 #: ../src/modules/alsa/alsa-mixer.c:1708
 msgid "Radio"
-msgstr "Radio"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1709
 msgid "Video"
-msgstr "Video"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1710
 msgid "Automatic Gain Control"
-msgstr "Automaattinen äänenvoimakkuuden säätö"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1711
 msgid "No Automatic Gain Control"
-msgstr "Ei automaattista äänenvoimakkuuden säätöä"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1712
 msgid "Boost"
-msgstr "Vahvistus"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1713
 msgid "No Boost"
-msgstr "Ei vahvistusta"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1714
 msgid "Amplifier"
-msgstr "Vahvistin"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1715
 msgid "No Amplifier"
-msgstr "Ei vahvistinta"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1773
+#, fuzzy
 msgid "Analog Input"
-msgstr "Analoginen sisääntulo"
+msgstr "Analoginen mono"
 
 #: ../src/modules/alsa/alsa-mixer.c:1774
+#, fuzzy
 msgid "Analog Microphone"
-msgstr "Analoginen mikrofoni"
+msgstr "Analoginen mono"
 
 #: ../src/modules/alsa/alsa-mixer.c:1775
+#, fuzzy
 msgid "Analog Line-In"
-msgstr "Analoginen linjasisääntulo"
+msgstr "Analoginen mono"
 
 #: ../src/modules/alsa/alsa-mixer.c:1776
+#, fuzzy
 msgid "Analog Radio"
-msgstr "Analoginen radio"
+msgstr "Analoginen mono"
 
 #: ../src/modules/alsa/alsa-mixer.c:1777
+#, fuzzy
 msgid "Analog Video"
-msgstr "Analoginen video"
+msgstr "Analoginen stereo"
 
 #: ../src/modules/alsa/alsa-mixer.c:1778
+#, fuzzy
 msgid "Analog Output"
-msgstr "Analoginen ulostulo"
+msgstr "Tyhjä ulostulo"
 
 #: ../src/modules/alsa/alsa-mixer.c:1779
+#, fuzzy
 msgid "Analog Headphones"
-msgstr "Analoginen kuulokeliitäntä"
+msgstr "Analoginen mono"
 
 #: ../src/modules/alsa/alsa-mixer.c:1780
 msgid "Analog Output (LFE)"
-msgstr "Analoginen ulostulo (LFE)"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1781
+#, fuzzy
 msgid "Analog Mono Output"
-msgstr "Analoginen monoulostulo"
+msgstr "Analoginen mono"
 
 #: ../src/modules/alsa/alsa-mixer.c:1981
-#, c-format
+#, fuzzy, c-format
 msgid "%s+%s"
-msgstr "%s+%s"
+msgstr "%s %s"
 
 #: ../src/modules/alsa/alsa-mixer.c:1984 ../src/modules/alsa/alsa-mixer.c:3404
-#, c-format
+#, fuzzy, c-format
 msgid "%s / %s"
-msgstr "%s / %s"
+msgstr "%s %s"
 
 #: ../src/modules/alsa/alsa-mixer.c:2790
 msgid "Analog Mono"
@@ -2504,16 +2515,19 @@ msgid "Analog Stereo"
 msgstr "Analoginen stereo"
 
 #: ../src/modules/alsa/alsa-mixer.c:2792
+#, fuzzy
 msgid "Analog Surround 2.1"
-msgstr "Analoginen tilaääni 2.1"
+msgstr "Analoginen tilaääni 4.1"
 
 #: ../src/modules/alsa/alsa-mixer.c:2793
+#, fuzzy
 msgid "Analog Surround 3.0"
-msgstr "Analoginen tilaääni 3.0"
+msgstr "Analoginen tilaääni 4.0"
 
 #: ../src/modules/alsa/alsa-mixer.c:2794
+#, fuzzy
 msgid "Analog Surround 3.1"
-msgstr "Analoginen tilaääni 3.1"
+msgstr "Analoginen tilaääni 4.1"
 
 #: ../src/modules/alsa/alsa-mixer.c:2795
 msgid "Analog Surround 4.0"
@@ -2532,16 +2546,19 @@ msgid "Analog Surround 5.1"
 msgstr "Analoginen tilaääni 5.1"
 
 #: ../src/modules/alsa/alsa-mixer.c:2799
+#, fuzzy
 msgid "Analog Surround 6.0"
-msgstr "Analoginen tilaääni 6.0"
+msgstr "Analoginen tilaääni 4.0"
 
 #: ../src/modules/alsa/alsa-mixer.c:2800
+#, fuzzy
 msgid "Analog Surround 6.1"
-msgstr "Analoginen tilaääni 6.1"
+msgstr "Analoginen tilaääni 4.1"
 
 #: ../src/modules/alsa/alsa-mixer.c:2801
+#, fuzzy
 msgid "Analog Surround 7.0"
-msgstr "Analoginen tilaääni 7.0"
+msgstr "Analoginen tilaääni 4.0"
 
 #: ../src/modules/alsa/alsa-mixer.c:2802
 msgid "Analog Surround 7.1"
@@ -2552,8 +2569,9 @@ msgid "Digital Stereo (IEC958)"
 msgstr "Digitaalinen stereo (IEC958)"
 
 #: ../src/modules/alsa/alsa-mixer.c:2804
+#, fuzzy
 msgid "Digital Surround 4.0 (IEC958)"
-msgstr "Digitaalinen tilaääni 4.0 (IEC958)"
+msgstr "Digitaalinen tilaääni 4.0 (IEC958/AC3)"
 
 #: ../src/modules/alsa/alsa-mixer.c:2805
 msgid "Digital Surround 4.0 (IEC958/AC3)"

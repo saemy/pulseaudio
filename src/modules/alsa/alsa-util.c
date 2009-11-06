@@ -43,7 +43,6 @@
 #include <pulsecore/once.h>
 #include <pulsecore/thread.h>
 #include <pulsecore/conf-parser.h>
-#include <pulsecore/core-rtclock.h>
 
 #include "alsa-util.h"
 #include "alsa-mixer.h"
@@ -259,10 +258,6 @@ int pa_alsa_set_hw_params(
         goto finish;
     }
 
-    /* We ignore very small sampling rate deviations */
-    if (_ss.rate >= ss->rate*.95 && _ss.rate <= ss->rate*1.05)
-        _ss.rate = ss->rate;
-
     if (require_exact_channel_number) {
         if ((ret = snd_pcm_hw_params_set_channels(pcm_handle, hwparams, _ss.channels)) < 0) {
             pa_log_debug("snd_pcm_hw_params_set_channels(%u) failed: %s", _ss.channels, pa_alsa_strerror(ret));
@@ -307,7 +302,7 @@ int pa_alsa_set_hw_params(
             if (set_buffer_size(pcm_handle, hwparams_copy, _buffer_size) >= 0 &&
                 set_period_size(pcm_handle, hwparams_copy, _period_size) >= 0 &&
                 snd_pcm_hw_params(pcm_handle, hwparams_copy) >= 0) {
-                pa_log_debug("Set buffer size first (to %lu samples), period size second (to %lu samples).", (unsigned long) _buffer_size, (unsigned long) _period_size);
+                pa_log_debug("Set buffer size first, period size second.");
                 goto success;
             }
 
@@ -315,7 +310,7 @@ int pa_alsa_set_hw_params(
             if (set_period_size(pcm_handle, hwparams_copy, _period_size) >= 0 &&
                 set_buffer_size(pcm_handle, hwparams_copy, _buffer_size) >= 0 &&
                 snd_pcm_hw_params(pcm_handle, hwparams_copy) >= 0) {
-                pa_log_debug("Set period size first (to %lu samples), buffer size second (to %lu samples).", (unsigned long) _period_size, (unsigned long) _buffer_size);
+                pa_log_debug("Set period size first, buffer size second.");
                 goto success;
             }
         }
@@ -326,7 +321,7 @@ int pa_alsa_set_hw_params(
             /* Third try: set only buffer size */
             if (set_buffer_size(pcm_handle, hwparams_copy, _buffer_size) >= 0 &&
                 snd_pcm_hw_params(pcm_handle, hwparams_copy) >= 0) {
-                pa_log_debug("Set only buffer size (to %lu samples).", (unsigned long) _buffer_size);
+                pa_log_debug("Set only buffer size second.");
                 goto success;
             }
         }
@@ -337,7 +332,7 @@ int pa_alsa_set_hw_params(
             /* Fourth try: set only period size */
             if (set_period_size(pcm_handle, hwparams_copy, _period_size) >= 0 &&
                 snd_pcm_hw_params(pcm_handle, hwparams_copy) >= 0) {
-                pa_log_debug("Set only period size (to %lu samples).", (unsigned long) _period_size);
+                pa_log_debug("Set only period size second.");
                 goto success;
             }
         }
@@ -378,7 +373,9 @@ success:
         goto finish;
     }
 
-    ss->rate = _ss.rate;
+    /* If the sample rate deviates too much, we need to resample */
+    if (_ss.rate < ss->rate*.95 || _ss.rate > ss->rate*1.05)
+        ss->rate = _ss.rate;
     ss->channels = _ss.channels;
     ss->format = _ss.format;
 
@@ -406,7 +403,7 @@ finish:
     return ret;
 }
 
-int pa_alsa_set_sw_params(snd_pcm_t *pcm, snd_pcm_uframes_t avail_min, pa_bool_t period_event) {
+int pa_alsa_set_sw_params(snd_pcm_t *pcm, snd_pcm_uframes_t avail_min) {
     snd_pcm_sw_params_t *swparams;
     snd_pcm_uframes_t boundary;
     int err;
@@ -420,7 +417,7 @@ int pa_alsa_set_sw_params(snd_pcm_t *pcm, snd_pcm_uframes_t avail_min, pa_bool_t
         return err;
     }
 
-    if ((err = snd_pcm_sw_params_set_period_event(pcm, swparams, period_event)) < 0) {
+    if ((err = snd_pcm_sw_params_set_period_event(pcm, swparams, 0)) < 0) {
         pa_log_warn("Unable to disable period event: %s\n", pa_alsa_strerror(err));
         return err;
     }
@@ -1310,27 +1307,4 @@ const char* pa_alsa_strerror(int errnum) {
     PA_STATIC_TLS_SET(cstrerror, translated);
 
     return translated;
-}
-
-pa_bool_t pa_alsa_may_tsched(pa_bool_t want) {
-
-    if (!want)
-        return FALSE;
-
-    if (!pa_rtclock_hrtimer()) {
-        /* We cannot depend on being woken up in time when the timers
-        are inaccurate, so let's fallback to classic IO based playback
-        then. */
-        pa_log_notice("Disabling timer-based scheduling because high-resolution timers are not available from the kernel.");
-        return FALSE; }
-
-    if (pa_running_in_vm()) {
-        /* We cannot depend on being woken up when we ask for in a VM,
-         * so let's fallback to classic IO based playback then. */
-        pa_log_notice("Disabling timer-based scheduling because running inside a VM.");
-        return FALSE;
-    }
-
-
-    return TRUE;
 }

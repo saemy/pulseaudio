@@ -60,9 +60,7 @@
       " movq "#s", %%mm5             \n\t"                                              \
       " pmulhw "#v", "#s"            \n\t" /* .. |    0  | vl*p0 | */                   \
       " paddw %%mm4, "#s"            \n\t" /* .. |    0  | vl*p0 | + sign correct */    \
-      " pslld $16, "#s"              \n\t" /* .. | vl*p0 |   0   | */                   \
       " psrld $16, "#v"              \n\t" /* .. |    0  |   vh  | */                   \
-      " psrad $16, "#s"              \n\t" /* .. |     vl*p0     | sign extend */       \
       " pmaddwd %%mm5, "#v"          \n\t" /* .. |    p0 * vh    | */                   \
       " paddd "#s", "#v"             \n\t" /* .. |    p0 * v0    | */                   \
       " packssdw "#v", "#v"          \n\t" /* .. | p1*v1 | p0*v0 | */
@@ -154,7 +152,7 @@ pa_volume_s16ne_mmx (int16_t *samples, int32_t *volumes, unsigned channels, unsi
         " emms                          \n\t"
 
         : "+r" (samples), "+r" (volumes), "+r" (length), "=D" ((pa_reg_x86)channel), "=&r" (temp)
-        : "rm" ((pa_reg_x86)channels)
+        : "X" ((pa_reg_x86)channels)
         : "cc"
     );
 }
@@ -230,7 +228,7 @@ pa_volume_s16re_mmx (int16_t *samples, int32_t *volumes, unsigned channels, unsi
         " emms                          \n\t"
 
         : "+r" (samples), "+r" (volumes), "+r" (length), "=D" ((pa_reg_x86)channel), "=&r" (temp)
-        : "rm" ((pa_reg_x86)channels)
+        : "X" ((pa_reg_x86)channels)
         : "cc"
     );
 }
@@ -257,14 +255,11 @@ static void run_test (void) {
     printf ("checking MMX %zd\n", sizeof (samples));
 
     pa_random (samples, sizeof (samples));
-    /* for (i = 0; i < SAMPLES; i++)
-       samples[i] = -1; */
     memcpy (samples_ref, samples, sizeof (samples));
     memcpy (samples_orig, samples, sizeof (samples));
 
     for (i = 0; i < CHANNELS; i++)
         volumes[i] = rand() >> 1;
-        /* volumes[i] = 0x0000ffff; */
     for (padding = 0; padding < PADDING; padding++, i++)
         volumes[i] = volumes[padding];
 
@@ -272,7 +267,7 @@ static void run_test (void) {
     pa_volume_s16ne_mmx (samples, volumes, CHANNELS, sizeof (samples));
     for (i = 0; i < SAMPLES; i++) {
         if (samples[i] != samples_ref[i]) {
-            printf ("%d: %04x != %04x (%04x * %08x)\n", i, samples[i], samples_ref[i],
+            printf ("%d: %04x != %04x (%04x * %04x)\n", i, samples[i], samples_ref[i],
                   samples_orig[i], volumes[i % CHANNELS]);
         }
     }

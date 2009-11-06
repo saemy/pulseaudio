@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: pulseaudio\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-10-30 10:22+0000\n"
-"PO-Revision-Date: 2009-10-30 22:51+0100\n"
+"POT-Creation-Date: 2009-09-29 23:47+0200\n"
+"PO-Revision-Date: 2009-09-16 22:10+0100\n"
 "Last-Translator: Miloš Komarčević <kmilos@gmail.com>\n"
 "Language-Team: Serbian (sr) <fedora-trans-sr@redhat.com>\n"
 "MIME-Version: 1.0\n"
@@ -2371,7 +2371,7 @@ msgstr "Snimanje visoke tačnosti (A2DP)"
 
 #: ../src/modules/bluetooth/module-bluetooth-device.c:2213
 msgid "Telephony Duplex (HSP/HFP)"
-msgstr "Dvosmerno telefoniranje (HSP/HFP)"
+msgstr "Dvostrano telefoniranje (HSP/HFP)"
 
 #: ../src/modules/reserve-wrap.c:151
 msgid "PulseAudio Sound Server"
@@ -2380,203 +2380,217 @@ msgstr "PulseAudio zvučni sistem"
 #: ../src/modules/module-rygel-media-server.c:569
 #: ../src/modules/module-rygel-media-server.c:583
 msgid "Output Devices"
-msgstr "Izlazni uređaji"
+msgstr ""
 
 #: ../src/modules/module-rygel-media-server.c:570
 #: ../src/modules/module-rygel-media-server.c:584
 msgid "Input Devices"
-msgstr "Ulazni uređaji"
+msgstr ""
 
 #: ../src/modules/module-rygel-media-server.c:774
 msgid "Audio on @HOSTNAME@"
-msgstr "Audio na @HOSTNAME@"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1701
 msgid "Input"
-msgstr "Ulaz"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1702
 msgid "Docking Station Input"
-msgstr "Ulaz priključne stanice"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1703
 msgid "Docking Station Microphone"
-msgstr "Mikrofon priključne stanice"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1704
 msgid "Line-In"
-msgstr "Linija u"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1705
 msgid "Microphone"
-msgstr "Mikrofon"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1706
 msgid "External Microphone"
-msgstr "Spoljni mikrofon"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1707
+#, fuzzy
 msgid "Internal Microphone"
-msgstr "Unutrašnji mikrofon"
+msgstr "Unutrašnji zvuk"
 
 #: ../src/modules/alsa/alsa-mixer.c:1708
 msgid "Radio"
-msgstr "Radio"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1709
 msgid "Video"
-msgstr "Video"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1710
 msgid "Automatic Gain Control"
-msgstr "Samostalna kontrola pojačanja"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1711
 msgid "No Automatic Gain Control"
-msgstr "Bez samostalne kontrole pojačanja"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1712
 msgid "Boost"
-msgstr "Podizanje"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1713
 msgid "No Boost"
-msgstr "Bez podizanja"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1714
 msgid "Amplifier"
-msgstr "Pojačalo"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1715
 msgid "No Amplifier"
-msgstr "Bez pojačala"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1773
 msgid "Analog Input"
-msgstr "Analogni ulaz"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1774
 msgid "Analog Microphone"
-msgstr "Analogni mikrofon"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1775
 msgid "Analog Line-In"
-msgstr "Analogna linija u"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1776
 msgid "Analog Radio"
-msgstr "Analogni radio"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1777
 msgid "Analog Video"
-msgstr "Analogni video"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1778
+#, fuzzy
 msgid "Analog Output"
-msgstr "Analogni izlaz"
+msgstr "Prazan izlaz"
 
 #: ../src/modules/alsa/alsa-mixer.c:1779
 msgid "Analog Headphones"
-msgstr "Analogne slušalice"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1780
 msgid "Analog Output (LFE)"
-msgstr "Analogni izlaz (LFE)"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1781
 msgid "Analog Mono Output"
-msgstr "Analogni mono izlaz"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1981
-#, c-format
+#, fuzzy, c-format
 msgid "%s+%s"
-msgstr "%s+%s"
+msgstr "%s %s"
 
 #: ../src/modules/alsa/alsa-mixer.c:1984 ../src/modules/alsa/alsa-mixer.c:3404
-#, c-format
+#, fuzzy, c-format
 msgid "%s / %s"
-msgstr "%s / %s"
+msgstr "%s %s"
 
 #: ../src/modules/alsa/alsa-mixer.c:2790
 msgid "Analog Mono"
-msgstr "Analogni mono"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:2791
+#, fuzzy
 msgid "Analog Stereo"
-msgstr "Analogni stereo"
+msgstr "Stereo"
 
 #: ../src/modules/alsa/alsa-mixer.c:2792
+#, fuzzy
 msgid "Analog Surround 2.1"
-msgstr "Analogni okružujući 2.1"
+msgstr "Okružujući 4.1"
 
 #: ../src/modules/alsa/alsa-mixer.c:2793
+#, fuzzy
 msgid "Analog Surround 3.0"
-msgstr "Analogni okružujući 3.0"
+msgstr "Okružujući 4.0"
 
 #: ../src/modules/alsa/alsa-mixer.c:2794
+#, fuzzy
 msgid "Analog Surround 3.1"
-msgstr "Analogni okružujući 3.1"
+msgstr "Okružujući 4.1"
 
 #: ../src/modules/alsa/alsa-mixer.c:2795
+#, fuzzy
 msgid "Analog Surround 4.0"
-msgstr "Analogni okružujući 4.0"
+msgstr "Okružujući 4.0"
 
 #: ../src/modules/alsa/alsa-mixer.c:2796
+#, fuzzy
 msgid "Analog Surround 4.1"
-msgstr "Analogni okružujući 4.1"
+msgstr "Okružujući 4.1"
 
 #: ../src/modules/alsa/alsa-mixer.c:2797
+#, fuzzy
 msgid "Analog Surround 5.0"
-msgstr "Analogni okružujući 5.0"
+msgstr "Okružujući 5.0"
 
 #: ../src/modules/alsa/alsa-mixer.c:2798
+#, fuzzy
 msgid "Analog Surround 5.1"
-msgstr "Analogni okružujući 5.1"
+msgstr "Okružujući 5.1"
 
 #: ../src/modules/alsa/alsa-mixer.c:2799
+#, fuzzy
 msgid "Analog Surround 6.0"
-msgstr "Analogni okružujući 6.0"
+msgstr "Okružujući 4.0"
 
 #: ../src/modules/alsa/alsa-mixer.c:2800
+#, fuzzy
 msgid "Analog Surround 6.1"
-msgstr "Analogni okružujući 6.1"
+msgstr "Okružujući 4.1"
 
 #: ../src/modules/alsa/alsa-mixer.c:2801
+#, fuzzy
 msgid "Analog Surround 7.0"
-msgstr "Analogni okružujući 7.0"
+msgstr "Okružujući 4.0"
 
 #: ../src/modules/alsa/alsa-mixer.c:2802
+#, fuzzy
 msgid "Analog Surround 7.1"
-msgstr "Analogni okružujući 7.1"
+msgstr "Okružujući 7.1"
 
 #: ../src/modules/alsa/alsa-mixer.c:2803
 msgid "Digital Stereo (IEC958)"
-msgstr "Digitalni stereo (IEC958)"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:2804
 msgid "Digital Surround 4.0 (IEC958)"
-msgstr "Digitalni okružujući 4.0 (IEC958)"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:2805
 msgid "Digital Surround 4.0 (IEC958/AC3)"
-msgstr "Digitalni okružujući 4.0 (IEC958/AC3)"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:2806
 msgid "Digital Surround 5.1 (IEC958/AC3)"
-msgstr "Digitalni okružujući 5.1 (IEC958/AC3)"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:2807
 msgid "Digital Stereo (HDMI)"
-msgstr "Digitalni stereo (HDMI)"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:2928
 msgid "Analog Mono Duplex"
-msgstr "Dvosmerni analogni mono"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:2929
 msgid "Analog Stereo Duplex"
-msgstr "Dvosmerni analogni stereo"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:2930
 msgid "Digital Stereo Duplex (IEC958)"
-msgstr "Dvosmerni digitalni stereo (IEC958)"
+msgstr ""
