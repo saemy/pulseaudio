@@ -1,6 +1,7 @@
 etc/pulse/default.pa
 etc/pulse/system.pa
 etc/pulse/daemon.conf
+etc/dbus-1/system.d/pulseaudio-system.conf
 etc/X11/Xsession.d/70pulseaudio
 usr/bin/pulseaudio
 usr/bin/pulse-session
@@ -34,6 +35,7 @@ usr/lib/pulse-*/modules/module-mmkbd-evdev.so
 usr/lib/pulse-*/modules/module-native-protocol-fd.so
 usr/lib/pulse-*/modules/module-native-protocol-tcp.so
 usr/lib/pulse-*/modules/module-native-protocol-unix.so
+usr/lib/pulse-*/modules/module-udev-detect.so
 usr/lib/pulse-*/modules/module-loopback.so
 usr/share/alsa
 usr/share/apport
@@ -60,9 +62,10 @@ usr/lib/pulse-*/modules/module-augment-properties.so
 usr/lib/pulse-*/modules/module-card-restore.so
 usr/lib/pulse-*/modules/module-cork-music-on-phone.so
 usr/lib/pulse-*/modules/module-sine-source.so
+usr/lib/pulse-*/modules/module-rygel-media-server.so
+lib/udev/rules.d/90-pulseaudio.rules
 usr/share/man/man5/default.pa.5
 usr/share/locale
 usr/share/pulseaudio
 usr/lib/libpulsecore-*.so
 usr/lib/pm-utils/sleep.d/01PulseAudio
-lib/udev/rules.d
