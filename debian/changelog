@@ -1,3 +1,15 @@
+pulseaudio (1:0.9.19-2ubuntu2) lucid; urgency=low
+
+  * debian/control:
+    + Promote pulseaudio-utils to Depends for pulseaudio so that the
+      pm-utils script is present (LP: #478182)
+    - Drop obsolete Depends on pulseaudio-module-udev for pulseaudio
+      (LP: #477382)
+  * debian/01PulseAudio: Don't fail suspend/resume when system-wide
+    daemon is running (LP: #476505)
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Fri, 06 Nov 2009 18:37:36 -0500
+
 pulseaudio (1:0.9.19-2ubuntu1) lucid; urgency=low
 
   * Merge from Debian unstable, remaining changes:
