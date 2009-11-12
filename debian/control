@@ -28,6 +28,8 @@ Conflicts: libltdl3 (<< 1.5.24-1), pulseaudio-module-udev (<< ${binary:Version})
   pulseaudio-module-rygel-media-server (<< ${binary:Version})
 Replaces: pulseaudio-module-hal, pulseaudio-module-udev (<< ${binary:Version}),
   pulseaudio-module-rygel-media-server (<< ${binary:Version})
+Provides: pulseaudio-module-hal, pulseaudio-module-udev,
+  pulseaudio-module-rygel-media-server
 Recommends: pulseaudio-module-x11, gstreamer0.10-pulseaudio, pulseaudio-esound-compat, rtkit
 Suggests: pavumeter, paman, paprefs
 Description: PulseAudio sound server

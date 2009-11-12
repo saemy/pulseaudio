@@ -1,3 +1,26 @@
+pulseaudio (1:0.9.20-0ubuntu1) lucid; urgency=low
+
+  * New upstream bugfix release
+    + Fix BT validation (LP: #437293)
+  * debian/control:
+    + pulseaudio Provides pulseaudio-module-hal, pulseaudio-module-udev,
+      and pulseaudio-module-rygel-media-server for upgrades (really
+      fixes LP #477382)
+  * debian/patches/:
+    - 0002-work-around-suspend-on-idle-source-sink-race.patch:
+    - 0052-revert-sse2-optimize.patch:
+    - 0055-backport-alsa-bt-position-fixes-b3592a1.patch:
+      Remove; applied upstream
+    + 0054-mute-iec958-optical-raw-for-audigyX.patch: Refresh
+    + 0055-handle-Master-Front.patch: For new VIA-based HDA, handle
+      this mixer control until we've fixed it in linux (LP: #478868)
+  * Bump for 0.9.20:
+    + debian/libpulse0.shlibs
+    + debian/pulseaudio.shlibs
+    + debian/rules
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Thu, 12 Nov 2009 19:19:21 -0500
+
 pulseaudio (1:0.9.19-2ubuntu2) lucid; urgency=low
 
   * debian/control:

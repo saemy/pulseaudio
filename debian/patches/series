@@ -1,6 +1,5 @@
 0001-Work-around-some-platforms-not-having-O_CLOEXEC.patch
 0001-change-resample-and-buffering.patch
-#0002-work-around-suspend-on-idle-source-sink-race.patch
 0003-add-padsp-wrapper-check.patch
 0005-load-sample-dir-lazy.patch
 0006-a11y-special-case-disable.patch
@@ -10,8 +9,7 @@
 0051-fix-sigfpe-mcalign.patch
 0054-mute-iec958-optical-raw-for-audigyX.patch
 0090-disable-flat-volumes.patch
-0052-revert-sse2-optimize.patch
 0091-dont-load-cork-music-on-phone.patch
-0055-backport-alsa-bt-position-fixes-b3592a1.patch
 0056-ignore-sound-class-modem.patch
 0057-load-module-x11-bell.patch
+0055-handle-Master-Front.patch
