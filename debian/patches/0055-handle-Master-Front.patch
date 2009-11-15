@@ -10,7 +10,7 @@ Index: pulseaudio-0.9.20/src/modules/alsa/mixer/paths/analog-output-headphones-2
 +switch = mute
 +volume = merge
 +override-map.1 = all
-+override-map.2 = all-left,all-right
++override-map.2 = front-left,front-right
 +
  [Element Master Mono]
  switch = off
@@ -27,7 +27,7 @@ Index: pulseaudio-0.9.20/src/modules/alsa/mixer/paths/analog-output-headphones.c
 +switch = mute
 +volume = merge
 +override-map.1 = all
-+override-map.2 = all-left,all-right
++override-map.2 = front-left,front-right
 +
  [Element Master Mono]
  switch = off
@@ -59,7 +59,7 @@ Index: pulseaudio-0.9.20/src/modules/alsa/mixer/paths/analog-output-speaker.conf
 +switch = mute
 +volume = merge
 +override-map.1 = all
-+override-map.2 = all-left,all-right
++override-map.2 = front-left,front-right
 +
  [Element Master Mono]
  switch = off
@@ -76,7 +76,7 @@ Index: pulseaudio-0.9.20/src/modules/alsa/mixer/paths/analog-output.conf
 +switch = mute
 +volume = merge
 +override-map.1 = all
-+override-map.2 = all-left,all-right
++override-map.2 = front-left,front-right
 +
  [Element Master Mono]
  switch = off

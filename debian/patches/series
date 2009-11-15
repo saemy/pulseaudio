@@ -1,5 +1,6 @@
 0001-Work-around-some-platforms-not-having-O_CLOEXEC.patch
 0001-change-resample-and-buffering.patch
+0002-Fix-makefiles-to-include-all-alsa-path-files-on-inst.patch
 0003-add-padsp-wrapper-check.patch
 0005-load-sample-dir-lazy.patch
 0006-a11y-special-case-disable.patch

@@ -1,3 +1,14 @@
+pulseaudio (1:0.9.20-0ubuntu2) lucid; urgency=low
+
+  * Add 0002-Fix-makefiles-to-include-all-alsa-path-files-on-inst.patch
+    from Debian unstable (thanks, Sjoerd Simons!)
+  * Fix 0055-handle-Master-Front.patch to handle only front elements
+    based on comments from Lennart. The patch now does the right thing
+    despite linux still doing the wrong thing, but at least we handle
+    cases where linux will do the right thing.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Sun, 15 Nov 2009 13:45:49 -0500
+
 pulseaudio (1:0.9.20-0ubuntu1) lucid; urgency=low
 
   * New upstream bugfix release
