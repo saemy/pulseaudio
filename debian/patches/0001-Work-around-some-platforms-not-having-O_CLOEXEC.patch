@@ -1,4 +1,4 @@
-From c6bb9dd1df10c49b11ac65db138fc3f34757bb41 Mon Sep 17 00:00:00 2001
+From 041bcda2518671a4375e77659c80d1be43625904 Mon Sep 17 00:00:00 2001
 From: Clint Adams <schizo@debian.org>
 Date: Sun, 25 Oct 2009 12:35:14 +0000
 Subject: [PATCH] Work around some platforms not having O_CLOEXEC
