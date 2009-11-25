@@ -1,3 +1,13 @@
+pulseaudio (1:0.9.20-0ubuntu3) lucid; urgency=low
+
+  * drop the enforced switch to ARMv6 in debian rules (we build for cortex-a8
+    by default now).
+  * Make sure the arm specific assembler code builds properly with thumb
+    support by adding -Wa,-mimplicit-it=thumb instead until it is added to
+    the default compiler flags (fixes FTBFS).
+
+ -- Oliver Grawert <ogra@ubuntu.com>  Wed, 25 Nov 2009 14:16:59 +0100
+
 pulseaudio (1:0.9.20-0ubuntu2) lucid; urgency=low
 
   * Add 0002-Fix-makefiles-to-include-all-alsa-path-files-on-inst.patch
