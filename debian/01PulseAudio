@@ -15,31 +15,58 @@ get_pulse_users() {
     fi
 }
 
+call_pacmd() {
+    sudo -H -u \#$1 pacmd
+}
+
+# $1 = sink|source
+# $2 = uid
+save_pulse_state_and_mute() {
+    echo list-${1}s | call_pacmd $2 | \
+        sed -n 's/^[[:space:]*]*//; /\(index\|mute\)/p' | \
+        (index="";
+            while read field value; do
+                if [ ${field%:} = "index" ]; then
+                    index=$value
+                else
+                    savestate pulse:$2:$1$index $value
+                    echo set-$1-mute $index yes | call_pacmd $2
+                fi
+            done)
+}
+
+# $1 = sink|source
+# $2 = uid
+restore_pulse_state() {
+    echo list-${1}s | call_pacmd $2 | \
+        sed -n 's/^[[:space:]*]*index: //p' | \
+        while read index; do
+            if state_exists pulse:$2:$1$index; then
+                echo set-$1-mute \
+                    $index \
+                    $(restorestate pulse:$2:$1$index) | \
+                    call_pacmd $2;
+            fi
+        done
+}
+
 suspend_pulse() {
     for i in $(get_pulse_users); do
-        for j in $(echo list-sinks | sudo -H -u \#$i pacmd | awk '/\* index:/ {print $3}'); do
-            echo set-sink-mute $j true | sudo -H -u \#$i pacmd > /dev/null 2>&1
-        done
-        for j in $(echo list-sources | sudo -H -u \#$i pacmd | awk '/\* index:/ {print $3}'); do
-            echo set-source-mute $j true | sudo -H -u \#$i pacmd > /dev/null 2>&1
-        done
-        echo suspend true | sudo -H -u \#$i pacmd > /dev/null 2>&1
+        save_pulse_state_and_mute sink $i > /dev/null 2>&1
+        save_pulse_state_and_mute source $i > /dev/null 2>&1
+        echo suspend true | call_pacmd $i > /dev/null 2>&1
     done
 }
 
 resume_pulse() {
     for i in $(get_pulse_users); do
-        for j in $(echo list-sinks | sudo -H -u \#$i pacmd | awk '/\* index:/ {print $3}'); do
-            echo set-sink-mute $j false | sudo -H -u \#$i pacmd > /dev/null 2>&1
-        done
-        for j in $(echo list-sources | sudo -H -u \#$i pacmd | awk '/\* index:/ {print $3}'); do
-            echo set-source-mute $j false | sudo -H -u \#$i pacmd > /dev/null 2>&1
-        done
-        echo suspend false | sudo -H -u \#$i pacmd > /dev/null 2>&1
+        restore_pulse_state sink $i > /dev/null 2>&1
+        restore_pulse_state source $i > /dev/null 2>&1
+        echo suspend false | call_pacmd $i > /dev/null 2>&1
     done
 }
 
-case $1 in 
+case $1 in
     hibernate|suspend)
         suspend_pulse
         ;;

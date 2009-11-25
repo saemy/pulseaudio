@@ -1,13 +1,10 @@
 0001-Work-around-some-platforms-not-having-O_CLOEXEC.patch
 0001-change-resample-and-buffering.patch
-0002-Fix-makefiles-to-include-all-alsa-path-files-on-inst.patch
 0003-add-padsp-wrapper-check.patch
 0005-load-sample-dir-lazy.patch
-0006-a11y-special-case-disable.patch
 0007-esd-honour-system-pulseaudio.patch
 0050-revert-pacmd-poll-argv.patch
 #0090-use-volume-ignore-for-analog-output.patch
-0051-fix-sigfpe-mcalign.patch
 0054-mute-iec958-optical-raw-for-audigyX.patch
 0090-disable-flat-volumes.patch
 0091-dont-load-cork-music-on-phone.patch

@@ -1,3 +1,39 @@
+pulseaudio (1:0.9.21-0ubuntu1) lucid; urgency=low
+
+  [ Daniel T Chen ]
+  * New upstream bugfix release
+  * debian/control: pulseaudio-module-raop must Depends
+    pulseaudio-module-zeroconf (LP: #484870). Thanks, Dominic Evans!
+  * Bump for 0.9.21:
+    + debian/libpulse0.shlibs
+    + debian/pulseaudio.shlibs
+    + debian/rules
+  * debian/pulseaudio.install:
+    debian/copyright: Amend for addition of:
+    + module-device-manager.so
+  * debian/README.Debian: Update for Ubuntu 9.04+.
+  * 0002-Fix-makefiles-to-include-all-alsa-path-files-on-inst.patch:
+    Drop, fixed upstream.
+  * 0051-fix-sigfpe-mcalign.patch: Drop, needs fixing in alsa-kernel
+    and alsa-lib.
+
+  [ Chow Loong Jin ]
+  * debian/01PulseAudio: Add/modify functions to (re)store sink/source
+    state for (resume/)suspend (LP: #404986, #483900)
+
+  [ Luke Yelavich ]
+  * Remove wrapper scripts and accessibility special case, to help with the
+    desktop startup time. The accessibility case should be solved in
+    speech-dispatcher by the time lucid ships.
+    - debian/patches/0006-a11y-special-case-disable.patch: Removed
+    - debian/70pulseaudio: Removed
+    - debian/pulse-session: Removed
+    - debian/pulseaudio.install: Re-add the xdg autostart desktop file
+    - debian/pulseaudio.preinst: Instead of removing the xdg autostart desktop
+      file on upgrade, remove the 70pulseaudio X Session script on upgrade
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Wed, 25 Nov 2009 16:34:54 -0500
+
 pulseaudio (1:0.9.20-0ubuntu3) lucid; urgency=low
 
   * drop the enforced switch to ARMv6 in debian rules (we build for cortex-a8

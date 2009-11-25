@@ -169,6 +169,14 @@ License: LGPL-2.1+
  On Debian systems, the complete text of the LGPL-2 can be found in
  /usr/share/common-licenses/LGPL-2.1.
 
+Files: src/modules/module-device-manager.c
+Copyright:
+ Copyright 2006-2008 Lennart Poettering
+ Copyright 2009 Colin Guthrie
+License: LGPL-2.1+
+ On Debian systems, the complete text of the LGPL-2 can be found in
+ /usr/share/common-licenses/LGPL-2.1.
+
 Files: src/modules/module-solaris.c
 Copyright:
  Copyright 2006 Lennart Poettering
