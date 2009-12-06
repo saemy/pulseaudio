@@ -1,3 +1,21 @@
+pulseaudio (1:0.9.21-0ubuntu2) lucid; urgency=low
+
+  * Fix LP: #394500, #450222:
+    + 0070-dont-bail-on-sound-class-modem-devs.patch:
+      + Add pa_udev_get_sysattr() helper function so that we can
+        retrieve pcm_class.
+      + Add short-circuit in is_card_busy(). Currently there is an
+        incorrect break out of the loop when an HDA modem is driven by
+        slmodemd/hsfmodem. An HDA modem resides in device 6 and will
+        not contain "closed\n" for
+        /proc/asound/card.../pcm.../sub.../status.
+  * 0058-Backport-4c793.patch: Use pa_stream pointers to hashmaps
+    instead of dynarrays.
+  * 0059-Backport-978d3.patch: Mark shared variables as volatile
+    to supress compiler optimizations.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Sun, 06 Dec 2009 19:40:04 -0500
+
 pulseaudio (1:0.9.21-0ubuntu1) lucid; urgency=low
 
   [ Daniel T Chen ]

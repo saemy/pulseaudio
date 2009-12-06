@@ -11,3 +11,6 @@
 0056-ignore-sound-class-modem.patch
 0057-load-module-x11-bell.patch
 0055-handle-Master-Front.patch
+0070-dont-bail-on-sound-class-modem-devs.patch
+0058-Backport-4c793.patch
+0059-Backport-978d3.patch
