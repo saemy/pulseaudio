@@ -1,3 +1,9 @@
+pulseaudio (1:0.9.21-0ubuntu4) lucid; urgency=low
+
+  * 0060-fix-implicit-func-decl-cpu-arm.patch: Fix FTBFS on armel.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Wed, 16 Dec 2009 22:45:25 -0500
+
 pulseaudio (1:0.9.21-0ubuntu3) lucid; urgency=low
 
   * 0070-dont-bail-on-sound-class-modem-devs.patch: Fix parameter

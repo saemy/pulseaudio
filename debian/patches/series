@@ -14,3 +14,4 @@
 0070-dont-bail-on-sound-class-modem-devs.patch
 0058-Backport-4c793.patch
 0059-Backport-978d3.patch
+0060-fix-implicit-func-decl-cpu-arm.patch

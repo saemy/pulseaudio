@@ -1,0 +1,12 @@
+Index: pulseaudio-0.9.21/src/pulsecore/cpu-arm.c
+===================================================================
+--- pulseaudio-0.9.21.orig/src/pulsecore/cpu-arm.c	2009-12-16 22:42:44.000000000 -0500
++++ pulseaudio-0.9.21/src/pulsecore/cpu-arm.c	2009-12-16 22:43:50.000000000 -0500
+@@ -30,6 +30,7 @@
+ #include <fcntl.h>
+ 
+ #include <pulse/xmalloc.h>
++#include <pulsecore/core-util.h>
+ #include <pulsecore/log.h>
+ 
+ #include "cpu-arm.h"
