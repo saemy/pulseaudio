@@ -1,3 +1,10 @@
+pulseaudio (1:0.9.21-0ubuntu3) lucid; urgency=low
+
+  * 0070-dont-bail-on-sound-class-modem-devs.patch: Fix parameter
+    in function call. Thanks to Whoopie for spotting.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Wed, 16 Dec 2009 20:13:43 -0500
+
 pulseaudio (1:0.9.21-0ubuntu2) lucid; urgency=low
 
   * Fix LP: #394500, #450222:

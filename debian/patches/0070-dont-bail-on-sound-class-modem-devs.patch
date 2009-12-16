@@ -1,7 +1,7 @@
 Index: pulseaudio-0.9.21/src/modules/module-udev-detect.c
 ===================================================================
---- pulseaudio-0.9.21.orig/src/modules/module-udev-detect.c	2009-12-07 22:26:14.000000000 -0500
-+++ pulseaudio-0.9.21/src/modules/module-udev-detect.c	2009-12-07 22:26:30.000000000 -0500
+--- pulseaudio-0.9.21.orig/src/modules/module-udev-detect.c	2009-12-16 20:08:38.000000000 -0500
++++ pulseaudio-0.9.21/src/modules/module-udev-detect.c	2009-12-16 20:13:09.000000000 -0500
 @@ -103,13 +103,17 @@
      return e + 5;
  }
@@ -75,7 +75,7 @@ Index: pulseaudio-0.9.21/src/modules/module-udev-detect.c
 +        goto finish;
 +    }
 +
-+    t = pa_sprintf_malloc("%s/class/sound/card%i", udev_get_sys_path(udev), card_idx);
++    t = pa_sprintf_malloc("%s/class/sound/card%s", udev_get_sys_path(udev), card_idx);
 +    card = udev_device_new_from_syspath(udev, t);
 +    pa_xfree(t);
 +
