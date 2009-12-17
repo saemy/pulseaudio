@@ -1,3 +1,10 @@
+pulseaudio (1:0.9.21-0ubuntu5) lucid; urgency=low
+
+  * Refresh 0060-fix-implicit-func-decl-cpu-arm.patch with more FTBFS-
+    on-armel fixes (all submitted upstream).
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Thu, 17 Dec 2009 00:01:49 -0500
+
 pulseaudio (1:0.9.21-0ubuntu4) lucid; urgency=low
 
   * 0060-fix-implicit-func-decl-cpu-arm.patch: Fix FTBFS on armel.
