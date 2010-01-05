@@ -1,0 +1,12 @@
+Index: pulseaudio-0.9.21/src/pulse/thread-mainloop.c
+===================================================================
+--- pulseaudio-0.9.21.orig/src/pulse/thread-mainloop.c	2010-01-05 18:41:12.000000000 -0500
++++ pulseaudio-0.9.21/src/pulse/thread-mainloop.c	2010-01-05 18:41:55.000000000 -0500
+@@ -116,6 +116,7 @@
+     pa_mainloop_set_poll_func(m->real_mainloop, poll_func, m->mutex);
+ 
+     m->n_waiting = 0;
++    m->n_waiting_for_accept = 0;
+ 
+     return m;
+ }

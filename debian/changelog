@@ -1,3 +1,14 @@
+pulseaudio (1:0.9.21-0ubuntu6) lucid; urgency=low
+
+  * Backport fix from master HEAD:
+    + 0061-Backport-c5fdb.patch (LP: #502992)
+  * The following patches have been merged upstream, but we'll continue
+    to apply them here until the next upstream snapshot:
+    . 0056-ignore-sound-class-modem.patch
+    . 0060-fix-implicit-func-decl-cpu-arm.patch
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Tue, 05 Jan 2010 18:34:40 -0500
+
 pulseaudio (1:0.9.21-0ubuntu5) lucid; urgency=low
 
   * Refresh 0060-fix-implicit-func-decl-cpu-arm.patch with more FTBFS-
