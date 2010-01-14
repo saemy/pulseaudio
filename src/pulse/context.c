@@ -63,7 +63,7 @@
 #include <pulsecore/native-common.h>
 #include <pulsecore/pdispatch.h>
 #include <pulsecore/pstream.h>
-#include <pulsecore/dynarray.h>
+#include <pulsecore/hashmap.h>
 #include <pulsecore/socket-client.h>
 #include <pulsecore/pstream-util.h>
 #include <pulsecore/core-rtclock.h>
@@ -160,8 +160,8 @@ pa_context *pa_context_new_with_proplist(pa_mainloop_api *mainloop, const char *
     c->client = NULL;
     c->pstream = NULL;
     c->pdispatch = NULL;
-    c->playback_streams = pa_dynarray_new();
-    c->record_streams = pa_dynarray_new();
+    c->playback_streams = pa_hashmap_new(pa_idxset_trivial_hash_func, pa_idxset_trivial_compare_func);
+    c->record_streams = pa_hashmap_new(pa_idxset_trivial_hash_func, pa_idxset_trivial_compare_func);
     c->client_index = PA_INVALID_INDEX;
     c->use_rtclock = pa_mainloop_is_our_api(mainloop);
 
@@ -266,9 +266,9 @@ static void context_free(pa_context *c) {
 #endif
 
     if (c->record_streams)
-        pa_dynarray_free(c->record_streams, NULL, NULL);
+        pa_hashmap_free(c->record_streams, NULL, NULL);
     if (c->playback_streams)
-        pa_dynarray_free(c->playback_streams, NULL, NULL);
+        pa_hashmap_free(c->playback_streams, NULL, NULL);
 
     if (c->mempool)
         pa_mempool_free(c->mempool);
@@ -375,7 +375,7 @@ static void pstream_memblock_callback(pa_pstream *p, uint32_t channel, int64_t o
 
     pa_context_ref(c);
 
-    if ((s = pa_dynarray_get(c->record_streams, channel))) {
+    if ((s = pa_hashmap_get(c->record_streams, PA_UINT32_TO_PTR(channel)))) {
 
         if (chunk->memblock) {
             pa_memblockq_seek(s->record_memblockq, offset, seek, TRUE);
@@ -987,18 +987,22 @@ int pa_context_connect(
         /* Prepend in reverse order */
 
         /* Follow the X display */
-        if ((d = getenv("DISPLAY"))) {
-            d = pa_xstrndup(d, strcspn(d, ":"));
+        if (c->conf->auto_connect_display) {
+            if ((d = getenv("DISPLAY"))) {
+                d = pa_xstrndup(d, strcspn(d, ":"));
 
-            if (*d)
-                c->server_list = pa_strlist_prepend(c->server_list, d);
+                if (*d)
+                    c->server_list = pa_strlist_prepend(c->server_list, d);
 
-            pa_xfree(d);
+                pa_xfree(d);
+            }
         }
 
         /* Add TCP/IP on the localhost */
-        c->server_list = pa_strlist_prepend(c->server_list, "tcp6:[::1]");
-        c->server_list = pa_strlist_prepend(c->server_list, "tcp4:127.0.0.1");
+        if (c->conf->auto_connect_localhost) {
+            c->server_list = pa_strlist_prepend(c->server_list, "tcp6:[::1]");
+            c->server_list = pa_strlist_prepend(c->server_list, "tcp4:127.0.0.1");
+        }
 
         /* The system wide instance via PF_LOCAL */
         c->server_list = pa_strlist_prepend(c->server_list, PA_SYSTEM_RUNTIME_PATH PA_PATH_SEP PA_NATIVE_DEFAULT_UNIX_SOCKET);
@@ -1488,6 +1492,7 @@ pa_time_event* pa_context_rttime_new(pa_context *c, pa_usec_t usec, pa_time_even
     struct timeval tv;
 
     pa_assert(c);
+    pa_assert(PA_REFCNT_VALUE(c) >= 1);
     pa_assert(c->mainloop);
 
     if (usec == PA_USEC_INVALID)
@@ -1502,7 +1507,9 @@ void pa_context_rttime_restart(pa_context *c, pa_time_event *e, pa_usec_t usec) 
     struct timeval tv;
 
     pa_assert(c);
+    pa_assert(PA_REFCNT_VALUE(c) >= 1);
     pa_assert(c->mainloop);
+
 
     if (usec == PA_USEC_INVALID)
         c->mainloop->time_restart(e, NULL);
@@ -1510,4 +1517,18 @@ void pa_context_rttime_restart(pa_context *c, pa_time_event *e, pa_usec_t usec) 
         pa_timeval_rtstore(&tv, usec, c->use_rtclock);
         c->mainloop->time_restart(e, &tv);
     }
+}
+
+size_t pa_context_get_tile_size(pa_context *c, const pa_sample_spec *ss) {
+    size_t fs, mbs;
+
+    pa_assert(c);
+    pa_assert(PA_REFCNT_VALUE(c) >= 1);
+
+    PA_CHECK_VALIDITY_RETURN_ANY(c, !pa_detect_fork(), PA_ERR_FORKED, (size_t) -1);
+    PA_CHECK_VALIDITY_RETURN_ANY(c, !ss || pa_sample_spec_valid(ss), PA_ERR_INVALID, (size_t) -1);
+
+    fs = ss ? pa_frame_size(ss) : 1;
+    mbs = PA_ROUND_DOWN(pa_mempool_block_size_max(c->mempool), fs);
+    return PA_MAX(mbs, fs);
 }

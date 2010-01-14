@@ -22,6 +22,7 @@
 ; default-sink =
 ; default-source =
 ; default-server =
+; default-dbus-server =
 
 ; autospawn = yes
 ; daemon-binary = @PA_BINARY@
@@ -31,3 +32,6 @@
 
 ; enable-shm = yes
 ; shm-size-bytes = 0 # setting this 0 will use the system-default, usually 64 MiB
+
+; auto-connect-localhost = no
+; auto-connect-display = no

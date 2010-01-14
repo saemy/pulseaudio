@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: pulseaudio\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-10-18 05:22+0000\n"
-"PO-Revision-Date: 2009-10-18 11:46+0200\n"
+"POT-Creation-Date: 2009-09-29 23:47+0200\n"
+"PO-Revision-Date: 2009-08-26 21:46+0200\n"
 "Last-Translator: Milo Casagrande <milo@ubuntu.com>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
 "MIME-Version: 1.0\n"
@@ -62,11 +62,11 @@ msgstr ""
 
 #: ../src/modules/module-always-sink.c:39
 msgid "Always keeps at least one sink loaded even if it's a null one"
-msgstr "Mantiene sempre almeno un sink caricato anche se è nullo"
+msgstr ""
 
 #: ../src/modules/module-always-sink.c:83
 msgid "Dummy Output"
-msgstr "Output dummy"
+msgstr ""
 
 #: ../src/modules/module-ladspa-sink.c:49
 msgid "Virtual LADSPA sink"
@@ -88,11 +88,12 @@ msgstr ""
 
 #: ../src/modules/module-null-sink.c:55
 msgid "Clocked NULL sink"
-msgstr "Sink NULL temporizzato"
+msgstr ""
 
 #: ../src/modules/module-null-sink.c:291
+#, fuzzy
 msgid "Null Output"
-msgstr "Output nullo"
+msgstr "Output %s"
 
 #: ../src/pulsecore/sink.c:2613
 msgid "Internal Audio"
@@ -1138,11 +1139,11 @@ msgstr "Fork del client"
 
 #: ../src/pulse/error.c:68
 msgid "Input/Output error"
-msgstr "Errore di input/output"
+msgstr ""
 
 #: ../src/pulse/error.c:69
 msgid "Device or resource busy"
-msgstr "Dispositivo o risorsa occupata"
+msgstr ""
 
 #: ../src/pulse/sample.c:172
 #, c-format
@@ -1354,9 +1355,9 @@ msgstr "Recupero della latenza non riuscito: %s"
 
 # dubbio: tempo o durata??
 #: ../src/utils/pacat.c:580
-#, c-format
+#, fuzzy, c-format
 msgid "Time: %0.3f sec; Latency: %0.0f usec."
-msgstr "Tempo: %0.3f sec; Latenza: %0.0f microsec."
+msgstr "Tempo: %0.3f sec; Latenza: %0.0f microsec.  \r"
 
 #: ../src/utils/pacat.c:599
 #, c-format
@@ -1715,9 +1716,9 @@ msgid "pa_mainloop_run() failed.\n"
 msgstr "pa_mainloop_run() non riuscita.\n"
 
 #: ../src/utils/pactl.c:135
-#, c-format
+#, fuzzy, c-format
 msgid "Failed to get statistics: %s"
-msgstr "Recupero delle statistiche non riuscito: %s"
+msgstr "Recupero delle statistiche non riuscito: %s\n"
 
 #: ../src/utils/pactl.c:141
 #, c-format
@@ -1737,9 +1738,9 @@ msgid "Sample cache size: %s\n"
 msgstr "Dimensione della cache dei campioni: %s\n"
 
 #: ../src/utils/pactl.c:156
-#, c-format
+#, fuzzy, c-format
 msgid "Failed to get server information: %s"
-msgstr "Recupero delle informazioni del server non riuscito: %s"
+msgstr "Recupero delle informazioni del server non riuscito: %s\n"
 
 #: ../src/utils/pactl.c:164
 #, c-format
@@ -1765,9 +1766,9 @@ msgstr ""
 "Cookie: %08x\n"
 
 #: ../src/utils/pactl.c:205
-#, c-format
+#, fuzzy, c-format
 msgid "Failed to get sink information: %s"
-msgstr "Recupero delle informazioni del sink non riuscito: %s"
+msgstr "Recupero delle informazioni del sink non riuscito: %s\n"
 
 # nel relativo messaggio per il source
 # c'è "monitor of sink", quindi assumo che
@@ -1822,9 +1823,9 @@ msgid "\tActive Port: %s\n"
 msgstr "\tPorta attiva: %s\n"
 
 #: ../src/utils/pactl.c:297
-#, c-format
+#, fuzzy, c-format
 msgid "Failed to get source information: %s"
-msgstr "Recupero delle informazioni della sorgente non riuscito: %s"
+msgstr "Recupero delle informazioni della sorgente non riuscito: %s\n"
 
 #: ../src/utils/pactl.c:313
 #, c-format
@@ -1874,9 +1875,9 @@ msgid "n/a"
 msgstr "N/D"
 
 #: ../src/utils/pactl.c:375
-#, c-format
+#, fuzzy, c-format
 msgid "Failed to get module information: %s"
-msgstr "Recupero delle informazioni del modulo non riuscito: %s"
+msgstr "Recupero delle informazioni del modulo non riuscito: %s\n"
 
 #: ../src/utils/pactl.c:393
 #, c-format
@@ -1896,9 +1897,9 @@ msgstr ""
 "\t\t%s\n"
 
 #: ../src/utils/pactl.c:412
-#, c-format
+#, fuzzy, c-format
 msgid "Failed to get client information: %s"
-msgstr "Recupero delle informazioni del client non riuscito: %s"
+msgstr "Recupero delle informazioni del client non riuscito: %s\n"
 
 #: ../src/utils/pactl.c:430
 #, c-format
@@ -1916,9 +1917,9 @@ msgstr ""
 "\t\t%s\n"
 
 #: ../src/utils/pactl.c:447
-#, c-format
+#, fuzzy, c-format
 msgid "Failed to get card information: %s"
-msgstr "Recupero delle informazioni della scheda non riuscito: %s"
+msgstr "Recupero delle informazioni della scheda non riuscito: %s\n"
 
 #: ../src/utils/pactl.c:465
 #, c-format
@@ -1952,9 +1953,10 @@ msgstr "\tProfilo attivo: %s\n"
 #
 # from http://pulseaudio.org/wiki/WritingVolumeControlUIs
 #: ../src/utils/pactl.c:496
-#, c-format
+#, fuzzy, c-format
 msgid "Failed to get sink input information: %s"
-msgstr "Recupero delle informazioni dell'ingresso per il sink non riuscito: %s"
+msgstr ""
+"Recupero delle informazioni dell'ingresso per il sink non riuscito: %s\n"
 
 #: ../src/utils/pactl.c:515
 #, c-format
@@ -1998,10 +2000,10 @@ msgstr ""
 #
 # from http://pulseaudio.org/wiki/WritingVolumeControlUIs
 #: ../src/utils/pactl.c:554
-#, c-format
+#, fuzzy, c-format
 msgid "Failed to get source output information: %s"
 msgstr ""
-"Recupero delle informazioni dell'uscita per la sorgente non riuscito: %s"
+"Recupero delle informazioni dell'uscita per la sorgente non riuscito: %s\n"
 
 #: ../src/utils/pactl.c:574
 #, c-format
@@ -2033,9 +2035,9 @@ msgstr ""
 "\t\t%s\n"
 
 #: ../src/utils/pactl.c:605
-#, c-format
+#, fuzzy, c-format
 msgid "Failed to get sample information: %s"
-msgstr "Recupero delle informazioni del campione non riuscito: %s"
+msgstr "Recupero delle informazioni del campione non riuscito: %s\n"
 
 # campiona lazy??
 #: ../src/utils/pactl.c:623
@@ -2070,25 +2072,27 @@ msgstr ""
 "\t\t%s\n"
 
 #: ../src/utils/pactl.c:653 ../src/utils/pactl.c:663
-#, c-format
+#, fuzzy, c-format
 msgid "Failure: %s"
-msgstr "Fallimento: %s"
+msgstr "Fallimento: %s\n"
 
 #: ../src/utils/pactl.c:687
-#, c-format
+#, fuzzy, c-format
 msgid "Failed to upload sample: %s"
-msgstr "Caricamento del campione non riuscito: %s"
+msgstr "Caricamento del campione non riuscito: %s\n"
 
 #: ../src/utils/pactl.c:704
+#, fuzzy
 msgid "Premature end of file"
-msgstr "Fine del file prematura"
+msgstr "Fine del file prematura\n"
 
 #: ../src/utils/pactl.c:863
+#, fuzzy
 msgid "Got SIGINT, exiting."
-msgstr "Ricevuto SIGINT, uscita."
+msgstr "Ricevuto SIGINT, in uscita.\n"
 
 #: ../src/utils/pactl.c:869
-#, c-format
+#, fuzzy, c-format
 msgid ""
 "%s [options] stat\n"
 "%s [options] list\n"
@@ -2126,21 +2130,15 @@ msgstr ""
 "%s [OPZIONI] upload-sample NOMEFILE [NOME]\n"
 "%s [OPZIONI] play-sample NOME [SINK]\n"
 "%s [OPZIONI] remove-sample NOME\n"
-"%s [OPZIONI] move-sink-input SINKINPUT SINK\n"
-"%s [OPZIONI] move-source-output SOURCEOUTPUT SORGENTE\n"
+"%s [OPZIONI] move-sink-input ID SINK\n"
+"%s [OPZIONI] move-source-output ID SORGENTE\n"
 "%s [OPZIONI] load-module NOME [ARGOMENTI...]\n"
-"%s [OPZIONI] unload-module MODULO\n"
-"%s [OPZIONI] suspend-sink SINK 1|0\n"
-"%s [OPZIONI] suspend-source SORGENTE 1|0\n"
-"%s [OPZIONI] set-card-profile SCHEDA PROFILO\n"
-"%s [OPZIONI] set-sink-port SINK PORTA\n"
-"%s [OPZIONI] set-source-port SORGENTE PORTA\n"
-"%s [OPZIONI] set-sink-volume SINK VOLUME\n"
-"%s [OPZIONI] set-source-volume SORGENTE VOLUME\n"
-"%s [OPZIONI] set-sink-input-volume SINKINPUT VOLUME\n"
-"%s [OPZIONI] set-sink-mute SINK 1|0\n"
-"%s [OPZIONI] set-source-mute SORGENTE 1|0\n"
-"%s [OPZIONI] set-sink-input-mute SINKINPUT 1|0\n"
+"%s [OPZIONI] unload-module ID\n"
+"%s [OPZIONI] suspend-sink [SINK] 1|0\n"
+"%s [OPZIONI] suspend-source [SORGENTE] 1|0\n"
+"%s [OPZIONI] set-card-profile [SCHEDA] [PROFILO] \n"
+"%s [OPZIONI] set-sink-port [SINK] [PORTA] \n"
+"%s [OPZIONI] set-source-port [SORGENTE] [PORTA] \n"
 "\n"
 "  -h, --help                       Mostra questo aiuto\n"
 "      --version                    Mostra la versione\n"
@@ -2160,113 +2158,139 @@ msgstr ""
 "Link eseguito con libpulse %s\n"
 
 #: ../src/utils/pactl.c:979
+#, fuzzy
 msgid "Please specify a sample file to load"
-msgstr "Specificare un file campione da caricare"
+msgstr "Specificare un file campione da caricare\n"
 
 #: ../src/utils/pactl.c:992
+#, fuzzy
 msgid "Failed to open sound file."
-msgstr "Apertura del file audio non riuscita."
+msgstr "Apertura del file audio non riuscita.\n"
 
 #: ../src/utils/pactl.c:1004
+#, fuzzy
 msgid "Warning: Failed to determine sample specification from file."
 msgstr ""
 "Attenzione: determinazione della specifica di campionamento dal file non "
-"riuscita."
+"riuscita.\n"
 
 #: ../src/utils/pactl.c:1014
+#, fuzzy
 msgid "You have to specify a sample name to play"
-msgstr "È necessario specificare un nome di campione da riprodurre"
+msgstr "È necessario specificare un nome di campione da riprodurre\n"
 
 #: ../src/utils/pactl.c:1026
+#, fuzzy
 msgid "You have to specify a sample name to remove"
-msgstr "È necessario specificare un nome di campione da rimuovere"
+msgstr "È necessario specificare un nome di campione da rimuovere\n"
 
 #: ../src/utils/pactl.c:1035
+#, fuzzy
 msgid "You have to specify a sink input index and a sink"
-msgstr "È necessario specificare un indice di ingresso per sink e un sink"
+msgstr "È necessario specificare un indice di ingresso per sink e un sink\n"
 
 #: ../src/utils/pactl.c:1045
+#, fuzzy
 msgid "You have to specify a source output index and a source"
 msgstr ""
-"È necessario specificare una indice di uscita per sorgente e una sorgente"
+"È necessario specificare una indice di uscita per sorgente e una sorgente\n"
 
 #: ../src/utils/pactl.c:1060
+#, fuzzy
 msgid "You have to specify a module name and arguments."
-msgstr "È necessario specificare un nome di modulo e gli argomenti."
+msgstr "È necessario specificare un nome di modulo e gli argomenti.\n"
 
 #: ../src/utils/pactl.c:1080
+#, fuzzy
 msgid "You have to specify a module index"
-msgstr "È necessario specificare un indice di modulo"
+msgstr "È necessario specificare un indice di modulo\n"
 
 #: ../src/utils/pactl.c:1090
+#, fuzzy
 msgid ""
 "You may not specify more than one sink. You have to specify a boolean value."
 msgstr ""
 "Non è possibile specificare più di un sink. È necessario specificare un "
-"valore booleano."
+"valore booleano.\n"
 
 #: ../src/utils/pactl.c:1103
+#, fuzzy
 msgid ""
 "You may not specify more than one source. You have to specify a boolean "
 "value."
 msgstr ""
 "Non è possibile specificare più di una sorgente. È necessario specificare un "
-"valore booleano."
+"valore booleano.\n"
 
 #: ../src/utils/pactl.c:1115
+#, fuzzy
 msgid "You have to specify a card name/index and a profile name"
 msgstr ""
-"È necessario specificare un nome/indice di scheda e un nome di profilo."
+"È necessario specificare un nome/indice di scheda e un nome di profilo.\n"
 
 #: ../src/utils/pactl.c:1126
+#, fuzzy
 msgid "You have to specify a sink name/index and a port name"
-msgstr "È necessario specificare un nome/indice di sink e un nome di porta"
+msgstr "È necessario specificare un nome/indice di sink e un nome di porta\n"
 
 #: ../src/utils/pactl.c:1137
+#, fuzzy
 msgid "You have to specify a source name/index and a port name"
-msgstr "È necessario specificare un nome/indice di sorgente e un nome di porta"
+msgstr ""
+"È necessario specificare un nome/indice di sorgente e un nome di porta\n"
 
 #: ../src/utils/pactl.c:1149
+#, fuzzy
 msgid "You have to specify a sink name/index and a volume"
-msgstr "È necessario specificare un nome/indice di sink e un nome di porta"
+msgstr "È necessario specificare un nome/indice di sink e un nome di porta\n"
 
 #: ../src/utils/pactl.c:1154 ../src/utils/pactl.c:1171
 #: ../src/utils/pactl.c:1193 ../src/utils/pactl.c:1209
 #: ../src/utils/pactl.c:1226 ../src/utils/pactl.c:1248
+#, fuzzy
 msgid "Invalid volume specification"
-msgstr "Specifica di volume non valida"
+msgstr "Specifica di campionamento non valida"
 
 #: ../src/utils/pactl.c:1166
+#, fuzzy
 msgid "You have to specify a source name/index and a volume"
-msgstr "È necessario specificare un nome/indice di sorgente e un nome di porta"
+msgstr ""
+"È necessario specificare un nome/indice di sorgente e un nome di porta\n"
 
 #: ../src/utils/pactl.c:1183
+#, fuzzy
 msgid "You have to specify a sink input index and a volume"
-msgstr "È necessario specificare un indice di ingresso per sink e un sink"
+msgstr "È necessario specificare un indice di ingresso per sink e un sink\n"
 
 #: ../src/utils/pactl.c:1188
 msgid "Invalid sink input index"
-msgstr "Indice dell'input del sink non valido"
+msgstr ""
 
 #: ../src/utils/pactl.c:1204
+#, fuzzy
 msgid "You have to specify a sink name/index and a mute boolean"
-msgstr "È necessario specificare un nome/indice di sink e un nome di porta"
+msgstr "È necessario specificare un nome/indice di sink e un nome di porta\n"
 
 #: ../src/utils/pactl.c:1221
+#, fuzzy
 msgid "You have to specify a source name/index and a mute boolean"
-msgstr "È necessario specificare un nome/indice di sorgente e un nome di porta"
+msgstr ""
+"È necessario specificare un nome/indice di sorgente e un nome di porta\n"
 
 #: ../src/utils/pactl.c:1238
+#, fuzzy
 msgid "You have to specify a sink input index and a mute boolean"
-msgstr "È necessario specificare un indice di ingresso per sink e un sink"
+msgstr "È necessario specificare un indice di ingresso per sink e un sink\n"
 
 #: ../src/utils/pactl.c:1243
+#, fuzzy
 msgid "Invalid sink input index specification"
-msgstr "Specifica dell'indice di input del sink non valida"
+msgstr "Specifica di campionamento non valida"
 
 #: ../src/utils/pactl.c:1262
+#, fuzzy
 msgid "No valid command specified."
-msgstr "Nessun comando valido specificato."
+msgstr "Nessun comando valido specificato.\n"
 
 #: ../src/utils/pax11publish.c:61
 #, c-format
@@ -2451,122 +2475,133 @@ msgstr "Server sonoro PulseAudio"
 #: ../src/modules/module-rygel-media-server.c:569
 #: ../src/modules/module-rygel-media-server.c:583
 msgid "Output Devices"
-msgstr "Dispositivi di uscita"
+msgstr ""
 
 #: ../src/modules/module-rygel-media-server.c:570
 #: ../src/modules/module-rygel-media-server.c:584
+#, fuzzy
 msgid "Input Devices"
-msgstr "Dispositivi di ingresso"
+msgstr "Input %s"
 
 #: ../src/modules/module-rygel-media-server.c:774
 msgid "Audio on @HOSTNAME@"
-msgstr "Audio su @HOSTNAME@"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1701
+#, fuzzy
 msgid "Input"
-msgstr "Ingresso"
+msgstr "Input %s"
 
 #: ../src/modules/alsa/alsa-mixer.c:1702
 msgid "Docking Station Input"
-msgstr "Ingresso docking station"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1703
 msgid "Docking Station Microphone"
-msgstr "Microfono docking station"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1704
 msgid "Line-In"
-msgstr "Line-In"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1705
 msgid "Microphone"
-msgstr "Microfono"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1706
 msgid "External Microphone"
-msgstr "Microfono esterno"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1707
+#, fuzzy
 msgid "Internal Microphone"
-msgstr "Microfono interno"
+msgstr "Audio interno"
 
 #: ../src/modules/alsa/alsa-mixer.c:1708
 msgid "Radio"
-msgstr "Radio"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1709
 msgid "Video"
-msgstr "Video"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1710
 msgid "Automatic Gain Control"
-msgstr "Controllo automatico del guadagno"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1711
 msgid "No Automatic Gain Control"
-msgstr "Nessun controllo automatico del guadagno"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1712
 msgid "Boost"
-msgstr "Boost"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1713
 msgid "No Boost"
-msgstr "Nessun boost"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1714
 msgid "Amplifier"
-msgstr "Amplificatore"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1715
 msgid "No Amplifier"
-msgstr "Nessun amplificatore"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1773
+#, fuzzy
 msgid "Analog Input"
-msgstr "Ingresso analogico"
+msgstr "Mono analogico"
 
 #: ../src/modules/alsa/alsa-mixer.c:1774
+#, fuzzy
 msgid "Analog Microphone"
-msgstr "Microfono analogico"
+msgstr "Mono analogico"
 
 #: ../src/modules/alsa/alsa-mixer.c:1775
+#, fuzzy
 msgid "Analog Line-In"
-msgstr "Line-in analogico"
+msgstr "Mono analogico"
 
 #: ../src/modules/alsa/alsa-mixer.c:1776
+#, fuzzy
 msgid "Analog Radio"
-msgstr "Radio analogica"
+msgstr "Mono analogico"
 
 #: ../src/modules/alsa/alsa-mixer.c:1777
+#, fuzzy
 msgid "Analog Video"
-msgstr "Video analogico"
+msgstr "Stereo analogico"
 
 #: ../src/modules/alsa/alsa-mixer.c:1778
+#, fuzzy
 msgid "Analog Output"
-msgstr "Uscita analogica"
+msgstr "Output %s"
 
 #: ../src/modules/alsa/alsa-mixer.c:1779
+#, fuzzy
 msgid "Analog Headphones"
-msgstr "Cuffie analogiche"
+msgstr "Mono analogico"
 
 #: ../src/modules/alsa/alsa-mixer.c:1780
 msgid "Analog Output (LFE)"
-msgstr "Uscita analogica (LFE)"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1781
+#, fuzzy
 msgid "Analog Mono Output"
-msgstr "Uscita mono analogica"
+msgstr "Mono analogico"
 
 #: ../src/modules/alsa/alsa-mixer.c:1981
-#, c-format
+#, fuzzy, c-format
 msgid "%s+%s"
-msgstr "%s+%s"
+msgstr "%s %s"
 
 #: ../src/modules/alsa/alsa-mixer.c:1984 ../src/modules/alsa/alsa-mixer.c:3404
-#, c-format
+#, fuzzy, c-format
 msgid "%s / %s"
-msgstr "%s / %s"
+msgstr "%s %s"
 
 #: ../src/modules/alsa/alsa-mixer.c:2790
 msgid "Analog Mono"
@@ -2577,16 +2612,19 @@ msgid "Analog Stereo"
 msgstr "Stereo analogico"
 
 #: ../src/modules/alsa/alsa-mixer.c:2792
+#, fuzzy
 msgid "Analog Surround 2.1"
-msgstr "Surround analogico 2.1"
+msgstr "Surround analogico 4.1"
 
 #: ../src/modules/alsa/alsa-mixer.c:2793
+#, fuzzy
 msgid "Analog Surround 3.0"
-msgstr "Surround analogico 3.0"
+msgstr "Surround analogico 4.0"
 
 #: ../src/modules/alsa/alsa-mixer.c:2794
+#, fuzzy
 msgid "Analog Surround 3.1"
-msgstr "Surround analogico 3.1"
+msgstr "Surround analogico 4.1"
 
 #: ../src/modules/alsa/alsa-mixer.c:2795
 msgid "Analog Surround 4.0"
@@ -2605,16 +2643,19 @@ msgid "Analog Surround 5.1"
 msgstr "Surround analogico 5.1"
 
 #: ../src/modules/alsa/alsa-mixer.c:2799
+#, fuzzy
 msgid "Analog Surround 6.0"
-msgstr "Surround analogico 6.0"
+msgstr "Surround analogico 4.0"
 
 #: ../src/modules/alsa/alsa-mixer.c:2800
+#, fuzzy
 msgid "Analog Surround 6.1"
-msgstr "Surround analogico 6.1"
+msgstr "Surround analogico 4.1"
 
 #: ../src/modules/alsa/alsa-mixer.c:2801
+#, fuzzy
 msgid "Analog Surround 7.0"
-msgstr "Surround analogico 7.0"
+msgstr "Surround analogico 4.0"
 
 #: ../src/modules/alsa/alsa-mixer.c:2802
 msgid "Analog Surround 7.1"
@@ -2625,8 +2666,9 @@ msgid "Digital Stereo (IEC958)"
 msgstr "Stereo digitale (IEC958)"
 
 #: ../src/modules/alsa/alsa-mixer.c:2804
+#, fuzzy
 msgid "Digital Surround 4.0 (IEC958)"
-msgstr "Surround digitale 4.0 (IEC958)"
+msgstr "Surround digitale 4.0 (IEC958/AC3)"
 
 #: ../src/modules/alsa/alsa-mixer.c:2805
 msgid "Digital Surround 4.0 (IEC958/AC3)"
@@ -2641,13 +2683,235 @@ msgid "Digital Stereo (HDMI)"
 msgstr "Stereo digitale (HDMI)"
 
 #: ../src/modules/alsa/alsa-mixer.c:2928
+#, fuzzy
 msgid "Analog Mono Duplex"
-msgstr "Duplex mono analogico"
+msgstr "Mono analogico"
 
 #: ../src/modules/alsa/alsa-mixer.c:2929
+#, fuzzy
 msgid "Analog Stereo Duplex"
-msgstr "Duplex stereo analogico"
+msgstr "Stereo analogico"
 
 #: ../src/modules/alsa/alsa-mixer.c:2930
+#, fuzzy
 msgid "Digital Stereo Duplex (IEC958)"
-msgstr "Duplex stereo digitale (IEC958)"
+msgstr "Stereo digitale (IEC958)"
+
+#~ msgid "Invalid client name '%s'\n"
+#~ msgstr "Nome del client \"%s\" non valido\n"
+
+#~ msgid "Failed to determine sample specification from file.\n"
+#~ msgstr ""
+#~ "Determinazione della specifica di campionamento dal file non riuscita.\n"
+
+#~ msgid "select(): %s"
+#~ msgstr "select(): %s"
+
+#~ msgid "Cannot connect to system bus: %s"
+#~ msgstr "Impossibile effettuare la connessione al bus di sistema: %s"
+
+#~ msgid "Cannot get caller from PID: %s"
+#~ msgstr "Impossibile ottenere il chiamante dal PID: %s"
+
+#~ msgid "Cannot set UID on caller object."
+#~ msgstr "Impossibile impostare l'UID sull'oggetto chiamante."
+
+#~ msgid "Failed to get CK session."
+#~ msgstr "Recupero della sessione CK non riuscito."
+
+#~ msgid "Cannot set UID on session object."
+#~ msgstr "Impossibile impostare l'UID sull'oggetto sessione."
+
+#~ msgid "Cannot allocate PolKitAction."
+#~ msgstr "Impossibile allocare PolKitAction."
+
+#~ msgid "Cannot set action_id"
+#~ msgstr "Impossibile impostare action_id"
+
+#~ msgid "Cannot allocate PolKitContext."
+#~ msgstr "Impossibile allocare PolKitContext."
+
+#~ msgid "Cannot initialize PolKitContext: %s"
+#~ msgstr "Impossibile inizializzare PolKitContext: %s"
+
+#~ msgid "Could not determine whether caller is authorized: %s"
+#~ msgstr "Impossibile determinare se il chiamante è autorizzato: %s"
+
+#~ msgid "Cannot obtain auth: %s"
+#~ msgstr "Impossibile ottenere l'autorizzazione: %s"
+
+#~ msgid "PolicyKit responded with '%s'"
+#~ msgstr "PolicyKit ha risposto con \"%s\""
+
+#~ msgid ""
+#~ "High-priority scheduling (negative Unix nice level) for the PulseAudio "
+#~ "daemon"
+#~ msgstr ""
+#~ "Scheduling high-priority (valori negativi di \"nice\") per il demone "
+#~ "PulseAudio"
+
+#~ msgid "Real-time scheduling for the PulseAudio daemon"
+#~ msgstr "Scheduling realt-time per il demone PulseAudio"
+
+#~ msgid ""
+#~ "System policy prevents PulseAudio from acquiring high-priority scheduling."
+#~ msgstr ""
+#~ "La politica di sistema previene PulseAudio dall'ottenere lo scheduling "
+#~ "high-priority."
+
+#~ msgid ""
+#~ "System policy prevents PulseAudio from acquiring real-time scheduling."
+#~ msgstr ""
+#~ "La politica di sistema previene PulseAudio dall'ottenere lo scheduling "
+#~ "real-time."
+
+#~ msgid "read() failed: %s\n"
+#~ msgstr "read() non riuscita: %s\n"
+
+#, fuzzy
+#~ msgid "pa_context_connect() failed: %s\n"
+#~ msgstr "pa_context_connect() non riuscita: %s"
+
+#~ msgid "We're in the group '%s', allowing high-priority scheduling."
+#~ msgstr ""
+#~ "Attualmente nel gruppo \"%s\", che consente scheduling high-priority."
+
+#~ msgid "We're in the group '%s', allowing real-time scheduling."
+#~ msgstr "Attualmente nel gruppo \"%s\", che consente scheduling real-time."
+
+#~ msgid "PolicyKit grants us acquire-high-priority privilege."
+#~ msgstr "Privilegi acquire-high-priority assegnati da PolicyKit."
+
+#~ msgid "PolicyKit refuses acquire-high-priority privilege."
+#~ msgstr "Privilegi acquire-high-priority rifiutati da PolicyKit."
+
+#~ msgid "PolicyKit grants us acquire-real-time privilege."
+#~ msgstr "Privilegi acquire-real-time assegnati da PolicyKit."
+
+#~ msgid "PolicyKit refuses acquire-real-time privilege."
+#~ msgstr "Privilegi acquire-real-time rifiutati da PolicyKit."
+
+#~ msgid ""
+#~ "Called SUID root and real-time and/or high-priority scheduling was "
+#~ "requested in the configuration. However, we lack the necessary "
+#~ "privileges:\n"
+#~ "We are not in group '%s', PolicyKit refuse to grant us the requested "
+#~ "privileges and we have no increase RLIMIT_NICE/RLIMIT_RTPRIO resource "
+#~ "limits.\n"
+#~ "For enabling real-time/high-priority scheduling please acquire the "
+#~ "appropriate PolicyKit privileges, or become a member of '%s', or increase "
+#~ "the RLIMIT_NICE/RLIMIT_RTPRIO resource limits for this user."
+#~ msgstr ""
+#~ "Lo SUID root e lo scheduling real-time o high-priority erano richiesti "
+#~ "nella configurazione, ma mancano i privilegi necessari:\n"
+#~ "non si è nel gruppo «%s», PolicyKit non consente di acquisire i privilegi "
+#~ "richiesti e non è possibile incrementare i limiti RLIMIT_NICE/"
+#~ "RLIMIT_RTPRIO della risorsa.\n"
+#~ "Per abilitare lo scheduling real-time/high-priority, acquisire i "
+#~ "privilegi PolicyKit appropriati, diventare un membro di «%s» oppure "
+#~ "incrementare i limiti RLIMIT_NICE/RLIMIT_RTPRIO della risorsa per questo "
+#~ "utente."
+
+#~ msgid ""
+#~ "High-priority scheduling enabled in configuration but not allowed by "
+#~ "policy."
+#~ msgstr ""
+#~ "Scheduling high-priority abilitato nella configurazione, ma non ammesso "
+#~ "dalla politica."
+
+#~ msgid "Successfully increased RLIMIT_RTPRIO"
+#~ msgstr "Incremento di RLIMIT_RTPRIO riuscito"
+
+#~ msgid "RLIMIT_RTPRIO failed: %s"
+#~ msgstr "RLIMIT_RTPRIO non riuscito: %s"
+
+# abbandono??
+#~ msgid "Giving up CAP_NICE"
+#~ msgstr "Abbandono del CAP_NICE"
+
+#~ msgid ""
+#~ "Real-time scheduling enabled in configuration but not allowed by policy."
+#~ msgstr ""
+#~ "Scheduling real-time abilitato nella configurazione, ma non ammesso dalla "
+#~ "politica."
+
+#~ msgid "Limited capabilities successfully to CAP_SYS_NICE."
+#~ msgstr "Limitazione delle capacità a CAP_SYS_NICE riuscita."
+
+#~ msgid "time_new() failed.\n"
+#~ msgstr "time_new() non riuscita.\n"
+
+#~ msgid "Output %s + Input %s"
+#~ msgstr "Output %s + Input %s"
+
+#~ msgid "Stream successfully created\n"
+#~ msgstr "Creazione dello stream riuscita\n"
+
+# fixme!!! errror
+#~ msgid "Stream errror: %s\n"
+#~ msgstr "Errore nello stream: %s\n"
+
+#~ msgid "Connection established.\n"
+#~ msgstr "Connessione stabilita.\n"
+
+#~ msgid ""
+#~ "%s [options] [FILE]\n"
+#~ "\n"
+#~ "  -h, --help                            Show this help\n"
+#~ "      --version                         Show version\n"
+#~ "\n"
+#~ "  -v, --verbose                         Enable verbose operation\n"
+#~ "\n"
+#~ "  -s, --server=SERVER                   The name of the server to connect "
+#~ "to\n"
+#~ "  -d, --device=DEVICE                   The name of the sink to connect "
+#~ "to\n"
+#~ "  -n, --client-name=NAME                How to call this client on the "
+#~ "server\n"
+#~ "      --stream-name=NAME                How to call this stream on the "
+#~ "server\n"
+#~ "      --volume=VOLUME                   Specify the initial (linear) "
+#~ "volume in range 0...65536\n"
+#~ "      --channel-map=CHANNELMAP          Set the channel map to the use\n"
+#~ msgstr ""
+#~ "%s [OPZIONI] [FILE]\n"
+#~ "\n"
+#~ "  -h, --help                            Mostra questo aiuto\n"
+#~ "      --version                         Mostra la versione\n"
+#~ "\n"
+#~ "  -v, --verbose                         Abilita la modalità prolissa\n"
+#~ "\n"
+#~ "  -s, --server=SERVER                   Il nome del server a cui "
+#~ "connettersi\n"
+#~ "  -d, --device=DEVICE                   Il nome del sink a cui "
+#~ "connettersi\n"
+#~ "  -n, --client-name=NOME                Come chiamare questo client sul "
+#~ "server\n"
+#~ "      --stream-name=NOME                Come chiamare questo stream sul "
+#~ "server\n"
+#~ "      --volume=VOLUME                   Specifica il volume iniziale "
+#~ "(lineare) \n"
+#~ "                                         nell'intervallo 0...65536\n"
+#~ "      --channel-map=MAPPA_CANALI        Imposta la mappa di canali da "
+#~ "usare\n"
+
+#~ msgid ""
+#~ "paplay %s\n"
+#~ "Compiled with libpulse %s\n"
+#~ "Linked with libpulse %s\n"
+#~ msgstr ""
+#~ "paplay %s\n"
+#~ "Compilato con libpulse %s\n"
+#~ "Link eseguito con libpulse %s\n"
+
+#~ msgid "Invalid channel map\n"
+#~ msgstr "Mappa dei canali non valida\n"
+
+#~ msgid "Failed to open file '%s'\n"
+#~ msgstr "Apertura del file \"%s\" non riuscita\n"
+
+#~ msgid "Channel map doesn't match file.\n"
+#~ msgstr "La mappa dei canali non corrisponde al file.\n"
+
+#~ msgid "Using sample spec '%s'\n"
+#~ msgstr "In uso la specifica di campionamento \"%s\"\n"

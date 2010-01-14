@@ -106,6 +106,23 @@ USA.
       memory overcommit.</p>
     </option>
 
+    <option>
+      <p><opt>auto-connect-localhost=</opt> Automatically try to
+      connect to localhost via IP. Enabling this is a potential
+      security hole since connections are only authenticated one-way
+      and a rogue server might hence fool a client into sending it its
+      private (e.g. VoIP call) data. This was enabled by default on
+      PulseAudio version 0.9.21 and older. Defaults to
+      <opt>no</opt>.</p>
+    </option>
+
+    <option>
+      <p><opt>auto-connect-display=</opt> Automatically try to connect
+      to the host X11's $DISPLAY variable is set to. The same security
+      issues apply as to <opt>auto-connect-localhost=</opt>. Defaults
+      to <opt>no</opt>.</p>
+    </option>
+
   </section>
 
   <section name="Authors">

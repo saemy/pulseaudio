@@ -1,3 +1,37 @@
+pulseaudio (1:0.9.22~0.9.21+341-g62bf-0ubuntu1) lucid; urgency=low
+
+  * New snapshot based on stable-queue git branch (testing requested
+    specifically by upstream)
+    - LP: #164745, #173212, #201391, #204536, #207796, #210016, #221038,
+    - LP: #226342, #230408, #236423, #237443, #250059, #269585, #274304,
+    - LP: #274577, #275474, #277532, #277566, #277932, #278025, #280534,
+    - LP: #283049, #286816, #287036, #292732, #298011, #298301, #300290,
+    - LP: #302038, #311497, #311853, #324062, #339448, #344057, #348979,
+    - LP: #350829, #356206, #367379, #367544, #369822, #371897, #374846,
+    - LP: #375570, #381801, #399515, #402950, #403786, #408169, #409322,
+    - LP: #409723, #410326, #410446, #417695, #417976, #419271, #421072,
+    - LP: #422774, #423979, #424655, #425028, #427016, #431072, #432660,
+    - LP: #437640, #437996, #442191, #443306, #443389, #446719, #449762,
+    - LP: #455417, #461532, #464652, #483191, #497537, #503780
+  * debian/patches/:
+    + add: 0099-change-configure-git-version-tag.patch: Match released
+           upstream 0.9.21 for shlibs and LIBPULSE_VERSION_INFO
+    - drop: 0004-set-tsched0.patch (no longer relevant)
+            0050-revert-pacmd-poll-argv.patch (no longer relevant)
+            0056-dont-bail-on-sound-class-modem.patch (merged)
+            0056-ignore-sound-class-modem.patch (merged)
+            0058-Backport-4c793.patch (merged)
+            0059-Backport-978d3.patch (merged)
+            0060-fix-implicit-func-decl-cpu-arm.patch (merged)
+            0061-Backport-c5fdb.patch (merged)
+            0070-dont-bail-on-sound-class-modem-devs.patch (merged)
+    + refresh: 0001-change-resample-and-buffering.patch
+               0090-disable-flat-volumes.patch
+               0091-dont-load-cork-music-on-phone.patch
+               0057-load-module-x11-bell.patch
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Thu, 14 Jan 2010 20:33:05 -0500
+
 pulseaudio (1:0.9.21-0ubuntu6) lucid; urgency=low
 
   * Backport fix from master HEAD:

@@ -31,7 +31,6 @@ pulselibexecdir=$(libexecdir)/pulse
 xdgautostartdir=$(sysconfdir)/xdg/autostart
 alsaprofilesetsdir=$(datadir)/pulseaudio/alsa-mixer/profile-sets
 alsapathsdir=$(datadir)/pulseaudio/alsa-mixer/paths
-udevrulesdir=/lib/udev/rules.d
 dbuspolicydir=$(sysconfdir)/dbus-1/system.d
 
 ###################################
@@ -70,6 +69,8 @@ AM_CFLAGS = \
 	-I$(top_builddir)/src/modules/x11 \
 	-I$(top_srcdir)/src/modules/jack \
 	-I$(top_builddir)/src/modules/jack \
+	-I$(top_srcdir)/src/modules/dbus \
+	-I$(top_builddir)/src/modules/dbus \
 	$(PTHREAD_CFLAGS) -D_POSIX_PTHREAD_SEMANTICS \
 	$(LIBSAMPLERATE_CFLAGS) \
 	$(LIBSNDFILE_CFLAGS) \
@@ -107,30 +108,6 @@ MODULE_LDFLAGS = -module -disable-static -avoid-version $(LDFLAGS_NOUNDEFINED)
 #          Extra files            #
 ###################################
 
-ALSA_PROFILES = \
-		modules/alsa/mixer/profile-sets/default.conf \
-		modules/alsa/mixer/profile-sets/native-instruments-audio4dj.conf \
-		modules/alsa/mixer/profile-sets/native-instruments-audio8dj.conf
-
-ALSA_PATHS = \
-		modules/alsa/mixer/paths/analog-input-aux.conf \
-		modules/alsa/mixer/paths/analog-input.conf \
-		modules/alsa/mixer/paths/analog-input.conf.common \
-		modules/alsa/mixer/paths/analog-input-fm.conf \
-		modules/alsa/mixer/paths/analog-input-linein.conf \
-		modules/alsa/mixer/paths/analog-input-mic.conf \
-		modules/alsa/mixer/paths/analog-input-mic.conf.common \
-		modules/alsa/mixer/paths/analog-input-mic-line.conf \
-		modules/alsa/mixer/paths/analog-input-tvtuner.conf \
-		modules/alsa/mixer/paths/analog-input-video.conf \
-		modules/alsa/mixer/paths/analog-output.conf \
-		modules/alsa/mixer/paths/analog-output-speaker.conf \
-		modules/alsa/mixer/paths/analog-output.conf.common \
-		modules/alsa/mixer/paths/analog-output-headphones.conf \
-		modules/alsa/mixer/paths/analog-output-headphones-2.conf \
-		modules/alsa/mixer/paths/analog-output-lfe-on-mono.conf \
-		modules/alsa/mixer/paths/analog-output-mono.conf
-
 EXTRA_DIST = \
 		pulse/client.conf.in \
 		pulse/version.h.in \
@@ -147,10 +124,7 @@ EXTRA_DIST = \
 		daemon/pulseaudio.desktop.in \
 		daemon/pulseaudio-kde.desktop.in \
 		map-file \
-		daemon/pulseaudio-system.conf \
-		modules/alsa/mixer/profile-sets/90-pulseaudio.rules \
-		${ALSA_PROFILES} \
-		${ALSA_PATHS}
+		daemon/pulseaudio-system.conf
 
 pulseconf_DATA = \
 		default.pa \
@@ -180,7 +154,7 @@ BUILT_SOURCES = \
 bin_PROGRAMS = pulseaudio
 
 pulseaudio_SOURCES = \
-		daemon/caps.h daemon/caps.c \
+		daemon/caps.c daemon/caps.h \
 		daemon/cmdline.c daemon/cmdline.h \
 		daemon/cpulimit.c daemon/cpulimit.h \
 		daemon/daemon-conf.c daemon/daemon-conf.h \
@@ -188,10 +162,16 @@ pulseaudio_SOURCES = \
 		daemon/ltdl-bind-now.c daemon/ltdl-bind-now.h \
 		daemon/main.c
 
-pulseaudio_CFLAGS = $(AM_CFLAGS) $(LIBSAMPLERATE_CFLAGS) $(LIBSPEEX_CFLAGS) $(LIBSNDFILE_CFLAGS) $(CAP_CFLAGS) $(DBUS_CFLAGS)
-pulseaudio_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la libpulse.la $(LIBLTDL) $(LIBSAMPLERATE_LIBS) $(LIBSPEEX_LIBS) $(LIBSNDFILE_LIBS) $(CAP_LIBS) $(DBUS_LIBS)
+pulseaudio_CFLAGS = $(AM_CFLAGS) $(LIBSAMPLERATE_CFLAGS) $(LIBSPEEX_CFLAGS) $(LIBSNDFILE_CFLAGS) $(CAP_CFLAGS)
+pulseaudio_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la libpulse.la $(LIBLTDL) $(LIBSAMPLERATE_LIBS) $(LIBSPEEX_LIBS) $(LIBSNDFILE_LIBS) $(CAP_LIBS)
 # This is needed because automake doesn't properly expand the foreach below
 pulseaudio_DEPENDENCIES = libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la libpulse.la $(PREOPEN_LIBS)
+
+if HAVE_DBUS
+pulseaudio_CFLAGS += $(DBUS_CFLAGS)
+pulseaudio_SOURCES += daemon/server-lookup.c daemon/server-lookup.h
+pulseaudio_LDADD += $(DBUS_LIBS)
+endif
 
 if PREOPEN_MODS
 PREOPEN_LIBS = $(PREOPEN_MODS)
@@ -314,6 +294,7 @@ TESTS_BINARIES = \
 		hook-list-test \
 		memblock-test \
 		thread-test \
+		once-test \
 		flist-test \
 		asyncq-test \
 		asyncmsgq-test \
@@ -404,6 +385,11 @@ thread_test_SOURCES = tests/thread-test.c
 thread_test_CFLAGS = $(AM_CFLAGS)
 thread_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 thread_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
+
+once_test_SOURCES = tests/once-test.c
+once_test_CFLAGS = $(AM_CFLAGS)
+once_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
+once_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 
 flist_test_SOURCES = tests/flist-test.c
 flist_test_CFLAGS = $(AM_CFLAGS)
@@ -647,6 +633,12 @@ libpulsecommon_@PA_MAJORMINORMICRO@_la_CFLAGS = $(AM_CFLAGS)
 libpulsecommon_@PA_MAJORMINORMICRO@_la_LDFLAGS = $(AM_LDFLAGS) -avoid-version
 libpulsecommon_@PA_MAJORMINORMICRO@_la_LIBADD = $(AM_LIBADD) $(LIBWRAP_LIBS) $(WINSOCK_LIBS) $(LTLIBICONV) $(LIBSNDFILE_LIBS)
 
+if HAVE_X11
+libpulsecommon_@PA_MAJORMINORMICRO@_la_SOURCES += pulse/client-conf-x11.c pulse/client-conf-x11.h
+libpulsecommon_@PA_MAJORMINORMICRO@_la_CFLAGS += $(X11_CFLAGS)
+libpulsecommon_@PA_MAJORMINORMICRO@_la_LDFLAGS += $(X11_LIBS)
+endif
+
 # proplist-util.h uses these header files, but not the library itself!
 libpulsecommon_@PA_MAJORMINORMICRO@_la_CFLAGS += $(GLIB20_CFLAGS) $(GTK20_CFLAGS)
 
@@ -660,12 +652,21 @@ libpulsecommon_@PA_MAJORMINORMICRO@_la_SOURCES += \
 		pulsecore/mutex-win32.c pulsecore/mutex.h \
 		pulsecore/thread-win32.c pulsecore/thread.h \
 		pulsecore/semaphore-win32.c pulsecore/semaphore.h
-else
+else !OS_IS_WIN32
+if OS_IS_DARWIN
+libpulsecommon_@PA_MAJORMINORMICRO@_la_SOURCES += \
+		pulsecore/mutex-posix.c pulsecore/mutex.h \
+		pulsecore/thread-posix.c pulsecore/thread.h \
+		pulsecore/semaphore-osx.c pulsecore/semaphore.h
+libpulsecommon_@PA_MAJORMINORMICRO@_la_CFLAGS += "-I/Developer/Headers/FlatCarbon/"
+#libpulsecommon_@PA_MAJORMINORMICRO@_la_LDFLAGS += "-framework CoreServices"
+else !OS_IS_DARWIN
 libpulsecommon_@PA_MAJORMINORMICRO@_la_SOURCES += \
 		pulsecore/mutex-posix.c pulsecore/mutex.h \
 		pulsecore/thread-posix.c pulsecore/thread.h \
 		pulsecore/semaphore-posix.c pulsecore/semaphore.h
-endif
+endif !OS_IS_DARWIN
+endif !OS_IS_WIN32
 
 if HAVE_X11
 libpulsecommon_@PA_MAJORMINORMICRO@_la_SOURCES += pulsecore/x11prop.c pulsecore/x11prop.h
@@ -778,12 +779,6 @@ libpulse_la_CFLAGS = $(AM_CFLAGS) $(DBUS_CFLAGS)
 libpulse_la_LIBADD = $(AM_LIBADD) $(WINSOCK_LIBS) $(LTLIBICONV) libpulsecommon-@PA_MAJORMINORMICRO@.la
 libpulse_la_LDFLAGS = $(AM_LDFLAGS) $(VERSIONING_LDFLAGS) -version-info $(LIBPULSE_VERSION_INFO)
 
-if HAVE_X11
-libpulse_la_SOURCES += pulse/client-conf-x11.c pulse/client-conf-x11.h
-libpulse_la_CFLAGS += $(X11_CFLAGS)
-libpulse_la_LDFLAGS += $(X11_LIBS)
-endif
-
 libpulse_simple_la_SOURCES = pulse/simple.c pulse/simple.h
 libpulse_simple_la_CFLAGS = $(AM_CFLAGS)
 libpulse_simple_la_LIBADD = $(AM_LIBADD) libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
@@ -882,7 +877,9 @@ libpulsecore_@PA_MAJORMINORMICRO@_la_LDFLAGS += $(X11_LIBS)
 endif
 
 if HAVE_DBUS
-libpulsecore_@PA_MAJORMINORMICRO@_la_SOURCES += pulsecore/dbus-shared.c pulsecore/dbus-shared.h
+libpulsecore_@PA_MAJORMINORMICRO@_la_SOURCES += \
+		pulsecore/dbus-shared.c pulsecore/dbus-shared.h \
+		pulsecore/protocol-dbus.c pulsecore/protocol-dbus.h
 libpulsecore_@PA_MAJORMINORMICRO@_la_CFLAGS += $(DBUS_CFLAGS)
 libpulsecore_@PA_MAJORMINORMICRO@_la_LIBADD += $(DBUS_LIBS)
 endif
@@ -1075,6 +1072,12 @@ modlibexec_LTLIBRARIES += \
 		module-oss.la
 endif
 
+if HAVE_COREAUDIO
+modlibexec_LTLIBRARIES += \
+		module-coreaudio-detect.la \
+		module-coreaudio-device.la
+endif
+
 pulselibexec_PROGRAMS =
 
 if HAVE_ALSA
@@ -1084,14 +1087,34 @@ modlibexec_LTLIBRARIES += \
 		module-alsa-source.la \
 		module-alsa-card.la
 
-alsaprofilesets_DATA = ${ALSA_PROFILES}
+dist_alsaprofilesets_DATA = \
+		modules/alsa/mixer/profile-sets/default.conf \
+		modules/alsa/mixer/profile-sets/native-instruments-audio4dj.conf \
+		modules/alsa/mixer/profile-sets/native-instruments-audio8dj.conf
 
 if HAVE_UDEV
-udevrules_DATA = \
+dist_udevrules_DATA = \
 		modules/alsa/mixer/profile-sets/90-pulseaudio.rules
 endif
 
-alsapaths_DATA = ${ALSA_PATHS}
+dist_alsapaths_DATA = \
+		modules/alsa/mixer/paths/analog-input-aux.conf \
+		modules/alsa/mixer/paths/analog-input.conf \
+		modules/alsa/mixer/paths/analog-input.conf.common \
+		modules/alsa/mixer/paths/analog-input-fm.conf \
+		modules/alsa/mixer/paths/analog-input-linein.conf \
+		modules/alsa/mixer/paths/analog-input-mic.conf \
+		modules/alsa/mixer/paths/analog-input-mic.conf.common \
+		modules/alsa/mixer/paths/analog-input-mic-line.conf \
+		modules/alsa/mixer/paths/analog-input-tvtuner.conf \
+		modules/alsa/mixer/paths/analog-input-video.conf \
+		modules/alsa/mixer/paths/analog-output.conf \
+		modules/alsa/mixer/paths/analog-output-speaker.conf \
+		modules/alsa/mixer/paths/analog-output.conf.common \
+		modules/alsa/mixer/paths/analog-output-headphones.conf \
+		modules/alsa/mixer/paths/analog-output-headphones-2.conf \
+		modules/alsa/mixer/paths/analog-output-lfe-on-mono.conf \
+		modules/alsa/mixer/paths/analog-output-mono.conf
 
 endif
 
@@ -1104,6 +1127,11 @@ if HAVE_AVAHI
 modlibexec_LTLIBRARIES += \
 		module-zeroconf-publish.la \
 		module-zeroconf-discover.la
+endif
+
+if HAVE_BONJOUR
+modlibexec_LTLIBRARIES += \
+		module-bonjour-publish.la
 endif
 
 if HAVE_LIRC
@@ -1152,7 +1180,8 @@ endif
 
 if HAVE_DBUS
 modlibexec_LTLIBRARIES += \
-		module-rygel-media-server.la
+		module-rygel-media-server.la \
+		module-dbus-protocol.la
 endif
 
 if HAVE_BLUEZ
@@ -1178,6 +1207,12 @@ modlibexec_LTLIBRARIES += \
 endif
 endif
 
+if HAVE_FFTW
+modlibexec_LTLIBRARIES += \
+		module-equalizer-sink.la
+bin_SCRIPTS += utils/qpaeq
+endif
+
 # These are generated by an M4 script
 SYMDEF_FILES = \
 		modules/module-cli-symdef.h \
@@ -1196,6 +1231,7 @@ SYMDEF_FILES = \
 		modules/module-combine-symdef.h \
 		modules/module-remap-sink-symdef.h \
 		modules/module-ladspa-sink-symdef.h \
+		modules/module-equalizer-sink-symdef.h \
 		modules/module-esound-compat-spawnfd-symdef.h \
 		modules/module-esound-compat-spawnpid-symdef.h \
 		modules/module-match-symdef.h \
@@ -1206,6 +1242,7 @@ SYMDEF_FILES = \
 		modules/module-esound-sink-symdef.h \
 		modules/module-zeroconf-publish-symdef.h \
 		modules/module-zeroconf-discover-symdef.h \
+		modules/module-bonjour-publish-symdef.h \
 		modules/module-lirc-symdef.h \
 		modules/module-mmkbd-evdev-symdef.h \
 		modules/module-http-protocol-tcp-symdef.h \
@@ -1219,6 +1256,8 @@ SYMDEF_FILES = \
 		modules/alsa/module-alsa-sink-symdef.h \
 		modules/alsa/module-alsa-source-symdef.h \
 		modules/alsa/module-alsa-card-symdef.h \
+		modules/coreaudio/module-coreaudio-detect-symdef.h \
+		modules/coreaudio/module-coreaudio-device-symdef.h \
 		modules/module-solaris-symdef.h \
 		modules/module-waveout-symdef.h \
 		modules/module-detect-symdef.h \
@@ -1248,6 +1287,7 @@ SYMDEF_FILES = \
 		modules/module-augment-properties-symdef.h \
 		modules/module-cork-music-on-phone-symdef.h \
 		modules/module-console-kit-symdef.h \
+		modules/dbus/module-dbus-protocol-symdef.h \
 		modules/module-loopback-symdef.h
 
 EXTRA_DIST += $(SYMDEF_FILES)
@@ -1296,6 +1336,24 @@ module_http_protocol_unix_la_SOURCES = modules/module-protocol-stub.c
 module_http_protocol_unix_la_CFLAGS = -DUSE_UNIX_SOCKETS -DUSE_PROTOCOL_HTTP $(AM_CFLAGS)
 module_http_protocol_unix_la_LDFLAGS = $(MODULE_LDFLAGS)
 module_http_protocol_unix_la_LIBADD = $(AM_LIBADD) libpulsecore-@PA_MAJORMINORMICRO@.la libprotocol-http.la libpulsecommon-@PA_MAJORMINORMICRO@.la libpulse.la
+
+# D-Bus protocol
+
+module_dbus_protocol_la_SOURCES = \
+		modules/dbus/iface-card.c modules/dbus/iface-card.h \
+		modules/dbus/iface-card-profile.c modules/dbus/iface-card-profile.h \
+		modules/dbus/iface-client.c modules/dbus/iface-client.h \
+		modules/dbus/iface-core.c modules/dbus/iface-core.h \
+		modules/dbus/iface-device.c modules/dbus/iface-device.h \
+		modules/dbus/iface-device-port.c modules/dbus/iface-device-port.h \
+		modules/dbus/iface-memstats.c modules/dbus/iface-memstats.h \
+		modules/dbus/iface-module.c modules/dbus/iface-module.h \
+		modules/dbus/iface-sample.c modules/dbus/iface-sample.h \
+		modules/dbus/iface-stream.c modules/dbus/iface-stream.h \
+		modules/dbus/module-dbus-protocol.c
+module_dbus_protocol_la_CFLAGS = $(AM_CFLAGS) $(DBUS_CFLAGS)
+module_dbus_protocol_la_LDFLAGS = $(MODULE_LDFLAGS)
+module_dbus_protocol_la_LIBADD = $(AM_LIBADD) $(DBUS_LIBS) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la libpulse.la
 
 # Native protocol
 
@@ -1377,6 +1435,11 @@ module_ladspa_sink_la_CFLAGS = -DLADSPA_PATH=\"$(libdir)/ladspa:/usr/local/lib/l
 module_ladspa_sink_la_LDFLAGS = $(MODULE_LDFLAGS)
 module_ladspa_sink_la_LIBADD = $(AM_LIBADD) $(LIBLTDL) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la libpulse.la
 
+module_equalizer_sink_la_SOURCES = modules/module-equalizer-sink.c
+module_equalizer_sink_la_CFLAGS = $(AM_CFLAGS) $(FFTW_CFLAGS)
+module_equalizer_sink_la_LDFLAGS = $(MODULE_LDFLAGS)
+module_equalizer_sink_la_LIBADD = $(AM_LIBADD) $(DBUS_LIBS) $(FFTW_LIBS) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la libpulse.la
+
 module_match_la_SOURCES = modules/module-match.c
 module_match_la_LDFLAGS = $(MODULE_LDFLAGS)
 module_match_la_LIBADD = $(AM_LIBADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la libpulse.la
@@ -1426,6 +1489,19 @@ module_oss_la_SOURCES = modules/oss/module-oss.c
 module_oss_la_LDFLAGS = $(MODULE_LDFLAGS)
 module_oss_la_LIBADD = $(AM_LIBADD) liboss-util.la libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la libpulse.la
 
+# COREAUDIO
+
+module_coreaudio_detect_la_SOURCES = modules/coreaudio/module-coreaudio-detect.c
+module_coreaudio_detect_la_LDFLAGS = $(MODULE_LDFLAGS) \
+			-Wl,-framework -Wl,Cocoa -framework CoreAudio \
+			-Wl,-framework -Wl,AudioUnit -framework AudioUnit
+module_coreaudio_detect_la_LIBADD = $(AM_LIBADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la libpulse.la
+
+module_coreaudio_device_la_SOURCES = modules/coreaudio/module-coreaudio-device.c
+module_coreaudio_device_la_LDFLAGS = $(MODULE_LDFLAGS) \
+			-Wl,-framework -Wl,Cocoa -framework CoreAudio \
+			-Wl,-framework -Wl,AudioUnit -framework AudioUnit
+module_coreaudio_device_la_LIBADD = $(AM_LIBADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la libpulse.la
 # ALSA
 
 libalsa_util_la_SOURCES = modules/alsa/alsa-util.c modules/alsa/alsa-util.h modules/alsa/alsa-mixer.c modules/alsa/alsa-mixer.h modules/alsa/alsa-sink.c modules/alsa/alsa-sink.h modules/alsa/alsa-source.c modules/alsa/alsa-source.h modules/reserve-wrap.c modules/reserve-wrap.h
@@ -1483,6 +1559,13 @@ module_zeroconf_discover_la_SOURCES = modules/module-zeroconf-discover.c
 module_zeroconf_discover_la_LDFLAGS = $(MODULE_LDFLAGS)
 module_zeroconf_discover_la_LIBADD = $(AM_LIBADD) $(AVAHI_LIBS) libavahi-wrap.la libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la libpulse.la
 module_zeroconf_discover_la_CFLAGS = $(AM_CFLAGS) $(AVAHI_CFLAGS)
+
+# Bonjour
+
+module_bonjour_publish_la_SOURCES = modules/module-bonjour-publish.c
+module_bonjour_publish_la_LDFLAGS = $(MODULE_LDFLAGS) \
+			-Wl,-framework -Wl,CoreFoundation -framework CoreFoundation
+module_bonjour_publish_la_LIBADD = libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la libpulse.la
 
 # LIRC
 
@@ -1553,6 +1636,11 @@ module_stream_restore_la_SOURCES = modules/module-stream-restore.c
 module_stream_restore_la_LDFLAGS = $(MODULE_LDFLAGS)
 module_stream_restore_la_LIBADD = $(AM_LIBADD) libprotocol-native.la libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la libpulse.la
 module_stream_restore_la_CFLAGS = $(AM_CFLAGS)
+
+if HAVE_DBUS
+module_stream_restore_la_LIBADD += $(DBUS_LIBS)
+module_stream_restore_la_CFLAGS += $(DBUS_CFLAGS)
+endif
 
 # Card profile restore module
 module_card_restore_la_SOURCES = modules/module-card-restore.c

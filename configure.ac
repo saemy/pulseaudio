@@ -22,8 +22,7 @@
 
 AC_PREREQ(2.63)
 
-AC_INIT([pulseaudio], m4_esyscmd([./git-version-gen .tarball-version]),
-	[mzchyfrnhqvb (at) 0pointer (dot) net])
+AC_INIT([pulseaudio],[m4_esyscmd(./git-version-gen .tarball-version)],[mzchyfrnhqvb (at) 0pointer (dot) net])
 AC_CONFIG_SRCDIR([src/daemon/main.c])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([config.h])
@@ -41,11 +40,11 @@ AC_SUBST(PA_MAJORMINORMICRO, pa_major.pa_minor.pa_micro)
 AC_SUBST(PACKAGE_URL, [http://pulseaudio.org/])
 
 AC_SUBST(PA_API_VERSION, 12)
-AC_SUBST(PA_PROTOCOL_VERSION, 16)
+AC_SUBST(PA_PROTOCOL_VERSION, 17)
 
 # The stable ABI for client applications, for the version info x:y:z
 # always will hold y=z
-AC_SUBST(LIBPULSE_VERSION_INFO, [12:2:12])
+AC_SUBST(LIBPULSE_VERSION_INFO, [12:0:12])
 
 # A simplified, synchronous, ABI-stable interface for client
 # applications, for the version info x:y:z always will hold y=z
@@ -62,23 +61,12 @@ AC_SUBST(LIBPULSE_MAINLOOP_GLIB_VERSION_INFO, [0:4:0])
 AC_CANONICAL_HOST
 AC_DEFINE_UNQUOTED([CANONICAL_HOST], "$host", [Canonical host string.])
 
-if type -p stow > /dev/null && test -d /usr/local/stow ; then
+AC_CHECK_PROG([STOW], [stow], [yes], [no])
+
+AS_IF([test "x$STOW" = "xyes" && test -d /usr/local/stow], [
    AC_MSG_NOTICE([*** Found /usr/local/stow: default install prefix set to /usr/local/stow/${PACKAGE_NAME}-${PACKAGE_VERSION} ***])
    ac_default_prefix="/usr/local/stow/${PACKAGE_NAME}-${PACKAGE_VERSION}"
-fi
-
-#### Platform hacks ####
-
-case $host in
-   *-*-solaris* )
-      AC_DEFINE(_XOPEN_SOURCE,        600, Needed to get declarations for msg_control and msg_controllen on Solaris)
-      AC_DEFINE(__EXTENSIONS__,         1, Needed to get declarations for msg_control and msg_controllen on Solaris)
-      ;;
-   *-*-darwin* )
-      AC_DEFINE([_POSIX_C_SOURCE], [200112L], [Needed to get clock_gettime on Mac OS X])
-      AC_DEFINE([_DARWIN_C_SOURCE], [200112L], [Needed to get NSIG on Mac OS X])
-      ;;
-esac
+])
 
 AM_SILENT_RULES([yes])
 
@@ -95,6 +83,19 @@ AC_PROG_CC_C99
 AM_PROG_CC_C_O
 AC_PROG_GCC_TRADITIONAL
 AC_USE_SYSTEM_EXTENSIONS
+
+#### Platform hacks ####
+
+case $host in
+   *-*-solaris* )
+      AC_DEFINE(_XOPEN_SOURCE,        600, Needed to get declarations for msg_control and msg_controllen on Solaris)
+      AC_DEFINE(__EXTENSIONS__,         1, Needed to get declarations for msg_control and msg_controllen on Solaris)
+      ;;
+   *-*-darwin* )
+      AC_DEFINE([_POSIX_C_SOURCE], [200112L], [Needed to get clock_gettime on Mac OS X])
+      AC_DEFINE([_DARWIN_C_SOURCE], [200112L], [Needed to get NSIG on Mac OS X])
+      ;;
+esac
 
 # M4
 
@@ -165,26 +166,15 @@ AC_ARG_ENABLE([atomic-arm-memory-barrier],
             esac
         ],)
 
-AC_ARG_ENABLE([netbsd-atomic-ops],
-    AS_HELP_STRING([--enable-netbsd-atomic-ops],[Use the native NetBSD atomic_ops implementation]),
-        [
-            case "${enableval}" in
-                yes) atomic_netbsd_helpers=yes ;;
-                no) atomic_netbsd_helpers=no ;;
-                *) AC_MSG_ERROR(bad value ${enableval} for --enable-netbsd-atomic-ops) ;;
-            esac
-        ],
-        [atomic_netbsd_helpers=auto])
-
 AC_MSG_CHECKING([target operating system])
 case $host in
         *-*-linux*)
             AC_MSG_RESULT([linux])
             pulse_target_os=linux
         ;;
-        *-*-netbsd*)
-            AC_MSG_RESULT([netbsd])
-            pulse_target_os=netbsd
+        *-*-darwin*)
+            AC_MSG_RESULT([darwin])
+            pulse_target_os=darwin
         ;;
         *)
             AC_MSG_RESULT([unknown])
@@ -209,7 +199,7 @@ if test "$pulseaudio_cv_sync_bool_compare_and_swap" = "yes" ; then
 else
     # HW specific atomic ops stuff
     AC_MSG_CHECKING([architecture for native atomic operations])
-    case $host_cpu in
+    case $host in
         arm*)
             AC_MSG_RESULT([arm])
             AC_MSG_CHECKING([whether we can use Linux kernel helpers])
@@ -245,14 +235,16 @@ else
                  ])
            fi
         ;;
+	*-netbsdelf5*)
+            AC_MSG_RESULT([yes])
+            need_libatomic_ops=no
+	;;
+	*-freebsd*)
+            AC_MSG_RESULT([yes])
+            need_libatomic_ops=no
+	;;
         *)
-            if test "x$pulse_target_os" = "xnetbsd" && test "x$atomic_netbsd_helpers" = "xyes"; then
-                AC_MSG_RESULT([yes])
-                AC_DEFINE_UNQUOTED(NETBSD_ATOMIC_OPS, 1, [netbsd implementation])
-                need_libatomic_ops=no
-            else
-                AC_MSG_RESULT([unknown])
-            fi
+            AC_MSG_RESULT([unknown])
         ;;
     esac
 fi
@@ -303,15 +295,21 @@ AC_SUBST([LIBLTDL])
 #### Determine build environment ####
 
 os_is_win32=0
+os_is_darwin=0
 
 case "$host_os" in
         mingw*)
         AC_DEFINE([OS_IS_WIN32], 1, [Build target is Windows.])
         os_is_win32=1
                 ;;
+        darwin*)
+        AC_DEFINE([OS_IS_DARWIN], 1, [Build target is Darwin.])
+        os_is_darwin=1
+                ;;
         esac
 
 AM_CONDITIONAL(OS_IS_WIN32, test "x$os_is_win32" = "x1")
+AM_CONDITIONAL(OS_IS_DARWIN, test "x$os_is_darwin" = "x1")
 
 ###################################
 #   Basic environment checks      #
@@ -415,6 +413,22 @@ AC_SEARCH_LIBS([backtrace], [execinfo])
 # build, disabling its ability to make dlls.
 AC_CHECK_FUNCS([getopt_long], [], [AC_CHECK_LIB([iberty], [getopt_long])])
 
+# Darwin/OS X
+if test "x$os_is_darwin" = "x1" ; then
+    AC_MSG_CHECKING([looking for Apple CoreService Framework])
+    # How do I check a framework "library" - AC_CHECK_LIB prob. won't work??, just assign LIBS & hope
+    AC_CHECK_HEADER([/Developer/Headers/FlatCarbon/CoreServices.h],
+    [LIBS="$LIBS -framework CoreServices"],
+    [AC_MSG_ERROR([CoreServices.h header file not found]) ])
+
+    AC_MSG_RESULT([ok])
+    AC_DEFINE([HAVE_CLOCK_GETTIME], 1, [Using clock_gettime() replacement])
+    HAVE_BONJOUR=1
+fi
+
+AC_SUBST(HAVE_BONJOUR)
+AM_CONDITIONAL([HAVE_BONJOUR], [test "x$HAVE_BONJOUR" = x1])
+
 #### Check for functions ####
 
 # ISO
@@ -446,7 +460,7 @@ AC_CHECK_FUNCS_ONCE([lstat])
 
 # Non-standard
 
-AC_CHECK_FUNCS_ONCE([setresuid setresgid setreuid setregid seteuid setegid ppoll strsignal sig2str strtof_l])
+AC_CHECK_FUNCS_ONCE([setresuid setresgid setreuid setregid seteuid setegid ppoll strsignal sig2str strtof_l pipe2 accept4])
 
 AC_FUNC_ALLOCA
 
@@ -742,6 +756,28 @@ fi
 AC_SUBST(HAVE_OSS)
 AM_CONDITIONAL([HAVE_OSS_OUTPUT], [test "x$HAVE_OSS" = x1 && test "x${oss_output}" != "xno"])
 AM_CONDITIONAL([HAVE_OSS_WRAPPER], [test "x$HAVE_OSS" = x1 && test "x${oss_wrapper}" != "xno"])
+
+#### CoreAudio support (optional) ####
+
+AC_ARG_ENABLE([coreaudio-output],
+    AS_HELP_STRING([--disable-coreaudio-output],[Disable optional CoreAudio output support]),
+        [
+            case "${enableval}" in
+                yes) coreaudio_enabled=yes ;;
+                no) coreaudio_enabled=no ;;
+                *) AC_MSG_ERROR(bad value ${enableval} for --disable-coreaudio-output) ;;
+            esac
+        ],
+        [coreaudio_enabled=auto])
+
+if test "x${coreaudio_enabled}" != xno ; then
+    AC_CHECK_HEADERS([CoreAudio/CoreAudio.h], HAVE_COREAUDIO=1)
+else
+    HAVE_COREAUDIO=0
+fi
+
+AC_SUBST(HAVE_COREAUDIO)
+AM_CONDITIONAL([HAVE_COREAUDIO], [test "x$HAVE_COREAUDIO" = x1 && test "x${coreaudio_enabled}" != "xno"])
 
 #### ALSA support (optional) ####
 
@@ -1199,6 +1235,7 @@ if test "x${dbus}" != xno || test "x${bluez}" != xno || test "x${hal}" != xno ; 
             HAVE_DBUS=1
             saved_LIBS="$LIBS"
             LIBS="$LIBS $DBUS_LIBS"
+            CFLAGS="$CFLAGS $DBUS_CFLAGS"
             AC_CHECK_FUNCS(dbus_watch_get_unix_fd)
             LIBS="$saved_LIBS"
             AC_DEFINE([HAVE_DBUS], 1, [Have D-Bus.])
@@ -1272,6 +1309,16 @@ AC_SUBST(OPENSSL_CFLAGS)
 AC_SUBST(OPENSSL_LIBS)
 AC_SUBST(HAVE_OPENSSL)
 AM_CONDITIONAL([HAVE_OPENSSL], [test "x$HAVE_OPENSSL" = x1])
+
+#### FFTW (optional) ####
+AC_ARG_WITH(
+	[fftw],
+	AS_HELP_STRING([--without-fftw], [Omit FFTW-using modules (equalizer)]))
+
+if test "x${with_fftw}" != "xno"; then
+    PKG_CHECK_MODULES([FFTW], [fftw3f], [HAVE_FFTW=1], [HAVE_FFTW=0])
+fi
+AM_CONDITIONAL([HAVE_FFTW], [test "x$HAVE_FFTW" = "x1"])
 
 ### Build and Install man pages ###
 AC_ARG_ENABLE(manpages,
@@ -1374,6 +1421,13 @@ AC_ARG_WITH(
 
 AC_SUBST(modlibexecdir)
 
+AC_ARG_WITH(
+        [udev-rules-dir],
+        AS_HELP_STRING([--with-udev-rules-dir],[Directory where to install udev rules to (defaults to /lib/udev/rules.d)]),
+        [udevrulesdir=$withval], [udevrulesdir="/lib/udev/rules.d"])
+
+AC_SUBST(udevrulesdir)
+
 AC_ARG_ENABLE(
         [force-preopen],
         AS_HELP_STRING([--enable-force-preopen],[Preopen modules, even when dlopen() is supported.]),
@@ -1411,6 +1465,11 @@ if test "x$HAVE_OSS" = "x1" ; then
    if test "x$enable_oss_wrapper" != "xno"; then
       ENABLE_OSS_WRAPPER=yes
    fi
+fi
+
+ENABLE_COREAUDIO=no
+if test "x$HAVE_COREAUDIO" = "x1" ; then
+   ENABLE_COREAUDIO=yes
 fi
 
 ENABLE_ALSA=no
@@ -1503,6 +1562,11 @@ if test "x${HAVE_SIMPLEDB}" = "x1" ; then
     ENABLE_SIMPLEDB=yes
 fi
 
+ENABLE_FFTW=no
+if test "x${HAVE_FFTW}" = "x1" ; then
+   ENABLE_FFTW=yes
+fi
+
 ENABLE_OPENSSL=no
 if test "x${HAVE_OPENSSL}" = "x1" ; then
    ENABLE_OPENSSL=yes
@@ -1533,6 +1597,7 @@ echo "
     Have X11:                      ${ENABLE_X11}
     Enable OSS Output:             ${ENABLE_OSS_OUTPUT}
     Enable OSS Wrapper:            ${ENABLE_OSS_WRAPPER}
+    Enable CoreAudio:              ${ENABLE_COREAUDIO}
     Enable Alsa:                   ${ENABLE_ALSA}
     Enable Solaris:                ${ENABLE_SOLARIS}
     Enable GLib 2.0:               ${ENABLE_GLIB20}
@@ -1553,6 +1618,7 @@ echo "
     Enable tdb:                    ${ENABLE_TDB}
     Enable gdbm:                   ${ENABLE_GDBM}
     Enable simple database:        ${ENABLE_SIMPLEDB}
+    Enable fftw:                   ${ENABLE_FFTW}
 
     System User:                   ${PA_SYSTEM_USER}
     System Group:                  ${PA_SYSTEM_GROUP}
