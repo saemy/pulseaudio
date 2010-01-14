@@ -64,8 +64,8 @@ DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/libpulse-mainloop-glib.pc.in \
 	$(srcdir)/libpulse-simple.pc.in $(srcdir)/libpulse.pc.in \
 	$(top_srcdir)/configure $(top_srcdir)/src/pulse/version.h.in \
-	ABOUT-NLS compile config.guess config.rpath config.sub depcomp \
-	install-sh ltmain.sh missing
+	ABOUT-NLS ChangeLog compile config.guess config.rpath \
+	config.sub depcomp install-sh ltmain.sh missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/acx_libwrap.m4 \
 	$(top_srcdir)/m4/acx_lirc.m4 $(top_srcdir)/m4/acx_pthread.m4 \
@@ -206,6 +206,8 @@ ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
+FFTW_CFLAGS = @FFTW_CFLAGS@
+FFTW_LIBS = @FFTW_LIBS@
 FGREP = @FGREP@
 GCONF_CFLAGS = @GCONF_CFLAGS@
 GCONF_LIBS = @GCONF_LIBS@
@@ -224,6 +226,8 @@ HAL_LIBS = @HAL_LIBS@
 HAVE_ALSA = @HAVE_ALSA@
 HAVE_AVAHI = @HAVE_AVAHI@
 HAVE_BLUEZ = @HAVE_BLUEZ@
+HAVE_BONJOUR = @HAVE_BONJOUR@
+HAVE_COREAUDIO = @HAVE_COREAUDIO@
 HAVE_DBUS = @HAVE_DBUS@
 HAVE_GCONF = @HAVE_GCONF@
 HAVE_GDBM = @HAVE_GDBM@
@@ -332,6 +336,7 @@ RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
+STOW = @STOW@
 STRIP = @STRIP@
 TDB_CFLAGS = @TDB_CFLAGS@
 TDB_LIBS = @TDB_LIBS@
@@ -398,6 +403,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
+udevrulesdir = @udevrulesdir@
 ACLOCAL_AMFLAGS = -I m4
 EXTRA_DIST = \
 	bootstrap.sh \

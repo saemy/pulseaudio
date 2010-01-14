@@ -63,6 +63,7 @@ static inline int PA_CONTEXT_IS_GOOD(pa_context_state_t x) {
 #define PA_CONTEXT_SETTING_NAME PA_CONTEXT_SETTING_NAME
 #define PA_CONTEXT_READY PA_CONTEXT_READY
 #define PA_CONTEXT_FAILED PA_CONTEXT_FAILED
+#define PA_CONTEXT_TERMINATED PA_CONTEXT_TERMINATED
 #define PA_CONTEXT_IS_GOOD PA_CONTEXT_IS_GOOD
 /** \endcond */
 
@@ -276,11 +277,18 @@ typedef enum pa_stream_flags {
      * whether to create the stream in muted or in unmuted
      * state. \since 0.9.15 */
 
-    PA_STREAM_FAIL_ON_SUSPEND = 0x20000U
+    PA_STREAM_FAIL_ON_SUSPEND = 0x20000U,
     /**< If the sink/source this stream is connected to is suspended
      * during the creation of this stream, cause it to fail. If the
      * sink/source is being suspended during creation of this stream,
      * make sure this stream is terminated. \since 0.9.15 */
+
+    PA_STREAM_RELATIVE_VOLUME = 0x40000U,
+    /**< If a volume is passed when this stream is created, consider
+     * it relative to the sink's current volume, never as absolute
+     * device volume. If this is not specified the volume will be
+     * consider absolute when the sink is in flat volume mode,
+     * relative otherwise. \since 0.9.20 */
 } pa_stream_flags_t;
 
 /** \cond fulldocs */
@@ -307,6 +315,7 @@ typedef enum pa_stream_flags {
 #define PA_STREAM_DONT_INHIBIT_AUTO_SUSPEND PA_STREAM_DONT_INHIBIT_AUTO_SUSPEND
 #define PA_STREAM_START_UNMUTED PA_STREAM_START_UNMUTED
 #define PA_STREAM_FAIL_ON_SUSPEND PA_STREAM_FAIL_ON_SUSPEND
+#define PA_STREAM_RELATIVE_VOLUME PA_STREAM_RELATIVE_VOLUME
 
 /** \endcond */
 
@@ -343,7 +352,7 @@ typedef struct pa_buffer_attr {
      * that may be. Initialize to 0 to enable manual start/stop
      * control of the stream. This means that playback will not stop
      * on underrun and playback will not start automatically. Instead
-     * pa_stream_corked() needs to be called explicitly. If you set
+     * pa_stream_cork() needs to be called explicitly. If you set
      * this value to 0 you should also set PA_STREAM_START_CORKED. */
 
     uint32_t minreq;

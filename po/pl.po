@@ -5,8 +5,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: pl\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-09-30 09:44+0000\n"
-"PO-Revision-Date: 2009-09-30 17:04+0200\n"
+"POT-Creation-Date: 2009-09-29 23:47+0200\n"
+"PO-Revision-Date: 2009-09-27 15:42+0200\n"
 "Last-Translator: Piotr Drąg <piotrdrag@gmail.com>\n"
 "Language-Team: Polish <fedora-trans-pl@redhat.com>\n"
 "MIME-Version: 1.0\n"
@@ -2377,203 +2377,217 @@ msgstr "Serwer dźwięku PulseAudio"
 #: ../src/modules/module-rygel-media-server.c:569
 #: ../src/modules/module-rygel-media-server.c:583
 msgid "Output Devices"
-msgstr "Urządzenia wyjściowe"
+msgstr ""
 
 #: ../src/modules/module-rygel-media-server.c:570
 #: ../src/modules/module-rygel-media-server.c:584
 msgid "Input Devices"
-msgstr "Urządzenia wejściowe"
+msgstr ""
 
 #: ../src/modules/module-rygel-media-server.c:774
 msgid "Audio on @HOSTNAME@"
-msgstr "Dźwięk na @HOSTNAME@"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1701
 msgid "Input"
-msgstr "Wejście"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1702
 msgid "Docking Station Input"
-msgstr "Wejście stacji dokującej"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1703
 msgid "Docking Station Microphone"
-msgstr "Mikrofon stacji dokującej"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1704
 msgid "Line-In"
-msgstr "Wejście liniowe"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1705
 msgid "Microphone"
-msgstr "Mikrofon"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1706
 msgid "External Microphone"
-msgstr "Zewnętrzny mikrofon"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1707
+#, fuzzy
 msgid "Internal Microphone"
-msgstr "Wewnętrzny mikrofon"
+msgstr "Wewnętrzny dźwięk"
 
 #: ../src/modules/alsa/alsa-mixer.c:1708
 msgid "Radio"
-msgstr "Radio"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1709
 msgid "Video"
-msgstr "Wideo"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1710
 msgid "Automatic Gain Control"
-msgstr "Automatyczna kontrola natężenia"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1711
 msgid "No Automatic Gain Control"
-msgstr "Brak automatycznej kontroli natężenia"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1712
 msgid "Boost"
-msgstr "Podbicie"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1713
 msgid "No Boost"
-msgstr "Brak podbicia"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1714
 msgid "Amplifier"
-msgstr "Amplituner"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1715
 msgid "No Amplifier"
-msgstr "Brak amplitunera"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1773
 msgid "Analog Input"
-msgstr "Wejście analogowe"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1774
 msgid "Analog Microphone"
-msgstr "Mikrofon analogowy"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1775
 msgid "Analog Line-In"
-msgstr "Analogowe wejście liniowe"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1776
 msgid "Analog Radio"
-msgstr "Radio analogowe"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1777
 msgid "Analog Video"
-msgstr "Wideo analogowe"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1778
+#, fuzzy
 msgid "Analog Output"
-msgstr "Wyjście analogowe"
+msgstr "Puste wyjście"
 
 #: ../src/modules/alsa/alsa-mixer.c:1779
 msgid "Analog Headphones"
-msgstr "Słuchawki analogowe"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1780
 msgid "Analog Output (LFE)"
-msgstr "Wyjście analogowe (subwoofer)"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1781
 msgid "Analog Mono Output"
-msgstr "Analogowe wyjście mono"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:1981
-#, c-format
+#, fuzzy, c-format
 msgid "%s+%s"
-msgstr "%s+%s"
+msgstr "%s %s"
 
 #: ../src/modules/alsa/alsa-mixer.c:1984 ../src/modules/alsa/alsa-mixer.c:3404
-#, c-format
+#, fuzzy, c-format
 msgid "%s / %s"
-msgstr "%s/%s"
+msgstr "%s %s"
 
 #: ../src/modules/alsa/alsa-mixer.c:2790
 msgid "Analog Mono"
-msgstr "Analogowe mono"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:2791
+#, fuzzy
 msgid "Analog Stereo"
-msgstr "Analogowe stereo"
+msgstr "Stereo"
 
 #: ../src/modules/alsa/alsa-mixer.c:2792
+#, fuzzy
 msgid "Analog Surround 2.1"
-msgstr "Analogowe surround 2.1"
+msgstr "Surround 4.1"
 
 #: ../src/modules/alsa/alsa-mixer.c:2793
+#, fuzzy
 msgid "Analog Surround 3.0"
-msgstr "Analogowe surround 3.0"
+msgstr "Surround 4.0"
 
 #: ../src/modules/alsa/alsa-mixer.c:2794
+#, fuzzy
 msgid "Analog Surround 3.1"
-msgstr "Analogowe surround 3.1"
+msgstr "Surround 4.1"
 
 #: ../src/modules/alsa/alsa-mixer.c:2795
+#, fuzzy
 msgid "Analog Surround 4.0"
-msgstr "Analogowe surround 4.0"
+msgstr "Surround 4.0"
 
 #: ../src/modules/alsa/alsa-mixer.c:2796
+#, fuzzy
 msgid "Analog Surround 4.1"
-msgstr "Analogowe surround 4.1"
+msgstr "Surround 4.1"
 
 #: ../src/modules/alsa/alsa-mixer.c:2797
+#, fuzzy
 msgid "Analog Surround 5.0"
-msgstr "Analogowe surround 5.0"
+msgstr "Surround 5.0"
 
 #: ../src/modules/alsa/alsa-mixer.c:2798
+#, fuzzy
 msgid "Analog Surround 5.1"
-msgstr "Analogowe surround 5.1"
+msgstr "Surround 5.1"
 
 #: ../src/modules/alsa/alsa-mixer.c:2799
+#, fuzzy
 msgid "Analog Surround 6.0"
-msgstr "Analogowe surround 6.0"
+msgstr "Surround 4.0"
 
 #: ../src/modules/alsa/alsa-mixer.c:2800
+#, fuzzy
 msgid "Analog Surround 6.1"
-msgstr "Analogowe surround 6.1"
+msgstr "Surround 4.1"
 
 #: ../src/modules/alsa/alsa-mixer.c:2801
+#, fuzzy
 msgid "Analog Surround 7.0"
-msgstr "Analogowe surround 7.0"
+msgstr "Surround 4.0"
 
 #: ../src/modules/alsa/alsa-mixer.c:2802
+#, fuzzy
 msgid "Analog Surround 7.1"
-msgstr "Analogowe surround 7.1"
+msgstr "Surround 7.1"
 
 #: ../src/modules/alsa/alsa-mixer.c:2803
 msgid "Digital Stereo (IEC958)"
-msgstr "Cyfrowe stereo (IEC958)"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:2804
 msgid "Digital Surround 4.0 (IEC958)"
-msgstr "Cyfrowe surround 4.0 (IEC958)"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:2805
 msgid "Digital Surround 4.0 (IEC958/AC3)"
-msgstr "Cyfrowe surround 4.0 (IEC958/AC3)"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:2806
 msgid "Digital Surround 5.1 (IEC958/AC3)"
-msgstr "Cyfrowe surround 5.1 (IEC958/AC3)"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:2807
 msgid "Digital Stereo (HDMI)"
-msgstr "Cyfrowe stereo (HDMI)"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:2928
 msgid "Analog Mono Duplex"
-msgstr "Analogowy dupleks mono"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:2929
 msgid "Analog Stereo Duplex"
-msgstr "Analogowy dupleks stereo"
+msgstr ""
 
 #: ../src/modules/alsa/alsa-mixer.c:2930
 msgid "Digital Stereo Duplex (IEC958)"
-msgstr "Cyfrowy dupleks stereo (IEC958)"
+msgstr ""
