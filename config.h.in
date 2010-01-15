@@ -36,9 +36,6 @@
 /* Gettext package */
 #undef GETTEXT_PACKAGE
 
-/* Define to 1 if you have the `accept4' function. */
-#undef HAVE_ACCEPT4
-
 /* Define to 1 if you have `alloca', as a function or macro. */
 #undef HAVE_ALLOCA
 
@@ -72,9 +69,6 @@
 
 /* Define to 1 if you have the `clock_gettime' function. */
 #undef HAVE_CLOCK_GETTIME
-
-/* Define to 1 if you have the <CoreAudio/CoreAudio.h> header file. */
-#undef HAVE_COREAUDIO_COREAUDIO_H
 
 /* Define to 1 if you have the `ctime_r' function. */
 #undef HAVE_CTIME_R
@@ -244,9 +238,6 @@
 
 /* Define to 1 if you have the `pipe' function. */
 #undef HAVE_PIPE
-
-/* Define to 1 if you have the `pipe2' function. */
-#undef HAVE_PIPE2
 
 /* Define to 1 if you have the <poll.h> header file. */
 #undef HAVE_POLL_H
@@ -471,11 +462,11 @@
    */
 #undef LT_OBJDIR
 
+/* netbsd implementation */
+#undef NETBSD_ATOMIC_OPS
+
 /* Define to 1 if your C compiler doesn't accept -c and -o together. */
 #undef NO_MINUS_C_MINUS_O
-
-/* Build target is Darwin. */
-#undef OS_IS_DARWIN
 
 /* Build target is Windows. */
 #undef OS_IS_WIN32

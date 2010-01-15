@@ -1804,7 +1804,7 @@ int pa_cli_command_execute_file(pa_core *c, const char *fn, pa_strbuf *buf, pa_b
     if (!fail)
         fail = &_fail;
 
-    if (!(f = pa_fopen_cloexec(fn, "r"))) {
+    if (!(f = fopen(fn, "r"))) {
         pa_strbuf_printf(buf, "open('%s') failed: %s\n", fn, pa_cstrerror(errno));
         if (!*fail)
             ret = 0;

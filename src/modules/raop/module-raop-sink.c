@@ -32,6 +32,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <limits.h>
+#include <poll.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
@@ -59,7 +60,6 @@
 #include <pulsecore/thread.h>
 #include <pulsecore/time-smoother.h>
 #include <pulsecore/socket-util.h>
-#include <pulsecore/poll.h>
 
 #include "module-raop-sink-symdef.h"
 #include "rtp.h"

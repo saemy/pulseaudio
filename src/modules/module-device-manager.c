@@ -1032,27 +1032,27 @@ static int extension_cb(pa_native_protocol *p, pa_module *m, pa_native_connectio
 
         if ((e = read_entry(u, name))) {
             uint32_t idx;
-            char *device_name;
+            char *devname;
             uint32_t found_index = PA_INVALID_INDEX;
 
-            if ((device_name = get_name(name, "sink:"))) {
+            if ((devname = get_name(name, "sink:"))) {
                 pa_sink* s;
                 PA_IDXSET_FOREACH(s, u->core->sinks, idx) {
-                    if (strcmp(s->name, device_name) == 0) {
+                    if (strcmp(s->name, devname) == 0) {
                         found_index = s->index;
                         break;
                     }
                 }
-                pa_xfree(device_name);
-            } else if ((device_name = get_name(name, "source:"))) {
+                pa_xfree(devname);
+            } else if ((devname = get_name(name, "source:"))) {
                 pa_source* s;
                 PA_IDXSET_FOREACH(s, u->core->sources, idx) {
-                    if (strcmp(s->name, device_name) == 0) {
+                    if (strcmp(s->name, devname) == 0) {
                         found_index = s->index;
                         break;
                     }
                 }
-                pa_xfree(device_name);
+                pa_xfree(devname);
             }
 
             pa_tagstruct_puts(reply, name);

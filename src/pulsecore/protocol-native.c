@@ -1002,7 +1002,6 @@ static playback_stream* playback_stream_new(
         pa_proplist *p,
         pa_bool_t adjust_latency,
         pa_bool_t early_requests,
-        pa_bool_t relative_volume,
         int *ret) {
 
     playback_stream *s, *ssync;
@@ -1053,7 +1052,7 @@ static playback_stream* playback_stream_new(
     pa_sink_input_new_data_set_channel_map(&data, map);
     if (volume) {
         pa_sink_input_new_data_set_volume(&data, volume);
-        data.volume_is_absolute = !relative_volume;
+        data.volume_is_absolute = TRUE;
         data.save_volume = TRUE;
     }
     if (muted_set) {
@@ -1114,6 +1113,8 @@ static playback_stream* playback_stream_new(
 
     *missing = (uint32_t) pa_memblockq_pop_missing(s->memblockq);
 
+    /* pa_log("missing original: %li", (long int) *missing); */
+
     *ss = s->sink_input->sample_spec;
     *map = s->sink_input->channel_map;
 
@@ -1138,11 +1139,12 @@ static void playback_stream_request_bytes(playback_stream *s) {
 
     m = pa_memblockq_pop_missing(s->memblockq);
 
-    /* pa_log("request_bytes(%lu) (tlength=%lu minreq=%lu length=%lu)", */
+    /* pa_log("request_bytes(%lu) (tlength=%lu minreq=%lu length=%lu really missing=%lli)", */
     /*        (unsigned long) m, */
     /*        pa_memblockq_get_tlength(s->memblockq), */
     /*        pa_memblockq_get_minreq(s->memblockq), */
-    /*        pa_memblockq_get_length(s->memblockq)); */
+    /*        pa_memblockq_get_length(s->memblockq), */
+    /*        (long long) pa_memblockq_get_tlength(s->memblockq) - (long long) pa_memblockq_get_length(s->memblockq)); */
 
     if (m <= 0)
         return;
@@ -1847,8 +1849,7 @@ static void command_create_playback_stream(pa_pdispatch *pd, uint32_t command, u
         early_requests = FALSE,
         dont_inhibit_auto_suspend = FALSE,
         muted_set = FALSE,
-        fail_on_suspend = FALSE,
-        relative_volume = FALSE;
+        fail_on_suspend = FALSE;
     pa_sink_input_flags_t flags = 0;
     pa_proplist *p;
     pa_bool_t volume_set = TRUE;
@@ -1941,15 +1942,6 @@ static void command_create_playback_stream(pa_pdispatch *pd, uint32_t command, u
         }
     }
 
-    if (c->version >= 17) {
-
-        if (pa_tagstruct_get_boolean(t, &relative_volume) < 0) {
-            protocol_error(c);
-            pa_proplist_free(p);
-            return;
-        }
-    }
-
     if (!pa_tagstruct_eof(t)) {
         protocol_error(c);
         pa_proplist_free(p);
@@ -1989,7 +1981,7 @@ static void command_create_playback_stream(pa_pdispatch *pd, uint32_t command, u
      * flag. For older versions we synthesize it here */
     muted_set = muted_set || muted;
 
-    s = playback_stream_new(c, sink, &ss, &map, &attr, volume_set ? &volume : NULL, muted, muted_set, syncid, &missing, flags, p, adjust_latency, early_requests, relative_volume, &ret);
+    s = playback_stream_new(c, sink, &ss, &map, &attr, volume_set ? &volume : NULL, muted, muted_set, syncid, &missing, flags, p, adjust_latency, early_requests, &ret);
     pa_proplist_free(p);
 
     CHECK_VALIDITY(c->pstream, s, tag, ret);
