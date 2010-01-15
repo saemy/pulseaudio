@@ -1,0 +1,251 @@
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-24-gfa64/src/pulse/stream.c
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-24-gfa64.orig/src/pulse/stream.c	2010-01-15 18:21:18.000000000 -0500
++++ pulseaudio-0.9.22~0.9.21+stable-queue-24-gfa64/src/pulse/stream.c	2010-01-15 19:18:19.000000000 -0500
+@@ -743,8 +743,6 @@
+ 
+     s->requested_bytes += bytes;
+ 
+-    /* pa_log("got request for %lli, now at %lli", (long long) bytes, (long long) s->requested_bytes); */
+-
+     if (s->requested_bytes > 0 && s->write_callback)
+         s->write_callback(s, (size_t) s->requested_bytes, s->write_userdata);
+ 
+@@ -1377,8 +1375,6 @@
+      * that's OK, the server side applies the same error */
+     s->requested_bytes -= (seek == PA_SEEK_RELATIVE ? offset : 0) + (int64_t) length;
+ 
+-    /* pa_log("wrote %lli, now at %lli", (long long) length, (long long) s->requested_bytes); */
+-
+     if (s->direction == PA_STREAM_PLAYBACK) {
+ 
+         /* Update latency request correction */
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-24-gfa64/src/pulsecore/memblockq.c
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-24-gfa64.orig/src/pulsecore/memblockq.c	2010-01-15 18:21:19.000000000 -0500
++++ pulseaudio-0.9.22~0.9.21+stable-queue-24-gfa64/src/pulsecore/memblockq.c	2010-01-15 19:18:19.000000000 -0500
+@@ -55,7 +55,8 @@
+     pa_bool_t in_prebuf;
+     pa_memchunk silence;
+     pa_mcalign *mcalign;
+-    int64_t missing, requested;
++    int64_t missing;
++    size_t requested;
+ };
+ 
+ pa_memblockq* pa_memblockq_new(
+@@ -83,8 +84,8 @@
+     pa_log_debug("memblockq requested: maxlength=%lu, tlength=%lu, base=%lu, prebuf=%lu, minreq=%lu maxrewind=%lu",
+                  (unsigned long) maxlength, (unsigned long) tlength, (unsigned long) base, (unsigned long) prebuf, (unsigned long) minreq, (unsigned long) maxrewind);
+ 
+-    bq->missing = bq->requested = 0;
+-    bq->maxlength = bq->tlength = bq->prebuf = bq->minreq = bq->maxrewind = 0;
++    bq->missing = 0;
++    bq->requested = bq->maxlength = bq->tlength = bq->prebuf = bq->minreq = bq->maxrewind = 0;
+     bq->in_prebuf = TRUE;
+ 
+     pa_memblockq_set_maxlength(bq, maxlength);
+@@ -245,34 +246,10 @@
+     return TRUE;
+ }
+ 
+-static void write_index_changed(pa_memblockq *bq, int64_t old_write_index, pa_bool_t account) {
+-    int64_t delta;
+-
+-    pa_assert(bq);
+-
+-    delta = bq->write_index - old_write_index;
+-
+-    if (account)
+-        bq->requested -= delta;
+-
+-    /* pa_log("pushed/seeked %lli: requested counter at %lli, account=%i", (long long) delta, (long long) bq->requested, account); */
+-}
+-
+-static void read_index_changed(pa_memblockq *bq, int64_t old_read_index) {
+-    int64_t delta;
+-
+-    pa_assert(bq);
+-
+-    delta = bq->read_index - old_read_index;
+-    bq->missing += delta;
+-
+-    /* pa_log("popped %lli: missing counter at %lli", (long long) delta, (long long) bq->missing); */
+-}
+-
+ int pa_memblockq_push(pa_memblockq* bq, const pa_memchunk *uchunk) {
+     struct list_item *q, *n;
+     pa_memchunk chunk;
+-    int64_t old;
++    int64_t old, delta;
+ 
+     pa_assert(bq);
+     pa_assert(uchunk);
+@@ -432,7 +409,18 @@
+ 
+ finish:
+ 
+-    write_index_changed(bq, old, TRUE);
++    delta = bq->write_index - old;
++
++    if (delta >= (int64_t) bq->requested) {
++        delta -= (int64_t) bq->requested;
++        bq->requested = 0;
++    } else {
++        bq->requested -= (size_t) delta;
++        delta = 0;
++    }
++
++    bq->missing -= delta;
++
+     return 0;
+ }
+ 
+@@ -526,7 +514,7 @@
+ }
+ 
+ void pa_memblockq_drop(pa_memblockq *bq, size_t length) {
+-    int64_t old;
++    int64_t old, delta;
+     pa_assert(bq);
+     pa_assert(length % bq->base == 0);
+ 
+@@ -565,21 +553,19 @@
+     }
+ 
+     drop_backlog(bq);
+-    read_index_changed(bq, old);
++
++    delta = bq->read_index - old;
++    bq->missing += delta;
+ }
+ 
+ void pa_memblockq_rewind(pa_memblockq *bq, size_t length) {
+-    int64_t old;
+     pa_assert(bq);
+     pa_assert(length % bq->base == 0);
+ 
+-    old = bq->read_index;
+-
+     /* This is kind of the inverse of pa_memblockq_drop() */
+ 
+     bq->read_index -= (int64_t) length;
+-
+-    read_index_changed(bq, old);
++    bq->missing -= (int64_t) length;
+ }
+ 
+ pa_bool_t pa_memblockq_is_readable(pa_memblockq *bq) {
+@@ -616,7 +602,7 @@
+ }
+ 
+ void pa_memblockq_seek(pa_memblockq *bq, int64_t offset, pa_seek_mode_t seek, pa_bool_t account) {
+-    int64_t old;
++    int64_t old, delta;
+     pa_assert(bq);
+ 
+     old = bq->write_index;
+@@ -639,11 +625,24 @@
+     }
+ 
+     drop_backlog(bq);
+-    write_index_changed(bq, old, account);
++
++    delta = bq->write_index - old;
++
++    if (account) {
++        if (delta >= (int64_t) bq->requested) {
++            delta -= (int64_t) bq->requested;
++            bq->requested = 0;
++        } else if (delta >= 0) {
++            bq->requested -= (size_t) delta;
++            delta = 0;
++        }
++    }
++
++    bq->missing -= delta;
+ }
+ 
+ void pa_memblockq_flush_write(pa_memblockq *bq) {
+-    int64_t old;
++    int64_t old, delta;
+     pa_assert(bq);
+ 
+     pa_memblockq_silence(bq);
+@@ -652,11 +651,22 @@
+     bq->write_index = bq->read_index;
+ 
+     pa_memblockq_prebuf_force(bq);
+-    write_index_changed(bq, old, TRUE);
++
++    delta = bq->write_index - old;
++
++    if (delta >= (int64_t) bq->requested) {
++        delta -= (int64_t) bq->requested;
++        bq->requested = 0;
++    } else if (delta >= 0) {
++        bq->requested -= (size_t) delta;
++        delta = 0;
++    }
++
++    bq->missing -= delta;
+ }
+ 
+ void pa_memblockq_flush_read(pa_memblockq *bq) {
+-    int64_t old;
++    int64_t old, delta;
+     pa_assert(bq);
+ 
+     pa_memblockq_silence(bq);
+@@ -665,7 +675,9 @@
+     bq->read_index = bq->write_index;
+ 
+     pa_memblockq_prebuf_force(bq);
+-    read_index_changed(bq, old);
++
++    delta = bq->read_index - old;
++    bq->missing += delta;
+ }
+ 
+ size_t pa_memblockq_get_tlength(pa_memblockq *bq) {
+@@ -762,11 +774,8 @@
+         return 0;
+ 
+     l = (size_t) bq->missing;
+-
+-    bq->requested += bq->missing;
+     bq->missing = 0;
+-
+-    /* pa_log("sent %lli: request counter is at %lli", (long long) l, (long long) bq->requested); */
++    bq->requested += l;
+ 
+     return l;
+ }
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-24-gfa64/src/pulsecore/protocol-native.c
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-24-gfa64.orig/src/pulsecore/protocol-native.c	2010-01-15 18:21:19.000000000 -0500
++++ pulseaudio-0.9.22~0.9.21+stable-queue-24-gfa64/src/pulsecore/protocol-native.c	2010-01-15 19:18:19.000000000 -0500
+@@ -1113,8 +1113,6 @@
+ 
+     *missing = (uint32_t) pa_memblockq_pop_missing(s->memblockq);
+ 
+-    /* pa_log("missing original: %li", (long int) *missing); */
+-
+     *ss = s->sink_input->sample_spec;
+     *map = s->sink_input->channel_map;
+ 
+@@ -1139,12 +1137,11 @@
+ 
+     m = pa_memblockq_pop_missing(s->memblockq);
+ 
+-    /* pa_log("request_bytes(%lu) (tlength=%lu minreq=%lu length=%lu really missing=%lli)", */
++    /* pa_log("request_bytes(%lu) (tlength=%lu minreq=%lu length=%lu)", */
+     /*        (unsigned long) m, */
+     /*        pa_memblockq_get_tlength(s->memblockq), */
+     /*        pa_memblockq_get_minreq(s->memblockq), */
+-    /*        pa_memblockq_get_length(s->memblockq), */
+-    /*        (long long) pa_memblockq_get_tlength(s->memblockq) - (long long) pa_memblockq_get_length(s->memblockq)); */
++    /*        pa_memblockq_get_length(s->memblockq)); */
+ 
+     if (m <= 0)
+         return;

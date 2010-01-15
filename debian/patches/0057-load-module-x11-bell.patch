@@ -1,8 +1,8 @@
-Index: pulseaudio-0.9.22~0.9.21+341-g62bf/src/daemon/start-pulseaudio-x11.in
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-24-gfa64/src/daemon/start-pulseaudio-x11.in
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+341-g62bf.orig/src/daemon/start-pulseaudio-x11.in	2010-01-14 20:20:45.000000000 -0500
-+++ pulseaudio-0.9.22~0.9.21+341-g62bf/src/daemon/start-pulseaudio-x11.in	2010-01-14 20:45:22.000000000 -0500
-@@ -24,6 +24,7 @@
+--- pulseaudio-0.9.22~0.9.21+stable-queue-24-gfa64.orig/src/daemon/start-pulseaudio-x11.in	2010-01-15 18:21:18.000000000 -0500
++++ pulseaudio-0.9.22~0.9.21+stable-queue-24-gfa64/src/daemon/start-pulseaudio-x11.in	2010-01-15 19:18:04.000000000 -0500
+@@ -26,6 +26,7 @@
  if [ x"$DISPLAY" != x ] ; then
  
      @PACTL_BINARY@ load-module module-x11-publish "display=$DISPLAY" > /dev/null

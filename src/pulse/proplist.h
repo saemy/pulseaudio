@@ -325,7 +325,7 @@ void pa_proplist_update(pa_proplist *p, pa_update_mode_t mode, pa_proplist *othe
  * specified key name. \since 0.9.11 */
 int pa_proplist_unset(pa_proplist *p, const char *key);
 
-/** Similar to pa_proplist_unset() but takes an array of keys to
+/** Similar to pa_proplist_remove() but takes an array of keys to
  * remove. The array should be terminated by a NULL pointer. Return -1
  * on failure, otherwise the number of entries actually removed (which
  * might even be 0, if there where no matching entries to
@@ -358,7 +358,7 @@ char *pa_proplist_to_string_sep(pa_proplist *p, const char *sep);
  * readable string. \since 0.9.15 */
 pa_proplist *pa_proplist_from_string(const char *str);
 
-/** Returns 1 if an entry for the specified key is existant in the
+  /** Returns 1 if an entry for the specified key is existant in the
  * property list. \since 0.9.11 */
 int pa_proplist_contains(pa_proplist *p, const char *key);
 
@@ -374,10 +374,6 @@ unsigned pa_proplist_size(pa_proplist *t);
 
 /** Returns 0 when the proplist is empty, positive otherwise \since 0.9.15 */
 int pa_proplist_isempty(pa_proplist *t);
-
-/** Return non-zero when a and b have the same keys and values.
- * \since 0.9.16 */
-int pa_proplist_equal(pa_proplist *a, pa_proplist *b);
 
 PA_C_DECL_END
 

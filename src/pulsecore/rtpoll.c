@@ -30,10 +30,15 @@
 #include <string.h>
 #include <errno.h>
 
+#ifdef HAVE_POLL_H
+#include <poll.h>
+#else
+#include <pulsecore/poll.h>
+#endif
+
 #include <pulse/xmalloc.h>
 #include <pulse/timeval.h>
 
-#include <pulsecore/poll.h>
 #include <pulsecore/core-error.h>
 #include <pulsecore/core-rtclock.h>
 #include <pulsecore/macro.h>
@@ -42,7 +47,6 @@
 #include <pulsecore/core-util.h>
 #include <pulsecore/winsock.h>
 #include <pulsecore/ratelimit.h>
-#include <pulse/rtclock.h>
 
 #include "rtpoll.h"
 
@@ -213,10 +217,6 @@ int pa_rtpoll_run(pa_rtpoll *p, pa_bool_t wait_op) {
     pa_assert(p);
     pa_assert(!p->running);
 
-#ifdef DEBUG_TIMING
-    pa_log("rtpoll_run");
-#endif
-
     p->running = TRUE;
     p->timer_elapsed = FALSE;
 
@@ -230,19 +230,13 @@ int pa_rtpoll_run(pa_rtpoll *p, pa_bool_t wait_op) {
         if (!i->work_cb)
             continue;
 
-        if (p->quit) {
-#ifdef DEBUG_TIMING
-            pa_log("rtpoll finish");
-#endif
+        if (p->quit)
             goto finish;
-        }
 
         if ((k = i->work_cb(i)) != 0) {
             if (k < 0)
                 r = k;
-#ifdef DEBUG_TIMING
-            pa_log("rtpoll finish");
-#endif
+
             goto finish;
         }
     }
@@ -274,9 +268,7 @@ int pa_rtpoll_run(pa_rtpoll *p, pa_bool_t wait_op) {
 
             if (k < 0)
                 r = k;
-#ifdef DEBUG_TIMING
-            pa_log("rtpoll finish");
-#endif
+
             goto finish;
         }
     }
@@ -300,10 +292,6 @@ int pa_rtpoll_run(pa_rtpoll *p, pa_bool_t wait_op) {
         pa_usec_t now = pa_rtclock_now();
         p->awake = now - p->timestamp;
         p->timestamp = now;
-        if (!wait_op || p->quit || p->timer_enabled)
-            pa_log("poll timeout: %d ms ",(int) ((timeout.tv_sec*1000) + (timeout.tv_usec / 1000)));
-        else
-            pa_log("poll timeout is ZERO");
     }
 #endif
 
@@ -316,7 +304,7 @@ int pa_rtpoll_run(pa_rtpoll *p, pa_bool_t wait_op) {
         r = ppoll(p->pollfd, p->n_pollfd_used, (!wait_op || p->quit || p->timer_enabled) ? &ts : NULL, NULL);
     }
 #else
-    r = pa_poll(p->pollfd, p->n_pollfd_used, (!wait_op || p->quit || p->timer_enabled) ? (int) ((timeout.tv_sec*1000) + (timeout.tv_usec / 1000)) : -1);
+    r = poll(p->pollfd, p->n_pollfd_used, (!wait_op || p->quit || p->timer_enabled) ? (int) ((timeout.tv_sec*1000) + (timeout.tv_usec / 1000)) : -1);
 #endif
 
     p->timer_elapsed = r == 0;

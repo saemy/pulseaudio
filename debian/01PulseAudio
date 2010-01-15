@@ -15,14 +15,10 @@ get_pulse_users() {
     fi
 }
 
-call_pacmd() {
-    sudo -H -u \#$1 pacmd
-}
-
 # $1 = sink|source
 # $2 = uid
 save_pulse_state_and_mute() {
-    echo list-${1}s | call_pacmd $2 | \
+    sudo -H -u \#$2 pacmd list-${1}s | \
         sed -n 's/^[[:space:]*]*//; /\(index\|mute\)/p' | \
         (index="";
             while read field value; do
@@ -30,7 +26,7 @@ save_pulse_state_and_mute() {
                     index=$value
                 else
                     savestate pulse:$2:$1$index $value
-                    echo set-$1-mute $index yes | call_pacmd $2
+                    sudo -H -u \#$2 pacmd set-$1-mute $index yes
                 fi
             done)
 }
@@ -38,31 +34,31 @@ save_pulse_state_and_mute() {
 # $1 = sink|source
 # $2 = uid
 restore_pulse_state() {
-    echo list-${1}s | call_pacmd $2 | \
+    sudo -H -u \#$2 pacmd list-${1}s | \
         sed -n 's/^[[:space:]*]*index: //p' | \
         while read index; do
             if state_exists pulse:$2:$1$index; then
-                echo set-$1-mute \
+                sudo -H -u \#$2 pacmd \
+                    set-$1-mute \
                     $index \
-                    $(restorestate pulse:$2:$1$index) | \
-                    call_pacmd $2;
+                    $(restorestate pulse:$2:$1$index);
             fi
         done
 }
 
 suspend_pulse() {
     for i in $(get_pulse_users); do
-        save_pulse_state_and_mute sink $i > /dev/null 2>&1
-        save_pulse_state_and_mute source $i > /dev/null 2>&1
-        echo suspend true | call_pacmd $i > /dev/null 2>&1
+        save_pulse_state_and_mute sink $i
+        save_pulse_state_and_mute source $i
+        sudo -H -u \#$i pacmd suspend true
     done
 }
 
 resume_pulse() {
     for i in $(get_pulse_users); do
-        restore_pulse_state sink $i > /dev/null 2>&1
-        restore_pulse_state source $i > /dev/null 2>&1
-        echo suspend false | call_pacmd $i > /dev/null 2>&1
+        restore_pulse_state sink $i
+        restore_pulse_state source $i
+        sudo -H -u \#$i pacmd suspend false
     done
 }
 

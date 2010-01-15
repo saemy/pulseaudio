@@ -1,3 +1,20 @@
+pulseaudio (1:0.9.22~0.9.21+stable-queue-24-gfa64-0ubuntu1) lucid; urgency=low
+
+  * Reroll actual stable-queue tarball (arrrg!)
+  * debian/01PulseAudio: Rework pacmd bits (LP: #507941)
+  * debian/patches/:
+    + add:  0099-back-out-8d3566.patch (upstream says this commit causes
+            regressions)
+    - drop: 0099-change-configure-git-version-tag.patch (no longer
+            relevant)
+    + refresh: 0001-change-resample-and-buffering.patch
+               0054-mute-iec958-optical-raw-for-audigyX.patch
+               0090-disable-flat-volumes.patch
+               0091-dont-load-cork-music-on-phone.patch
+               0057-load-module-x11-bell.patch
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Fri, 15 Jan 2010 19:06:15 -0500
+
 pulseaudio (1:0.9.22~0.9.21+341-g62bf-0ubuntu1) lucid; urgency=low
 
   * New snapshot based on stable-queue git branch (testing requested

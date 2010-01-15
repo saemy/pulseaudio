@@ -1340,7 +1340,7 @@ static void propagate_reference_volume(pa_sink *s) {
 void pa_sink_set_volume(
         pa_sink *s,
         const pa_cvolume *volume,
-        pa_bool_t send_msg,
+        pa_bool_t sendmsg,
         pa_bool_t save) {
 
     pa_cvolume old_reference_volume;
@@ -1409,7 +1409,7 @@ void pa_sink_set_volume(
         s->soft_volume = s->real_volume;
 
     /* This tells the sink that soft and/or virtual volume changed */
-    if (send_msg)
+    if (sendmsg)
         pa_assert_se(pa_asyncmsgq_send(s->asyncmsgq, PA_MSGOBJECT(s), PA_SINK_MESSAGE_SET_VOLUME, NULL, 0, NULL) == 0);
 
     if (reference_changed)
@@ -1731,14 +1731,10 @@ static void sync_input_volumes_within_thread(pa_sink *s) {
     pa_sink_assert_io_context(s);
 
     PA_HASHMAP_FOREACH(i, s->thread_info.inputs, state) {
-        if (pa_atomic_load(&i->before_ramping_v))
-            i->thread_info.future_soft_volume = i->soft_volume;
-
         if (pa_cvolume_equal(&i->thread_info.soft_volume, &i->soft_volume))
             continue;
 
-        if (!pa_atomic_load(&i->before_ramping_v))
-            i->thread_info.soft_volume = i->soft_volume;
+        i->thread_info.soft_volume = i->soft_volume;
         pa_sink_input_request_rewind(i, 0, TRUE, FALSE, FALSE);
     }
 }

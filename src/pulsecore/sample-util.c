@@ -1007,7 +1007,7 @@ void pa_memchunk_dump_to_file(pa_memchunk *c, const char *fn) {
 
     /* Only for debugging purposes */
 
-    f = pa_fopen_cloexec(fn, "a");
+    f = fopen(fn, "a");
 
     if (!f) {
         pa_log_warn("Failed to open '%s': %s", fn, pa_cstrerror(errno));

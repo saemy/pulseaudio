@@ -33,13 +33,6 @@
 #include <sys/prctl.h>
 #endif
 
-#ifdef OS_IS_DARWIN
-#include <CoreServices/CoreServices.h>
-#include <mach/mach.h>
-#include <mach/mach_time.h>
-#include <unistd.h>
-#endif
-
 #include <pulse/timeval.h>
 #include <pulsecore/macro.h>
 #include <pulsecore/core-error.h>
@@ -54,20 +47,7 @@ pa_usec_t pa_rtclock_age(const struct timeval *tv) {
 }
 
 struct timeval *pa_rtclock_get(struct timeval *tv) {
-
-#if defined(OS_IS_DARWIN)
-    uint64_t val, abs_time = mach_absolute_time();
-    Nanoseconds nanos;
-
-    nanos = AbsoluteToNanoseconds(*(AbsoluteTime *) &abs_time);
-    val = *(uint64_t *) &nanos;
-
-    tv->tv_sec = val / PA_NSEC_PER_SEC;
-    tv->tv_usec = (val % PA_NSEC_PER_SEC) / PA_NSEC_PER_USEC;
-
-    return tv;
-
-#elif defined(HAVE_CLOCK_GETTIME)
+#ifdef HAVE_CLOCK_GETTIME
     struct timespec ts;
 
 #ifdef CLOCK_MONOTONIC
@@ -79,7 +59,7 @@ struct timeval *pa_rtclock_get(struct timeval *tv) {
             no_monotonic = TRUE;
 
     if (no_monotonic)
-#endif /* CLOCK_MONOTONIC */
+#endif
         pa_assert_se(clock_gettime(CLOCK_REALTIME, &ts) == 0);
 
     pa_assert(tv);
@@ -88,45 +68,36 @@ struct timeval *pa_rtclock_get(struct timeval *tv) {
     tv->tv_usec = ts.tv_nsec / PA_NSEC_PER_USEC;
 
     return tv;
-#endif /* HAVE_CLOCK_GETTIME */
+
+#else /* HAVE_CLOCK_GETTIME */
 
     return pa_gettimeofday(tv);
+
+#endif
 }
 
 pa_bool_t pa_rtclock_hrtimer(void) {
-
-#if defined (OS_IS_DARWIN)
-    mach_timebase_info_data_t tbi;
-    uint64_t time_nsec;
-
-    mach_timebase_info(&tbi);
-
-    /* nsec = nticks * (N/D) - we want 1 tick == resolution !? */
-    time_nsec = tbi.numer / tbi.denom;
-    return time_nsec <= (long) (PA_HRTIMER_THRESHOLD_USEC*PA_NSEC_PER_USEC);
-
-#elif defined(HAVE_CLOCK_GETTIME)
+#ifdef HAVE_CLOCK_GETTIME
     struct timespec ts;
 
 #ifdef CLOCK_MONOTONIC
-
     if (clock_getres(CLOCK_MONOTONIC, &ts) >= 0)
         return ts.tv_sec == 0 && ts.tv_nsec <= (long) (PA_HRTIMER_THRESHOLD_USEC*PA_NSEC_PER_USEC);
-
-#endif /* CLOCK_MONOTONIC */
+#endif
 
     pa_assert_se(clock_getres(CLOCK_REALTIME, &ts) == 0);
     return ts.tv_sec == 0 && ts.tv_nsec <= (long) (PA_HRTIMER_THRESHOLD_USEC*PA_NSEC_PER_USEC);
 
-#endif /* HAVE_CLOCK_GETTIME */
+#else /* HAVE_CLOCK_GETTIME */
 
     return FALSE;
+
+#endif
 }
 
 #define TIMER_SLACK_NS (int) ((500 * PA_NSEC_PER_USEC))
 
 void pa_rtclock_hrtimer_enable(void) {
-
 #ifdef PR_SET_TIMERSLACK
     int slack_ns;
 

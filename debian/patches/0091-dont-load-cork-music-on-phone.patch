@@ -1,8 +1,8 @@
-Index: pulseaudio-0.9.22~0.9.21+341-g62bf/src/daemon/default.pa.in
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-24-gfa64/src/daemon/default.pa.in
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+341-g62bf.orig/src/daemon/default.pa.in	2010-01-14 20:44:41.000000000 -0500
-+++ pulseaudio-0.9.22~0.9.21+341-g62bf/src/daemon/default.pa.in	2010-01-14 20:45:02.000000000 -0500
-@@ -118,7 +118,7 @@
+--- pulseaudio-0.9.22~0.9.21+stable-queue-24-gfa64.orig/src/daemon/default.pa.in	2010-01-15 19:17:06.000000000 -0500
++++ pulseaudio-0.9.22~0.9.21+stable-queue-24-gfa64/src/daemon/default.pa.in	2010-01-15 19:17:51.000000000 -0500
+@@ -115,7 +115,7 @@
  load-module module-position-event-sounds
  
  ### Cork music streams when a phone stream is active
