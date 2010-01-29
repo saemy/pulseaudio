@@ -1,3 +1,17 @@
+pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu2) lucid; urgency=low
+
+  * debian/01PulseAudio: Use su(1) instead of sudo(8)
+    (LP: #489144, #498980).
+  * debian/patches/series: To trim the startup time, don't lazy-load
+    sounds by not applying 0005-load-sample-dir-lazy.patch.
+  * 0091-dont-load-cork-music-on-phone.patch: Refresh.
+  * 0057-load-module-x11-bell.patch: Don't explicitly load the daemon
+    since it will autospawn if necessary, and if the system or user
+    configuration has autospawn disabled it breaks that semantics
+    (LP: #513120).
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Fri, 29 Jan 2010 14:37:52 -0500
+
 pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu1) lucid; urgency=low
 
   * New snapshot of stable-queue branch as requested by upstream
