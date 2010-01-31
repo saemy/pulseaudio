@@ -53,8 +53,8 @@ suspend_pulse() {
             save_pulse_state_and_mute sink "${THIS_USER}"
             save_pulse_state_and_mute source "${THIS_USER}"
             su "${THIS_USER}" -l -c -- 'pacmd suspend true' > /dev/null 2>&1
+            break
         fi
-        break
     done
 }
 
@@ -65,8 +65,8 @@ resume_pulse() {
             restore_pulse_state sink "${THIS_USER}"
             restore_pulse_state source "${THIS_USER}"
             su "${THIS_USER}" -l -c -- 'pacmd suspend false' > /dev/null 2>&1
+            break
         fi
-        break
     done
 }
 

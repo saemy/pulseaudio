@@ -1,3 +1,10 @@
+pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu4) lucid; urgency=low
+
+  * debian/01PulseAudio: Break from state (re)store in the correct
+    place!
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Sun, 31 Jan 2010 13:44:57 -0500
+
 pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu3) lucid; urgency=low
 
   * debian/01PulseAudio:
