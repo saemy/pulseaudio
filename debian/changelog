@@ -1,3 +1,16 @@
+pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu3) lucid; urgency=low
+
+  * debian/01PulseAudio:
+    + Fix su(1) -c quoting (LP: #515038)
+    + Now that PA only stores mixer state for the active CK seat, and
+      because the active ConsoleKit seat is the only one we care about,
+      we don't need to save all PA users' mixer states.  Thus, we can
+      stop (re)storing state as soon as we've finished processing the
+      active ConsoleKit seat, thereby further optimizing the suspend/
+      resume speed.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Sun, 31 Jan 2010 13:16:46 -0500
+
 pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu2) lucid; urgency=low
 
   * debian/01PulseAudio: Use su(1) instead of sudo(8)

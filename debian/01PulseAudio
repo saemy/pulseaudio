@@ -8,59 +8,65 @@ test_pulse_system() {
 
 get_pulse_users() {
     PULSE_SYSTEM_USER=$(test_pulse_system)
-    if [ -z "$PULSE_SYSTEM_USER" ]; then
+    if [ -z "${PULSE_SYSTEM_USER}" ]; then
         ps -C pulseaudio -o uid= | tr -d ' '
     else
-        ps -C pulseaudio -o uid= | tr -d ' ' | sed s/$PULSE_SYSTEM_USER//
+        ps -C pulseaudio -o uid= | tr -d ' ' | sed s/${PULSE_SYSTEM_USER}//
     fi
 }
 
 # $1 = sink|source
 # $2 = username
 save_pulse_state_and_mute() {
-    su "$2" -l -c "pacmd list-${1}s | \
-        sed -n 's/^[[:space:]*]*//; /\(index\|mute\)/p' | \
+    su "${2}" -l -c -- 'pacmd list-${1}s | \
+        sed -n "s/^[[:space:]*]*//; /\(index\|mute\)/p" | \
         (index="";
             while read field value; do
                 if [ ${field%:} = "index" ]; then
-                    index=$value
+                    index=${value}
                 else
-                    savestate pulse:"$2":$1$index $value
-                    su "$2" -l -c "pacmd set-$1-mute $index yes"
+                    savestate pulse:"${2}":${1}${index} ${value}
+                    pacmd set-${1}-mute ${index} yes
                 fi
-            done)"
+            done)'
 }
 
 # $1 = sink|source
 # $2 = username
 restore_pulse_state() {
-    su "$2" -l -c "pacmd list-${1}s | \
-        sed -n 's/^[[:space:]*]*index: //p' | \
+    su "${2}" -l -c -- 'pacmd list-${1}s | \
+        sed -n "s/^[[:space:]*]*index: //p" | \
         while read index; do
-            if state_exists pulse:"$2":$1$index; then
-                su "$2" -l -c "pacmd \
-                    set-$1-mute \
-                    $index \
-                    $(restorestate pulse:"$2":$1$index)";
+            if state_exists pulse:"${2}":${1}${index}; then
+                pacmd \
+                    set-${1}-mute \
+                    ${index} \
+                    $(restorestate pulse:"${2}":${1}${index})
             fi
-        done"
+        done'
 }
 
 suspend_pulse() {
     for i in $(get_pulse_users); do
-        THIS_USER="$(getent passwd $i | cut -f1 -d:)"
-        save_pulse_state_and_mute sink "$THIS_USER"
-        save_pulse_state_and_mute source "$THIS_USER"
-        su "$THIS_USER" -l -c "pacmd suspend true"
+        THIS_USER="$(getent passwd ${i} | cut -f1 -d:)"
+        if su "${THIS_USER}" -l -c -- 'ck-list-sessions | grep "active = TRUE"' > /dev/null 2>&1; then
+            save_pulse_state_and_mute sink "${THIS_USER}"
+            save_pulse_state_and_mute source "${THIS_USER}"
+            su "${THIS_USER}" -l -c -- 'pacmd suspend true' > /dev/null 2>&1
+        fi
+        break
     done
 }
 
 resume_pulse() {
     for i in $(get_pulse_users); do
-        THIS_USER="$(getent passwd $i | cut -f1 -d:)"
-        restore_pulse_state sink "$THIS_USER"
-        restore_pulse_state source "$THIS_USER"
-        su "$THIS_USER" -l -c "pacmd suspend false"
+        THIS_USER="$(getent passwd ${i} | cut -f1 -d:)"
+        if su "${THIS_USER}" -l -c -- 'ck-list-sessions | grep "active = TRUE"' > /dev/null 2>&1; then
+            restore_pulse_state sink "${THIS_USER}"
+            restore_pulse_state source "${THIS_USER}"
+            su "${THIS_USER}" -l -c -- 'pacmd suspend false' > /dev/null 2>&1
+        fi
+        break
     done
 }
 
