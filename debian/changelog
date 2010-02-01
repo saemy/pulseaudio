@@ -1,3 +1,14 @@
+pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu5) lucid; urgency=low
+
+  * Add bzr-builddeb configuration (merge mode).
+  * debian/control: Prefix the Debian git Vcs-* fields with XS-Debian-*, so
+    that debcheckout on Ubuntu will actually work.
+  * Add 0092-delay-gnome-autostart.patch: Delay applet startup by two seconds,
+    so that pulseaudio has started up enough to avoid starting it a second
+    time through autospawn.
+
+ -- Martin Pitt <martin.pitt@ubuntu.com>  Mon, 01 Feb 2010 18:12:13 -0800
+
 pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu4) lucid; urgency=low
 
   * debian/01PulseAudio: Break from state (re)store in the correct
