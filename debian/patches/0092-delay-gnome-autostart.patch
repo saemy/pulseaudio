@@ -1,4 +1,4 @@
-Description: Delay applet startup by two seconds, so that pulseaudio has started up enough to avoid starting it a second time through autospawn.
+Description: Delay applet startup by some seconds, so that pulseaudio has started up enough to avoid starting it a second time through autospawn.
 Index: pulseaudio/src/daemon/pulseaudio.desktop.in
 ===================================================================
 --- pulseaudio.orig/src/daemon/pulseaudio.desktop.in	2010-02-01 18:10:40.000000000 -0800
@@ -7,4 +7,4 @@ Index: pulseaudio/src/daemon/pulseaudio.desktop.in
  Type=Application
  Categories=
  GenericName=
-+X-GNOME-Autostart-Delay=2
++X-GNOME-Autostart-Delay=8

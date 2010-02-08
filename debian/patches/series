@@ -9,3 +9,5 @@
 0057-load-module-x11-bell.patch
 0055-handle-Master-Front.patch
 0092-delay-gnome-autostart.patch
+0093-backport-fixes-stable-queue-head.patch
+0094-autoconf.patch

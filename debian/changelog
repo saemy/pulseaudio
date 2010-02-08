@@ -1,3 +1,31 @@
+pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu6) lucid; urgency=low
+
+  [ Daniel T Chen ]
+  * pulseaudio.default: More clearly describe the conditions for
+    autospawn to function correctly given the recent login-speedup work.
+    (As a side effect, it now also lists what one needs to do to disable
+    PA.)
+  * 0093-backport-fixes-stable-queue-head.patch: Backport the following
+    changesets from the stable-queue branch:
+    + a631be (PA_SINK_INPUT_IS_LINKED typo fix)
+    + e8cb96 ('Desktop Speaker' handling)
+    + 7d6bab ('Shared Mic/Line in', 'Analog Source' handling)
+    + 0c836a ('Internal Mic' handling)
+    + 307bd1 (default output port names)
+    + f9b31f (gobject explicit linking)
+    + ff2474 (padsp handling of /dev/audio)
+    + 96592c (dbus timeout callback timer fix)
+    + 5e2af2 (logging of eventfd read failures)
+  * 0094-autoconf.patch: Rerun autoconf given explicit gobject link
+    addition; readd version string.
+
+  [ Martin Pitt ]
+  * 0092-delay-gnome-autostart.patch: Push it out a little further; the X11
+    bell is not crucial at desktop startup, and it keeps other programs from
+    doing more urgent initialization.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Mon, 08 Feb 2010 12:42:02 -0500
+
 pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu5) lucid; urgency=low
 
   * Add bzr-builddeb configuration (merge mode).

@@ -4,10 +4,13 @@
 # System mode is not the recommended way to run PulseAudio as it has some
 # limitations (such as no shared memory access) and could potentially allow
 # users to disconnect or redirect each others' audio streams. The
-# recommended way to run PulseAudio is as a per-session daemon. For GNOME
-# sessions in Ubuntu Lucid/10.04, /etc/xdg/autostart/pulseaudio.desktop
-# handles this function of automatically starting PulseAudio on login. For
-# other sessions, you can simply start PulseAudio with "pulseaudio --daemonize".
+# recommended way to run PulseAudio is as a per-session daemon. For GNOME/KDE/
+# Xfce sessions in Ubuntu Lucid/10.04, /etc/xdg/autostart/pulseaudio.desktop
+# handles this function of automatically starting PulseAudio on login, and for
+# it to work correctly your user must *not* have "autospawn = no" set in
+# ~/.pulse/client.conf (or in /etc/pulse/client.conf). By default, autospawn
+# is enabled. For other sessions, you can simply start PulseAudio with
+# "pulseaudio --daemonize".
 # 0 = don't start in system mode, 1 = start in system mode
 PULSEAUDIO_SYSTEM_START=0
 

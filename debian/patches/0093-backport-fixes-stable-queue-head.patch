@@ -1,0 +1,845 @@
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/alsa-mixer.c
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/alsa-mixer.c	2010-02-15 18:23:55.000000000 -0500
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/alsa-mixer.c	2010-02-15 22:01:43.000000000 -0500
+@@ -1783,8 +1783,7 @@
+         { "analog-output-headphones",   N_("Analog Headphones") },
+         { "analog-output-lfe-on-mono",  N_("Analog Output (LFE)") },
+         { "analog-output-mono",         N_("Analog Mono Output") },
+-        { "analog-output-headphones-2", N_("Analog Headphones 2") },
+-        { "analog-output-speaker",      N_("Analog Speaker") }
++        { "analog-output-speaker",      N_("Analog Speakers") }
+     };
+ 
+     pa_alsa_element *e;
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input.conf.common
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-input.conf.common	2010-02-15 18:23:55.000000000 -0500
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input.conf.common	2010-02-15 22:00:48.000000000 -0500
+@@ -277,6 +277,31 @@
+ [Option Digital Input Source:Digital Mic 2]
+ name = input-microphone
+ 
++;;; 'Analog Source'
++
++[Element Analog Source]
++enumeration = select
++
++[Option Analog Source:Mic]
++name = input-microphone
++
++[Option Analog Source:Line in]
++name = input-linein
++
++[Option Analog Source:Aux]
++name = input
++
++;;; 'Shared Mic/Line in'
++
++[Element Shared Mic/Line in]
++enumeration = select
++
++[Option Shared Mic/Line in:Mic in]
++name = input-microphone
++
++[Option Shared Mic/Line in:Line in]
++name = input-linein
++
+ ;;; Various Boosts
+ 
+ [Element Capture Boost]
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output-desktop-speaker.conf
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output-desktop-speaker.conf	2010-02-15 22:01:43.000000000 -0500
+@@ -0,0 +1,99 @@
++# This file is part of PulseAudio.
++#
++# PulseAudio is free software; you can redistribute it and/or modify
++# it under the terms of the GNU Lesser General Public License as
++# published by the Free Software Foundation; either version 2.1 of the
++# License, or (at your option) any later version.
++#
++# PulseAudio is distributed in the hope that it will be useful, but
++# WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++# General Public License for more details.
++#
++# You should have received a copy of the GNU Lesser General Public License
++# along with PulseAudio; if not, write to the Free Software Foundation,
++# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
++
++; Path for mixers that have a 'Desktop Speaker' control
++;
++; See analog-output.conf.common for an explanation on the directives
++
++[General]
++priority = 101
++name = analog-output-speaker
++
++[Element Hardware Master]
++switch = mute
++volume = merge
++override-map.1 = all
++override-map.2 = all-left,all-right
++
++[Element Master]
++switch = mute
++volume = merge
++override-map.1 = all
++override-map.2 = all-left,all-right
++
++[Element Master Mono]
++switch = off
++volume = off
++
++; This profile path is intended to control the desktop speaker, not
++; the headphones. But it should not hurt if we leave the headphone
++; jack enabled nonetheless.
++[Element Headphone]
++switch = mute
++volume = zero
++
++[Element Headphone2]
++switch = mute
++volume = zero
++
++[Element Speaker]
++switch = off
++volume = off
++
++[Element Desktop Speaker]
++required = any
++switch = mute
++volume = merge
++override-map.1 = all
++override-map.2 = all-left,all-right
++
++[Element Front]
++switch = mute
++volume = merge
++override-map.1 = all-front
++override-map.2 = front-left,front-right
++
++[Element Rear]
++switch = mute
++volume = merge
++override-map.1 = all-rear
++override-map.2 = rear-left,rear-right
++
++[Element Surround]
++switch = mute
++volume = merge
++override-map.1 = all-rear
++override-map.2 = rear-left,rear-right
++
++[Element Side]
++switch = mute
++volume = merge
++override-map.1 = all-side
++override-map.2 = side-left,side-right
++
++[Element Center]
++switch = mute
++volume = merge
++override-map.1 = all-center
++override-map.2 = all-center,all-center
++
++[Element LFE]
++switch = mute
++volume = merge
++override-map.1 = lfe
++override-map.2 = lfe,lfe
++
++.include analog-output.conf.common
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output-headphones-2.conf
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-output-headphones-2.conf	2010-02-15 22:00:48.000000000 -0500
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output-headphones-2.conf	2010-02-15 22:01:43.000000000 -0500
+@@ -20,6 +20,7 @@
+ 
+ [General]
+ priority = 89
++name = analog-output-headphones
+ 
+ [Element Hardware Master]
+ switch = mute
+@@ -61,6 +62,10 @@
+ switch = off
+ volume = off
+ 
++[Element Desktop Speaker]
++switch = off
++volume = off
++
+ [Element Front]
+ switch = off
+ volume = off
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output-headphones.conf
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-output-headphones.conf	2010-02-15 22:00:48.000000000 -0500
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output-headphones.conf	2010-02-15 22:01:43.000000000 -0500
+@@ -20,6 +20,7 @@
+ 
+ [General]
+ priority = 90
++name = analog-output-headphones
+ 
+ [Element Hardware Master]
+ switch = mute
+@@ -61,6 +62,10 @@
+ switch = off
+ volume = off
+ 
++[Element Desktop Speaker]
++switch = off
++volume = off
++
+ [Element Front]
+ switch = off
+ volume = off
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output-lfe-on-mono.conf
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-output-lfe-on-mono.conf	2010-02-15 18:23:55.000000000 -0500
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output-lfe-on-mono.conf	2010-02-15 22:00:48.000000000 -0500
+@@ -58,6 +58,10 @@
+ override-map.1 = all
+ override-map.2 = all-left,all-right
+ 
++[Element Desktop Speaker]
++switch = off
++volume = off
++
+ [Element Front]
+ switch = off
+ volume = off
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output-mono.conf
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-output-mono.conf	2010-02-15 22:00:48.000000000 -0500
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output-mono.conf	2010-02-15 22:00:48.000000000 -0500
+@@ -59,6 +59,10 @@
+ override-map.1 = all
+ override-map.2 = all-left,all-right
+ 
++[Element Desktop Speaker]
++switch = off
++volume = off
++
+ [Element Front]
+ switch = off
+ volume = off
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output-speaker.conf
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-output-speaker.conf	2010-02-15 22:00:48.000000000 -0500
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output-speaker.conf	2010-02-15 22:01:43.000000000 -0500
+@@ -20,6 +20,7 @@
+ 
+ [General]
+ priority = 100
++name = analog-output-speaker
+ 
+ [Element Hardware Master]
+ switch = mute
+@@ -61,6 +62,10 @@
+ override-map.1 = all
+ override-map.2 = all-left,all-right
+ 
++[Element Desktop Speaker]
++switch = off
++volume = off
++
+ [Element Front]
+ switch = mute
+ volume = merge
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output.conf
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-output.conf	2010-02-15 22:00:48.000000000 -0500
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output.conf	2010-02-15 22:00:48.000000000 -0500
+@@ -59,6 +59,10 @@
+ switch = mute
+ volume = off
+ 
++[Element Desktop Speaker]
++switch = mute
++volume = off
++
+ [Element Front]
+ switch = mute
+ volume = merge
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/profile-sets/default.conf
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/profile-sets/default.conf	2010-02-15 18:23:55.000000000 -0500
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/profile-sets/default.conf	2010-02-15 22:00:48.000000000 -0500
+@@ -62,42 +62,42 @@
+ [Mapping analog-mono]
+ device-strings = hw:%f
+ channel-map = mono
+-paths-output = analog-output analog-output-speaker analog-output-headphones analog-output-headphones-2 analog-output-mono analog-output-lfe-on-mono
++paths-output = analog-output analog-output-speaker analog-output-desktop-speaker analog-output-headphones analog-output-headphones-2 analog-output-mono analog-output-lfe-on-mono
+ paths-input = analog-input analog-input-mic analog-input-linein analog-input-aux analog-input-video analog-input-tvtuner analog-input-fm analog-input-mic-line
+ priority = 1
+ 
+ [Mapping analog-stereo]
+ device-strings = front:%f hw:%f
+ channel-map = left,right
+-paths-output = analog-output analog-output-speaker analog-output-headphones analog-output-headphones-2 analog-output-mono analog-output-lfe-on-mono
++paths-output = analog-output analog-output-speaker analog-output-desktop-speaker analog-output-headphones analog-output-headphones-2 analog-output-mono analog-output-lfe-on-mono
+ paths-input = analog-input analog-input-mic analog-input-linein analog-input-aux analog-input-video analog-input-tvtuner analog-input-fm analog-input-mic-line
+ priority = 10
+ 
+ [Mapping analog-surround-40]
+ device-strings = surround40:%f
+ channel-map = front-left,front-right,rear-left,rear-right
+-paths-output = analog-output analog-output-speaker analog-output-lfe-on-mono
++paths-output = analog-output analog-output-speaker analog-output-desktop-speaker analog-output-lfe-on-mono
+ priority = 7
+ direction = output
+ 
+ [Mapping analog-surround-41]
+ device-strings = surround41:%f
+ channel-map = front-left,front-right,rear-left,rear-right,lfe
+-paths-output = analog-output analog-output-speaker analog-output-lfe-on-mono
++paths-output = analog-output analog-output-speaker analog-output-desktop-speaker analog-output-lfe-on-mono
+ priority = 8
+ direction = output
+ 
+ [Mapping analog-surround-50]
+ device-strings = surround50:%f
+ channel-map = front-left,front-right,rear-left,rear-right,front-center
+-paths-output = analog-output analog-output-speaker analog-output-lfe-on-mono
++paths-output = analog-output analog-output-speaker analog-output-desktop-speaker analog-output-lfe-on-mono
+ priority = 7
+ direction = output
+ 
+ [Mapping analog-surround-51]
+ device-strings = surround51:%f
+ channel-map = front-left,front-right,rear-left,rear-right,front-center,lfe
+-paths-output = analog-output analog-output-speaker analog-output-lfe-on-mono
++paths-output = analog-output analog-output-speaker analog-output-desktop-speaker analog-output-lfe-on-mono
+ priority = 8
+ direction = output
+ 
+@@ -105,7 +105,7 @@
+ device-strings = surround71:%f
+ channel-map = front-left,front-right,rear-left,rear-right,front-center,lfe,side-left,side-right
+ description = Analog Surround 7.1
+-paths-output = analog-output analog-output-speaker analog-output-lfe-on-mono
++paths-output = analog-output analog-output-speaker analog-output-desktop-speaker analog-output-lfe-on-mono
+ priority = 7
+ direction = output
+ 
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/sink-input.c
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/sink-input.c	2010-02-15 18:23:55.000000000 -0500
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/sink-input.c	2010-02-15 22:00:48.000000000 -0500
+@@ -1086,7 +1086,7 @@
+     if (p)
+         pa_proplist_update(i->proplist, mode, p);
+ 
+-    if (PA_SINK_IS_LINKED(i->state)) {
++    if (PA_SINK_INPUT_IS_LINKED(i->state)) {
+         pa_hook_fire(&i->core->hooks[PA_CORE_HOOK_SINK_INPUT_PROPLIST_CHANGED], i);
+         pa_subscription_post(i->core, PA_SUBSCRIPTION_EVENT_SINK_INPUT|PA_SUBSCRIPTION_EVENT_CHANGE, i->index);
+     }
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/configure.ac
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/configure.ac	2010-02-15 22:01:28.000000000 -0500
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/configure.ac	2010-02-15 22:01:43.000000000 -0500
+@@ -893,7 +893,7 @@
+         [gconf=auto])
+ 
+ if test "x${gconf}" != xno ; then
+-    PKG_CHECK_MODULES(GCONF, [ gconf-2.0 >= 2.4.0 ],
++    PKG_CHECK_MODULES(GCONF, [ gconf-2.0 >= 2.4.0 gobject-2.0 ],
+         HAVE_GCONF=1,
+         [
+             HAVE_GCONF=0
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-aux.conf
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-input-aux.conf	2010-02-15 22:01:28.000000000 -0500
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-aux.conf	2010-02-15 22:01:43.000000000 -0500
+@@ -32,6 +32,10 @@
+ switch = off
+ volume = off
+ 
++[Element Internal Mic]
++switch = off
++volume = off
++
+ [Element Line]
+ switch = off
+ volume = off
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-fm.conf
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-input-fm.conf	2010-02-15 22:01:28.000000000 -0500
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-fm.conf	2010-02-15 22:01:43.000000000 -0500
+@@ -32,6 +32,10 @@
+ switch = off
+ volume = off
+ 
++[Element Internal Mic]
++switch = off
++volume = off
++
+ [Element Line]
+ switch = off
+ volume = off
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-internal-mic.conf
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-internal-mic.conf	2010-02-15 22:01:43.000000000 -0500
+@@ -0,0 +1,67 @@
++# This file is part of PulseAudio.
++#
++# PulseAudio is free software; you can redistribute it and/or modify
++# it under the terms of the GNU Lesser General Public License as
++# published by the Free Software Foundation; either version 2.1 of the
++# License, or (at your option) any later version.
++#
++# PulseAudio is distributed in the hope that it will be useful, but
++# WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++# General Public License for more details.
++#
++# You should have received a copy of the GNU Lesser General Public License
++# along with PulseAudio; if not, write to the Free Software Foundation,
++# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
++
++; For devices where a 'Internal Mic' element exists
++;
++; See analog-output.conf.common for an explanation on the directives
++
++[General]
++priority = 90
++name = analog-input-microphone
++
++[Element Capture]
++switch = mute
++volume = merge
++override-map.1 = all
++override-map.2 = all-left,all-right
++
++[Element Mic]
++switch = off
++volume = off
++
++[Element Internal Mic]
++required = any
++switch = mute
++volume = merge
++override-map.1 = all
++override-map.2 = all-left,all-right
++
++[Element Line]
++switch = off
++volume = off
++
++[Element Aux]
++switch = off
++volume = off
++
++[Element Video]
++switch = off
++volume = off
++
++[Element Mic/Line]
++switch = off
++volume = off
++
++[Element TV Tuner]
++switch = off
++volume = off
++
++[Element FM]
++switch = off
++volume = off
++
++.include analog-input.conf.common
++.include analog-input-mic.conf.common
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-linein.conf
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-input-linein.conf	2010-02-15 22:01:28.000000000 -0500
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-linein.conf	2010-02-15 22:01:43.000000000 -0500
+@@ -31,6 +31,10 @@
+ switch = off
+ volume = off
+ 
++[Element Internal Mic]
++switch = off
++volume = off
++
+ [Element Line]
+ required = any
+ switch = mute
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-mic-line.conf
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-input-mic-line.conf	2010-02-15 22:01:28.000000000 -0500
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-mic-line.conf	2010-02-15 22:01:43.000000000 -0500
+@@ -32,6 +32,10 @@
+ switch = off
+ volume = off
+ 
++[Element Internal Mic]
++switch = off
++volume = off
++
+ [Element Line]
+ switch = off
+ volume = off
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-mic.conf
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-input-mic.conf	2010-02-15 22:01:28.000000000 -0500
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-mic.conf	2010-02-15 22:01:43.000000000 -0500
+@@ -35,6 +35,10 @@
+ override-map.1 = all
+ override-map.2 = all-left,all-right
+ 
++[Element Internal Mic]
++switch = off
++volume = off
++
+ [Element Line]
+ switch = off
+ volume = off
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-tvtuner.conf
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-input-tvtuner.conf	2010-02-15 22:01:28.000000000 -0500
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-tvtuner.conf	2010-02-15 22:01:43.000000000 -0500
+@@ -32,6 +32,10 @@
+ switch = off
+ volume = off
+ 
++[Element Internal Mic]
++switch = off
++volume = off
++
+ [Element Line]
+ switch = off
+ volume = off
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-video.conf
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-input-video.conf	2010-02-15 22:01:28.000000000 -0500
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-video.conf	2010-02-15 22:01:43.000000000 -0500
+@@ -31,6 +31,10 @@
+ switch = off
+ volume = off
+ 
++[Element Internal Mic]
++switch = off
++volume = off
++
+ [Element Line]
+ switch = off
+ volume = off
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input.conf
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-input.conf	2010-02-15 22:01:28.000000000 -0500
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input.conf	2010-02-15 22:01:43.000000000 -0500
+@@ -32,6 +32,9 @@
+ [Element Mic]
+ required-absent = any
+ 
++[Element Internal Mic]
++required-absent = any
++
+ [Element Line]
+ required-absent = any
+ 
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/dbus-util.c
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/dbus-util.c	2010-02-15 22:01:29.000000000 -0500
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/dbus-util.c	2010-02-15 22:01:43.000000000 -0500
+@@ -44,17 +44,16 @@
+ };
+ 
+ struct timeout_data {
+-    pa_dbus_wrap_connection *c;
++    pa_dbus_wrap_connection *connection;
+     DBusTimeout *timeout;
+ };
+ 
+ static void dispatch_cb(pa_mainloop_api *ea, pa_defer_event *ev, void *userdata) {
+     DBusConnection *conn = userdata;
+ 
+-    if (dbus_connection_dispatch(conn) == DBUS_DISPATCH_COMPLETE) {
++    if (dbus_connection_dispatch(conn) == DBUS_DISPATCH_COMPLETE)
+         /* no more data to process, disable the deferred */
+         ea->defer_enable(ev, 0);
+-    }
+ }
+ 
+ /* DBusDispatchStatusFunction callback for the pa mainloop */
+@@ -131,13 +130,17 @@
+     struct timeout_data *d = userdata;
+ 
+     pa_assert(d);
+-    pa_assert(d->c);
++    pa_assert(d->connection);
+ 
+     if (dbus_timeout_get_enabled(d->timeout)) {
+-        dbus_timeout_handle(d->timeout);
++        /* Restart it for the next scheduled time. We do this before
++         * calling dbus_timeout_handle() to make sure that the time
++         * event is still around. */
++        ea->time_restart(e, pa_timeval_rtstore(&tv,
++                                               pa_timeval_load(t) + dbus_timeout_get_interval(d->timeout) * PA_USEC_PER_MSEC,
++                                               d->connection->use_rtclock));
+ 
+-        /* restart it for the next scheduled time */
+-        ea->time_restart(e, pa_timeval_rtstore(&tv, pa_timeval_load(t) + dbus_timeout_get_interval(d->timeout) * PA_USEC_PER_MSEC, d->c->use_rtclock));
++        dbus_timeout_handle(d->timeout);
+     }
+ }
+ 
+@@ -207,7 +210,7 @@
+         return FALSE;
+ 
+     d = pa_xnew(struct timeout_data, 1);
+-    d->c = c;
++    d->connection = c;
+     d->timeout = timeout;
+     ev = c->mainloop->time_new(c->mainloop, pa_timeval_rtstore(&tv, pa_rtclock_now() + dbus_timeout_get_interval(timeout) * PA_USEC_PER_MSEC, c->use_rtclock), handle_time_event, d);
+     c->mainloop->time_set_destroy(ev, time_event_destroy_cb);
+@@ -236,15 +239,15 @@
+     struct timeval tv;
+ 
+     pa_assert(d);
+-    pa_assert(d->c);
++    pa_assert(d->connection);
+     pa_assert(timeout);
+ 
+     pa_assert_se(ev = dbus_timeout_get_data(timeout));
+ 
+-    if (dbus_timeout_get_enabled(timeout)) {
+-        d->c->mainloop->time_restart(ev, pa_timeval_rtstore(&tv, pa_rtclock_now() + dbus_timeout_get_interval(timeout) * PA_USEC_PER_MSEC, d->c->use_rtclock));
+-    } else
+-        d->c->mainloop->time_restart(ev, pa_timeval_rtstore(&tv, PA_USEC_INVALID, d->c->use_rtclock));
++    if (dbus_timeout_get_enabled(timeout))
++        d->connection->mainloop->time_restart(ev, pa_timeval_rtstore(&tv, pa_rtclock_now() + dbus_timeout_get_interval(timeout) * PA_USEC_PER_MSEC, d->connection->use_rtclock));
++    else
++        d->connection->mainloop->time_restart(ev, pa_timeval_rtstore(&tv, PA_USEC_INVALID, d->connection->use_rtclock));
+ }
+ 
+ static void wakeup_main(void *userdata) {
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/fdsem.c
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/fdsem.c	2010-02-15 22:01:29.000000000 -0500
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/fdsem.c	2010-02-15 22:01:43.000000000 -0500
+@@ -35,6 +35,7 @@
+ #include <pulsecore/thread.h>
+ #include <pulsecore/macro.h>
+ #include <pulsecore/core-util.h>
++#include <pulsecore/core-error.h>
+ #include <pulse/xmalloc.h>
+ 
+ #ifndef HAVE_PIPE
+@@ -159,7 +160,12 @@
+             uint64_t u;
+ 
+             if ((r = read(f->efd, &u, sizeof(u))) != sizeof(u)) {
+-                pa_assert(r < 0 && errno == EINTR);
++
++                if (r >= 0 || errno != EINTR) {
++                    pa_log_error("Invalid read from eventfd: %s", r < 0 ? pa_cstrerror(errno) : "EOF");
++                    pa_assert_not_reached();
++                }
++
+                 continue;
+             }
+             r = (ssize_t) u;
+@@ -167,7 +173,12 @@
+ #endif
+ 
+         if ((r = read(f->fds[0], &x, sizeof(x))) <= 0) {
+-            pa_assert(r < 0 && errno == EINTR);
++
++            if (r >= 0 || errno != EINTR) {
++                pa_log_error("Invalid read from pipe: %s", r < 0 ? pa_cstrerror(errno) : "EOF");
++                pa_assert_not_reached();
++            }
++
+             continue;
+         }
+ 
+@@ -192,14 +203,22 @@
+                     uint64_t u = 1;
+ 
+                     if ((r = write(f->efd, &u, sizeof(u))) != sizeof(u)) {
+-                        pa_assert(r < 0 && errno == EINTR);
++                        if (r >= 0 || errno != EINTR) {
++                            pa_log_error("Invalid read from pipe: %s", r < 0 ? pa_cstrerror(errno) : "EOF");
++                            pa_assert_not_reached();
++                        }
++
+                         continue;
+                     }
+                 } else
+ #endif
+ 
+                 if ((r = write(f->fds[1], &x, 1)) != 1) {
+-                    pa_assert(r < 0 && errno == EINTR);
++                    if (r >= 0 || errno != EINTR) {
++                        pa_log_error("Invalid read from pipe: %s", r < 0 ? pa_cstrerror(errno) : "EOF");
++                        pa_assert_not_reached();
++                    }
++
+                     continue;
+                 }
+ 
+@@ -228,7 +247,12 @@
+             uint64_t u;
+ 
+             if ((r = read(f->efd, &u, sizeof(u))) != sizeof(u)) {
+-                pa_assert(r < 0 && errno == EINTR);
++
++                if (r >= 0 || errno != EINTR) {
++                    pa_log_error("Invalid read from pipe: %s", r < 0 ? pa_cstrerror(errno) : "EOF");
++                    pa_assert_not_reached();
++                }
++
+                 continue;
+             }
+ 
+@@ -237,7 +261,12 @@
+ #endif
+ 
+         if ((r = read(f->fds[0], &x, sizeof(x))) <= 0) {
+-            pa_assert(r < 0 && errno == EINTR);
++
++            if (r >= 0 || errno != EINTR) {
++                pa_log_error("Invalid read from pipe: %s", r < 0 ? pa_cstrerror(errno) : "EOF");
++                pa_assert_not_reached();
++            }
++
+             continue;
+         }
+ 
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/utils/padsp.c
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/utils/padsp.c	2010-02-15 22:01:29.000000000 -0500
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/utils/padsp.c	2010-02-15 22:01:43.000000000 -0500
+@@ -1458,11 +1458,11 @@
+         return _open(filename, flags, mode);
+     }
+ 
+-    if (filename && dsp_cloak_enable() && (strcmp(filename, "/dev/dsp") == 0 || strcmp(filename, "/dev/adsp") == 0))
++    if (filename && dsp_cloak_enable() && (pa_streq(filename, "/dev/dsp") || pa_streq(filename, "/dev/adsp") || pa_streq(filename, "/dev/audio")))
+         r = dsp_open(flags, &_errno);
+-    else if (filename && mixer_cloak_enable() && strcmp(filename, "/dev/mixer") == 0)
++    else if (filename && mixer_cloak_enable() && pa_streq(filename, "/dev/mixer"))
+         r = mixer_open(flags, &_errno);
+-    else if (filename && sndstat_cloak_enable() && strcmp(filename, "/dev/sndstat") == 0)
++    else if (filename && sndstat_cloak_enable() && pa_streq(filename, "/dev/sndstat"))
+         r = sndstat_open(flags, &_errno);
+     else {
+         function_exit();
+@@ -2383,15 +2383,21 @@
+     return 0;
+ }
+ 
++static pa_bool_t is_audio_device_node(const char *path) {
++    return
++        pa_streq(path, "/dev/dsp") ||
++        pa_streq(path, "/dev/adsp") ||
++        pa_streq(path, "/dev/audio") ||
++        pa_streq(path, "/dev/sndstat") ||
++        pa_streq(path, "/dev/mixer");
++}
++
+ int access(const char *pathname, int mode) {
+ 
+     debug(DEBUG_LEVEL_VERBOSE, __FILE__": access(%s)\n", pathname?pathname:"NULL");
+ 
+     if (!pathname ||
+-        (strcmp(pathname, "/dev/dsp") != 0 &&
+-         strcmp(pathname, "/dev/adsp") != 0 &&
+-         strcmp(pathname, "/dev/sndstat") != 0 &&
+-         strcmp(pathname, "/dev/mixer") != 0 )) {
++        !is_audio_device_node(pathname)) {
+         LOAD_ACCESS_FUNC();
+         return _access(pathname, mode);
+     }
+@@ -2417,10 +2423,7 @@
+ 
+     if (!pathname ||
+         !buf ||
+-        ( strcmp(pathname, "/dev/dsp") != 0 &&
+-          strcmp(pathname, "/dev/adsp") != 0 &&
+-          strcmp(pathname, "/dev/sndstat") != 0 &&
+-          strcmp(pathname, "/dev/mixer") != 0 )) {
++        !is_audio_device_node(pathname)) {
+         debug(DEBUG_LEVEL_VERBOSE, __FILE__": stat(%s)\n", pathname?pathname:"NULL");
+         LOAD_STAT_FUNC();
+         return _stat(pathname, buf);
+@@ -2474,10 +2477,7 @@
+ 
+     if (!pathname ||
+         !buf ||
+-        ( strcmp(pathname, "/dev/dsp") != 0 &&
+-          strcmp(pathname, "/dev/adsp") != 0 &&
+-          strcmp(pathname, "/dev/sndstat") != 0 &&
+-          strcmp(pathname, "/dev/mixer") != 0 )) {
++        !is_audio_device_node(pathname)) {
+         LOAD_STAT64_FUNC();
+         return _stat64(pathname, buf);
+     }
+@@ -2519,10 +2519,7 @@
+     }
+ 
+     if (!filename ||
+-        ( strcmp(filename, "/dev/dsp") != 0 &&
+-          strcmp(filename, "/dev/adsp") != 0 &&
+-          strcmp(filename, "/dev/sndstat") != 0 &&
+-          strcmp(filename, "/dev/mixer") != 0 )) {
++        !is_audio_device_node(filename)) {
+         LOAD_OPEN64_FUNC();
+         return _open64(filename, flags, mode);
+     }
+@@ -2539,10 +2536,7 @@
+ 
+     if (!pathname ||
+         !buf ||
+-        ( strcmp(pathname, "/dev/dsp") != 0 &&
+-          strcmp(pathname, "/dev/adsp") != 0 &&
+-          strcmp(pathname, "/dev/sndstat") != 0 &&
+-          strcmp(pathname, "/dev/mixer") != 0 )) {
++        !is_audio_device_node(pathname)) {
+         LOAD_XSTAT_FUNC();
+         return ___xstat(ver, pathname, buf);
+     }
+@@ -2562,10 +2556,7 @@
+ 
+     if (!pathname ||
+         !buf ||
+-        ( strcmp(pathname, "/dev/dsp") != 0 &&
+-          strcmp(pathname, "/dev/adsp") != 0 &&
+-          strcmp(pathname, "/dev/sndstat") != 0 &&
+-          strcmp(pathname, "/dev/mixer") != 0 )) {
++        !is_audio_device_node(pathname)) {
+         LOAD_XSTAT64_FUNC();
+         return ___xstat64(ver, pathname, buf);
+     }
+@@ -2591,10 +2582,7 @@
+ 
+     if (!filename ||
+         !mode ||
+-        ( strcmp(filename, "/dev/dsp") != 0 &&
+-          strcmp(filename, "/dev/adsp") != 0 &&
+-          strcmp(filename, "/dev/sndstat") != 0 &&
+-          strcmp(filename, "/dev/mixer") != 0 )) {
++        !is_audio_device_node(filename)) {
+         LOAD_FOPEN_FUNC();
+         return _fopen(filename, mode);
+     }
+@@ -2634,10 +2622,7 @@
+ 
+     if (!filename ||
+         !mode ||
+-        ( strcmp(filename, "/dev/dsp") != 0 &&
+-          strcmp(filename, "/dev/adsp") != 0 &&
+-          strcmp(filename, "/dev/sndstat") != 0 &&
+-          strcmp(filename, "/dev/mixer") != 0 )) {
++        !is_audio_device_node(filename)) {
+         LOAD_FOPEN64_FUNC();
+         return _fopen64(filename, mode);
+     }
