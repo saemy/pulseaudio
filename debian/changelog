@@ -1,3 +1,12 @@
+pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu8) lucid; urgency=low
+
+  * Back out 307bd1 until we can roll a new tarball. Applying it to the
+    current source package requires all sorts of nasty hacks.
+    (LP: #523716)
+  * Drop 0094-autoconf.patch, as it's no longer needed
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Thu, 18 Feb 2010 07:32:58 -0500
+
 pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu7) lucid; urgency=low
 
   * debian/control: Since JACK has been approved for promotion back into
