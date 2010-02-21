@@ -10,3 +10,4 @@
 0055-handle-Master-Front.patch
 0092-delay-gnome-autostart.patch
 0093-backport-fixes-stable-queue-head.patch
+0094-add-missing-mixer-paths-and-rerun-automake.patch

@@ -1,3 +1,33 @@
+pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu10) lucid; urgency=low
+
+  * 0093-backport-fixes-stable-queue-head.patch: Backport the following
+    changesets from the stable-queue branch:
+    + dfe27f (don't complain about missing SHM segments)
+    + 5ce18c (fix definition of INVALID_INDEX for vala)
+    + 6bbdd2 (fix definition of the GLib mainloop adapter for vala)
+    + 3f44bf (Use "Subwoofer" in channelmap)
+    + 117c99 (fix wrapping of port setting calls for vala)
+    + ddabaa (explicitly mention 'test' role in proplist)
+    + 8adf53 (increase verboseness when not restoring sink)
+    + 180589 (use sample name for unmodified fallback)
+    + f9b957 (don't queue cached sample when sink is suspended)
+    + b2e9fb (pass buffer_attr to recording streams)
+    + a469d4 (make devices resume for corked state to fix latency
+      miscalculation) (LP: #511558)
+    + 4a3210 (improve buffer_attrs logging)
+  * 0094-add-missing-mixer-paths-and-rerun-automake.patch has been
+    merged upstream (047e16f in the stable-queue branch), but we'll continue to
+    carry it until the next stable tarball is rolled.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Sun, 21 Feb 2010 22:37:37 -0500
+
+pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu9) lucid; urgency=low
+
+  * 0094-add-missing-mixer-paths-and-rerun-automake.patch: Fix missing paths
+    elements that broke volume control.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Thu, 18 Feb 2010 23:56:42 -0500
+
 pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu8) lucid; urgency=low
 
   * Back out 307bd1 until we can roll a new tarball. Applying it to the
