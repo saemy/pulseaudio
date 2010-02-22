@@ -1,3 +1,16 @@
+pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu11) lucid; urgency=low
+
+  * 0093-backport-fixes-stable-queue-head.patch: Backport the following
+    changesets from the stable-queue branch:
+    + 522c44 (strip spaces from ALSA card/pcm names)
+    + 195069 (use pa_strip())
+    + dd682d (reset max_rewind/max_request in sink while suspending)
+    + 30f28e (fix wrong counters by using pa_memblockq_pop_missing() for
+      all request handling)
+    + 0d1154 (rework how stream volumes affect sink volumes)
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Mon, 22 Feb 2010 00:22:50 -0500
+
 pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu10) lucid; urgency=low
 
   * 0093-backport-fixes-stable-queue-head.patch: Backport the following
