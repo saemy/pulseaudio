@@ -1,8 +1,8 @@
 #!/bin/sh -e
 ### BEGIN INIT INFO
 # Provides:          pulseaudio esound
-# Required-Start:    $remote_fs $syslog udev
-# Required-Stop:     $remote_fs $syslog udev
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
 # Should-Start:      udev NetworkManager
 # Should-Stop:       udev NetworkManager
 # Default-Start:     2 3 4 5
