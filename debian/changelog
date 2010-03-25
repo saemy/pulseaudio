@@ -1,3 +1,22 @@
+pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu13) lucid; urgency=low
+
+  [ Daniel T Chen ]
+  * 0093-backport-fixes-stable-queue-head.patch: Backport the following
+    changesets from the stable-queue branch:
+    + a7c1778 (don't pick monitor sources automatically for role-based
+               device selection).
+    + e8b83fa (handle asyncns failure when IPv6 is not supported in the
+               kernel).
+  * 0096-lp453966-handle-digmic-pt2.patch: Raise the priority of the
+    'Digital Mic 1' digital input source for newer Dell laptops.
+    (LP: #453966)
+  * 0096-lp451635-handle-dove-x0-line-hp-swap.patch: Add 'Line HP Swap'
+    to the Headphone profile. (LP: #451635)
+  * debian/control: Update Vcs-Bzr to point to new branch that uses pack
+    repo format 2a.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Thu, 25 Mar 2010 21:58:46 -0700
+
 pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu12) lucid; urgency=low
 
   * debian/pulseaudio.init: Remove udev from Required-* LSB headers
@@ -7,7 +26,8 @@ pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu12) lucid; urgency=low
       pulled from upstream stable-queue d3efa43; CVE-2009-1299.
       (LP: #509008)
     + 0096-lp533877-handle-digmic.patch: Prefer the built-in digital
-      mic on newer Dells, e.g., XPS 1330. (LP: #533877)
+      mic on newer Dells, e.g., XPS 1330. (stable-queue 29845be)
+      (LP: #533877)
     + 0097-regenerate-configure.patch: Apply changes from stable-queue
       f9b31fe (gobject linking) and d3efa43 above.
 

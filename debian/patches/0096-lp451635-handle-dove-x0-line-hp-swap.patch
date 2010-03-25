@@ -1,0 +1,17 @@
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output-headphones.conf
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-output-headphones.conf	2010-03-25 21:50:26.000000000 -0700
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output-headphones.conf	2010-03-25 21:57:21.000000000 -0700
+@@ -51,6 +51,12 @@
+ override-map.1 = all
+ override-map.2 = all-left,all-right
+ 
++[Element Line HP Swap]
++required = any
++switch = mute
++override-map.1 = all
++override-map.2 = all-left,all-right
++
+ ; This profile path is intended to control the first headphones, not
+ ; the second headphones. But it should not hurt if we leave the second
+ ; headphone jack enabled nonetheless.

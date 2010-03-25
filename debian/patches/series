@@ -13,4 +13,6 @@
 0094-add-missing-mixer-paths-and-rerun-automake.patch
 0095-cve-2009-1299.patch
 0096-lp533877-handle-digmic.patch
+0096-lp453966-handle-digmic-pt2.patch
+0096-lp451635-handle-dove-x0-line-hp-swap.patch
 0097-regenerate-configure.patch

@@ -17,7 +17,7 @@ Build-Depends: debhelper (>= 5), cdbs, quilt, m4, libltdl-dev,
 Standards-Version: 3.8.1
 XS-Debian-Vcs-Git: git://git.debian.org/git/pkg-pulseaudio/pulseaudio.git
 XS-Debian-Vcs-Browser: http://git.debian.org/?p=pkg-pulseaudio/pulseaudio.git
-Vcs-Bzr: http://launchpad.net/~ubuntu-core-dev/pulseaudio/ubuntu
+Vcs-Bzr: http://launchpad.net/~ubuntu-core-dev/pulseaudio/ubuntu.2a
 Homepage: http://www.pulseaudio.org
 
 Package: pulseaudio
