@@ -1,3 +1,14 @@
+pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu14) lucid; urgency=low
+
+  * 0096-lp451635-handle-dove-x0-line-hp-swap.patch: Make the connector
+    work as intended: if 'Analog Output' is selected in the dropdown,
+    then 'Line HP Swap' is muted; if 'Analog Headphones' is selected,
+    then 'Line HP Swap' is unmuted. This better fits existing speaker
+    semantics and actually works. Many thanks to Tobin Davis for
+    helping chase this one. Really closes (LP: #451635)
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Fri, 26 Mar 2010 15:18:35 -0700
+
 pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu13) lucid; urgency=low
 
   [ Daniel T Chen ]
