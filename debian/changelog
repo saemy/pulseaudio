@@ -1,3 +1,10 @@
+pulseaudio (0.9.21-1.1) unstable; urgency=high
+
+  * Non-maintainer upload.
+  * Fix insecure temporary file creation security issue (closes: #573615).
+
+ -- Michael Gilbert <michael.s.gilbert@gmail.com>  Sat, 27 Mar 2010 14:32:13 -0400
+
 pulseaudio (0.9.21-1) unstable; urgency=low
 
   * New upstream release
