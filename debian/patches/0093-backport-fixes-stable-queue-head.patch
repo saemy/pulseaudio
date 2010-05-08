@@ -1,7 +1,7 @@
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/alsa-mixer.c
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/alsa-mixer.c	2010-03-23 21:33:58.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/alsa-mixer.c	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/alsa-mixer.c	2010-05-08 11:04:52.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/alsa-mixer.c	2010-05-08 11:05:05.000000000 -0400
 @@ -1783,8 +1783,7 @@
          { "analog-output-headphones",   N_("Analog Headphones") },
          { "analog-output-lfe-on-mono",  N_("Analog Output (LFE)") },
@@ -14,8 +14,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/alsa-mixe
      pa_alsa_element *e;
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input.conf.common
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-input.conf.common	2010-03-23 21:33:58.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input.conf.common	2010-03-25 21:36:53.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-input.conf.common	2010-05-08 11:04:52.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input.conf.common	2010-05-08 11:05:40.000000000 -0400
 @@ -277,6 +277,31 @@
  [Option Digital Input Source:Digital Mic 2]
  name = input-microphone
@@ -51,7 +51,7 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/pat
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output-desktop-speaker.conf
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output-desktop-speaker.conf	2010-03-25 21:36:47.000000000 -0700
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output-desktop-speaker.conf	2010-05-08 11:05:05.000000000 -0400
 @@ -0,0 +1,99 @@
 +# This file is part of PulseAudio.
 +#
@@ -154,8 +154,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/pat
 +.include analog-output.conf.common
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output-headphones-2.conf
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-output-headphones-2.conf	2010-03-25 21:36:47.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output-headphones-2.conf	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-output-headphones-2.conf	2010-05-08 11:05:05.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output-headphones-2.conf	2010-05-08 11:05:05.000000000 -0400
 @@ -20,6 +20,7 @@
  
  [General]
@@ -177,8 +177,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/pat
  volume = off
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output-headphones.conf
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-output-headphones.conf	2010-03-25 21:36:47.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output-headphones.conf	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-output-headphones.conf	2010-05-08 11:05:05.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output-headphones.conf	2010-05-08 11:05:34.000000000 -0400
 @@ -20,6 +20,7 @@
  
  [General]
@@ -200,8 +200,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/pat
  volume = off
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output-lfe-on-mono.conf
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-output-lfe-on-mono.conf	2010-03-23 21:33:58.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output-lfe-on-mono.conf	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-output-lfe-on-mono.conf	2010-05-08 11:04:52.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output-lfe-on-mono.conf	2010-05-08 11:05:05.000000000 -0400
 @@ -58,6 +58,10 @@
  override-map.1 = all
  override-map.2 = all-left,all-right
@@ -215,8 +215,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/pat
  volume = off
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output-mono.conf
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-output-mono.conf	2010-03-25 21:36:47.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output-mono.conf	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-output-mono.conf	2010-05-08 11:05:05.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output-mono.conf	2010-05-08 11:05:05.000000000 -0400
 @@ -59,6 +59,10 @@
  override-map.1 = all
  override-map.2 = all-left,all-right
@@ -230,8 +230,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/pat
  volume = off
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output-speaker.conf
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-output-speaker.conf	2010-03-25 21:36:47.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output-speaker.conf	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-output-speaker.conf	2010-05-08 11:05:05.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output-speaker.conf	2010-05-08 11:05:05.000000000 -0400
 @@ -20,6 +20,7 @@
  
  [General]
@@ -253,8 +253,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/pat
  volume = merge
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output.conf
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-output.conf	2010-03-25 21:36:47.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output.conf	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-output.conf	2010-05-08 11:05:05.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-output.conf	2010-05-08 11:05:34.000000000 -0400
 @@ -59,6 +59,10 @@
  switch = mute
  volume = off
@@ -268,8 +268,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/pat
  volume = merge
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/profile-sets/default.conf
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/profile-sets/default.conf	2010-03-23 21:33:58.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/profile-sets/default.conf	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/profile-sets/default.conf	2010-05-08 11:04:52.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/profile-sets/default.conf	2010-05-08 11:05:05.000000000 -0400
 @@ -62,42 +62,42 @@
  [Mapping analog-mono]
  device-strings = hw:%f
@@ -330,8 +330,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/pro
  
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/sink-input.c
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/sink-input.c	2010-03-23 21:33:57.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/sink-input.c	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/sink-input.c	2010-05-08 11:04:52.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/sink-input.c	2010-05-08 11:05:05.000000000 -0400
 @@ -1086,7 +1086,7 @@
      if (p)
          pa_proplist_update(i->proplist, mode, p);
@@ -343,8 +343,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/sink-input.c
      }
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-aux.conf
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-input-aux.conf	2010-03-23 21:33:58.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-aux.conf	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-input-aux.conf	2010-05-08 11:04:52.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-aux.conf	2010-05-08 11:05:05.000000000 -0400
 @@ -32,6 +32,10 @@
  switch = off
  volume = off
@@ -358,8 +358,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/pat
  volume = off
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-fm.conf
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-input-fm.conf	2010-03-23 21:33:58.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-fm.conf	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-input-fm.conf	2010-05-08 11:04:52.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-fm.conf	2010-05-08 11:05:05.000000000 -0400
 @@ -32,6 +32,10 @@
  switch = off
  volume = off
@@ -374,7 +374,7 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/pat
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-internal-mic.conf
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-internal-mic.conf	2010-03-25 21:36:47.000000000 -0700
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-internal-mic.conf	2010-05-08 11:05:05.000000000 -0400
 @@ -0,0 +1,67 @@
 +# This file is part of PulseAudio.
 +#
@@ -445,8 +445,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/pat
 +.include analog-input-mic.conf.common
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-linein.conf
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-input-linein.conf	2010-03-23 21:33:58.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-linein.conf	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-input-linein.conf	2010-05-08 11:04:52.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-linein.conf	2010-05-08 11:05:05.000000000 -0400
 @@ -31,6 +31,10 @@
  switch = off
  volume = off
@@ -460,8 +460,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/pat
  switch = mute
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-mic-line.conf
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-input-mic-line.conf	2010-03-23 21:33:58.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-mic-line.conf	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-input-mic-line.conf	2010-05-08 11:04:52.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-mic-line.conf	2010-05-08 11:05:05.000000000 -0400
 @@ -32,6 +32,10 @@
  switch = off
  volume = off
@@ -475,8 +475,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/pat
  volume = off
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-mic.conf
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-input-mic.conf	2010-03-23 21:33:58.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-mic.conf	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-input-mic.conf	2010-05-08 11:04:52.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-mic.conf	2010-05-08 11:05:05.000000000 -0400
 @@ -35,6 +35,10 @@
  override-map.1 = all
  override-map.2 = all-left,all-right
@@ -490,8 +490,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/pat
  volume = off
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-tvtuner.conf
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-input-tvtuner.conf	2010-03-23 21:33:58.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-tvtuner.conf	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-input-tvtuner.conf	2010-05-08 11:04:52.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-tvtuner.conf	2010-05-08 11:05:05.000000000 -0400
 @@ -32,6 +32,10 @@
  switch = off
  volume = off
@@ -505,8 +505,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/pat
  volume = off
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-video.conf
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-input-video.conf	2010-03-23 21:33:58.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-video.conf	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-input-video.conf	2010-05-08 11:04:52.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input-video.conf	2010-05-08 11:05:05.000000000 -0400
 @@ -31,6 +31,10 @@
  switch = off
  volume = off
@@ -520,8 +520,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/pat
  volume = off
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input.conf
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-input.conf	2010-03-23 21:33:58.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input.conf	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/mixer/paths/analog-input.conf	2010-05-08 11:04:52.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/paths/analog-input.conf	2010-05-08 11:05:05.000000000 -0400
 @@ -32,6 +32,9 @@
  [Element Mic]
  required-absent = any
@@ -534,8 +534,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/mixer/pat
  
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/dbus-util.c
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/dbus-util.c	2010-03-23 21:33:57.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/dbus-util.c	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/dbus-util.c	2010-05-08 11:04:52.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/dbus-util.c	2010-05-08 11:05:05.000000000 -0400
 @@ -44,17 +44,16 @@
  };
  
@@ -610,8 +610,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/dbus-util.c
  static void wakeup_main(void *userdata) {
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/fdsem.c
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/fdsem.c	2010-03-23 21:33:57.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/fdsem.c	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/fdsem.c	2010-05-08 11:04:52.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/fdsem.c	2010-05-08 11:05:05.000000000 -0400
 @@ -35,6 +35,7 @@
  #include <pulsecore/thread.h>
  #include <pulsecore/macro.h>
@@ -703,8 +703,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/fdsem.c
  
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/utils/padsp.c
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/utils/padsp.c	2010-03-23 21:33:57.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/utils/padsp.c	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/utils/padsp.c	2010-05-08 11:04:52.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/utils/padsp.c	2010-05-08 11:05:05.000000000 -0400
 @@ -1458,11 +1458,11 @@
          return _open(filename, flags, mode);
      }
@@ -832,8 +832,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/utils/padsp.c
      }
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/utils/pacat.c
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/utils/pacat.c	2010-03-23 21:33:57.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/utils/pacat.c	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/utils/pacat.c	2010-05-08 11:04:52.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/utils/pacat.c	2010-05-08 11:05:05.000000000 -0400
 @@ -195,28 +195,41 @@
  
          pa_assert(sndfile);
@@ -904,8 +904,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/utils/pacat.c
                  }
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/utils/pacmd.c
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/utils/pacmd.c	2010-03-23 21:33:57.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/utils/pacmd.c	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/utils/pacmd.c	2010-05-08 11:04:52.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/utils/pacmd.c	2010-05-08 11:05:05.000000000 -0400
 @@ -45,13 +45,6 @@
  
  int main(int argc, char*argv[]) {
@@ -1148,8 +1148,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/utils/pacmd.c
  
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/shm.c
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/shm.c	2010-03-23 21:33:57.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/shm.c	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/shm.c	2010-05-08 11:04:52.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/shm.c	2010-05-08 11:05:05.000000000 -0400
 @@ -286,7 +286,7 @@
      segment_name(fn, sizeof(fn), m->id = id);
  
@@ -1161,8 +1161,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/shm.c
      }
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/vala/libpulse.vapi
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/vala/libpulse.vapi	2010-03-23 21:33:57.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/vala/libpulse.vapi	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/vala/libpulse.vapi	2010-05-08 11:04:51.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/vala/libpulse.vapi	2010-05-08 11:05:05.000000000 -0400
 @@ -46,7 +46,7 @@
          [CCode (cname="PA_CHECK_VERSION")]
          public bool CHECK_VERSION(int major, int minor, int micro);
@@ -1206,8 +1206,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/vala/libpulse.vapi
  
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/module-stream-restore.c
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/module-stream-restore.c	2010-03-23 21:33:58.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/module-stream-restore.c	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/module-stream-restore.c	2010-05-08 11:04:52.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/module-stream-restore.c	2010-05-08 11:05:05.000000000 -0400
 @@ -394,7 +394,7 @@
          return PA_HOOK_OK;
  
@@ -1219,8 +1219,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/module-stream-
  
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulse/channelmap.c
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulse/channelmap.c	2010-03-23 21:33:57.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulse/channelmap.c	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulse/channelmap.c	2010-05-08 11:04:51.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulse/channelmap.c	2010-05-08 11:05:05.000000000 -0400
 @@ -112,7 +112,7 @@
      [PA_CHANNEL_POSITION_REAR_LEFT] = N_("Rear Left"),
      [PA_CHANNEL_POSITION_REAR_RIGHT] = N_("Rear Right"),
@@ -1232,8 +1232,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulse/channelmap.c
      [PA_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER] = N_("Front Right-of-center"),
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulse/proplist.h
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulse/proplist.h	2010-03-23 21:33:57.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulse/proplist.h	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulse/proplist.h	2010-05-08 11:04:51.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulse/proplist.h	2010-05-08 11:05:05.000000000 -0400
 @@ -59,7 +59,7 @@
  /** For streams: an XDG icon name for the media. e.g. "audio-x-mp3" */
  #define PA_PROP_MEDIA_ICON_NAME                "media.icon_name"
@@ -1245,8 +1245,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulse/proplist.h
  /** For event sound streams: XDG event sound name. e.g. "message-new-email" (Event sound streams are those with media.role set to "event") */
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/core-scache.c
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/core-scache.c	2010-03-23 21:33:57.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/core-scache.c	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/core-scache.c	2010-05-08 11:04:51.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/core-scache.c	2010-05-08 11:05:05.000000000 -0400
 @@ -310,7 +310,8 @@
          return -1;
  
@@ -1273,8 +1273,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/core-scache.
      pa_proplist_free(merged);
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/play-memblockq.c
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/play-memblockq.c	2010-03-23 21:33:57.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/play-memblockq.c	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/play-memblockq.c	2010-05-08 11:04:52.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/play-memblockq.c	2010-05-08 11:05:05.000000000 -0400
 @@ -173,7 +173,8 @@
          const pa_channel_map *map,
          pa_memblockq *q,
@@ -1312,8 +1312,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/play-membloc
      pa_sink_input_put(i);
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/play-memblockq.h
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/play-memblockq.h	2010-03-23 21:33:57.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/play-memblockq.h	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/play-memblockq.h	2010-05-08 11:04:52.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/play-memblockq.h	2010-05-08 11:05:05.000000000 -0400
 @@ -31,17 +31,19 @@
          const pa_channel_map *map,
          pa_memblockq *q,
@@ -1344,8 +1344,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/play-membloc
  #endif
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/play-memchunk.c
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/play-memchunk.c	2010-03-23 21:33:57.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/play-memchunk.c	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/play-memchunk.c	2010-05-08 11:04:52.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/play-memchunk.c	2010-05-08 11:05:05.000000000 -0400
 @@ -43,6 +43,7 @@
          const pa_memchunk *chunk,
          pa_cvolume *volume,
@@ -1365,8 +1365,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/play-memchun
      }
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/play-memchunk.h
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/play-memchunk.h	2010-03-23 21:33:57.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/play-memchunk.h	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/play-memchunk.h	2010-05-08 11:04:52.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/play-memchunk.h	2010-05-08 11:05:05.000000000 -0400
 @@ -26,12 +26,13 @@
  #include <pulsecore/memchunk.h>
  
@@ -1390,8 +1390,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/play-memchun
  #endif
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/module-suspend-on-idle.c
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/module-suspend-on-idle.c	2010-03-23 21:33:58.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/module-suspend-on-idle.c	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/module-suspend-on-idle.c	2010-05-08 11:04:52.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/module-suspend-on-idle.c	2010-05-08 11:05:05.000000000 -0400
 @@ -145,8 +145,9 @@
      pa_assert(data);
      pa_assert(u);
@@ -1416,8 +1416,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/module-suspend
      else
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/protocol-native.c
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/protocol-native.c	2010-03-23 21:33:57.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/protocol-native.c	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/protocol-native.c	2010-05-08 11:04:52.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/protocol-native.c	2010-05-08 11:05:05.000000000 -0400
 @@ -858,6 +858,18 @@
  
      pa_assert(s);
@@ -1452,8 +1452,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/protocol-nat
  /* Called from main context */
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/alsa-sink.c
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/alsa-sink.c	2010-03-23 21:33:58.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/alsa-sink.c	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/alsa-sink.c	2010-05-08 11:04:52.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/alsa-sink.c	2010-05-08 11:06:35.000000000 -0400
 @@ -79,7 +79,7 @@
  #define TSCHED_MIN_WAKEUP_USEC (4*PA_USEC_PER_MSEC)                /* 4ms   -- Wakeup at least this long before the buffer runs empty*/
  
@@ -1486,10 +1486,19 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/alsa-sink
  
      return 0;
  }
+@@ -1908,7 +1917,7 @@
+ 
+     pa_alsa_dump(PA_LOG_DEBUG, u->pcm_handle);
+ 
+-    if (!(u->thread = pa_thread_new(thread_func, u))) {
++    if (!(u->thread = pa_thread_new("alsa-sink", thread_func, u))) {
+         pa_log("Failed to create thread.");
+         goto fail;
+     }
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/alsa-util.c
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/alsa-util.c	2010-03-23 21:33:58.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/alsa-util.c	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/alsa-util.c	2010-05-08 11:04:52.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/alsa-util.c	2010-05-08 11:05:05.000000000 -0400
 @@ -874,12 +874,12 @@
      pa_proplist_setf(p, "alsa.card", "%i", card);
  
@@ -1528,8 +1537,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/alsa-util
  }
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/core-util.c
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/core-util.c	2010-03-23 21:33:57.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/core-util.c	2010-03-25 21:36:55.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/core-util.c	2010-05-08 11:04:51.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/core-util.c	2010-05-08 11:05:42.000000000 -0400
 @@ -126,6 +126,9 @@
  #define MSG_NOSIGNAL 0
  #endif
@@ -1581,8 +1590,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/core-util.c
  
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/core-util.h
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/core-util.h	2010-03-23 21:33:57.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/core-util.h	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/core-util.h	2010-05-08 11:04:51.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/core-util.h	2010-05-08 11:05:05.000000000 -0400
 @@ -102,6 +102,7 @@
  char *pa_split_spaces(const char *c, const char **state);
  
@@ -1593,8 +1602,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/core-util.h
  
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/protocol-esound.c
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/protocol-esound.c	2010-03-23 21:33:57.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/protocol-esound.c	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/protocol-esound.c	2010-05-08 11:04:51.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/protocol-esound.c	2010-05-08 11:05:05.000000000 -0400
 @@ -462,7 +462,7 @@
  
      c->protocol->n_player++;
@@ -1606,8 +1615,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/protocol-eso
  
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/protocol-simple.c
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/protocol-simple.c	2010-03-23 21:33:57.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/protocol-simple.c	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/protocol-simple.c	2010-05-08 11:04:51.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/protocol-simple.c	2010-05-08 11:05:05.000000000 -0400
 @@ -574,7 +574,7 @@
  
          pa_iochannel_socket_set_rcvbuf(io, l);
@@ -1619,8 +1628,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/protocol-sim
      }
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/sink.c
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/sink.c	2010-03-23 21:33:57.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/sink.c	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/sink.c	2010-05-08 11:04:52.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/sink.c	2010-05-08 11:05:05.000000000 -0400
 @@ -1162,6 +1162,46 @@
      return usec;
  }
@@ -1679,8 +1688,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/sink.c
  
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/module-intended-roles.c
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/module-intended-roles.c	2010-03-23 21:33:58.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/module-intended-roles.c	2010-03-25 21:36:47.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/module-intended-roles.c	2010-05-08 11:04:52.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/module-intended-roles.c	2010-05-08 11:05:05.000000000 -0400
 @@ -123,6 +123,7 @@
              return PA_HOOK_OK;
          }
@@ -1744,8 +1753,8 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/module-intende
              }
 Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/socket-client.c
 ===================================================================
---- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/socket-client.c	2010-03-25 21:37:40.000000000 -0700
-+++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/socket-client.c	2010-03-25 21:37:54.000000000 -0700
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/socket-client.c	2010-05-08 11:04:52.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/socket-client.c	2010-05-08 11:05:05.000000000 -0400
 @@ -389,7 +389,8 @@
          goto fail;
  
@@ -1755,4 +1764,498 @@ Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/socket-clien
 +            goto fail;
  
      asyncns_freeaddrinfo(res);
+ 
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/alsa-source.c
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/alsa/alsa-source.c	2010-05-08 11:06:18.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/alsa/alsa-source.c	2010-05-08 11:06:35.000000000 -0400
+@@ -1744,7 +1744,7 @@
+ 
+     pa_alsa_dump(PA_LOG_DEBUG, u->pcm_handle);
+ 
+-    if (!(u->thread = pa_thread_new(thread_func, u))) {
++    if (!(u->thread = pa_thread_new("alsa-source", thread_func, u))) {
+         pa_log("Failed to create thread.");
+         goto fail;
+     }
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/bluetooth/module-bluetooth-device.c
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/bluetooth/module-bluetooth-device.c	2010-05-08 11:06:18.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/bluetooth/module-bluetooth-device.c	2010-05-08 11:06:35.000000000 -0400
+@@ -2041,7 +2041,7 @@
+     }
+ #endif
+ 
+-    if (!(u->thread = pa_thread_new(thread_func, u))) {
++    if (!(u->thread = pa_thread_new("bluetooth", thread_func, u))) {
+         pa_log_error("Failed to create IO thread");
+         stop_thread(u);
+         return -1;
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/jack/module-jack-sink.c
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/jack/module-jack-sink.c	2010-05-08 11:06:18.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/jack/module-jack-sink.c	2010-05-08 11:06:35.000000000 -0400
+@@ -147,6 +147,7 @@
+                 pa_sample_spec ss;
+ 
+                 /* Humm, we're not RUNNING, hence let's write some silence */
++                /* This can happen if we're paused, or during shutdown (when we're unlinked but jack is still running). */
+ 
+                 ss = u->sink->sample_spec;
+                 ss.channels = 1;
+@@ -197,6 +198,7 @@
+     return pa_sink_process_msg(o, code, data, offset, memchunk);
+ }
+ 
++/* JACK Callback: This is called when JACK needs some data */
+ static int jack_process(jack_nframes_t nframes, void *arg) {
+     struct userdata *u = arg;
+     unsigned c;
+@@ -250,6 +252,7 @@
+     pa_log_debug("Thread shutting down");
+ }
+ 
++/* JACK Callback: This is called when JACK triggers an error */
+ static void jack_error_func(const char*t) {
+     char *s;
+ 
+@@ -258,6 +261,7 @@
+     pa_xfree(s);
+ }
+ 
++/* JACK Callback: This is called when JACK is set up */
+ static void jack_init(void *arg) {
+     struct userdata *u = arg;
+ 
+@@ -267,6 +271,7 @@
+         pa_make_realtime(u->core->realtime_priority+4);
+ }
+ 
++/* JACK Callback: This is called when JACK kicks us */
+ static void jack_shutdown(void* arg) {
+     struct userdata *u = arg;
+ 
+@@ -274,6 +279,7 @@
+     pa_asyncmsgq_post(u->jack_msgq, PA_MSGOBJECT(u->sink), SINK_MESSAGE_ON_SHUTDOWN, NULL, 0, NULL, NULL);
+ }
+ 
++/* JACK Callback: This is called when JACK changes the buffer size */
+ static int jack_buffer_size(jack_nframes_t nframes, void *arg) {
+     struct userdata *u = arg;
+ 
+@@ -413,7 +419,7 @@
+     jack_set_thread_init_callback(u->client, jack_init, u);
+     jack_set_buffer_size_callback(u->client, jack_buffer_size, u);
+ 
+-    if (!(u->thread = pa_thread_new(thread_func, u))) {
++    if (!(u->thread = pa_thread_new("jack-sink", thread_func, u))) {
+         pa_log("Failed to create thread.");
+         goto fail;
+     }
+@@ -475,12 +481,12 @@
+     if (!(u = m->userdata))
+         return;
+ 
+-    if (u->client)
+-        jack_client_close(u->client);
+-
+     if (u->sink)
+         pa_sink_unlink(u->sink);
+ 
++    if (u->client)
++        jack_client_close(u->client);
++
+     if (u->thread) {
+         pa_asyncmsgq_send(u->thread_mq.inq, NULL, PA_MESSAGE_SHUTDOWN, NULL, 0, NULL);
+         pa_thread_free(u->thread);
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/jack/module-jack-source.c
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/jack/module-jack-source.c	2010-05-08 11:06:18.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/jack/module-jack-source.c	2010-05-08 11:06:35.000000000 -0400
+@@ -363,7 +363,7 @@
+     jack_on_shutdown(u->client, jack_shutdown, u);
+     jack_set_thread_init_callback(u->client, jack_init, u);
+ 
+-    if (!(u->thread = pa_thread_new(thread_func, u))) {
++    if (!(u->thread = pa_thread_new("jack-source", thread_func, u))) {
+         pa_log("Failed to create thread.");
+         goto fail;
+     }
+@@ -425,12 +425,12 @@
+     if (!(u = m->userdata))
+         return;
+ 
+-    if (u->client)
+-        jack_client_close(u->client);
+-
+     if (u->source)
+         pa_source_unlink(u->source);
+ 
++    if (u->client)
++        jack_client_close(u->client);
++
+     if (u->thread) {
+         pa_asyncmsgq_send(u->thread_mq.inq, NULL, PA_MESSAGE_SHUTDOWN, NULL, 0, NULL);
+         pa_thread_free(u->thread);
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/module-combine.c
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/module-combine.c	2010-05-08 11:06:18.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/module-combine.c	2010-05-08 11:06:35.000000000 -0400
+@@ -1304,7 +1304,7 @@
+     u->sink_unlink_slot = pa_hook_connect(&m->core->hooks[PA_CORE_HOOK_SINK_UNLINK], PA_HOOK_EARLY, (pa_hook_cb_t) sink_unlink_hook_cb, u);
+     u->sink_state_changed_slot = pa_hook_connect(&m->core->hooks[PA_CORE_HOOK_SINK_STATE_CHANGED], PA_HOOK_NORMAL, (pa_hook_cb_t) sink_state_changed_hook_cb, u);
+ 
+-    if (!(u->thread = pa_thread_new(thread_func, u))) {
++    if (!(u->thread = pa_thread_new("combine", thread_func, u))) {
+         pa_log("Failed to create thread.");
+         goto fail;
+     }
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/module-esound-sink.c
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/module-esound-sink.c	2010-05-08 11:06:18.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/module-esound-sink.c	2010-05-08 11:06:35.000000000 -0400
+@@ -628,7 +628,7 @@
+     /* Reserve space for the response */
+     u->read_data = pa_xmalloc(u->read_length = sizeof(int32_t));
+ 
+-    if (!(u->thread = pa_thread_new(thread_func, u))) {
++    if (!(u->thread = pa_thread_new("esound-sink", thread_func, u))) {
+         pa_log("Failed to create thread.");
+         goto fail;
+     }
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/module-null-sink.c
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/module-null-sink.c	2010-05-08 11:06:18.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/module-null-sink.c	2010-05-08 11:06:35.000000000 -0400
+@@ -317,7 +317,7 @@
+     pa_sink_set_max_rewind(u->sink, nbytes);
+     pa_sink_set_max_request(u->sink, nbytes);
+ 
+-    if (!(u->thread = pa_thread_new(thread_func, u))) {
++    if (!(u->thread = pa_thread_new("null-sink", thread_func, u))) {
+         pa_log("Failed to create thread.");
+         goto fail;
+     }
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/module-pipe-sink.c
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/module-pipe-sink.c	2010-05-08 11:06:18.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/module-pipe-sink.c	2010-05-08 11:06:35.000000000 -0400
+@@ -307,7 +307,7 @@
+     pollfd->fd = u->fd;
+     pollfd->events = pollfd->revents = 0;
+ 
+-    if (!(u->thread = pa_thread_new(thread_func, u))) {
++    if (!(u->thread = pa_thread_new("pipe-sink", thread_func, u))) {
+         pa_log("Failed to create thread.");
+         goto fail;
+     }
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/module-pipe-source.c
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/module-pipe-source.c	2010-05-08 11:06:18.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/module-pipe-source.c	2010-05-08 11:06:35.000000000 -0400
+@@ -291,7 +291,7 @@
+     pollfd->fd = u->fd;
+     pollfd->events = pollfd->revents = 0;
+ 
+-    if (!(u->thread = pa_thread_new(thread_func, u))) {
++    if (!(u->thread = pa_thread_new("pipe-source", thread_func, u))) {
+         pa_log("Failed to create thread.");
+         goto fail;
+     }
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/module-sine-source.c
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/module-sine-source.c	2010-05-08 11:06:18.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/module-sine-source.c	2010-05-08 11:06:35.000000000 -0400
+@@ -274,7 +274,7 @@
+     pa_source_set_rtpoll(u->source, u->rtpoll);
+     pa_source_set_fixed_latency(u->source, u->block_usec);
+ 
+-    if (!(u->thread = pa_thread_new(thread_func, u))) {
++    if (!(u->thread = pa_thread_new("sine-source", thread_func, u))) {
+         pa_log("Failed to create thread.");
+         goto fail;
+     }
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/module-tunnel.c
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/module-tunnel.c	2010-05-08 11:06:18.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/module-tunnel.c	2010-05-08 11:06:35.000000000 -0400
+@@ -2014,7 +2014,7 @@
+     u->fragsize = (uint32_t) -1;
+ #endif
+ 
+-    if (!(u->thread = pa_thread_new(thread_func, u))) {
++    if (!(u->thread = pa_thread_new("module-tunnel", thread_func, u))) {
+         pa_log("Failed to create thread.");
+         goto fail;
+     }
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/oss/module-oss.c
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/oss/module-oss.c	2010-05-08 11:06:18.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/oss/module-oss.c	2010-05-08 11:06:35.000000000 -0400
+@@ -1456,7 +1456,7 @@
+ 
+     pa_memchunk_reset(&u->memchunk);
+ 
+-    if (!(u->thread = pa_thread_new(thread_func, u))) {
++    if (!(u->thread = pa_thread_new("oss", thread_func, u))) {
+         pa_log("Failed to create thread.");
+         goto fail;
+     }
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/raop/module-raop-sink.c
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/raop/module-raop-sink.c	2010-05-08 11:06:18.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/raop/module-raop-sink.c	2010-05-08 11:06:35.000000000 -0400
+@@ -620,7 +620,7 @@
+     pa_raop_client_set_callback(u->raop, on_connection, u);
+     pa_raop_client_set_closed_callback(u->raop, on_close, u);
+ 
+-    if (!(u->thread = pa_thread_new(thread_func, u))) {
++    if (!(u->thread = pa_thread_new("raop-sink", thread_func, u))) {
+         pa_log("Failed to create thread.");
+         goto fail;
+     }
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/rtp/rtp.c
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/modules/rtp/rtp.c	2010-05-08 11:06:19.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/modules/rtp/rtp.c	2010-05-08 11:06:35.000000000 -0400
+@@ -278,8 +278,8 @@
+         pa_memchunk_reset(&c->memchunk);
+     }
+ 
+-    for (cm = CMSG_FIRSTHDR(&m); cm; cm = CMSG_NXTHDR(&m, cm)) {
+-        if (cm->cmsg_level == SOL_SOCKET && cm->cmsg_type == SO_TIMESTAMP)
++    for (cm = CMSG_FIRSTHDR(&m); cm; cm = CMSG_NXTHDR(&m, cm))
++        if (cm->cmsg_level == SOL_SOCKET && cm->cmsg_type == SO_TIMESTAMP) {
+             memcpy(tstamp, CMSG_DATA(cm), sizeof(struct timeval));
+             found_tstamp = TRUE;
+             break;
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulse/thread-mainloop.c
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulse/thread-mainloop.c	2010-05-08 11:06:19.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulse/thread-mainloop.c	2010-05-08 11:06:35.000000000 -0400
+@@ -146,7 +146,7 @@
+ 
+     pa_assert(!m->thread || !pa_thread_is_running(m->thread));
+ 
+-    if (!(m->thread = pa_thread_new(thread, m)))
++    if (!(m->thread = pa_thread_new("threaded-ml", thread, m)))
+         return -1;
+ 
+     return 0;
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/lock-autospawn.c
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/lock-autospawn.c	2010-05-08 11:06:19.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/lock-autospawn.c	2010-05-08 11:06:35.000000000 -0400
+@@ -246,7 +246,7 @@
+ static int start_thread(void) {
+ 
+     if (!thread)
+-        if (!(thread = pa_thread_new(thread_func, NULL)))
++        if (!(thread = pa_thread_new("autospawn", thread_func, NULL)))
+             return -1;
+ 
+     return 0;
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/thread-posix.c
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/thread-posix.c	2010-05-08 11:06:19.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/thread-posix.c	2010-05-08 11:06:35.000000000 -0400
+@@ -28,6 +28,10 @@
+ #include <sched.h>
+ #include <errno.h>
+ 
++#ifdef __linux__
++#include <sys/prctl.h>
++#endif
++
+ #include <pulse/xmalloc.h>
+ #include <pulsecore/mutex.h>
+ #include <pulsecore/once.h>
+@@ -42,6 +46,7 @@
+     void *userdata;
+     pa_atomic_t running;
+     pa_bool_t joined;
++    char *name;
+ };
+ 
+ struct pa_tls {
+@@ -53,9 +58,11 @@
+ 
+     pa_assert(t);
+ 
+-    if (!t->thread_func)
++    if (!t->thread_func) {
+         /* This is a foreign thread, we need to free the struct */
++        pa_xfree(t->name);
+         pa_xfree(t);
++    }
+ }
+ 
+ PA_STATIC_TLS_DECLARE(current_thread, thread_free_cb);
+@@ -64,6 +71,10 @@
+     pa_thread *t = userdata;
+     pa_assert(t);
+ 
++#ifdef __linux__
++    prctl(PR_SET_NAME, t->name);
++#endif
++
+     t->id = pthread_self();
+ 
+     PA_STATIC_TLS_SET(current_thread, t);
+@@ -75,12 +86,13 @@
+     return NULL;
+ }
+ 
+-pa_thread* pa_thread_new(pa_thread_func_t thread_func, void *userdata) {
++pa_thread* pa_thread_new(const char *name, pa_thread_func_t thread_func, void *userdata) {
+     pa_thread *t;
+ 
+     pa_assert(thread_func);
+ 
+     t = pa_xnew0(pa_thread, 1);
++    t->name = pa_xstrdup(name);
+     t->thread_func = thread_func;
+     t->userdata = userdata;
+ 
+@@ -110,6 +122,8 @@
+     pa_assert(t);
+ 
+     pa_thread_join(t);
++
++    pa_xfree(t->name);
+     pa_xfree(t);
+ }
+ 
+@@ -155,6 +169,36 @@
+     t->userdata = userdata;
+ }
+ 
++void pa_thread_set_name(pa_thread *t, const char *name) {
++    pa_assert(t);
++
++    pa_xfree(t->name);
++    t->name = pa_xstrdup(name);
++
++#ifdef __linux__
++    prctl(PR_SET_NAME, name);
++#endif
++}
++
++const char *pa_thread_get_name(pa_thread *t) {
++    pa_assert(t);
++
++#ifdef __linux__
++    if (!t->name) {
++        t->name = pa_xmalloc(17);
++
++        if (prctl(PR_GET_NAME, t->name) >= 0)
++            t->name[16] = 0;
++        else {
++            pa_xfree(t->name);
++            t->name = NULL;
++        }
++    }
++#endif
++
++    return t->name;
++}
++
+ void pa_thread_yield(void) {
+ #ifdef HAVE_PTHREAD_YIELD
+     pthread_yield();
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/thread.h
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/pulsecore/thread.h	2010-05-08 11:06:19.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/pulsecore/thread.h	2010-05-08 11:06:35.000000000 -0400
+@@ -35,7 +35,7 @@
+ 
+ typedef void (*pa_thread_func_t) (void *userdata);
+ 
+-pa_thread* pa_thread_new(pa_thread_func_t thread_func, void *userdata);
++pa_thread* pa_thread_new(const char *name, pa_thread_func_t thread_func, void *userdata);
+ void pa_thread_free(pa_thread *t);
+ int pa_thread_join(pa_thread *t);
+ int pa_thread_is_running(pa_thread *t);
+@@ -45,6 +45,9 @@
+ void* pa_thread_get_data(pa_thread *t);
+ void pa_thread_set_data(pa_thread *t, void *userdata);
+ 
++const char *pa_thread_get_name(pa_thread *t);
++void pa_thread_set_name(pa_thread *t, const char *name);
++
+ typedef struct pa_tls pa_tls;
+ 
+ pa_tls* pa_tls_new(pa_free_cb_t free_cb);
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/tests/asyncmsgq-test.c
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/tests/asyncmsgq-test.c	2010-05-08 11:06:19.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/tests/asyncmsgq-test.c	2010-05-08 11:06:35.000000000 -0400
+@@ -80,7 +80,7 @@
+ 
+     pa_assert_se(q = pa_asyncmsgq_new(0));
+ 
+-    pa_assert_se(t = pa_thread_new(the_thread, q));
++    pa_assert_se(t = pa_thread_new("test", the_thread, q));
+ 
+     printf("Operation A post\n");
+     pa_asyncmsgq_post(q, NULL, OPERATION_A, NULL, 0, NULL, NULL);
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/tests/asyncq-test.c
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/tests/asyncq-test.c	2010-05-08 11:06:19.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/tests/asyncq-test.c	2010-05-08 11:06:35.000000000 -0400
+@@ -73,8 +73,8 @@
+ 
+     pa_assert_se(q = pa_asyncq_new(0));
+ 
+-    pa_assert_se(t1 = pa_thread_new(producer, q));
+-    pa_assert_se(t2 = pa_thread_new(consumer, q));
++    pa_assert_se(t1 = pa_thread_new("producer", producer, q));
++    pa_assert_se(t2 = pa_thread_new("consumer", consumer, q));
+ 
+     pa_thread_free(t1);
+     pa_thread_free(t2);
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/tests/flist-test.c
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/tests/flist-test.c	2010-05-08 11:06:19.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/tests/flist-test.c	2010-05-08 11:06:35.000000000 -0400
+@@ -87,7 +87,7 @@
+     flist = pa_flist_new(0);
+ 
+     for (i = 0; i < THREADS_MAX; i++) {
+-        threads[i] = pa_thread_new(thread_func, pa_sprintf_malloc("Thread #%i", i+1));
++        threads[i] = pa_thread_new("test", thread_func, pa_sprintf_malloc("Thread #%i", i+1));
+         assert(threads[i]);
+     }
+ 
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/tests/lock-autospawn-test.c
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/tests/lock-autospawn-test.c	2010-05-08 11:06:19.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/tests/lock-autospawn-test.c	2010-05-08 11:06:35.000000000 -0400
+@@ -88,10 +88,10 @@
+ int main(int argc, char**argv) {
+     pa_thread *a, *b, *c, *d;
+ 
+-    pa_assert_se((a = pa_thread_new(thread_func, PA_INT_TO_PTR(1))));
+-    pa_assert_se((b = pa_thread_new(thread_func2, PA_INT_TO_PTR(2))));
+-    pa_assert_se((c = pa_thread_new(thread_func2, PA_INT_TO_PTR(3))));
+-    pa_assert_se((d = pa_thread_new(thread_func, PA_INT_TO_PTR(4))));
++    pa_assert_se((a = pa_thread_new("test1", thread_func, PA_INT_TO_PTR(1))));
++    pa_assert_se((b = pa_thread_new("test2", thread_func2, PA_INT_TO_PTR(2))));
++    pa_assert_se((c = pa_thread_new("test3", thread_func2, PA_INT_TO_PTR(3))));
++    pa_assert_se((d = pa_thread_new("test4", thread_func, PA_INT_TO_PTR(4))));
+ 
+     pa_thread_join(a);
+     pa_thread_join(b);
+Index: pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/tests/thread-test.c
+===================================================================
+--- pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478.orig/src/tests/thread-test.c	2010-05-08 11:06:19.000000000 -0400
++++ pulseaudio-0.9.22~0.9.21+stable-queue-32-g8478/src/tests/thread-test.c	2010-05-08 11:06:35.000000000 -0400
+@@ -102,7 +102,7 @@
+     tls = pa_tls_new(pa_xfree);
+ 
+     for (i = 0; i < THREADS_MAX; i++) {
+-        t[i] = pa_thread_new(thread_func, pa_sprintf_malloc("Thread #%i", i+1));
++        t[i] = pa_thread_new("test", thread_func, pa_sprintf_malloc("Thread #%i", i+1));
+         assert(t[i]);
+     }
  

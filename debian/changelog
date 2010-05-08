@@ -1,3 +1,26 @@
+pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu15) maverick; urgency=low
+
+  * 0093-backport-fixes-stable-queue-head.patch: Backport the following
+    changesets from the stable-queue branch:
+    + bc7314f (name all threads for /proc/$PID/task/$TID/comm)
+    + d519ca4 (prevent crash on jack server shutdown) (LP: #538815)
+    + 65f89dc (fix bracketing in pa_rtp_recv())
+  * debian/01PulseAudio: modify the ConsoleKit active seat checks in the
+    pm-utils hook so that:
+    - pre-suspend: all users' sink & source states are stored, then only
+      the active seat's sinks and sources are muted
+    - post-resume: all users' sink & source pre-suspend states are
+      restored
+    This resolves the issue where users' post-resume sink & source
+    states don't correspond with their pre-suspend ones.
+    (LP: #569395)
+  * debian/01PulseAudio: fix broken quoting and misuse of su -l. Merged
+    from lp:~hyperair/pulseaudio/fix-01Pulseaudio-quoting. Thanks,
+    Chow Loong Jin! (LP: #572391)
+  * debian/control: Update bzr branch for maverick.
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Sat, 08 May 2010 11:08:56 -0400
+
 pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu14) lucid; urgency=low
 
   * 0096-lp451635-handle-dove-x0-line-hp-swap.patch: Make the connector

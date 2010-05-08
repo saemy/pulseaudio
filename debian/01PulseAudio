@@ -17,8 +17,8 @@ get_pulse_users() {
 
 # $1 = sink|source
 # $2 = username
-save_pulse_state_and_mute() {
-    su "${2}" -l -c -- 'pacmd list-${1}s | \
+save_pulse_state() {
+    su "${2}" -c -- "pacmd list-${1}s" | \
         sed -n "s/^[[:space:]*]*//; /\(index\|mute\)/p" | \
         (index="";
             while read field value; do
@@ -26,33 +26,52 @@ save_pulse_state_and_mute() {
                     index=${value}
                 else
                     savestate pulse:"${2}":${1}${index} ${value}
-                    pacmd set-${1}-mute ${index} yes
                 fi
-            done)'
+            done)
 }
 
 # $1 = sink|source
 # $2 = username
 restore_pulse_state() {
-    su "${2}" -l -c -- 'pacmd list-${1}s | \
+    su "${2}" -c -- "pacmd list-${1}s" | \
         sed -n "s/^[[:space:]*]*index: //p" | \
         while read index; do
             if state_exists pulse:"${2}":${1}${index}; then
-                pacmd \
+                su "${2}" -c -- "pacmd \
                     set-${1}-mute \
                     ${index} \
-                    $(restorestate pulse:"${2}":${1}${index})
+                    $(restorestate pulse:"${2}":${1}${index})"
             fi
-        done'
+        done
+}
+
+# $1 = sink|source
+# $2 = username
+mute_pulse() {
+    su "${2}" -c -- "pacmd list-${1}s" | \
+        sed -n "s/^[[:space:]*]*//; /\(index\|mute\)/p" | \
+        (index="";
+            while read field value; do
+                if [ ${field%:} = "index" ]; then
+                    index=${value}
+                    su "${2}" -c -- "pacmd \
+                        set-${1}-mute ${index} yes"
+                fi
+            done)
 }
 
 suspend_pulse() {
     for i in $(get_pulse_users); do
         THIS_USER="$(getent passwd ${i} | cut -f1 -d:)"
-        if su "${THIS_USER}" -l -c -- 'ck-list-sessions | grep "active = TRUE"' > /dev/null 2>&1; then
-            save_pulse_state_and_mute sink "${THIS_USER}"
-            save_pulse_state_and_mute source "${THIS_USER}"
-            su "${THIS_USER}" -l -c -- 'pacmd suspend true' > /dev/null 2>&1
+        save_pulse_state sink "${THIS_USER}"
+        save_pulse_state source "${THIS_USER}"
+        su "${THIS_USER}" -c -- 'pacmd suspend true' > /dev/null 2>&1
+    done
+    for i in $(get_pulse_users); do
+        THIS_USER="$(getent passwd ${i} | cut -f1 -d:)"
+        if su "${THIS_USER}" -c -- 'ck-list-sessions | grep "active = TRUE"' > /dev/null 2>&1; then
+            mute_pulse sink "${THIS_USER}"
+            mute_pulse source "${THIS_USER}"
             break
         fi
     done
@@ -61,12 +80,9 @@ suspend_pulse() {
 resume_pulse() {
     for i in $(get_pulse_users); do
         THIS_USER="$(getent passwd ${i} | cut -f1 -d:)"
-        if su "${THIS_USER}" -l -c -- 'ck-list-sessions | grep "active = TRUE"' > /dev/null 2>&1; then
-            restore_pulse_state sink "${THIS_USER}"
-            restore_pulse_state source "${THIS_USER}"
-            su "${THIS_USER}" -l -c -- 'pacmd suspend false' > /dev/null 2>&1
-            break
-        fi
+        restore_pulse_state sink "${THIS_USER}"
+        restore_pulse_state source "${THIS_USER}"
+        su "${THIS_USER}" -c -- 'pacmd suspend false' > /dev/null 2>&1
     done
 }
 
