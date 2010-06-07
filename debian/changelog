@@ -1,3 +1,12 @@
+pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu16) maverick; urgency=low
+
+  * Include /usr/bin/start-pulseaudio-kde and its autostart file now that KDE
+    will be using PulseAudio by default in Maverick (LP: #563250)
+  * Also update 0057-load-module-x11-bell.patch to give its improvements to
+    /usr/bin/start-pulseaudio-kde as well
+
+ -- Jonathan Thomas <echidnaman@kubuntu.org>  Mon, 07 Jun 2010 18:32:53 -0400
+
 pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu15) maverick; urgency=low
 
   * 0093-backport-fixes-stable-queue-head.patch: Backport the following
