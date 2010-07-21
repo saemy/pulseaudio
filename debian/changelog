@@ -1,3 +1,9 @@
+pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu17) maverick; urgency=low
+
+  * No-change rebuild to pick up new j-a-c-k shlibs
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Wed, 21 Jul 2010 11:29:18 +0200
+
 pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu16) maverick; urgency=low
 
   * Include /usr/bin/start-pulseaudio-kde and its autostart file now that KDE
