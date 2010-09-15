@@ -1,3 +1,53 @@
+pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu18) maverick; urgency=low
+
+  [ Emmet Hikory ]
+  * Drop 0001-change-resample-and-buffering.patch
+  * debian/rules: Add arch-specific build-time configuration patching system
+    - set resample-method to speex-fixed-1 and fragments to 2 for armel
+    - set resample-method to speex-float-1 and fragments to 8 for other arches
+    - Closes LP: #623242
+
+  [ Luke Yelavich ]
+  * debian/rules:
+    - Back up src/daemon/daemon.conf.in, restoring on package clean, allowing
+      the package to be built more than once, and keeping the diff sane
+    - Disable flat volumes via regular expression instead of a patch, to
+      prevent the mess that goes with touching a file multiple times, and
+      with multiple methods
+  * 0093-backport-fixes-stable-queue-head.patch: Backport the following
+    changesets from the stable-queue branch:
+    + 6c8660a (alsa: Fix assertion on mmap_write (triggered via a52 plugin))
+    + aaae99d (alsa: disable rewinds when using ALSA plugins)
+    + 4a1072e (udev: fix hex decoding)
+    + 2b88634 (x11: Partially convert to XCB.)
+    + 9375019 (alsa: resume smoother after unsuspend)
+    + 4fb02d8 (alsa: increase the smoother window)
+    + e2ef3a1 (alsa: don't make use of tsched related variables when tsched is
+               disabled)
+    + 514fd1e (add rewind-safeguard parameter)
+    + 8748ebd (alsa-sink: Get rid of a compiler warning regarding
+               rewind_safeguard type.)
+    + a65825f (alsa: Set the rewind safeguard proportionally to sample spec)
+    + 3d9b710 (smoother: avoid losing precision)
+    + 1503b8c (alsa-source: refactor smoother and device start)
+    + 74c117f (alsa-time-test: make test usable for capture too)
+    + 1c29f55 (alsa: work around slightly broken _delay implementations)
+    + 1ff360c (alsa: make defines for smoother configuration)
+    + 28f4aeb (alsa-mixer: add profile for Traktor Kontrol S4)
+    + eef247b (alsa: Only set the 'first' flag to false when we actually call
+               snd_pcm_start())
+  * debian/control: Add libxcb-atom1-dev and libx11-xcb-dev to build depends
+  * debian/patches/0090-disable-flat-volumes.patch: Drop, as per above
+  * debian/patches/0097-regenerate-configure.patch: Refreshed
+  * debian/patches/0098-tarball-version.patch: Ensure the version string for
+    pulseaudio internally stays the same, in case the build process wants
+    to regenerate autotools files
+  * debian/patches/0094-add-missing-mixer-paths-and-rerun-automake.patch:
+    - Remove the patch to Makefile.in, easier to do it all at once in a
+      single patch later in the series
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Wed, 15 Sep 2010 13:57:55 +1000
+
 pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu17) maverick; urgency=low
 
   * No-change rebuild to pick up new j-a-c-k shlibs

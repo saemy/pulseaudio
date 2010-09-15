@@ -1,10 +1,9 @@
-0001-change-resample-and-buffering.patch
+
 0003-add-padsp-wrapper-check.patch
 #0005-load-sample-dir-lazy.patch
 0007-esd-honour-system-pulseaudio.patch
 #0090-use-volume-ignore-for-analog-output.patch
 0054-mute-iec958-optical-raw-for-audigyX.patch
-0090-disable-flat-volumes.patch
 0091-dont-load-cork-music-on-phone.patch
 0057-load-module-x11-bell.patch
 0055-handle-Master-Front.patch
@@ -16,3 +15,4 @@
 0096-lp453966-handle-digmic-pt2.patch
 0096-lp451635-handle-dove-x0-line-hp-swap.patch
 0097-regenerate-configure.patch
+0098-tarball-version.patch
