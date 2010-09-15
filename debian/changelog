@@ -1,3 +1,10 @@
+pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu19) maverick; urgency=low
+
+  * Removed packaging for a patch that was being tested locally, as the
+    patch is not going into maverick. Fixes FTBFS
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Wed, 15 Sep 2010 14:38:38 +1000
+
 pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu18) maverick; urgency=low
 
   [ Emmet Hikory ]

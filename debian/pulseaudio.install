@@ -1,5 +1,4 @@
 etc/pulse/default.pa
-etc/pulse/default.d
 etc/pulse/system.pa
 etc/pulse/daemon.conf
 etc/dbus-1/system.d/pulseaudio-system.conf

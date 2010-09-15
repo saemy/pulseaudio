@@ -20,7 +20,6 @@ common-install-arch::
 	install -D -m755 $(CURDIR)/debian/01PulseAudio $(CURDIR)/debian/tmp/usr/lib/pm-utils/sleep.d/01PulseAudio
 	install -d $(CURDIR)/debian/tmp/usr/share/apport/package-hooks
 	cp $(CURDIR)/debian/apport-hook.py $(CURDIR)/debian/tmp/usr/share/apport/package-hooks/source_pulseaudio.py
-	cp -r $(CURDIR)/debian/default.d $(CURDIR)/debian/tmp/etc/pulse
 
 common-configure-arch::
 ifneq (,$(findstring $(DEB_HOST_ARCH), "arm armel"))
