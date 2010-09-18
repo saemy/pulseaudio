@@ -1,3 +1,14 @@
+pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu20) maverick; urgency=low
+
+  * 0093-backport-fixes-stable-queue-head.patch: Backport the following
+    changesets from the stable-queue branch:
+    + 2c564f2 (xcb: Ensure the XCB connection is valid before using it.)
+    + 5c0bc09 (xcb: xcb_get_setup() can return 0, so make sure we check it before using)
+    + 165cb87 (x11: Use the default screen for X11 properties.)
+    (LP: #640127)
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Sat, 18 Sep 2010 08:46:31 -0400
+
 pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu19) maverick; urgency=low
 
   * Removed packaging for a patch that was being tested locally, as the
