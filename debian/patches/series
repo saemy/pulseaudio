@@ -16,3 +16,6 @@
 0096-lp451635-handle-dove-x0-line-hp-swap.patch
 0097-regenerate-configure.patch
 0098-tarball-version.patch
+0192-stream-restore-Clear-the-save_sink-save_source-flags.patch
+0193-augment-properties-Search-for-.desktop-files-in-subf.patch
+0194-device-manager-Ensure-that-sinks-sources-populate-th.patch

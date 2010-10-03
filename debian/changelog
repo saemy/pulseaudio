@@ -1,3 +1,15 @@
+pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu21) maverick; urgency=low
+
+  * Add 0192-stream-restore-Clear-the-save_sink-save_source-flags.patch
+    Clear the save_sink/save_source flags on apply_entry.
+  * Add 0193-augment-properties-Search-for-.desktop-files-in-subf.patch
+    Search for .desktop files in subfolders too.
+  * Add 0194-device-manager-Ensure-that-sinks-sources-populate-th.patch
+    Ensure that sinks/sources populate the device manager lists in order
+    of their priority.
+
+ -- Jonathan Riddell <jriddell@ubuntu.com>  Sun, 03 Oct 2010 20:38:24 +0100
+
 pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu20) maverick; urgency=low
 
   * 0093-backport-fixes-stable-queue-head.patch: Backport the following
