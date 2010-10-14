@@ -1,3 +1,12 @@
+pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu21.1) maverick-proposed; urgency=low
+
+  * 0195-SSE-MMX-ARM-Fix-high-frequency-noise-with-unusual-nu.patch:
+    - Pull fix from the upstream stable-queue branch a8d76e9 to Fix a high
+      frequency noise with an nunusual number of channels, when either SSE,
+      MMX, or ARM optimized volume scaling code is used. (LP: #445849)
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Thu, 14 Oct 2010 16:38:46 +1100
+
 pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu21) maverick; urgency=low
 
   * Add 0192-stream-restore-Clear-the-save_sink-save_source-flags.patch

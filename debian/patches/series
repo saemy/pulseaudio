@@ -19,3 +19,4 @@
 0192-stream-restore-Clear-the-save_sink-save_source-flags.patch
 0193-augment-properties-Search-for-.desktop-files-in-subf.patch
 0194-device-manager-Ensure-that-sinks-sources-populate-th.patch
+0195-SSE-MMX-ARM-Fix-high-frequency-noise-with-unusual-nu.patch
