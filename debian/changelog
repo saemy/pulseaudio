@@ -1,3 +1,25 @@
+pulseaudio (1:0.9.22~0.9.21+stable-queue-98-ga8d7-0ubuntu1) natty; urgency=low
+
+  * New upstream snapshot, based on the stable-queue branch
+  * debian/patches: Drop the following patches as they are applied upstream,
+    or were created to regenerate autotools files/package version
+    - 0090-use-volume-ignore-for-analog-output.patch
+    - 0093-backport-fixes-stable-queue-head.patch
+    - 0094-add-missing-mixer-paths-and-rerun-automake.patch
+    - 0095-cve-2009-1299.patch
+    - 0097-regenerate-configure.patch
+    - 0098-tarball-version.patch
+    - 0192-stream-restore-Clear-the-save_sink-save_source-flags.patch
+    - 0193-augment-properties-Search-for-.desktop-files-in-subf.patch
+    - 0194-device-manager-Ensure-that-sinks-sources-populate-th.patch
+    - 0195-SSE-MMX-ARM-Fix-high-frequency-noise-with-unusual-nu.patch
+  * debian/control: Update Vcs-Bzr link
+  * 0097-explicitly-link-libraries.patch: Patch to explicitly link pulseaudio
+    tests binaries against pulseaudio libraries, due to gcc 4.5 and new
+    binutils in natty enforcing explicit linking
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Fri, 29 Oct 2010 12:39:27 -0400
+
 pulseaudio (1:0.9.22~0.9.21+stable-queue-32-g8478-0ubuntu21.1) maverick-proposed; urgency=low
 
   * 0195-SSE-MMX-ARM-Fix-high-frequency-noise-with-unusual-nu.patch:
