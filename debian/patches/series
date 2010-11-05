@@ -11,3 +11,5 @@
 0096-lp453966-handle-digmic-pt2.patch
 0096-lp451635-handle-dove-x0-line-hp-swap.patch
 0097-explicitly-link-libraries.patch
+0101-alsa-mixer-add-profile-for-Native-Instruments-Koreco.patch
+0102-intended-roles-Mark-devices-with-a-form-factor-of-he.patch

@@ -1,3 +1,13 @@
+pulseaudio (1:0.9.22~0.9.21+stable-queue-98-ga8d7-0ubuntu2) natty; urgency=low
+
+  * debian/control: Update Vcs-Bzr field
+  * Pull latest fixes from stable queue:
+    - 8a30d4c (alsa-mixer: add profile for Native Instruments Korecontroller)
+    - 848dd37 (intended-roles: Mark devices with a form factor of 'headset' as
+               being appropriate for 'phone' streams)
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Fri, 05 Nov 2010 10:40:47 -0400
+
 pulseaudio (1:0.9.22~0.9.21+stable-queue-98-ga8d7-0ubuntu1) natty; urgency=low
 
   * New upstream snapshot, based on the stable-queue branch
