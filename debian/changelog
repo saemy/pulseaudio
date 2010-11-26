@@ -1,3 +1,15 @@
+pulseaudio (1:0.9.22-0ubuntu1) natty; urgency=low
+
+  * New upstream release, based on the stable-queue branch
+  * Drop following patches, as applied upstream:
+    - 0101-alsa-mixer-add-profile-for-Native-Instruments-Koreco.patch
+    - 0102-intended-roles-Mark-devices-with-a-form-factor-of-he.patch
+  * debian/rules:
+    - Disable --as-needed due to a circular dependency for libpulsecommon
+    - Adjust filenames/paths for 0.9.22
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Fri, 26 Nov 2010 13:44:10 +1100
+
 pulseaudio (1:0.9.22~0.9.21+stable-queue-98-ga8d7-0ubuntu3) natty; urgency=low
 
   * 0101-alsa-mixer-add-profile-for-Native-Instruments-Koreco.patch: Also
