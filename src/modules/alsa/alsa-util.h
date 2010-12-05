@@ -42,8 +42,8 @@
 int pa_alsa_set_hw_params(
         snd_pcm_t *pcm_handle,
         pa_sample_spec *ss,                /* modified at return */
-        uint32_t *periods,                 /* modified at return */
         snd_pcm_uframes_t *period_size,    /* modified at return */
+        snd_pcm_uframes_t *buffer_size,    /* modified at return */
         snd_pcm_uframes_t tsched_size,
         pa_bool_t *use_mmap,               /* modified at return */
         pa_bool_t *use_tsched,             /* modified at return */
@@ -51,7 +51,8 @@ int pa_alsa_set_hw_params(
 
 int pa_alsa_set_sw_params(
         snd_pcm_t *pcm,
-        snd_pcm_uframes_t avail_min);
+        snd_pcm_uframes_t avail_min,
+        pa_bool_t period_event);
 
 /* Picks a working mapping from the profile set based on the specified ss/map */
 snd_pcm_t *pa_alsa_open_by_device_id_auto(
@@ -60,8 +61,8 @@ snd_pcm_t *pa_alsa_open_by_device_id_auto(
         pa_sample_spec *ss,               /* modified at return */
         pa_channel_map* map,              /* modified at return */
         int mode,
-        uint32_t *nfrags,                 /* modified at return */
         snd_pcm_uframes_t *period_size,   /* modified at return */
+        snd_pcm_uframes_t *buffer_size,   /* modified at return */
         snd_pcm_uframes_t tsched_size,
         pa_bool_t *use_mmap,              /* modified at return */
         pa_bool_t *use_tsched,            /* modified at return */
@@ -75,8 +76,8 @@ snd_pcm_t *pa_alsa_open_by_device_id_mapping(
         pa_sample_spec *ss,               /* modified at return */
         pa_channel_map* map,              /* modified at return */
         int mode,
-        uint32_t *nfrags,                 /* modified at return */
         snd_pcm_uframes_t *period_size,   /* modified at return */
+        snd_pcm_uframes_t *buffer_size,   /* modified at return */
         snd_pcm_uframes_t tsched_size,
         pa_bool_t *use_mmap,              /* modified at return */
         pa_bool_t *use_tsched,            /* modified at return */
@@ -89,8 +90,8 @@ snd_pcm_t *pa_alsa_open_by_device_string(
         pa_sample_spec *ss,               /* modified at return */
         pa_channel_map* map,              /* modified at return */
         int mode,
-        uint32_t *nfrags,                 /* modified at return */
         snd_pcm_uframes_t *period_size,   /* modified at return */
+        snd_pcm_uframes_t *buffer_size,   /* modified at return */
         snd_pcm_uframes_t tsched_size,
         pa_bool_t *use_mmap,              /* modified at return */
         pa_bool_t *use_tsched,            /* modified at return */
@@ -104,8 +105,8 @@ snd_pcm_t *pa_alsa_open_by_template(
         pa_sample_spec *ss,               /* modified at return */
         pa_channel_map* map,              /* modified at return */
         int mode,
-        uint32_t *nfrags,                 /* modified at return */
         snd_pcm_uframes_t *period_size,   /* modified at return */
+        snd_pcm_uframes_t *buffer_size,   /* modified at return */
         snd_pcm_uframes_t tsched_size,
         pa_bool_t *use_mmap,              /* modified at return */
         pa_bool_t *use_tsched,            /* modified at return */
@@ -128,7 +129,7 @@ int pa_alsa_recover_from_poll(snd_pcm_t *pcm, int revents);
 pa_rtpoll_item* pa_alsa_build_pollfd(snd_pcm_t *pcm, pa_rtpoll *rtpoll);
 
 snd_pcm_sframes_t pa_alsa_safe_avail(snd_pcm_t *pcm, size_t hwbuf_size, const pa_sample_spec *ss);
-int pa_alsa_safe_delay(snd_pcm_t *pcm, snd_pcm_sframes_t *delay, size_t hwbuf_size, const pa_sample_spec *ss);
+int pa_alsa_safe_delay(snd_pcm_t *pcm, snd_pcm_sframes_t *delay, size_t hwbuf_size, const pa_sample_spec *ss, pa_bool_t capture);
 int pa_alsa_safe_mmap_begin(snd_pcm_t *pcm, const snd_pcm_channel_area_t **areas, snd_pcm_uframes_t *offset, snd_pcm_uframes_t *frames, size_t hwbuf_size, const pa_sample_spec *ss);
 
 char *pa_alsa_get_driver_name(int card);
@@ -140,5 +141,7 @@ pa_bool_t pa_alsa_pcm_is_hw(snd_pcm_t *pcm);
 pa_bool_t pa_alsa_pcm_is_modem(snd_pcm_t *pcm);
 
 const char* pa_alsa_strerror(int errnum);
+
+pa_bool_t pa_alsa_may_tsched(pa_bool_t want);
 
 #endif

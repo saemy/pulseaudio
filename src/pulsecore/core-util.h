@@ -102,6 +102,7 @@ char *pa_split(const char *c, const char*delimiters, const char **state);
 char *pa_split_spaces(const char *c, const char **state);
 
 char *pa_strip_nl(char *s);
+char *pa_strip(char *s);
 
 const char *pa_sig2str(int sig) PA_GCC_PURE;
 
@@ -195,6 +196,8 @@ int pa_reset_sigs(int except, ...);
 int pa_reset_sigsv(const int except[]);
 
 void pa_set_env(const char *key, const char *value);
+void pa_set_env_and_record(const char *key, const char *value);
+void pa_unset_env_recorded(void);
 
 pa_bool_t pa_in_system_mode(void);
 
@@ -242,5 +245,14 @@ char* pa_maybe_prefix_path(const char *path, const char *prefix);
 size_t pa_pipe_buf(int fd);
 
 void pa_reset_personality(void);
+
+#if defined(__linux__) && !defined(__OPTIMIZE__)
+pa_bool_t pa_run_from_build_tree(void);
+#endif
+
+const char *pa_get_temp_dir(void);
+
+char *pa_read_line_from_file(const char *fn);
+pa_bool_t pa_running_in_vm(void);
 
 #endif

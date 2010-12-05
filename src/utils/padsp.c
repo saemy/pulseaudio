@@ -1394,10 +1394,12 @@ static int sndstat_open(int flags, int *_errno) {
         "Mixers:\n"
         "0: PulseAudio Virtual OSS\n";
 
-    char fn[] = "/tmp/padsp-sndstat-XXXXXX";
+    char *fn;
     mode_t u;
     int fd = -1;
     int e;
+
+    fn = pa_sprintf_malloc("%s" PA_PATH_SEP "padsp-sndstat-XXXXXX", pa_get_temp_dir());
 
     debug(DEBUG_LEVEL_NORMAL, __FILE__": sndstat_open()\n");
 
@@ -1423,6 +1425,7 @@ static int sndstat_open(int flags, int *_errno) {
     }
 
     unlink(fn);
+    pa_xfree(fn);
 
     if (write(fd, sndstat, sizeof(sndstat) -1) != sizeof(sndstat)-1) {
         *_errno = errno;
@@ -1439,6 +1442,7 @@ static int sndstat_open(int flags, int *_errno) {
     return fd;
 
 fail:
+    pa_xfree(fn);
     if (fd >= 0)
         close(fd);
     return -1;
@@ -1454,11 +1458,11 @@ static int real_open(const char *filename, int flags, mode_t mode) {
         return _open(filename, flags, mode);
     }
 
-    if (filename && dsp_cloak_enable() && (strcmp(filename, "/dev/dsp") == 0 || strcmp(filename, "/dev/adsp") == 0))
+    if (filename && dsp_cloak_enable() && (pa_streq(filename, "/dev/dsp") || pa_streq(filename, "/dev/adsp") || pa_streq(filename, "/dev/audio")))
         r = dsp_open(flags, &_errno);
-    else if (filename && mixer_cloak_enable() && strcmp(filename, "/dev/mixer") == 0)
+    else if (filename && mixer_cloak_enable() && pa_streq(filename, "/dev/mixer"))
         r = mixer_open(flags, &_errno);
-    else if (filename && sndstat_cloak_enable() && strcmp(filename, "/dev/sndstat") == 0)
+    else if (filename && sndstat_cloak_enable() && pa_streq(filename, "/dev/sndstat"))
         r = sndstat_open(flags, &_errno);
     else {
         function_exit();
@@ -1821,7 +1825,7 @@ fail:
 
     pa_threaded_mainloop_unlock(i->mainloop);
 
-    return 0;
+    return r;
 }
 
 static int dsp_trigger(fd_info *i) {
@@ -1864,7 +1868,7 @@ fail:
 
     pa_threaded_mainloop_unlock(i->mainloop);
 
-    return 0;
+    return r;
 }
 
 static int dsp_cork(fd_info *i, pa_stream *s, int b) {
@@ -1902,7 +1906,7 @@ fail:
 
     pa_threaded_mainloop_unlock(i->mainloop);
 
-    return 0;
+    return r;
 }
 
 static int dsp_ioctl(fd_info *i, unsigned long request, void*argp, int *_errno) {
@@ -2379,15 +2383,21 @@ int close(int fd) {
     return 0;
 }
 
+static pa_bool_t is_audio_device_node(const char *path) {
+    return
+        pa_streq(path, "/dev/dsp") ||
+        pa_streq(path, "/dev/adsp") ||
+        pa_streq(path, "/dev/audio") ||
+        pa_streq(path, "/dev/sndstat") ||
+        pa_streq(path, "/dev/mixer");
+}
+
 int access(const char *pathname, int mode) {
 
     debug(DEBUG_LEVEL_VERBOSE, __FILE__": access(%s)\n", pathname?pathname:"NULL");
 
     if (!pathname ||
-        (strcmp(pathname, "/dev/dsp") != 0 &&
-         strcmp(pathname, "/dev/adsp") != 0 &&
-         strcmp(pathname, "/dev/sndstat") != 0 &&
-         strcmp(pathname, "/dev/mixer") != 0 )) {
+        !is_audio_device_node(pathname)) {
         LOAD_ACCESS_FUNC();
         return _access(pathname, mode);
     }
@@ -2413,10 +2423,7 @@ int stat(const char *pathname, struct stat *buf) {
 
     if (!pathname ||
         !buf ||
-        ( strcmp(pathname, "/dev/dsp") != 0 &&
-          strcmp(pathname, "/dev/adsp") != 0 &&
-          strcmp(pathname, "/dev/sndstat") != 0 &&
-          strcmp(pathname, "/dev/mixer") != 0 )) {
+        !is_audio_device_node(pathname)) {
         debug(DEBUG_LEVEL_VERBOSE, __FILE__": stat(%s)\n", pathname?pathname:"NULL");
         LOAD_STAT_FUNC();
         return _stat(pathname, buf);
@@ -2470,10 +2477,7 @@ int stat64(const char *pathname, struct stat64 *buf) {
 
     if (!pathname ||
         !buf ||
-        ( strcmp(pathname, "/dev/dsp") != 0 &&
-          strcmp(pathname, "/dev/adsp") != 0 &&
-          strcmp(pathname, "/dev/sndstat") != 0 &&
-          strcmp(pathname, "/dev/mixer") != 0 )) {
+        !is_audio_device_node(pathname)) {
         LOAD_STAT64_FUNC();
         return _stat64(pathname, buf);
     }
@@ -2515,10 +2519,7 @@ int open64(const char *filename, int flags, ...) {
     }
 
     if (!filename ||
-        ( strcmp(filename, "/dev/dsp") != 0 &&
-          strcmp(filename, "/dev/adsp") != 0 &&
-          strcmp(filename, "/dev/sndstat") != 0 &&
-          strcmp(filename, "/dev/mixer") != 0 )) {
+        !is_audio_device_node(filename)) {
         LOAD_OPEN64_FUNC();
         return _open64(filename, flags, mode);
     }
@@ -2535,10 +2536,7 @@ int __xstat(int ver, const char *pathname, struct stat *buf) {
 
     if (!pathname ||
         !buf ||
-        ( strcmp(pathname, "/dev/dsp") != 0 &&
-          strcmp(pathname, "/dev/adsp") != 0 &&
-          strcmp(pathname, "/dev/sndstat") != 0 &&
-          strcmp(pathname, "/dev/mixer") != 0 )) {
+        !is_audio_device_node(pathname)) {
         LOAD_XSTAT_FUNC();
         return ___xstat(ver, pathname, buf);
     }
@@ -2558,10 +2556,7 @@ int __xstat64(int ver, const char *pathname, struct stat64 *buf) {
 
     if (!pathname ||
         !buf ||
-        ( strcmp(pathname, "/dev/dsp") != 0 &&
-          strcmp(pathname, "/dev/adsp") != 0 &&
-          strcmp(pathname, "/dev/sndstat") != 0 &&
-          strcmp(pathname, "/dev/mixer") != 0 )) {
+        !is_audio_device_node(pathname)) {
         LOAD_XSTAT64_FUNC();
         return ___xstat64(ver, pathname, buf);
     }
@@ -2587,10 +2582,7 @@ FILE* fopen(const char *filename, const char *mode) {
 
     if (!filename ||
         !mode ||
-        ( strcmp(filename, "/dev/dsp") != 0 &&
-          strcmp(filename, "/dev/adsp") != 0 &&
-          strcmp(filename, "/dev/sndstat") != 0 &&
-          strcmp(filename, "/dev/mixer") != 0 )) {
+        !is_audio_device_node(filename)) {
         LOAD_FOPEN_FUNC();
         return _fopen(filename, mode);
     }
@@ -2630,10 +2622,7 @@ FILE *fopen64(const char *filename, const char *mode) {
 
     if (!filename ||
         !mode ||
-        ( strcmp(filename, "/dev/dsp") != 0 &&
-          strcmp(filename, "/dev/adsp") != 0 &&
-          strcmp(filename, "/dev/sndstat") != 0 &&
-          strcmp(filename, "/dev/mixer") != 0 )) {
+        !is_audio_device_node(filename)) {
         LOAD_FOPEN64_FUNC();
         return _fopen64(filename, mode);
     }

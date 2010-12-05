@@ -41,7 +41,10 @@
  */
 
 /** \file
- * GLIB main loop support */
+ * GLIB main loop support
+ *
+ * See also \subpage glib-mainloop
+ */
 
 PA_C_DECL_BEGIN
 
@@ -56,7 +59,9 @@ pa_glib_mainloop *pa_glib_mainloop_new(GMainContext *c);
 /** Free the GLIB main loop object */
 void pa_glib_mainloop_free(pa_glib_mainloop* g);
 
-/** Return the abstract main loop API vtable for the GLIB main loop object */
+/** Return the abstract main loop API vtable for the GLIB main loop
+    object. No need to free the API as it is owned by the loop
+    and is destroyed when the loop is freed. */
 pa_mainloop_api* pa_glib_mainloop_get_api(pa_glib_mainloop *g);
 
 PA_C_DECL_END

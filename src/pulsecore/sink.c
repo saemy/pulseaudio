@@ -52,7 +52,7 @@
 #define ABSOLUTE_MAX_LATENCY (10*PA_USEC_PER_SEC)
 #define DEFAULT_FIXED_LATENCY (250*PA_USEC_PER_MSEC)
 
-static PA_DEFINE_CHECK_TYPE(pa_sink, pa_msgobject);
+PA_DEFINE_PUBLIC_CLASS(pa_sink, pa_msgobject);
 
 static void sink_free(pa_object *s);
 
@@ -236,12 +236,15 @@ pa_sink* pa_sink_new(
     s->core = core;
     s->state = PA_SINK_INIT;
     s->flags = flags;
+    s->priority = 0;
     s->suspend_cause = 0;
     s->name = pa_xstrdup(name);
     s->proplist = pa_proplist_copy(data->proplist);
     s->driver = pa_xstrdup(pa_path_get_filename(data->driver));
     s->module = data->module;
     s->card = data->card;
+
+    s->priority = pa_device_init_priority(s->proplist);
 
     s->sample_spec = data->sample_spec;
     s->channel_map = data->channel_map;
@@ -775,7 +778,7 @@ static unsigned fill_mix_info(pa_sink *s, size_t *length, pa_mix_info *info, uns
 /* Called from IO thread context */
 static void inputs_drop(pa_sink *s, pa_mix_info *info, unsigned n, pa_memchunk *result) {
     pa_sink_input *i;
-    void *state = NULL;
+    void *state;
     unsigned p = 0;
     unsigned n_unreffed = 0;
 
@@ -787,7 +790,7 @@ static void inputs_drop(pa_sink *s, pa_mix_info *info, unsigned n, pa_memchunk *
 
     /* We optimize for the case where the order of the inputs has not changed */
 
-    while ((i = pa_hashmap_iterate(s->thread_info.inputs, &state, NULL))) {
+    PA_HASHMAP_FOREACH(i, s->thread_info.inputs, state) {
         unsigned j;
         pa_mix_info* m = NULL;
 
@@ -881,8 +884,6 @@ void pa_sink_render(pa_sink*s, size_t length, pa_memchunk *result) {
     pa_assert(pa_frame_aligned(length, &s->sample_spec));
     pa_assert(result);
 
-    pa_sink_ref(s);
-
     pa_assert(!s->thread_info.rewind_requested);
     pa_assert(s->thread_info.rewind_nbytes == 0);
 
@@ -892,6 +893,8 @@ void pa_sink_render(pa_sink*s, size_t length, pa_memchunk *result) {
         result->length = PA_MIN(s->silence.length, length);
         return;
     }
+
+    pa_sink_ref(s);
 
     if (length <= 0)
         length = pa_frame_align(MIX_BUFFER_LENGTH, &s->sample_spec);
@@ -923,18 +926,16 @@ void pa_sink_render(pa_sink*s, size_t length, pa_memchunk *result) {
 
         pa_sw_cvolume_multiply(&volume, &s->thread_info.soft_volume, &info[0].volume);
 
-        if (s->thread_info.soft_muted || !pa_cvolume_is_norm(&volume)) {
-            if (s->thread_info.soft_muted || pa_cvolume_is_muted(&volume)) {
-                pa_memblock_unref(result->memblock);
-                pa_silence_memchunk_get(&s->core->silence_cache,
-                                        s->core->mempool,
-                                        result,
-                                        &s->sample_spec,
-                                        result->length);
-            } else {
-                pa_memchunk_make_writable(result, 0);
-                pa_volume_memchunk(result, &s->sample_spec, &volume);
-            }
+        if (s->thread_info.soft_muted || pa_cvolume_is_muted(&volume)) {
+            pa_memblock_unref(result->memblock);
+            pa_silence_memchunk_get(&s->core->silence_cache,
+                                    s->core->mempool,
+                                    result,
+                                    &s->sample_spec,
+                                    result->length);
+        } else if (!pa_cvolume_is_norm(&volume)) {
+            pa_memchunk_make_writable(result, 0);
+            pa_volume_memchunk(result, &s->sample_spec, &volume);
         }
     } else {
         void *ptr;
@@ -970,8 +971,6 @@ void pa_sink_render_into(pa_sink*s, pa_memchunk *target) {
     pa_assert(target->length > 0);
     pa_assert(pa_frame_aligned(target->length, &s->sample_spec));
 
-    pa_sink_ref(s);
-
     pa_assert(!s->thread_info.rewind_requested);
     pa_assert(s->thread_info.rewind_nbytes == 0);
 
@@ -979,6 +978,8 @@ void pa_sink_render_into(pa_sink*s, pa_memchunk *target) {
         pa_silence_memchunk(target, &s->sample_spec);
         return;
     }
+
+    pa_sink_ref(s);
 
     length = target->length;
     block_size_max = pa_mempool_block_size_max(s->core->mempool);
@@ -1054,10 +1055,15 @@ void pa_sink_render_into_full(pa_sink *s, pa_memchunk *target) {
     pa_assert(target->length > 0);
     pa_assert(pa_frame_aligned(target->length, &s->sample_spec));
 
-    pa_sink_ref(s);
-
     pa_assert(!s->thread_info.rewind_requested);
     pa_assert(s->thread_info.rewind_nbytes == 0);
+
+    if (s->thread_info.state == PA_SINK_SUSPENDED) {
+        pa_silence_memchunk(target, &s->sample_spec);
+        return;
+    }
+
+    pa_sink_ref(s);
 
     l = target->length;
     d = 0;
@@ -1077,10 +1083,6 @@ void pa_sink_render_into_full(pa_sink *s, pa_memchunk *target) {
 
 /* Called from IO thread context */
 void pa_sink_render_full(pa_sink *s, size_t length, pa_memchunk *result) {
-    pa_mix_info info[MAX_MIX_CHANNELS];
-    size_t length1st = length;
-    unsigned n;
-
     pa_sink_assert_ref(s);
     pa_sink_assert_io_context(s);
     pa_assert(PA_SINK_IS_LINKED(s->thread_info.state));
@@ -1088,81 +1090,24 @@ void pa_sink_render_full(pa_sink *s, size_t length, pa_memchunk *result) {
     pa_assert(pa_frame_aligned(length, &s->sample_spec));
     pa_assert(result);
 
-    pa_sink_ref(s);
-
     pa_assert(!s->thread_info.rewind_requested);
     pa_assert(s->thread_info.rewind_nbytes == 0);
 
-    pa_assert(length > 0);
+    pa_sink_ref(s);
 
-    n = fill_mix_info(s, &length1st, info, MAX_MIX_CHANNELS);
-
-    if (n == 0) {
-        pa_silence_memchunk_get(&s->core->silence_cache,
-                                s->core->mempool,
-                                result,
-                                &s->sample_spec,
-                                length1st);
-    } else if (n == 1) {
-        pa_cvolume volume;
-
-        *result = info[0].chunk;
-        pa_memblock_ref(result->memblock);
-
-        if (result->length > length)
-            result->length = length;
-
-        pa_sw_cvolume_multiply(&volume, &s->thread_info.soft_volume, &info[0].volume);
-
-        if (s->thread_info.soft_muted || !pa_cvolume_is_norm(&volume)) {
-            if (s->thread_info.soft_muted || pa_cvolume_is_muted(&volume)) {
-                pa_memblock_unref(result->memblock);
-                pa_silence_memchunk_get(&s->core->silence_cache,
-                                        s->core->mempool,
-                                        result,
-                                        &s->sample_spec,
-                                        result->length);
-            } else {
-                pa_memchunk_make_writable(result, length);
-                pa_volume_memchunk(result, &s->sample_spec, &volume);
-            }
-        }
-    } else {
-        void *ptr;
-
-        result->index = 0;
-        result->memblock = pa_memblock_new(s->core->mempool, length);
-
-        ptr = pa_memblock_acquire(result->memblock);
-
-        result->length = pa_mix(info, n,
-                                (uint8_t*) ptr + result->index, length1st,
-                                &s->sample_spec,
-                                &s->thread_info.soft_volume,
-                                s->thread_info.soft_muted);
-
-        pa_memblock_release(result->memblock);
-    }
-
-    inputs_drop(s, info, n, result);
+    pa_sink_render(s, length, result);
 
     if (result->length < length) {
         pa_memchunk chunk;
-        size_t l, d;
+
         pa_memchunk_make_writable(result, length);
 
-        l = length - result->length;
-        d = result->index + result->length;
-        while (l > 0) {
-            chunk = *result;
-            chunk.index = d;
-            chunk.length = l;
+        chunk.memblock = result->memblock;
+        chunk.index = result->index + result->length;
+        chunk.length = length - result->length;
 
-            pa_sink_render_into(s, &chunk);
+        pa_sink_render_into_full(s, &chunk);
 
-            d += chunk.length;
-            l -= chunk.length;
-        }
         result->length = length;
     }
 
@@ -1215,6 +1160,46 @@ pa_usec_t pa_sink_get_latency_within_thread(pa_sink *s) {
         return -1;
 
     return usec;
+}
+
+static pa_cvolume* cvolume_remap_minimal_impact(
+        pa_cvolume *v,
+        const pa_cvolume *template,
+        const pa_channel_map *from,
+        const pa_channel_map *to) {
+
+    pa_cvolume t;
+
+    pa_assert(v);
+    pa_assert(template);
+    pa_assert(from);
+    pa_assert(to);
+
+    pa_return_val_if_fail(pa_cvolume_compatible_with_channel_map(v, from), NULL);
+    pa_return_val_if_fail(pa_cvolume_compatible_with_channel_map(template, to), NULL);
+
+    /* Much like pa_cvolume_remap(), but tries to minimize impact when
+     * mapping from sink input to sink volumes:
+     *
+     * If template is a possible remapping from v it is used instead
+     * of remapping anew.
+     *
+     * If the channel maps don't match we set an all-channel volume on
+     * the sink to ensure that changing a volume on one stream has no
+     * effect that cannot be compensated for in another stream that
+     * does not have the same channel map as the sink. */
+
+    if (pa_channel_map_equal(from, to))
+        return v;
+
+    t = *template;
+    if (pa_cvolume_equal(pa_cvolume_remap(&t, to, from), v)) {
+        *v = *template;
+        return v;
+    }
+
+    pa_cvolume_set(v, to->channels, pa_cvolume_max(v));
+    return v;
 }
 
 /* Called from main context */
@@ -1344,7 +1329,7 @@ static void compute_real_volume(pa_sink *s) {
         pa_cvolume remapped;
 
         remapped = i->volume;
-        pa_cvolume_remap(&remapped, &i->channel_map, &s->channel_map);
+        cvolume_remap_minimal_impact(&remapped, &s->real_volume, &i->channel_map, &s->channel_map);
         pa_cvolume_merge(&s->real_volume, &s->real_volume, &remapped);
     }
 
@@ -1380,9 +1365,14 @@ static void propagate_reference_volume(pa_sink *s) {
         pa_cvolume_remap(&remapped, &s->channel_map, &i->channel_map);
         pa_sw_cvolume_multiply(&i->volume, &remapped, &i->reference_ratio);
 
-        /* The reference volume changed, let's tell people so */
-        if (!pa_cvolume_equal(&old_volume, &i->volume))
+        /* The volume changed, let's tell people so */
+        if (!pa_cvolume_equal(&old_volume, &i->volume)) {
+
+            if (i->volume_changed)
+                i->volume_changed(i);
+
             pa_subscription_post(i->core, PA_SUBSCRIPTION_EVENT_SINK_INPUT|PA_SUBSCRIPTION_EVENT_CHANGE, i->index);
+        }
     }
 }
 
@@ -1400,8 +1390,11 @@ void pa_sink_set_volume(
     pa_assert_ctl_context();
     pa_assert(PA_SINK_IS_LINKED(s->state));
     pa_assert(!volume || pa_cvolume_valid(volume));
-    pa_assert(!volume || pa_cvolume_compatible(volume, &s->sample_spec));
     pa_assert(volume || (s->flags & PA_SINK_FLAT_VOLUME));
+    pa_assert(!volume || volume->channels == 1 || pa_cvolume_compatible(volume, &s->sample_spec));
+
+    /* As a special exception we accept mono volumes on all sinks --
+     * even on those with more complex channel maps */
 
     /* If volume is NULL we synchronize the sink's real and reference
      * volumes with the stream volumes. If it is not NULL we update
@@ -1411,7 +1404,10 @@ void pa_sink_set_volume(
 
     if (volume) {
 
-        s->reference_volume = *volume;
+        if (pa_cvolume_compatible(volume, &s->sample_spec))
+            s->reference_volume = *volume;
+        else
+            pa_cvolume_scale(&s->reference_volume, pa_cvolume_max(volume));
 
         if (s->flags & PA_SINK_FLAT_VOLUME) {
             /* OK, propagate this volume change back to the inputs */
@@ -1522,8 +1518,13 @@ static void propagate_real_volume(pa_sink *s, const pa_cvolume *old_real_volume)
             pa_sw_cvolume_multiply(&i->volume, &remapped, &i->reference_ratio);
 
             /* Notify if something changed */
-            if (!pa_cvolume_equal(&old_volume, &i->volume))
+            if (!pa_cvolume_equal(&old_volume, &i->volume)) {
+
+                if (i->volume_changed)
+                    i->volume_changed(i);
+
                 pa_subscription_post(i->core, PA_SUBSCRIPTION_EVENT_SINK_INPUT|PA_SUBSCRIPTION_EVENT_CHANGE, i->index);
+            }
         }
     }
 
@@ -1744,7 +1745,14 @@ unsigned pa_sink_check_suspend(pa_sink *s) {
         pa_sink_input_state_t st;
 
         st = pa_sink_input_get_state(i);
-        pa_assert(PA_SINK_INPUT_IS_LINKED(st));
+
+        /* We do not assert here. It is perfectly valid for a sink input to
+         * be in the INIT state (i.e. created, marked done but not yet put)
+         * and we should not care if it's unlinked as it won't contribute
+         * towarards our busy status.
+         */
+        if (!PA_SINK_INPUT_IS_LINKED(st))
+            continue;
 
         if (st == PA_SINK_INPUT_CORKED)
             continue;
@@ -2678,10 +2686,56 @@ pa_bool_t pa_device_init_intended_roles(pa_proplist *p) {
         return TRUE;
 
     if ((s = pa_proplist_gets(p, PA_PROP_DEVICE_FORM_FACTOR)))
-        if (pa_streq(s, "handset") || pa_streq(s, "hands-free")) {
+        if (pa_streq(s, "handset") || pa_streq(s, "hands-free")
+            || pa_streq(s, "headset")) {
             pa_proplist_sets(p, PA_PROP_DEVICE_INTENDED_ROLES, "phone");
             return TRUE;
         }
 
     return FALSE;
+}
+
+unsigned pa_device_init_priority(pa_proplist *p) {
+    const char *s;
+    unsigned priority = 0;
+
+    pa_assert(p);
+
+    if ((s = pa_proplist_gets(p, PA_PROP_DEVICE_CLASS))) {
+
+        if (pa_streq(s, "sound"))
+            priority += 9000;
+        else if (!pa_streq(s, "modem"))
+            priority += 1000;
+    }
+
+    if ((s = pa_proplist_gets(p, PA_PROP_DEVICE_FORM_FACTOR))) {
+
+        if (pa_streq(s, "internal"))
+            priority += 900;
+        else if (pa_streq(s, "speaker"))
+            priority += 500;
+        else if (pa_streq(s, "headphone"))
+            priority += 400;
+    }
+
+    if ((s = pa_proplist_gets(p, PA_PROP_DEVICE_BUS))) {
+
+        if (pa_streq(s, "pci"))
+            priority += 50;
+        else if (pa_streq(s, "usb"))
+            priority += 40;
+        else if (pa_streq(s, "bluetooth"))
+            priority += 30;
+    }
+
+    if ((s = pa_proplist_gets(p, PA_PROP_DEVICE_PROFILE_NAME))) {
+
+        if (pa_startswith(s, "analog-"))
+            priority += 9;
+        else if (pa_startswith(s, "iec958-"))
+            priority += 8;
+    }
+
+    return priority;
 }

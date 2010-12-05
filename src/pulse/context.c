@@ -63,7 +63,7 @@
 #include <pulsecore/native-common.h>
 #include <pulsecore/pdispatch.h>
 #include <pulsecore/pstream.h>
-#include <pulsecore/dynarray.h>
+#include <pulsecore/hashmap.h>
 #include <pulsecore/socket-client.h>
 #include <pulsecore/pstream-util.h>
 #include <pulsecore/core-rtclock.h>
@@ -128,6 +128,9 @@ static void reset_callbacks(pa_context *c) {
     c->event_callback = NULL;
     c->event_userdata = NULL;
 
+    c->ext_device_manager.callback = NULL;
+    c->ext_device_manager.userdata = NULL;
+
     c->ext_stream_restore.callback = NULL;
     c->ext_stream_restore.userdata = NULL;
 }
@@ -142,7 +145,7 @@ pa_context *pa_context_new_with_proplist(pa_mainloop_api *mainloop, const char *
 
     pa_init_i18n();
 
-    c = pa_xnew(pa_context, 1);
+    c = pa_xnew0(pa_context, 1);
     PA_REFCNT_INIT(c);
 
     c->proplist = p ? pa_proplist_copy(p) : pa_proplist_new();
@@ -154,11 +157,8 @@ pa_context *pa_context_new_with_proplist(pa_mainloop_api *mainloop, const char *
     c->system_bus = c->session_bus = NULL;
 #endif
     c->mainloop = mainloop;
-    c->client = NULL;
-    c->pstream = NULL;
-    c->pdispatch = NULL;
-    c->playback_streams = pa_dynarray_new();
-    c->record_streams = pa_dynarray_new();
+    c->playback_streams = pa_hashmap_new(pa_idxset_trivial_hash_func, pa_idxset_trivial_compare_func);
+    c->record_streams = pa_hashmap_new(pa_idxset_trivial_hash_func, pa_idxset_trivial_compare_func);
     c->client_index = PA_INVALID_INDEX;
     c->use_rtclock = pa_mainloop_is_our_api(mainloop);
 
@@ -167,21 +167,8 @@ pa_context *pa_context_new_with_proplist(pa_mainloop_api *mainloop, const char *
 
     c->error = PA_OK;
     c->state = PA_CONTEXT_UNCONNECTED;
-    c->ctag = 0;
-    c->csyncid = 0;
 
     reset_callbacks(c);
-
-    c->is_local = FALSE;
-    c->server_list = NULL;
-    c->server = NULL;
-
-    c->do_shm = FALSE;
-
-    c->server_specified = FALSE;
-    c->no_fail = FALSE;
-    c->do_autospawn = FALSE;
-    memset(&c->spawn_api, 0, sizeof(c->spawn_api));
 
 #ifndef MSG_NOSIGNAL
 #ifdef SIGPIPE
@@ -252,20 +239,22 @@ static void context_free(pa_context *c) {
 
 #ifdef HAVE_DBUS
     if (c->system_bus) {
-        dbus_connection_remove_filter(pa_dbus_wrap_connection_get(c->system_bus), filter_cb, c);
+        if (c->filter_added)
+            dbus_connection_remove_filter(pa_dbus_wrap_connection_get(c->system_bus), filter_cb, c);
         pa_dbus_wrap_connection_free(c->system_bus);
     }
 
     if (c->session_bus) {
-        dbus_connection_remove_filter(pa_dbus_wrap_connection_get(c->session_bus), filter_cb, c);
+        if (c->filter_added)
+            dbus_connection_remove_filter(pa_dbus_wrap_connection_get(c->session_bus), filter_cb, c);
         pa_dbus_wrap_connection_free(c->session_bus);
     }
 #endif
 
     if (c->record_streams)
-        pa_dynarray_free(c->record_streams, NULL, NULL);
+        pa_hashmap_free(c->record_streams, NULL, NULL);
     if (c->playback_streams)
-        pa_dynarray_free(c->playback_streams, NULL, NULL);
+        pa_hashmap_free(c->playback_streams, NULL, NULL);
 
     if (c->mempool)
         pa_mempool_free(c->mempool);
@@ -372,7 +361,7 @@ static void pstream_memblock_callback(pa_pstream *p, uint32_t channel, int64_t o
 
     pa_context_ref(c);
 
-    if ((s = pa_dynarray_get(c->record_streams, channel))) {
+    if ((s = pa_hashmap_get(c->record_streams, PA_UINT32_TO_PTR(channel)))) {
 
         if (chunk->memblock) {
             pa_memblockq_seek(s->record_memblockq, offset, seek, TRUE);
@@ -635,7 +624,7 @@ static pa_strlist *prepend_per_user(pa_strlist *l) {
     char *ufn;
 
 #ifdef ENABLE_LEGACY_RUNTIME_DIR
-    static char *legacy_dir;
+    char *legacy_dir;
 
     /* The very old per-user instance path (< 0.9.11). This is supported only to ease upgrades */
     if ((legacy_dir = get_very_old_legacy_runtime_dir())) {
@@ -791,6 +780,7 @@ static void track_pulseaudio_on_dbus(pa_context *c, DBusBusType type, pa_dbus_wr
         pa_log_warn("Failed to add filter function");
         goto fail;
     }
+    c->filter_added = TRUE;
 
     if (pa_dbus_add_matches(
                 pa_dbus_wrap_connection_get(*conn), &error,
@@ -1045,7 +1035,10 @@ pa_context_state_t pa_context_get_state(pa_context *c) {
 }
 
 int pa_context_errno(pa_context *c) {
-    pa_assert(c);
+
+    if (!c)
+        return PA_ERR_INVALID;
+
     pa_assert(PA_REFCNT_VALUE(c) >= 1);
 
     return c->error;
@@ -1431,6 +1424,8 @@ void pa_command_extension(pa_pdispatch *pd, uint32_t command, uint32_t tag, pa_t
 
     if (!strcmp(name, "module-stream-restore"))
         pa_ext_stream_restore_command(c, tag, t);
+    else if (!strcmp(name, "module-device-manager"))
+        pa_ext_device_manager_command(c, tag, t);
     else
         pa_log(_("Received message for unknown extension '%s'"), name);
 

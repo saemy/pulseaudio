@@ -69,9 +69,8 @@ typedef struct connection {
     } playback;
 } connection;
 
-PA_DECLARE_CLASS(connection);
+PA_DEFINE_PRIVATE_CLASS(connection, pa_msgobject);
 #define CONNECTION(o) (connection_cast(o))
-static PA_DEFINE_CHECK_TYPE(connection, pa_msgobject);
 
 struct pa_simple_protocol {
     PA_REFCNT_DECLARE;
@@ -155,7 +154,7 @@ static int do_read(connection *c) {
     ssize_t r;
     size_t l;
     void *p;
-    size_t space;
+    size_t space = 0;
 
     connection_assert_ref(c);
 
@@ -526,6 +525,7 @@ void pa_simple_protocol_connect(pa_simple_protocol *p, pa_iochannel *io, pa_simp
 
     if (o->playback) {
         pa_sink_input_new_data data;
+        pa_memchunk silence;
         size_t l;
         pa_sink *sink;
 
@@ -542,7 +542,7 @@ void pa_simple_protocol_connect(pa_simple_protocol *p, pa_iochannel *io, pa_simp
         pa_proplist_update(data.proplist, PA_UPDATE_MERGE, c->client->proplist);
         pa_sink_input_new_data_set_sample_spec(&data, &o->sample_spec);
 
-        pa_sink_input_new(&c->sink_input, p->core, &data, 0);
+        pa_sink_input_new(&c->sink_input, p->core, &data);
         pa_sink_input_new_data_done(&data);
 
         if (!c->sink_input) {
@@ -560,6 +560,7 @@ void pa_simple_protocol_connect(pa_simple_protocol *p, pa_iochannel *io, pa_simp
         pa_sink_input_set_requested_latency(c->sink_input, DEFAULT_SINK_LATENCY);
 
         l = (size_t) ((double) pa_bytes_per_second(&o->sample_spec)*PLAYBACK_BUFFER_SECONDS);
+        pa_sink_input_get_silence(c->sink_input, &silence);
         c->input_memblockq = pa_memblockq_new(
                 0,
                 l,
@@ -568,10 +569,12 @@ void pa_simple_protocol_connect(pa_simple_protocol *p, pa_iochannel *io, pa_simp
                 (size_t) -1,
                 l/PLAYBACK_BUFFER_FRAGMENTS,
                 0,
-                NULL);
+                &silence);
+        pa_memblock_unref(silence.memblock);
+
         pa_iochannel_socket_set_rcvbuf(io, l);
 
-        pa_atomic_store(&c->playback.missing, (int) pa_memblockq_missing(c->input_memblockq));
+        pa_atomic_store(&c->playback.missing, (int) pa_memblockq_pop_missing(c->input_memblockq));
 
         pa_sink_input_put(c->sink_input);
     }
@@ -594,7 +597,7 @@ void pa_simple_protocol_connect(pa_simple_protocol *p, pa_iochannel *io, pa_simp
         pa_proplist_update(data.proplist, PA_UPDATE_MERGE, c->client->proplist);
         pa_source_output_new_data_set_sample_spec(&data, &o->sample_spec);
 
-        pa_source_output_new(&c->source_output, p->core, &data, 0);
+        pa_source_output_new(&c->source_output, p->core, &data);
         pa_source_output_new_data_done(&data);
 
         if (!c->source_output) {
@@ -628,8 +631,7 @@ void pa_simple_protocol_connect(pa_simple_protocol *p, pa_iochannel *io, pa_simp
     return;
 
 fail:
-    if (c)
-        connection_unlink(c);
+    connection_unlink(c);
 }
 
 void pa_simple_protocol_disconnect(pa_simple_protocol *p, pa_module *m) {

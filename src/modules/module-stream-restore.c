@@ -394,7 +394,7 @@ static pa_hook_result_t sink_input_new_hook_callback(pa_core *c, pa_sink_input_n
         return PA_HOOK_OK;
 
     if (new_data->sink)
-        pa_log_debug("Not restoring device for stream %s, because already set.", name);
+        pa_log_debug("Not restoring device for stream %s, because already set to '%s'.", name, new_data->sink->name);
     else if ((e = read_entry(u, name))) {
         pa_sink *s = NULL;
 
@@ -593,7 +593,7 @@ static pa_hook_result_t source_put_hook_callback(pa_core *c, pa_source *source, 
         if (!so->source)
             continue;
 
-        /* It might happen that a stream and a sink are set up at the
+        /* It might happen that a stream and a source are set up at the
            same time, in which case we want to make sure we don't
            interfere with that */
         if (!PA_SOURCE_OUTPUT_IS_LINKED(pa_source_output_get_state(so)))
@@ -742,12 +742,24 @@ static void apply_entry(struct userdata *u, const char *name, struct entry *e) {
             pa_sink_input_set_mute(si, e->muted, TRUE);
         }
 
-        if (u->restore_device &&
-            e->device_valid &&
-            (s = pa_namereg_get(u->core, e->device, PA_NAMEREG_SINK))) {
-
-            pa_log_info("Restoring device for stream %s.", name);
-            pa_sink_input_move_to(si, s, TRUE);
+        if (u->restore_device) {
+            if (!e->device_valid) {
+                if (si->save_sink) {
+                    pa_log_info("Ensuring device is not saved for stream %s.", name);
+                    /* If the device is not valid we should make sure the
+                       save flag is cleared as the user may have specifically
+                       removed the sink element from the rule. */
+                    si->save_sink = FALSE;
+                    /* This is cheating a bit. The sink input itself has not changed
+                       but the rules governing it's routing have, so we fire this event
+                       such that other routing modules (e.g. module-device-manager)
+                       will pick up the change and reapply their routing */
+                    pa_subscription_post(si->core, PA_SUBSCRIPTION_EVENT_SINK_INPUT|PA_SUBSCRIPTION_EVENT_CHANGE, si->index);
+                }
+            } else if ((s = pa_namereg_get(u->core, e->device, PA_NAMEREG_SINK))) {
+                pa_log_info("Restoring device for stream %s.", name);
+                pa_sink_input_move_to(si, s, TRUE);
+            }
         }
     }
 
@@ -764,12 +776,24 @@ static void apply_entry(struct userdata *u, const char *name, struct entry *e) {
         }
         pa_xfree(n);
 
-        if (u->restore_device &&
-            e->device_valid &&
-            (s = pa_namereg_get(u->core, e->device, PA_NAMEREG_SOURCE))) {
-
-            pa_log_info("Restoring device for stream %s.", name);
-            pa_source_output_move_to(so, s, TRUE);
+        if (u->restore_device) {
+            if (!e->device_valid) {
+                if (so->save_source) {
+                    pa_log_info("Ensuring device is not saved for stream %s.", name);
+                    /* If the device is not valid we should make sure the
+                       save flag is cleared as the user may have specifically
+                       removed the source element from the rule. */
+                    so->save_source = FALSE;
+                    /* This is cheating a bit. The source output itself has not changed
+                       but the rules governing it's routing have, so we fire this event
+                       such that other routing modules (e.g. module-device-manager)
+                       will pick up the change and reapply their routing */
+                    pa_subscription_post(so->core, PA_SUBSCRIPTION_EVENT_SOURCE_OUTPUT|PA_SUBSCRIPTION_EVENT_CHANGE, so->index);
+                }
+            } else if ((s = pa_namereg_get(u->core, e->device, PA_NAMEREG_SOURCE))) {
+                pa_log_info("Restoring device for stream %s.", name);
+                pa_source_output_move_to(so, s, TRUE);
+            }
         }
     }
 }
@@ -933,6 +957,10 @@ static int extension_cb(pa_native_protocol *p, pa_module *m, pa_native_connectio
 
                 data.data = &entry;
                 data.size = sizeof(entry);
+
+                pa_log_debug("Client %s changes entry %s.",
+                             pa_strnull(pa_proplist_gets(pa_native_connection_get_client(c)->proplist, PA_PROP_APPLICATION_PROCESS_BINARY)),
+                             name);
 
                 if (pa_database_set(u->database, &key, &data, mode == PA_UPDATE_REPLACE) == 0)
                     if (apply_immediately)
