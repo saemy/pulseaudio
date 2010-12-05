@@ -1,3 +1,154 @@
+pulseaudio (0.9.22-1) experimental; urgency=low
+
+  * New upstream release
+  * debian/patches/0002-CVE-2009-1299.patch:
+    + Dropped, fixed upstream
+  * debian/patches/0003-Re-bootstrap.patch
+    + Dropped, not needed anymore
+  * debian/rules: Stop using -g0 on mips{,el} the toolchain has been fixed
+  * debian/rules, debian/control: Update build-depends and force building
+    with X11
+  * debian/control: Suggest rtkit
+  * debian/control: Prune unneeded depends of libpulse-dev
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Sun, 05 Dec 2010 12:01:37 +0000
+
+pulseaudio (0.9.21-3) unstable; urgency=low
+
+  * debian/rules: Compile with -g0 on mips{,el} to work around #519006 in
+    gcc-4.4
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Sat, 03 Jul 2010 15:12:54 +0100
+
+pulseaudio (0.9.21-2) unstable; urgency=low
+
+  * Import NMU patches into pkg-pulse git, thanks to the security team for
+    their work!
+  * debian/patches/0003-Re-bootstrap.patch
+    + Added. Update configure so we don't have to re-run autotools when
+    building the package (Closes: #576457, #576546, #576769)
+  * Install a KDE specific startup file and module-device-manager.
+    Thanks to Daniel Schaal and Zsolt Rizsanyi for patches and tips.
+    (Closes: #570487)
+  * d/p/0004-In-KDE-only-start-pulseaudio-from-the-KDE-specific-d.patch
+    + Added. When running KDE use the KDE specific autostart desktop file
+    instead of the generic pulseaudio-x11 file
+  *  Fix two typos in debian/pulseaudio.default, patch by Paul Menzel
+    (Closes: #566332)
+  *  Prepare the debian package for building on HURD again (needs some upstream
+     fixes as well). Patch by Pino Toscano (Closes: #573339)
+  * Use the pulseaudio.1 manpage from the source tree instead of the older (and
+    outdated) debian specific one.
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Sun, 27 Jun 2010 20:27:23 +0100
+
+pulseaudio (0.9.21-1.2) unstable; urgency=high
+
+  * Non-maintainer upload by the Security Team.
+  * Added autoconf, automake, and libtool in Build-Depends to regenerate
+    configure and auto* files at build time, and fixed a regression introduced
+    in previous NMU (Closes: #576457)
+
+ -- Giuseppe Iuculano <iuculano@debian.org>  Mon, 05 Apr 2010 23:02:56 +0200
+
+pulseaudio (0.9.21-1.1) unstable; urgency=high
+
+  * Non-maintainer upload.
+  * Fix insecure temporary file creation security issue (closes: #573615).
+
+ -- Michael Gilbert <michael.s.gilbert@gmail.com>  Sat, 27 Mar 2010 14:32:13 -0400
+
+pulseaudio (0.9.21-1) unstable; urgency=low
+
+  * New upstream release
+  * d/p/0002-Fix-makefiles-to-include-all-alsa-path-files-on-inst.patch
+    + Removed, merged upstream
+  * debian/copyright: Updated
+  * debian/rules: Fix build on arm (slightly changes target name)
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Mon, 23 Nov 2009 23:51:16 +0000
+
+pulseaudio (0.9.20-1) unstable; urgency=low
+
+  * New upstream release
+  * d/p/0002-Fix-makefiles-to-include-all-alsa-path-files-on-inst.patch
+    + Added. Make sure all alsa path configuration files are installed
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Sat, 14 Nov 2009 22:50:52 +0000
+
+pulseaudio (0.9.19-2) unstable; urgency=low
+
+  * Built with normal old-style hal support on kfreebsd and the hurd
+  * debian/patches/0001-Work-around-some-platforms-not-having-O_CLOEXEC.patch:
+    + Added. Don't use O_CLOEXEC on platforms that don't support it.
+      (Closes: #550826)
+  * debian/pulseaudio.install: Install pulse udev rules so device profiles can
+    be matched with the few devices that need special tweaks
+  * debian/pulseaudio.install: Add the rygel media server plugin, such that
+    pulseaudio sources and sinks can be exposed over UPNP via rygel.
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Sun, 25 Oct 2009 13:43:06 +0000
+
+pulseaudio (0.9.19-1) unstable; urgency=low
+
+  * New upstream release
+  * Remove patches that were merged upstream:
+    d/p/0001-tunnel-fix-parsing-of-sink-info-from-newer-servers.patch
+    d/p/0002-tunnel-fix-parsing-of-source-info-from-newer-servers.patch
+    d/p/0003-svolume-tweak-constraints-for-32-bits.patch
+  * Only compile the ARMv6 optimized code with -march=armv6  (Closes: #546322)
+  * Depend on udev (>= 143) for device detection (Closes: #548821, #549001)
+  * Update various shlibs files to use 0.9.19
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Sat, 03 Oct 2009 18:22:56 +0100
+
+pulseaudio (0.9.18-1) unstable; urgency=low
+
+  * New upstream release
+  * d/p/0001-tunnel-fix-parsing-of-sink-info-from-newer-servers.patch
+    + Added. Fix parsing of the sink info when using module-tunnel
+      From the upstream 0.9.18-stable branch
+  * d/p/0002-tunnel-fix-parsing-of-source-info-from-newer-servers.patch
+    + Added. Fix parsing of the source info when using module-tunnel
+      From the upstream 0.9.18-stable branch
+  * d/p/0003-svolume-tweak-constraints-for-32-bits.patch
+    + Added. Fixes gcc and the inline assembly using the same register.
+      From the upstream 0.9.18-stable branch
+  * debian/control: Build-Depend on libudev-dev instead of libhal-dev.
+    Pulseaudio now uses udev for device detection (Closes: #546721)
+  * debian/control: Enable hal->udev compat module
+  * Update various shlibs files to use 0.9.18
+  * debian/pulseaudio.install, debian/rules: Add udev and loopback modules
+  * debian/pulseaudio-utils.install: Add pamon and parecord
+  * debian/pulseaudio.install: Add dbus configuration file for system-wide
+      pulse instance (Closes: #529989)
+  * debian/control: Bump libsndfile1-dev build-depend to >= 1.0.20.
+    (Closes: #546734)
+  * debian/rules: Add -march=armv6 to the CFLAGS on arm and armel
+    (Closes: #546322)
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Sun, 27 Sep 2009 23:46:37 +0200
+
+pulseaudio (0.9.17-1) unstable; urgency=low
+
+  * New upstream release
+  * debian/copyright: updated
+  * Update various shlibs files to use 0.9.17
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Sat, 12 Sep 2009 10:27:46 +0100
+
+pulseaudio (0.9.16-1) unstable; urgency=low
+
+  * New upstream release
+  * debian/copyright: updated
+  * debian/control: Remove the liboil build-dep
+  * debian/libpulse0.shlibs: Bump to >= 0.9.16
+  * debian/pulseaudio.postinst: No longer make pulseaudio suid and no longer
+    create the pulse-rt group. Setting realtime priorities is now handled by
+    rtkit.
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Thu, 10 Sep 2009 21:53:15 +0100
+
 pulseaudio (0.9.16~test5-1) experimental; urgency=low
 
   * New Upstream Version

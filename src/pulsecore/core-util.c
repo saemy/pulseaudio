@@ -115,6 +115,9 @@
 #include <pulsecore/macro.h>
 #include <pulsecore/thread.h>
 #include <pulsecore/strbuf.h>
+#include <pulsecore/usergroup.h>
+#include <pulsecore/strlist.h>
+#include <pulsecore/cpu-x86.h>
 
 #include "core-util.h"
 
@@ -122,6 +125,11 @@
 #ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
 #endif
+
+#define NEWLINE "\r\n"
+#define WHITESPACE "\n\r \t"
+
+static pa_strlist *recorded_env = NULL;
 
 #ifdef OS_IS_WIN32
 
@@ -191,7 +199,7 @@ void pa_make_fd_cloexec(int fd) {
 /** Creates a directory securely */
 int pa_make_secure_dir(const char* dir, mode_t m, uid_t uid, gid_t gid) {
     struct stat st;
-    int r, saved_errno;
+    int r, saved_errno, fd;
 
     pa_assert(dir);
 
@@ -209,16 +217,45 @@ int pa_make_secure_dir(const char* dir, mode_t m, uid_t uid, gid_t gid) {
     if (r < 0 && errno != EEXIST)
         return -1;
 
-#ifdef HAVE_CHOWN
+#ifdef HAVE_FSTAT
+    if ((fd = open(dir,
+#ifdef O_CLOEXEC
+                   O_CLOEXEC|
+#endif
+#ifdef O_NOCTTY
+                   O_NOCTTY|
+#endif
+#ifdef O_NOFOLLOW
+                   O_NOFOLLOW|
+#endif
+                   O_RDONLY)) < 0)
+        goto fail;
+
+    if (fstat(fd, &st) < 0) {
+        pa_assert_se(pa_close(fd) >= 0);
+        goto fail;
+    }
+
+    if (!S_ISDIR(st.st_mode)) {
+        pa_assert_se(pa_close(fd) >= 0);
+        errno = EEXIST;
+        goto fail;
+    }
+
+#ifdef HAVE_FCHOWN
     if (uid == (uid_t)-1)
         uid = getuid();
     if (gid == (gid_t)-1)
         gid = getgid();
-    (void) chown(dir, uid, gid);
+    (void) fchown(fd, uid, gid);
 #endif
 
-#ifdef HAVE_CHMOD
-    chmod(dir, m);
+#ifdef HAVE_FCHMOD
+    (void) fchmod(fd, m);
+#endif
+
+    pa_assert_se(pa_close(fd) >= 0);
+
 #endif
 
 #ifdef HAVE_LSTAT
@@ -587,13 +624,13 @@ static int set_scheduler(int rtprio) {
     sp.sched_priority = rtprio;
 
 #ifdef SCHED_RESET_ON_FORK
-    if ((r = pthread_setschedparam(pthread_self(), SCHED_RR|SCHED_RESET_ON_FORK, &sp)) == 0) {
+    if (pthread_setschedparam(pthread_self(), SCHED_RR|SCHED_RESET_ON_FORK, &sp) == 0) {
         pa_log_debug("SCHED_RR|SCHED_RESET_ON_FORK worked.");
         return 0;
     }
 #endif
 
-    if ((r = pthread_setschedparam(pthread_self(), SCHED_RR, &sp)) == 0) {
+    if (pthread_setschedparam(pthread_self(), SCHED_RR, &sp) == 0) {
         pa_log_debug("SCHED_RR worked.");
         return 0;
     }
@@ -607,6 +644,11 @@ static int set_scheduler(int rtprio) {
         errno = -EIO;
         return -1;
     }
+
+    /* We need to disable exit on disconnect because otherwise
+     * dbus_shutdown will kill us. See
+     * https://bugs.freedesktop.org/show_bug.cgi?id=16924 */
+    dbus_connection_set_exit_on_disconnect(bus, FALSE);
 
     r = rtkit_make_realtime(bus, 0, rtprio);
     dbus_connection_unref(bus);
@@ -675,6 +717,11 @@ static int set_nice(int nice_level) {
         errno = -EIO;
         return -1;
     }
+
+    /* We need to disable exit on disconnect because otherwise
+     * dbus_shutdown will kill us. See
+     * https://bugs.freedesktop.org/show_bug.cgi?id=16924 */
+    dbus_connection_set_exit_on_disconnect(bus, FALSE);
 
     r = rtkit_make_high_priority(bus, 0, nice_level);
     dbus_connection_unref(bus);
@@ -772,7 +819,6 @@ int pa_match(const char *expr, const char *v) {
 /* Try to parse a boolean string value.*/
 int pa_parse_boolean(const char *v) {
     const char *expr;
-    int r;
     pa_assert(v);
 
     /* First we check language independant */
@@ -784,12 +830,12 @@ int pa_parse_boolean(const char *v) {
     /* And then we check language dependant */
     if ((expr = nl_langinfo(YESEXPR)))
         if (expr[0])
-            if ((r = pa_match(expr, v)) > 0)
+            if (pa_match(expr, v) > 0)
                 return 1;
 
     if ((expr = nl_langinfo(NOEXPR)))
         if (expr[0])
-            if ((r = pa_match(expr, v)) > 0)
+            if (pa_match(expr, v) > 0)
                 return 0;
 
     errno = EINVAL;
@@ -815,9 +861,6 @@ char *pa_split(const char *c, const char *delimiter, const char**state) {
 
     return pa_xstrndup(current, l);
 }
-
-/* What is interpreted as whitespace? */
-#define WHITESPACE " \t\n"
 
 /* Split a string into words. Otherwise similar to pa_split(). */
 char *pa_split_spaces(const char *c, const char **state) {
@@ -969,54 +1012,24 @@ fail:
 
 /* Check whether the specified GID and the group name match */
 static int is_group(gid_t gid, const char *name) {
-    struct group group, *result = NULL;
-    long n;
-    void *data;
+    struct group *group = NULL;
     int r = -1;
 
-#ifdef HAVE_GETGRGID_R
-#ifdef _SC_GETGR_R_SIZE_MAX
-    n = sysconf(_SC_GETGR_R_SIZE_MAX);
-#else
-    n = -1;
-#endif
-    if (n <= 0)
-        n = 512;
-
-    data = pa_xmalloc((size_t) n);
-
     errno = 0;
-    if (getgrgid_r(gid, &group, data, (size_t) n, &result) < 0 || !result) {
-        pa_log("getgrgid_r(%u): %s", (unsigned) gid, pa_cstrerror(errno));
-
+    if (!(group = pa_getgrgid_malloc(gid)))
+    {
         if (!errno)
             errno = ENOENT;
+
+        pa_log("pa_getgrgid_malloc(%u): %s", gid, pa_cstrerror(errno));
 
         goto finish;
     }
 
-    r = strcmp(name, result->gr_name) == 0;
+    r = strcmp(name, group->gr_name) == 0;
 
 finish:
-    pa_xfree(data);
-#else
-    /* XXX Not thread-safe, but needed on OSes (e.g. FreeBSD 4.X) that do not
-     * support getgrgid_r. */
-
-    errno = 0;
-    if (!(result = getgrgid(gid))) {
-        pa_log("getgrgid(%u): %s", gid, pa_cstrerror(errno));
-
-        if (!errno)
-            errno = ENOENT;
-
-        goto finish;
-    }
-
-    r = strcmp(name, result->gr_name) == 0;
-
-finish:
-#endif
+    pa_getgrgid_free(group);
 
     return r;
 }
@@ -1065,38 +1078,12 @@ finish:
 
 /* Check whether the specifc user id is a member of the specified group */
 int pa_uid_in_group(uid_t uid, const char *name) {
-    char *g_buf, *p_buf;
-    long g_n, p_n;
-    struct group grbuf, *gr;
+    struct group *group = NULL;
     char **i;
     int r = -1;
 
-#ifdef _SC_GETGR_R_SIZE_MAX
-    g_n = sysconf(_SC_GETGR_R_SIZE_MAX);
-#else
-    g_n = -1;
-#endif
-    if (g_n <= 0)
-        g_n = 512;
-
-    g_buf = pa_xmalloc((size_t) g_n);
-
-#ifdef _SC_GETPW_R_SIZE_MAX
-    p_n = sysconf(_SC_GETPW_R_SIZE_MAX);
-#else
-    p_n = -1;
-#endif
-    if (p_n <= 0)
-        p_n = 512;
-
-    p_buf = pa_xmalloc((size_t) p_n);
-
     errno = 0;
-#ifdef HAVE_GETGRNAM_R
-    if (getgrnam_r(name, &grbuf, g_buf, (size_t) g_n, &gr) != 0 || !gr)
-#else
-    if (!(gr = getgrnam(name)))
-#endif
+    if (!(group = pa_getgrnam_malloc(name)))
     {
         if (!errno)
             errno = ENOENT;
@@ -1104,25 +1091,24 @@ int pa_uid_in_group(uid_t uid, const char *name) {
     }
 
     r = 0;
-    for (i = gr->gr_mem; *i; i++) {
-        struct passwd pwbuf, *pw;
+    for (i = group->gr_mem; *i; i++) {
+        struct passwd *pw = NULL;
 
-#ifdef HAVE_GETPWNAM_R
-        if (getpwnam_r(*i, &pwbuf, p_buf, (size_t) p_n, &pw) != 0 || !pw)
-#else
-        if (!(pw = getpwnam(*i)))
-#endif
+        errno = 0;
+        if (!(pw = pa_getpwnam_malloc(*i)))
             continue;
 
-        if (pw->pw_uid == uid) {
+        if (pw->pw_uid == uid)
             r = 1;
+
+        pa_getpwnam_free(pw);
+
+        if (r == 1)
             break;
-        }
     }
 
 finish:
-    pa_xfree(g_buf);
-    pa_xfree(p_buf);
+    pa_getgrnam_free(group);
 
     return r;
 }
@@ -1130,26 +1116,10 @@ finish:
 /* Get the GID of a gfiven group, return (gid_t) -1 on failure. */
 gid_t pa_get_gid_of_group(const char *name) {
     gid_t ret = (gid_t) -1;
-    char *g_buf;
-    long g_n;
-    struct group grbuf, *gr;
-
-#ifdef _SC_GETGR_R_SIZE_MAX
-    g_n = sysconf(_SC_GETGR_R_SIZE_MAX);
-#else
-    g_n = -1;
-#endif
-    if (g_n <= 0)
-        g_n = 512;
-
-    g_buf = pa_xmalloc((size_t) g_n);
+    struct group *gr = NULL;
 
     errno = 0;
-#ifdef HAVE_GETGRNAM_R
-    if (getgrnam_r(name, &grbuf, g_buf, (size_t) g_n, &gr) != 0 || !gr)
-#else
-    if (!(gr = getgrnam(name)))
-#endif
+    if (!(gr = pa_getgrnam_malloc(name)))
     {
         if (!errno)
             errno = ENOENT;
@@ -1159,7 +1129,7 @@ gid_t pa_get_gid_of_group(const char *name) {
     ret = gr->gr_gid;
 
 finish:
-    pa_xfree(g_buf);
+    pa_getgrnam_free(gr);
     return ret;
 }
 
@@ -1248,13 +1218,33 @@ int pa_lock_fd(int fd, int b) {
 char* pa_strip_nl(char *s) {
     pa_assert(s);
 
-    s[strcspn(s, "\r\n")] = 0;
+    s[strcspn(s, NEWLINE)] = 0;
+    return s;
+}
+
+char *pa_strip(char *s) {
+    char *e, *l = NULL;
+
+    /* Drops trailing whitespace. Modifies the string in
+     * place. Returns pointer to first non-space character */
+
+    s += strspn(s, WHITESPACE);
+
+    for (e = s; *e; e++)
+        if (!strchr(WHITESPACE, *e))
+            l = e;
+
+    if (l)
+        *(l+1) = 0;
+    else
+        *s = 0;
+
     return s;
 }
 
 /* Create a temporary lock file and lock it. */
 int pa_lock_lockfile(const char *fn) {
-    int fd = -1;
+    int fd;
     pa_assert(fn);
 
     for (;;) {
@@ -1297,8 +1287,6 @@ int pa_lock_lockfile(const char *fn) {
             fd = -1;
             goto fail;
         }
-
-        fd = -1;
     }
 
     return fd;
@@ -1440,19 +1428,10 @@ static char* make_random_dir(mode_t m) {
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         "0123456789";
 
-    const char *tmpdir;
     char *fn;
     size_t pathlen;
 
-    if (!(tmpdir = getenv("TMPDIR")))
-        if (!(tmpdir = getenv("TMP")))
-            if (!(tmpdir = getenv("TEMP")))
-                tmpdir = getenv("TEMPDIR");
-
-    if (!tmpdir || !pa_is_path_absolute(tmpdir))
-        tmpdir = "/tmp";
-
-    fn = pa_sprintf_malloc("%s/pulse-XXXXXXXXXXXX", tmpdir);
+    fn = pa_sprintf_malloc("%s" PA_PATH_SEP "pulse-XXXXXXXXXXXX", pa_get_temp_dir());
     pathlen = strlen(fn);
 
     for (;;) {
@@ -1949,16 +1928,16 @@ char *pa_make_path_absolute(const char *p) {
 static char *get_path(const char *fn, pa_bool_t prependmid, pa_bool_t rt) {
     char *rtp;
 
-    if (pa_is_path_absolute(fn))
-        return pa_xstrdup(fn);
-
     rtp = rt ? pa_get_runtime_dir() : pa_get_state_dir();
-
-    if (!rtp)
-        return NULL;
 
     if (fn) {
         char *r;
+
+        if (pa_is_path_absolute(fn))
+            return pa_xstrdup(fn);
+
+        if (!rtp)
+            return NULL;
 
         if (prependmid) {
             char *mid;
@@ -2295,7 +2274,7 @@ int pa_close_all(int except_fd, ...) {
     va_end(ap);
 
     r = pa_close_allv(p);
-    free(p);
+    pa_xfree(p);
 
     return r;
 }
@@ -2466,7 +2445,7 @@ int pa_reset_sigs(int except, ...) {
         p[i++] = except;
 
         while ((sig = va_arg(ap, int)) >= 0)
-            sig = p[i++];
+            p[i++] = sig;
     }
     p[i] = -1;
 
@@ -2523,7 +2502,36 @@ void pa_set_env(const char *key, const char *value) {
     pa_assert(key);
     pa_assert(value);
 
+    /* This is not thread-safe */
+
     putenv(pa_sprintf_malloc("%s=%s", key, value));
+}
+
+void pa_set_env_and_record(const char *key, const char *value) {
+    pa_assert(key);
+    pa_assert(value);
+
+    /* This is not thread-safe */
+
+    pa_set_env(key, value);
+    recorded_env = pa_strlist_prepend(recorded_env, key);
+}
+
+void pa_unset_env_recorded(void) {
+
+    /* This is not thread-safe */
+
+    for (;;) {
+        char *s;
+
+        recorded_env = pa_strlist_pop(recorded_env, &s);
+
+        if (!s)
+            break;
+
+        unsetenv(s);
+        pa_xfree(s);
+    }
 }
 
 pa_bool_t pa_in_system_mode(void) {
@@ -2867,4 +2875,135 @@ void pa_reset_personality(void) {
         pa_log_warn("Uh, personality() failed: %s", pa_cstrerror(errno));
 #endif
 
+}
+
+#if defined(__linux__) && !defined(__OPTIMIZE__)
+
+pa_bool_t pa_run_from_build_tree(void) {
+    char *rp;
+    pa_bool_t b = FALSE;
+
+    /* We abuse __OPTIMIZE__ as a check whether we are a debug build
+     * or not. */
+
+    if ((rp = pa_readlink("/proc/self/exe"))) {
+        b = pa_startswith(rp, PA_BUILDDIR);
+        pa_xfree(rp);
+    }
+
+    return b;
+}
+
+#endif
+
+const char *pa_get_temp_dir(void) {
+    const char *t;
+
+    if ((t = getenv("TMPDIR")) &&
+        pa_is_path_absolute(t))
+        return t;
+
+    if ((t = getenv("TMP")) &&
+        pa_is_path_absolute(t))
+        return t;
+
+    if ((t = getenv("TEMP")) &&
+        pa_is_path_absolute(t))
+        return t;
+
+    if ((t = getenv("TEMPDIR")) &&
+        pa_is_path_absolute(t))
+        return t;
+
+    return "/tmp";
+}
+
+char *pa_read_line_from_file(const char *fn) {
+    FILE *f;
+    char ln[256] = "", *r;
+
+    if (!(f = fopen(fn, "r")))
+        return NULL;
+
+    r = fgets(ln, sizeof(ln)-1, f);
+    fclose(f);
+
+    if (!r) {
+        errno = EIO;
+        return NULL;
+    }
+
+    pa_strip_nl(ln);
+    return pa_xstrdup(ln);
+}
+
+pa_bool_t pa_running_in_vm(void) {
+
+#if defined(__i386__) || defined(__x86_64__)
+
+    /* Both CPUID and DMI are x86 specific interfaces... */
+
+    uint32_t eax = 0x40000000;
+    union {
+        uint32_t sig32[3];
+        char text[13];
+    } sig;
+
+#ifdef __linux__
+    const char *const dmi_vendors[] = {
+        "/sys/class/dmi/id/sys_vendor",
+        "/sys/class/dmi/id/board_vendor",
+        "/sys/class/dmi/id/bios_vendor"
+    };
+
+    unsigned i;
+
+    for (i = 0; i < PA_ELEMENTSOF(dmi_vendors); i++) {
+        char *s;
+
+        if ((s = pa_read_line_from_file(dmi_vendors[i]))) {
+
+            if (pa_startswith(s, "QEMU") ||
+                /* http://kb.vmware.com/selfservice/microsites/search.do?language=en_US&cmd=displayKC&externalId=1009458 */
+                pa_startswith(s, "VMware") ||
+                pa_startswith(s, "VMW") ||
+                pa_startswith(s, "Microsoft Corporation") ||
+                pa_startswith(s, "innotek GmbH") ||
+                pa_startswith(s, "Xen")) {
+
+                pa_xfree(s);
+                return TRUE;
+            }
+
+            pa_xfree(s);
+        }
+    }
+
+#endif
+
+    /* http://lwn.net/Articles/301888/ */
+    pa_zero(sig);
+
+    __asm__ __volatile__ (
+        /* ebx/rbx is being used for PIC! */
+        "  push %%"PA_REG_b"         \n\t"
+        "  cpuid                     \n\t"
+        "  mov %%ebx, %1             \n\t"
+        "  pop %%"PA_REG_b"          \n\t"
+
+        : "=a" (eax), "=r" (sig.sig32[0]), "=c" (sig.sig32[1]), "=d" (sig.sig32[2])
+        : "0" (eax)
+    );
+
+    if (pa_streq(sig.text, "XenVMMXenVMM") ||
+        pa_streq(sig.text, "KVMKVMKVM") ||
+        /* http://kb.vmware.com/selfservice/microsites/search.do?language=en_US&cmd=displayKC&externalId=1009458 */
+        pa_streq(sig.text, "VMwareVMware") ||
+        /* http://msdn.microsoft.com/en-us/library/bb969719.aspx */
+        pa_streq(sig.text, "Microsoft Hv"))
+        return TRUE;
+
+#endif
+
+    return FALSE;
 }

@@ -286,7 +286,7 @@ int pa__init(pa_module*m) {
         goto fail;
     }
 
-    ports = jack_get_ports(u->client, NULL, NULL, JackPortIsPhysical|JackPortIsOutput);
+    ports = jack_get_ports(u->client, NULL, JACK_DEFAULT_AUDIO_TYPE, JackPortIsPhysical|JackPortIsOutput);
 
     channels = 0;
     for (p = ports; *p; p++)
@@ -363,7 +363,7 @@ int pa__init(pa_module*m) {
     jack_on_shutdown(u->client, jack_shutdown, u);
     jack_set_thread_init_callback(u->client, jack_init, u);
 
-    if (!(u->thread = pa_thread_new(thread_func, u))) {
+    if (!(u->thread = pa_thread_new("jack-source", thread_func, u))) {
         pa_log("Failed to create thread.");
         goto fail;
     }
@@ -425,11 +425,11 @@ void pa__done(pa_module*m) {
     if (!(u = m->userdata))
         return;
 
-    if (u->client)
-        jack_client_close(u->client);
-
     if (u->source)
         pa_source_unlink(u->source);
+
+    if (u->client)
+        jack_client_close(u->client);
 
     if (u->thread) {
         pa_asyncmsgq_send(u->thread_mq.inq, NULL, PA_MESSAGE_SHUTDOWN, NULL, 0, NULL);

@@ -31,6 +31,8 @@
 #include <pulse/def.h>
 #include <pulse/cdecl.h>
 #include <pulse/operation.h>
+#include <pulse/context.h>
+#include <pulse/proplist.h>
 
 /** \page streams Audio Streams
  *
@@ -308,7 +310,10 @@
  */
 
 /** \file
- * Audio streams for input, output and sample upload */
+ * Audio streams for input, output and sample upload
+ *
+ * See also \subpage streams
+ */
 
 PA_C_DECL_BEGIN
 
@@ -319,7 +324,7 @@ typedef struct pa_stream pa_stream;
 typedef void (*pa_stream_success_cb_t) (pa_stream*s, int success, void *userdata);
 
 /** A generic request callback */
-typedef void (*pa_stream_request_cb_t)(pa_stream *p, size_t bytes, void *userdata);
+typedef void (*pa_stream_request_cb_t)(pa_stream *p, size_t nbytes, void *userdata);
 
 /** A generic notification callback */
 typedef void (*pa_stream_notify_cb_t)(pa_stream *p, void *userdata);
@@ -399,7 +404,22 @@ int pa_stream_is_suspended(pa_stream *s);
  * not, and negative on error. \since 0.9.11 */
 int pa_stream_is_corked(pa_stream *s);
 
-/** Connect the stream to a sink */
+/** Connect the stream to a sink. It is strongly recommended to pass
+ * NULL in both dev and volume and not to set either
+ * PA_STREAM_START_MUTED nor PA_STREAM_START_UNMUTED -- unless these
+ * options are directly dependant on user input or configuration. If
+ * you follow this rule then the sound server will have the full
+ * flexibility to choose the device, volume and mute status
+ * automatically, based on server-side policies, heuristics and stored
+ * information from previous uses. Also the server may choose to
+ * reconfigure audio devices to make other sinks/sources or
+ * capabilities available to be able to accept the stream. Before
+ * 0.9.20 it was not defined whether the 'volume' parameter was
+ * interpreted relative to the sink's current volume or treated as
+ * absolute device volume. Since 0.9.20 it is an absolute volume when
+ * the sink is in flat volume mode, and relative otherwise, thus
+ * making sure the volume passed here has always the same semantics as
+ * the volume passed to pa_context_set_sink_input_volume(). */
 int pa_stream_connect_playback(
         pa_stream *s                  /**< The stream to connect to a sink */,
         const char *dev               /**< Name of the sink to connect to, or NULL for default */ ,
@@ -469,8 +489,8 @@ int pa_stream_cancel_write(
  * data is not copied. If NULL, the data is copied into an internal
  * buffer. The client may freely seek around in the output buffer. For
  * most applications passing 0 and PA_SEEK_RELATIVE as arguments for
- * offset and seek should be useful. Afte ther write call succeeded
- * the write index will be a the position after where this chunk of
+ * offset and seek should be useful. After the write call succeeded
+ * the write index will be at the position after where this chunk of
  * data has been written to.
  *
  * As an optimization for avoiding needless memory copies you may call
@@ -512,9 +532,10 @@ size_t pa_stream_writable_size(pa_stream *p);
 /** Return the number of bytes that may be read using pa_stream_peek()*/
 size_t pa_stream_readable_size(pa_stream *p);
 
-/** Drain a playback stream. Use this for notification when the buffer
- * is empty. Please note that only one drain operation per stream may
- * be issued at a time. */
+/** Drain a playback stream.  Use this for notification when the
+ * playback buffer is empty after playing all the audio in the buffer.
+ * Please note that only one drain operation per stream may be issued
+ * at a time. */
 pa_operation* pa_stream_drain(pa_stream *s, pa_stream_success_cb_t cb, void *userdata);
 
 /** Request a timing info structure update for a stream. Use
@@ -592,10 +613,10 @@ void pa_stream_set_buffer_attr_callback(pa_stream *p, pa_stream_notify_cb_t cb, 
  * of the stream it will be created in corked state. */
 pa_operation* pa_stream_cork(pa_stream *s, int b, pa_stream_success_cb_t cb, void *userdata);
 
-/** Flush the playback buffer of this stream. Most of the time you're
- * better off using the parameter delta of pa_stream_write() instead
- * of this function. Available on both playback and recording
- * streams. */
+/** Flush the playback buffer of this stream. This discards any audio
+ * in the buffer.  Most of the time you're better off using the parameter
+ * delta of pa_stream_write() instead of this function. Available on both
+ * playback and recording streams. */
 pa_operation* pa_stream_flush(pa_stream *s, pa_stream_success_cb_t cb, void *userdata);
 
 /** Reenable prebuffering as specified in the pa_buffer_attr
@@ -722,8 +743,9 @@ pa_operation *pa_stream_proplist_remove(pa_stream *s, const char *const keys[], 
  * 0.9.11 */
 int pa_stream_set_monitor_stream(pa_stream *s, uint32_t sink_input_idx);
 
-/** Return what has been set with pa_stream_set_monitor_stream()
- * ebfore. \since 0.9.11 */
+/** Return the sink input index previously set with
+ * pa_stream_set_monitor_stream().
+ * \since 0.9.11 */
 uint32_t pa_stream_get_monitor_stream(pa_stream *s);
 
 PA_C_DECL_END

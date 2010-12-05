@@ -120,9 +120,8 @@ typedef struct connection {
     pa_time_event *auth_timeout_event;
 } connection;
 
-PA_DECLARE_CLASS(connection);
+PA_DEFINE_PRIVATE_CLASS(connection, pa_msgobject);
 #define CONNECTION(o) (connection_cast(o))
-static PA_DEFINE_CHECK_TYPE(connection, pa_msgobject);
 
 struct pa_esound_protocol {
     PA_REFCNT_DECLARE;
@@ -390,6 +389,7 @@ static int esd_proto_stream_play(connection *c, esd_proto_t request, const void 
     size_t l;
     pa_sink *sink = NULL;
     pa_sink_input_new_data sdata;
+    pa_memchunk silence;
 
     connection_assert_ref(c);
     pa_assert(data);
@@ -430,12 +430,13 @@ static int esd_proto_stream_play(connection *c, esd_proto_t request, const void 
     sdata.sink = sink;
     pa_sink_input_new_data_set_sample_spec(&sdata, &ss);
 
-    pa_sink_input_new(&c->sink_input, c->protocol->core, &sdata, 0);
+    pa_sink_input_new(&c->sink_input, c->protocol->core, &sdata);
     pa_sink_input_new_data_done(&sdata);
 
     CHECK_VALIDITY(c->sink_input, "Failed to create sink input.");
 
     l = (size_t) ((double) pa_bytes_per_second(&ss)*PLAYBACK_BUFFER_SECONDS);
+    pa_sink_input_get_silence(c->sink_input, &silence);
     c->input_memblockq = pa_memblockq_new(
             0,
             l,
@@ -444,7 +445,8 @@ static int esd_proto_stream_play(connection *c, esd_proto_t request, const void 
             (size_t) -1,
             l/PLAYBACK_BUFFER_FRAGMENTS,
             0,
-            NULL);
+            &silence);
+    pa_memblock_unref(silence.memblock);
     pa_iochannel_socket_set_rcvbuf(c->io, l);
 
     c->sink_input->parent.process_msg = sink_input_process_msg;
@@ -460,7 +462,7 @@ static int esd_proto_stream_play(connection *c, esd_proto_t request, const void 
 
     c->protocol->n_player++;
 
-    pa_atomic_store(&c->playback.missing, (int) pa_memblockq_missing(c->input_memblockq));
+    pa_atomic_store(&c->playback.missing, (int) pa_memblockq_pop_missing(c->input_memblockq));
 
     pa_sink_input_put(c->sink_input);
 
@@ -526,7 +528,7 @@ static int esd_proto_stream_record(connection *c, esd_proto_t request, const voi
     sdata.source = source;
     pa_source_output_new_data_set_sample_spec(&sdata, &ss);
 
-    pa_source_output_new(&c->source_output, c->protocol->core, &sdata, 0);
+    pa_source_output_new(&c->source_output, c->protocol->core, &sdata);
     pa_source_output_new_data_done(&sdata);
 
     CHECK_VALIDITY(c->source_output, "Failed to create source output.");
@@ -772,7 +774,6 @@ static int esd_proto_stream_pan(connection *c, esd_proto_t request, const void *
 
     memcpy(&rvolume, data, sizeof(uint32_t));
     rvolume = PA_MAYBE_UINT32_SWAP(c->swap_byte_order, rvolume);
-    data = (const char*)data + sizeof(uint32_t);
 
     if ((conn = pa_idxset_get_by_index(c->protocol->connections, idx)) && conn->sink_input) {
         pa_cvolume volume;
@@ -810,7 +811,6 @@ static int esd_proto_sample_pan(connection *c, esd_proto_t request, const void *
 
     memcpy(&rvolume, data, sizeof(uint32_t));
     rvolume = PA_MAYBE_UINT32_SWAP(c->swap_byte_order, rvolume);
-    data = (const char*)data + sizeof(uint32_t);
 
     volume.values[0] = (lvolume*PA_VOLUME_NORM)/ESD_VOLUME_BASE;
     volume.values[1] = (rvolume*PA_VOLUME_NORM)/ESD_VOLUME_BASE;
@@ -1124,7 +1124,7 @@ static int do_read(connection *c) {
         ssize_t r;
         size_t l;
         void *p;
-        size_t space;
+        size_t space = 0;
 
         pa_assert(c->input_memblockq);
 

@@ -57,6 +57,8 @@ static pa_bool_t is_valid_char(char c) {
 pa_bool_t pa_namereg_is_valid_name(const char *name) {
     const char *c;
 
+    pa_assert(name);
+
     if (*name == 0)
         return FALSE;
 
@@ -70,6 +72,25 @@ pa_bool_t pa_namereg_is_valid_name(const char *name) {
     return TRUE;
 }
 
+pa_bool_t pa_namereg_is_valid_name_or_wildcard(const char *name, pa_namereg_type_t type) {
+
+    pa_assert(name);
+
+    if (pa_namereg_is_valid_name(name))
+        return TRUE;
+
+    if (type == PA_NAMEREG_SINK &&
+        pa_streq(name, "@DEFAULT_SINK@"))
+        return TRUE;
+
+    if (type == PA_NAMEREG_SOURCE &&
+        (pa_streq(name, "@DEFAULT_SOURCE@") ||
+         pa_streq(name, "@DEFAULT_MONITOR@")))
+        return TRUE;
+
+    return FALSE;
+}
+
 char* pa_namereg_make_valid_name(const char *name) {
     const char *a;
     char *b, *n;
@@ -77,7 +98,7 @@ char* pa_namereg_make_valid_name(const char *name) {
     if (*name == 0)
         return NULL;
 
-    n = pa_xmalloc(strlen(name)+1);
+    n = pa_xnew(char, strlen(name)+1);
 
     for (a = name, b = n; *a && (a-name < PA_NAME_MAX); a++, b++)
         *b = (char) (is_valid_char(*a) ? *a : '_');
@@ -149,6 +170,17 @@ const char *pa_namereg_register(pa_core *c, const char *name, pa_namereg_type_t 
 
     pa_assert_se(pa_hashmap_put(c->namereg, e->name, e) >= 0);
 
+    /* If a sink or source is registered and there was none registered
+     * before we inform the clients which then can ask for the default
+     * sink/source which is then assigned. We don't adjust the default
+     * sink/source here right away to give the module the chance to
+     * register more sinks/sources before we choose a new default
+     * sink/source. */
+
+    if ((!c->default_sink && type == PA_NAMEREG_SINK) ||
+        (!c->default_source && type == PA_NAMEREG_SOURCE))
+        pa_subscription_post(c, PA_SUBSCRIPTION_EVENT_SERVER|PA_SUBSCRIPTION_EVENT_CHANGE, PA_INVALID_INDEX);
+
     return e->name;
 }
 
@@ -191,7 +223,6 @@ void* pa_namereg_get(pa_core *c, const char *name, pa_namereg_type_t type) {
 
         if ((s = pa_namereg_get(c, NULL, PA_NAMEREG_SINK)))
             return s->monitor_source;
-
     }
 
     if (!name)
@@ -249,7 +280,7 @@ pa_source* pa_namereg_set_default_source(pa_core*c, pa_source *s) {
 }
 
 pa_sink *pa_namereg_get_default_sink(pa_core *c) {
-    pa_sink *s;
+    pa_sink *s, *best = NULL;
     uint32_t idx;
 
     pa_assert(c);
@@ -257,18 +288,19 @@ pa_sink *pa_namereg_get_default_sink(pa_core *c) {
     if (c->default_sink && PA_SINK_IS_LINKED(pa_sink_get_state(c->default_sink)))
         return c->default_sink;
 
-    /* FIXME: the selection here should be based priority values on
-     * the sinks */
-
     PA_IDXSET_FOREACH(s, c->sinks, idx)
         if (PA_SINK_IS_LINKED(pa_sink_get_state(s)))
-            return pa_namereg_set_default_sink(c, s);
+            if (!best || s->priority > best->priority)
+                best = s;
+
+    if (best)
+        return pa_namereg_set_default_sink(c, best);
 
     return NULL;
 }
 
 pa_source *pa_namereg_get_default_source(pa_core *c) {
-    pa_source *s;
+    pa_source *s, *best = NULL;
     uint32_t idx;
 
     pa_assert(c);
@@ -279,12 +311,26 @@ pa_source *pa_namereg_get_default_source(pa_core *c) {
     /* First, try to find one that isn't a monitor */
     PA_IDXSET_FOREACH(s, c->sources, idx)
         if (!s->monitor_of && PA_SOURCE_IS_LINKED(pa_source_get_state(s)))
-            return pa_namereg_set_default_source(c, s);
+            if (!best ||
+                s->priority > best->priority)
+                best = s;
+
+    if (best)
+        return pa_namereg_set_default_source(c, best);
 
     /* Then, fallback to a monitor */
     PA_IDXSET_FOREACH(s, c->sources, idx)
         if (PA_SOURCE_IS_LINKED(pa_source_get_state(s)))
-            return pa_namereg_set_default_source(c, s);
+            if (!best ||
+                s->priority > best->priority ||
+                (s->priority == best->priority &&
+                 s->monitor_of &&
+                 best->monitor_of &&
+                 s->monitor_of->priority > best->monitor_of->priority))
+                best = s;
+
+    if (best)
+        return pa_namereg_set_default_source(c, best);
 
     return NULL;
 }

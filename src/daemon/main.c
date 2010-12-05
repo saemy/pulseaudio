@@ -39,8 +39,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include <liboil/liboil.h>
-
 #ifdef HAVE_SYS_MMAN_H
 #include <sys/mman.h>
 #endif
@@ -95,6 +93,8 @@
 #ifdef HAVE_DBUS
 #include <pulsecore/dbus-shared.h>
 #endif
+#include <pulsecore/cpu-arm.h>
+#include <pulsecore/cpu-x86.h>
 
 #include "cmdline.h"
 #include "cpulimit.h"
@@ -259,9 +259,14 @@ static int change_user(void) {
     pa_set_env("HOME", PA_SYSTEM_RUNTIME_PATH);
 
     /* Relevant for pa_runtime_path() */
-    pa_set_env("PULSE_RUNTIME_PATH", PA_SYSTEM_RUNTIME_PATH);
-    pa_set_env("PULSE_CONFIG_PATH", PA_SYSTEM_CONFIG_PATH);
-    pa_set_env("PULSE_STATE_PATH", PA_SYSTEM_STATE_PATH);
+    if (!getenv("PULSE_RUNTIME_PATH"))
+        pa_set_env("PULSE_RUNTIME_PATH", PA_SYSTEM_RUNTIME_PATH);
+
+    if (!getenv("PULSE_CONFIG_PATH"))
+        pa_set_env("PULSE_CONFIG_PATH", PA_SYSTEM_CONFIG_PATH);
+
+    if (!getenv("PULSE_STATE_PATH"))
+        pa_set_env("PULSE_STATE_PATH", PA_SYSTEM_STATE_PATH);
 
     pa_log_info(_("Successfully dropped root privileges."));
 
@@ -411,23 +416,31 @@ int main(int argc, char *argv[]) {
 
     if (!getenv("LD_BIND_NOW")) {
         char *rp;
+        char *canonical_rp;
 
         /* We have to execute ourselves, because the libc caches the
          * value of $LD_BIND_NOW on initialization. */
 
         pa_set_env("LD_BIND_NOW", "1");
 
-        if ((rp = pa_readlink("/proc/self/exe"))) {
+        if ((canonical_rp = pa_realpath(PA_BINARY))) {
 
-            if (pa_streq(rp, PA_BINARY))
-                pa_assert_se(execv(rp, argv) == 0);
-            else
-                pa_log_warn("/proc/self/exe does not point to " PA_BINARY ", cannot self execute. Are you playing games?");
+            if ((rp = pa_readlink("/proc/self/exe"))) {
 
-            pa_xfree(rp);
+                if (pa_streq(rp, canonical_rp))
+                    pa_assert_se(execv(rp, argv) == 0);
+                else
+                    pa_log_warn("/proc/self/exe does not point to %s, cannot self execute. Are you playing games?", canonical_rp);
+
+                pa_xfree(rp);
+
+            } else
+                pa_log_warn("Couldn't read /proc/self/exe, cannot self execute. Running in a chroot()?");
+
+            pa_xfree(canonical_rp);
 
         } else
-            pa_log_warn("Couldn't read /proc/self/exe, cannot self execute. Running in a chroot()?");
+            pa_log_warn("Couldn't canonicalize binary path, cannot self execute.");
     }
 #endif
 
@@ -496,6 +509,12 @@ int main(int argc, char *argv[]) {
             goto finish;
 
         case PA_CMD_DUMP_CONF: {
+
+            if (d < argc) {
+                pa_log("Too many arguments.\n");
+                goto finish;
+            }
+
             s = pa_daemon_conf_dump(conf);
             fputs(s, stdout);
             pa_xfree(s);
@@ -505,6 +524,11 @@ int main(int argc, char *argv[]) {
 
         case PA_CMD_DUMP_RESAMPLE_METHODS: {
             int i;
+
+            if (d < argc) {
+                pa_log("Too many arguments.\n");
+                goto finish;
+            }
 
             for (i = 0; i < PA_RESAMPLER_MAX; i++)
                 if (pa_resample_method_supported(i))
@@ -520,12 +544,23 @@ int main(int argc, char *argv[]) {
             goto finish;
 
         case PA_CMD_VERSION :
+
+            if (d < argc) {
+                pa_log("Too many arguments.\n");
+                goto finish;
+            }
+
             printf(PACKAGE_NAME" "PACKAGE_VERSION"\n");
             retval = 0;
             goto finish;
 
         case PA_CMD_CHECK: {
             pid_t pid;
+
+            if (d < argc) {
+                pa_log("Too many arguments.\n");
+                goto finish;
+            }
 
             if (pa_pid_file_check_running(&pid, "pulseaudio") < 0)
                 pa_log_info(_("Daemon not running"));
@@ -539,6 +574,11 @@ int main(int argc, char *argv[]) {
         }
         case PA_CMD_KILL:
 
+            if (d < argc) {
+                pa_log("Too many arguments.\n");
+                goto finish;
+            }
+
             if (pa_pid_file_kill(SIGINT, NULL, "pulseaudio") < 0)
                 pa_log(_("Failed to kill daemon: %s"), pa_cstrerror(errno));
             else
@@ -548,6 +588,11 @@ int main(int argc, char *argv[]) {
 
         case PA_CMD_CLEANUP_SHM:
 
+            if (d < argc) {
+                pa_log("Too many arguments.\n");
+                goto finish;
+            }
+
             if (pa_shm_cleanup() >= 0)
                 retval = 0;
 
@@ -555,6 +600,11 @@ int main(int argc, char *argv[]) {
 
         default:
             pa_assert(conf->cmd == PA_CMD_DAEMON || conf->cmd == PA_CMD_START);
+    }
+
+    if (d < argc) {
+        pa_log("Too many arguments.\n");
+        goto finish;
     }
 
     if (getuid() == 0 && !conf->system_instance)
@@ -701,7 +751,7 @@ int main(int argc, char *argv[]) {
 #endif
     }
 
-    pa_set_env("PULSE_INTERNAL", "1");
+    pa_set_env_and_record("PULSE_INTERNAL", "1");
     pa_assert_se(chdir("/") == 0);
     umask(0022);
 
@@ -716,7 +766,7 @@ int main(int argc, char *argv[]) {
         if (change_user() < 0)
             goto finish;
 
-    pa_set_env("PULSE_SYSTEM", conf->system_instance ? "1" : "0");
+    pa_set_env_and_record("PULSE_SYSTEM", conf->system_instance ? "1" : "0");
 
     pa_log_info(_("This is PulseAudio %s"), PACKAGE_VERSION);
     pa_log_debug(_("Compilation host: %s"), CANONICAL_HOST);
@@ -737,6 +787,8 @@ int main(int argc, char *argv[]) {
 #endif
 
     pa_log_debug(_("Running in valgrind mode: %s"), pa_yes_no(pa_in_valgrind()));
+
+    pa_log_debug(_("Running in VM: %s"), pa_yes_no(pa_running_in_vm()));
 
 #ifdef __OPTIMIZE__
     pa_log_debug(_("Optimized build: yes"));
@@ -773,6 +825,8 @@ int main(int argc, char *argv[]) {
         goto finish;
     pa_log_info(_("Using state directory %s."), s);
     pa_xfree(s);
+
+    pa_log_info(_("Using modules directory %s."), conf->dl_search_path);
 
     pa_log_info(_("Running in system mode: %s"), pa_yes_no(pa_in_system_mode()));
 
@@ -821,6 +875,11 @@ int main(int argc, char *argv[]) {
 
     pa_memtrap_install();
 
+    if (!getenv("PULSE_NO_SIMD")) {
+        pa_cpu_init_x86();
+        pa_cpu_init_arm();
+    }
+
     pa_assert_se(mainloop = pa_mainloop_new());
 
     if (!(c = pa_core_new(pa_mainloop_get_api(mainloop), !conf->disable_shm, conf->shm_size))) {
@@ -860,8 +919,6 @@ int main(int argc, char *argv[]) {
     win32_timer = pa_mainloop_get_api(mainloop)->rtclock_time_new(pa_mainloop_get_api(mainloop), pa_gettimeofday(&win32_tv), message_cb, NULL);
 #endif
 
-    oil_init();
-
     if (!conf->no_cpu_limit)
         pa_assert_se(pa_cpu_limit_init(pa_mainloop_get_api(mainloop)) == 0);
 
@@ -895,6 +952,10 @@ int main(int argc, char *argv[]) {
         goto finish;
     }
 
+#ifdef HAVE_DBUS
+    dbus = register_dbus(c);
+#endif
+
 #ifdef HAVE_FORK
     if (daemon_pipe[1] >= 0) {
         int ok = 0;
@@ -902,10 +963,6 @@ int main(int argc, char *argv[]) {
         pa_close(daemon_pipe[1]);
         daemon_pipe[1] = -1;
     }
-#endif
-
-#ifdef HAVE_DBUS
-    dbus = register_dbus(c);
 #endif
 
     pa_log_info(_("Daemon startup complete."));
@@ -959,6 +1016,9 @@ finish:
 
     if (valid_pid_file)
         pa_pid_file_remove();
+
+    /* This has no real purpose except making things valgrind-clean */
+    pa_unset_env_recorded();
 
 #ifdef OS_IS_WIN32
     WSACleanup();

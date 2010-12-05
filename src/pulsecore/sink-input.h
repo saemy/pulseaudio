@@ -37,7 +37,7 @@ typedef struct pa_sink_input pa_sink_input;
 #include <pulsecore/core.h>
 
 typedef enum pa_sink_input_state {
-    PA_SINK_INPUT_INIT,         /*< The stream is not active yet, because pa_sink_put() has not been called yet */
+    PA_SINK_INPUT_INIT,         /*< The stream is not active yet, because pa_sink_input_put() has not been called yet */
     PA_SINK_INPUT_DRAINED,      /*< The stream stopped playing because there was no data to play */
     PA_SINK_INPUT_RUNNING,      /*< The stream is alive and kicking */
     PA_SINK_INPUT_CORKED,       /*< The stream was corked on user request */
@@ -99,6 +99,8 @@ struct pa_sink_input {
     pa_cvolume real_ratio;         /* The ratio of the stream's volume to the sink's real volume */
     pa_cvolume volume_factor;      /* An internally used volume factor that can be used by modules to apply effects and suchlike without having that visible to the outside */
     pa_cvolume soft_volume;        /* The internal software volume we apply to all PCM data while it passes through. Usually calculated as real_ratio * volume_factor */
+
+    pa_cvolume volume_factor_sink; /* A second volume factor in format of the sink this stream is connected to */
 
     pa_bool_t muted:1;
 
@@ -192,8 +194,16 @@ struct pa_sink_input {
     pa_bool_t (*may_move_to) (pa_sink_input *i, pa_sink *s); /* may be NULL */
 
     /* If non-NULL this function is used to dispatch asynchronous
-     * control events. */
-    void (*send_event)(pa_sink_input *i, const char *event, pa_proplist* data);
+     * control events. Called from main context. */
+    void (*send_event)(pa_sink_input *i, const char *event, pa_proplist* data); /* may be NULL */
+
+    /* If non-NULL this function is called whenever the sink input
+     * volume changes. Called from main context */
+    void (*volume_changed)(pa_sink_input *i); /* may be NULL */
+
+    /* If non-NULL this function is called whenever the sink input
+     * mute status changes. Called from main context */
+    void (*mute_changed)(pa_sink_input *i); /* may be NULL */
 
     struct {
         pa_sink_input_state_t state;
@@ -204,7 +214,7 @@ struct pa_sink_input {
 
         pa_bool_t attached:1; /* True only between ->attach() and ->detach() calls */
 
-        /* 0: rewrite nothing, (size_t) -1: rewrite everything, otherwise how many bytes to rewrite */
+        /* rewrite_nbytes: 0: rewrite nothing, (size_t) -1: rewrite everything, otherwise how many bytes to rewrite */
         pa_bool_t rewrite_flush:1, dont_rewind_render:1;
         size_t rewrite_nbytes;
         uint64_t underrun_for, playing_for;
@@ -227,7 +237,7 @@ struct pa_sink_input {
     void *userdata;
 };
 
-PA_DECLARE_CLASS(pa_sink_input);
+PA_DECLARE_PUBLIC_CLASS(pa_sink_input);
 #define PA_SINK_INPUT(o) pa_sink_input_cast(o)
 
 enum {
@@ -248,6 +258,8 @@ typedef struct pa_sink_input_send_event_hook_data {
 } pa_sink_input_send_event_hook_data;
 
 typedef struct pa_sink_input_new_data {
+    pa_sink_input_flags_t flags;
+
     pa_proplist *proplist;
 
     const char *driver;
@@ -263,13 +275,13 @@ typedef struct pa_sink_input_new_data {
     pa_sample_spec sample_spec;
     pa_channel_map channel_map;
 
-    pa_cvolume volume, volume_factor;
+    pa_cvolume volume, volume_factor, volume_factor_sink;
     pa_bool_t muted:1;
 
     pa_bool_t sample_spec_is_set:1;
     pa_bool_t channel_map_is_set:1;
 
-    pa_bool_t volume_is_set:1, volume_factor_is_set:1;
+    pa_bool_t volume_is_set:1, volume_factor_is_set:1, volume_factor_sink_is_set:1;
     pa_bool_t muted_is_set:1;
 
     pa_bool_t volume_is_absolute:1;
@@ -282,6 +294,7 @@ void pa_sink_input_new_data_set_sample_spec(pa_sink_input_new_data *data, const 
 void pa_sink_input_new_data_set_channel_map(pa_sink_input_new_data *data, const pa_channel_map *map);
 void pa_sink_input_new_data_set_volume(pa_sink_input_new_data *data, const pa_cvolume *volume);
 void pa_sink_input_new_data_apply_volume_factor(pa_sink_input_new_data *data, const pa_cvolume *volume_factor);
+void pa_sink_input_new_data_apply_volume_factor_sink(pa_sink_input_new_data *data, const pa_cvolume *volume_factor);
 void pa_sink_input_new_data_set_muted(pa_sink_input_new_data *data, pa_bool_t mute);
 void pa_sink_input_new_data_done(pa_sink_input_new_data *data);
 
@@ -290,8 +303,7 @@ void pa_sink_input_new_data_done(pa_sink_input_new_data *data);
 int pa_sink_input_new(
         pa_sink_input **i,
         pa_core *core,
-        pa_sink_input_new_data *data,
-        pa_sink_input_flags_t flags);
+        pa_sink_input_new_data *data);
 
 void pa_sink_input_put(pa_sink_input *i);
 void pa_sink_input_unlink(pa_sink_input* i);

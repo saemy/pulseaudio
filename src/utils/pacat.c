@@ -45,6 +45,7 @@
 #include <pulsecore/core-util.h>
 #include <pulsecore/log.h>
 #include <pulsecore/sndfile-util.h>
+#include <pulsecore/core-util.h>
 
 #define TIME_EVENT_USEC 50000
 
@@ -86,6 +87,7 @@ static sf_count_t (*writef_function)(SNDFILE *_sndfile, const void *ptr, sf_coun
 static pa_stream_flags_t flags = 0;
 
 static size_t latency = 0, process_time = 0;
+static int32_t latency_msec = 0, process_time_msec = 0;
 
 static pa_bool_t raw = TRUE;
 static int file_format = -1;
@@ -193,28 +195,41 @@ static void stream_write_callback(pa_stream *s, size_t length, void *userdata) {
 
         pa_assert(sndfile);
 
-        if (pa_stream_begin_write(s, &data, &length) < 0) {
-            pa_log(_("pa_stream_begin_write() failed: %s"), pa_strerror(pa_context_errno(context)));
-            quit(1);
-            return;
+        for (;;) {
+            size_t data_length = length;
+
+            if (pa_stream_begin_write(s, &data, &data_length) < 0) {
+                pa_log(_("pa_stream_begin_write() failed: %s"), pa_strerror(pa_context_errno(context)));
+                quit(1);
+                return;
+            }
+
+            if (readf_function) {
+                size_t k = pa_frame_size(&sample_spec);
+
+                if ((bytes = readf_function(sndfile, data, (sf_count_t) (data_length/k))) > 0)
+                    bytes *= (sf_count_t) k;
+
+            } else
+                bytes = sf_read_raw(sndfile, data, (sf_count_t) data_length);
+
+            if (bytes > 0)
+                pa_stream_write(s, data, (size_t) bytes, NULL, 0, PA_SEEK_RELATIVE);
+            else
+                pa_stream_cancel_write(s);
+
+            /* EOF? */
+            if (bytes < (sf_count_t) data_length) {
+                start_drain();
+                break;
+            }
+
+            /* Request fulfilled */
+            if ((size_t) bytes >= length)
+                break;
+
+            length -= bytes;
         }
-
-        if (readf_function) {
-            size_t k = pa_frame_size(&sample_spec);
-
-            if ((bytes = readf_function(sndfile, data, (sf_count_t) (length/k))) > 0)
-                bytes *= (sf_count_t) k;
-
-        } else
-            bytes = sf_read_raw(sndfile, data, (sf_count_t) length);
-
-        if (bytes > 0)
-            pa_stream_write(s, data, (size_t) bytes, NULL, 0, PA_SEEK_RELATIVE);
-        else
-            pa_stream_cancel_write(s);
-
-        if (bytes < (sf_count_t) length)
-            start_drain();
     }
 }
 
@@ -406,7 +421,6 @@ static void context_state_callback(pa_context *c, void *userdata) {
             break;
 
         case PA_CONTEXT_READY: {
-            int r;
             pa_buffer_attr buffer_attr;
 
             pa_assert(c);
@@ -431,25 +445,35 @@ static void context_state_callback(pa_context *c, void *userdata) {
             pa_stream_set_event_callback(stream, stream_event_callback, NULL);
             pa_stream_set_buffer_attr_callback(stream, stream_buffer_attr_callback, NULL);
 
-            if (latency > 0) {
-                memset(&buffer_attr, 0, sizeof(buffer_attr));
-                buffer_attr.tlength = (uint32_t) latency;
-                buffer_attr.minreq = (uint32_t) process_time;
-                buffer_attr.maxlength = (uint32_t) -1;
-                buffer_attr.prebuf = (uint32_t) -1;
-                buffer_attr.fragsize = (uint32_t) latency;
+            pa_zero(buffer_attr);
+            buffer_attr.maxlength = (uint32_t) -1;
+            buffer_attr.prebuf = (uint32_t) -1;
+
+            if (latency_msec > 0) {
+                buffer_attr.fragsize = buffer_attr.tlength = pa_usec_to_bytes(latency_msec * PA_USEC_PER_MSEC, &sample_spec);
                 flags |= PA_STREAM_ADJUST_LATENCY;
-            }
+            } else if (latency > 0) {
+                buffer_attr.fragsize = buffer_attr.tlength = (uint32_t) latency;
+                flags |= PA_STREAM_ADJUST_LATENCY;
+            } else
+                buffer_attr.fragsize = buffer_attr.tlength = (uint32_t) -1;
+
+            if (process_time_msec > 0) {
+                buffer_attr.minreq = pa_usec_to_bytes(process_time_msec * PA_USEC_PER_MSEC, &sample_spec);
+            } else if (process_time > 0)
+                buffer_attr.minreq = (uint32_t) process_time;
+            else
+                buffer_attr.minreq = (uint32_t) -1;
 
             if (mode == PLAYBACK) {
                 pa_cvolume cv;
-                if ((r = pa_stream_connect_playback(stream, device, latency > 0 ? &buffer_attr : NULL, flags, volume_is_set ? pa_cvolume_set(&cv, sample_spec.channels, volume) : NULL, NULL)) < 0) {
+                if (pa_stream_connect_playback(stream, device, &buffer_attr, flags, volume_is_set ? pa_cvolume_set(&cv, sample_spec.channels, volume) : NULL, NULL) < 0) {
                     pa_log(_("pa_stream_connect_playback() failed: %s"), pa_strerror(pa_context_errno(c)));
                     goto fail;
                 }
 
             } else {
-                if ((r = pa_stream_connect_record(stream, device, latency > 0 ? &buffer_attr : NULL, flags)) < 0) {
+                if (pa_stream_connect_record(stream, device, &buffer_attr, flags) < 0) {
                     pa_log(_("pa_stream_connect_record() failed: %s"), pa_strerror(pa_context_errno(c)));
                     goto fail;
                 }
@@ -574,9 +598,10 @@ static void stream_update_timing_callback(pa_stream *s, int success, void *userd
         return;
     }
 
-    pa_log(_("Time: %0.3f sec; Latency: %0.0f usec.  \r"),
+    fprintf(stderr, _("Time: %0.3f sec; Latency: %0.0f usec."),
             (float) usec / 1000000,
             (float) l * (negative?-1.0f:1.0f));
+    fprintf(stderr, "        \r");
 }
 
 /* Someone requested that the latency is shown */
@@ -630,9 +655,11 @@ static void help(const char *argv0) {
              "      --no-remap                        Map channels by index instead of name.\n"
              "      --latency=BYTES                   Request the specified latency in bytes.\n"
              "      --process-time=BYTES              Request the specified process time per request in bytes.\n"
+             "      --latency-msec=MSEC               Request the specified latency in msec.\n"
+             "      --process-time-msec=MSEC          Request the specified process time per request in msec.\n"
              "      --property=PROPERTY=VALUE         Set the specified property to the specified value.\n"
              "      --raw                             Record/play raw PCM data.\n"
-             "      --file-format=FFORMAT             Record/play formatted PCM data.\n"
+             "      --file-format[=FFORMAT]           Record/play formatted PCM data.\n"
              "      --list-file-formats               List available file formats.\n")
            , argv0);
 }
@@ -655,7 +682,9 @@ enum {
     ARG_RAW,
     ARG_PROPERTY,
     ARG_FILE_FORMAT,
-    ARG_LIST_FILE_FORMATS
+    ARG_LIST_FILE_FORMATS,
+    ARG_LATENCY_MSEC,
+    ARG_PROCESS_TIME_MSEC
 };
 
 int main(int argc, char *argv[]) {
@@ -691,6 +720,8 @@ int main(int argc, char *argv[]) {
         {"raw",          0, NULL, ARG_RAW},
         {"file-format",  2, NULL, ARG_FILE_FORMAT},
         {"list-file-formats", 0, NULL, ARG_LIST_FILE_FORMATS},
+        {"latency-msec", 1, NULL, ARG_LATENCY_MSEC},
+        {"process-time-msec", 1, NULL, ARG_PROCESS_TIME_MSEC},
         {NULL,           0, NULL, 0}
     };
 
@@ -768,7 +799,6 @@ int main(int argc, char *argv[]) {
 
             case ARG_STREAM_NAME: {
                 char *t;
-                t = pa_locale_to_utf8(optarg);
 
                 if (!(t = pa_locale_to_utf8(optarg)) ||
                     pa_proplist_sets(proplist, PA_PROP_MEDIA_NAME, t) < 0) {
@@ -846,6 +876,20 @@ int main(int argc, char *argv[]) {
 
             case ARG_PROCESS_TIME:
                 if (((process_time = (size_t) atoi(optarg))) <= 0) {
+                    pa_log(_("Invalid process time specification '%s'"), optarg);
+                    goto quit;
+                }
+                break;
+
+            case ARG_LATENCY_MSEC:
+                if (((latency_msec = (int32_t) atoi(optarg))) <= 0) {
+                    pa_log(_("Invalid latency specification '%s'"), optarg);
+                    goto quit;
+                }
+                break;
+
+            case ARG_PROCESS_TIME_MSEC:
+                if (((process_time_msec = (int32_t) atoi(optarg))) <= 0) {
                     pa_log(_("Invalid process time specification '%s'"), optarg);
                     goto quit;
                 }

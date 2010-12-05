@@ -80,6 +80,12 @@ static inline size_t PA_PAGE_ALIGN(size_t l) {
 
 #define PA_ELEMENTSOF(x) (sizeof(x)/sizeof((x)[0]))
 
+#if defined(__GNUC__)
+    #define PA_DECLARE_ALIGNED(n,t,v)      t v __attribute__ ((aligned (n)))
+#else
+    #define PA_DECLARE_ALIGNED(n,t,v)      t v
+#endif
+
 /* The users of PA_MIN and PA_MAX, PA_CLAMP, PA_ROUND_UP should be
  * aware that these macros on non-GCC executed code with side effects
  * twice. It is thus considered misuse to use code with side effects
@@ -155,6 +161,17 @@ static inline size_t PA_PAGE_ALIGN(size_t l) {
         })
 #else
 #define PA_ROUND_DOWN(a, b) (((a) / (b)) * (b))
+#endif
+
+#ifdef __GNUC__
+#define PA_CLIP_SUB(a, b)                       \
+    __extension__ ({                            \
+            typeof(a) _a = (a);                 \
+            typeof(b) _b = (b);                 \
+            _a > _b ? _a - _b : 0;              \
+        })
+#else
+#define PA_CLIP_SUB(a, b) ((a) > (b) ? (a) - (b) : 0)
 #endif
 
 /* This type is not intended to be used in exported APIs! Use classic "int" there! */
@@ -286,6 +303,18 @@ typedef int pa_bool_t;
 
 #define pa_memzero(x,l) (memset((x), 0, (l)))
 #define pa_zero(x) (pa_memzero(&(x), sizeof(x)))
+
+#define PA_INT_TYPE_SIGNED(type) (!!((type) 0 > (type) -1))
+
+#define PA_INT_TYPE_MAX(type)                                          \
+    ((type) (PA_INT_TYPE_SIGNED(type)                                  \
+             ? ~(~(type) 0 << (8*sizeof(type)-1))                      \
+             : (type) -1))
+
+#define PA_INT_TYPE_MIN(type)                                          \
+    ((type) (PA_INT_TYPE_SIGNED(type)                                  \
+             ? (~(type) 0 << (8*sizeof(type)-1))                       \
+             : (type) 0))
 
 /* We include this at the very last place */
 #include <pulsecore/log.h>

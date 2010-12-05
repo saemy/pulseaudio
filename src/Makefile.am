@@ -31,7 +31,6 @@ pulselibexecdir=$(libexecdir)/pulse
 xdgautostartdir=$(sysconfdir)/xdg/autostart
 alsaprofilesetsdir=$(datadir)/pulseaudio/alsa-mixer/profile-sets
 alsapathsdir=$(datadir)/pulseaudio/alsa-mixer/paths
-udevrulesdir=/lib/udev/rules.d
 dbuspolicydir=$(sysconfdir)/dbus-1/system.d
 
 ###################################
@@ -74,6 +73,7 @@ AM_CFLAGS = \
 	$(LIBSAMPLERATE_CFLAGS) \
 	$(LIBSNDFILE_CFLAGS) \
 	$(LIBSPEEX_CFLAGS) \
+	-DPA_BUILDDIR=\"$(abs_builddir)\" \
 	-DPA_DLSEARCHPATH=\"$(modlibexecdir)\" \
 	-DPA_DEFAULT_CONFIG_DIR=\"$(PA_DEFAULT_CONFIG_DIR)\" \
 	-DPA_BINARY=\"$(PA_BINARY)\" \
@@ -83,8 +83,8 @@ AM_CFLAGS = \
 	-DAO_REQUIRE_CAS \
 	-DPULSE_LOCALEDIR=\"$(pulselocaledir)\" \
 	-DPA_MACHINE_ID=\"$(localstatedir)/lib/dbus/machine-id\" \
-	-DPA_ALSA_PATHS_DIR=\"$(alsapathsdir)\" \
-	-DPA_ALSA_PROFILE_SETS_DIR=\"$(alsaprofilesetsdir)\"
+        -DPA_ALSA_PATHS_DIR=\"$(alsapathsdir)\" \
+        -DPA_ALSA_PROFILE_SETS_DIR=\"$(alsaprofilesetsdir)\"
 
 AM_LIBADD = $(PTHREAD_LIBS) $(INTLLIBS)
 AM_LDADD = $(PTHREAD_LIBS) $(INTLLIBS)
@@ -106,6 +106,35 @@ MODULE_LDFLAGS = -module -disable-static -avoid-version $(LDFLAGS_NOUNDEFINED)
 #          Extra files            #
 ###################################
 
+ALSA_PROFILES = \
+		modules/alsa/mixer/profile-sets/default.conf \
+		modules/alsa/mixer/profile-sets/maudio-fasttrack-pro.conf \
+		modules/alsa/mixer/profile-sets/native-instruments-audio4dj.conf \
+		modules/alsa/mixer/profile-sets/native-instruments-audio8dj.conf \
+		modules/alsa/mixer/profile-sets/native-instruments-traktorkontrol-s4.conf \
+		modules/alsa/mixer/profile-sets/native-instruments-korecontroller.conf
+
+ALSA_PATHS = \
+		modules/alsa/mixer/paths/analog-input-aux.conf \
+		modules/alsa/mixer/paths/analog-input.conf \
+		modules/alsa/mixer/paths/analog-input.conf.common \
+		modules/alsa/mixer/paths/analog-input-fm.conf \
+		modules/alsa/mixer/paths/analog-input-internal-mic.conf \
+		modules/alsa/mixer/paths/analog-input-linein.conf \
+		modules/alsa/mixer/paths/analog-input-mic.conf \
+		modules/alsa/mixer/paths/analog-input-mic.conf.common \
+		modules/alsa/mixer/paths/analog-input-mic-line.conf \
+		modules/alsa/mixer/paths/analog-input-tvtuner.conf \
+		modules/alsa/mixer/paths/analog-input-video.conf \
+		modules/alsa/mixer/paths/analog-output.conf \
+		modules/alsa/mixer/paths/analog-output-speaker.conf \
+		modules/alsa/mixer/paths/analog-output.conf.common \
+		modules/alsa/mixer/paths/analog-output-desktop-speaker.conf \
+		modules/alsa/mixer/paths/analog-output-headphones.conf \
+		modules/alsa/mixer/paths/analog-output-headphones-2.conf \
+		modules/alsa/mixer/paths/analog-output-lfe-on-mono.conf \
+		modules/alsa/mixer/paths/analog-output-mono.conf
+
 EXTRA_DIST = \
 		pulse/client.conf.in \
 		pulse/version.h.in \
@@ -116,30 +145,16 @@ EXTRA_DIST = \
 		depmod.py \
 		daemon/esdcompat.in \
 		daemon/start-pulseaudio-x11.in \
+		daemon/start-pulseaudio-kde.in \
 		utils/padsp \
 		modules/module-defs.h.m4 \
 		daemon/pulseaudio.desktop.in \
+		daemon/pulseaudio-kde.desktop.in \
 		map-file \
 		daemon/pulseaudio-system.conf \
-		modules/alsa/mixer/profile-sets/default.conf \
-		modules/alsa/mixer/profile-sets/native-instruments-audio4dj.conf \
-		modules/alsa/mixer/profile-sets/native-instruments-audio8dj.conf \
 		modules/alsa/mixer/profile-sets/90-pulseaudio.rules \
-		modules/alsa/mixer/paths/analog-input-aux.conf \
-		modules/alsa/mixer/paths/analog-input.conf \
-		modules/alsa/mixer/paths/analog-input.conf.common \
-		modules/alsa/mixer/paths/analog-input-fm.conf \
-		modules/alsa/mixer/paths/analog-input-linein.conf \
-		modules/alsa/mixer/paths/analog-input-mic.conf \
-		modules/alsa/mixer/paths/analog-input-mic.conf.common \
-		modules/alsa/mixer/paths/analog-input-mic-line.conf \
-		modules/alsa/mixer/paths/analog-input-tvtuner.conf \
-		modules/alsa/mixer/paths/analog-input-video.conf \
-		modules/alsa/mixer/paths/analog-output.conf \
-		modules/alsa/mixer/paths/analog-output.conf.common \
-		modules/alsa/mixer/paths/analog-output-headphones.conf \
-		modules/alsa/mixer/paths/analog-output-lfe-on-mono.conf \
-		modules/alsa/mixer/paths/analog-output-mono.conf
+		${ALSA_PROFILES} \
+		${ALSA_PATHS}
 
 pulseconf_DATA = \
 		default.pa \
@@ -152,7 +167,8 @@ dbuspolicy_DATA = \
 
 if HAVE_X11
 xdgautostart_in_files = \
-		daemon/pulseaudio.desktop.in
+		daemon/pulseaudio.desktop.in \
+		daemon/pulseaudio-kde.desktop.in
 endif
 xdgautostart_DATA = $(xdgautostart_in_files:.desktop.in=.desktop)
 @INTLTOOL_DESKTOP_RULE@
@@ -176,8 +192,8 @@ pulseaudio_SOURCES = \
 		daemon/ltdl-bind-now.c daemon/ltdl-bind-now.h \
 		daemon/main.c
 
-pulseaudio_CFLAGS = $(AM_CFLAGS) $(LIBOIL_CFLAGS) $(LIBSAMPLERATE_CFLAGS) $(LIBSPEEX_CFLAGS) $(LIBSNDFILE_CFLAGS) $(CAP_CFLAGS) $(LIBOIL_CFLAGS) $(DBUS_CFLAGS)
-pulseaudio_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la libpulse.la $(LIBLTDL) $(LIBSAMPLERATE_LIBS) $(LIBSPEEX_LIBS) $(LIBSNDFILE_LIBS) $(CAP_LIBS) $(LIBOIL_LIBS) $(DBUS_LIBS)
+pulseaudio_CFLAGS = $(AM_CFLAGS) $(LIBSAMPLERATE_CFLAGS) $(LIBSPEEX_CFLAGS) $(LIBSNDFILE_CFLAGS) $(CAP_CFLAGS) $(DBUS_CFLAGS)
+pulseaudio_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la libpulse.la $(LIBLTDL) $(LIBSAMPLERATE_LIBS) $(LIBSPEEX_LIBS) $(LIBSNDFILE_LIBS) $(CAP_LIBS) $(DBUS_LIBS)
 # This is needed because automake doesn't properly expand the foreach below
 pulseaudio_DEPENDENCIES = libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la libpulse.la $(PREOPEN_LIBS)
 
@@ -214,7 +230,7 @@ if HAVE_AVAHI
 bin_PROGRAMS += pabrowse
 endif
 
-bin_SCRIPTS = esdcompat start-pulseaudio-x11
+bin_SCRIPTS = esdcompat start-pulseaudio-x11 start-pulseaudio-kde
 
 pacat_SOURCES = utils/pacat.c
 pacat_LDADD = $(AM_LDADD) libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la $(LIBSNDFILE_LIBS)
@@ -279,7 +295,8 @@ TESTS = \
 		proplist-test \
 		lock-autospawn-test \
 		prioq-test \
-		sigbus-test
+		sigbus-test \
+		usergroup-test
 
 TESTS_BINARIES = \
 		mainloop-test \
@@ -317,7 +334,8 @@ TESTS_BINARIES = \
 		stripnul \
 		lock-autospawn-test \
 		prioq-test \
-		sigbus-test
+		sigbus-test \
+		usergroup-test
 
 if HAVE_SIGXCPU
 #TESTS += \
@@ -493,18 +511,18 @@ sig2str_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 
 resampler_test_SOURCES = tests/resampler-test.c
 resampler_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
-resampler_test_CFLAGS = $(AM_CFLAGS) $(LIBOIL_CFLAGS)
-resampler_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS) $(LIBOIL_LIBS)
+resampler_test_CFLAGS = $(AM_CFLAGS)
+resampler_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 
 mix_test_SOURCES = tests/mix-test.c
 mix_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
-mix_test_CFLAGS = $(AM_CFLAGS) $(LIBOIL_CFLAGS)
-mix_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS) $(LIBOIL_LIBS)
+mix_test_CFLAGS = $(AM_CFLAGS)
+mix_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 
 remix_test_SOURCES = tests/remix-test.c
 remix_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
-remix_test_CFLAGS = $(AM_CFLAGS) $(LIBOIL_CFLAGS)
-remix_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS) $(LIBOIL_LIBS)
+remix_test_CFLAGS = $(AM_CFLAGS)
+remix_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 
 smoother_test_SOURCES = tests/smoother-test.c
 smoother_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
@@ -513,38 +531,38 @@ smoother_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 
 envelope_test_SOURCES = tests/envelope-test.c
 envelope_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
-envelope_test_CFLAGS = $(AM_CFLAGS) $(LIBOIL_CFLAGS)
-envelope_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS) $(LIBOIL_LIBS)
+envelope_test_CFLAGS = $(AM_CFLAGS)
+envelope_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 
 proplist_test_SOURCES = tests/proplist-test.c
 proplist_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
-proplist_test_CFLAGS = $(AM_CFLAGS) $(LIBOIL_CFLAGS)
-proplist_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS) $(LIBOIL_LIBS)
+proplist_test_CFLAGS = $(AM_CFLAGS)
+proplist_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 
 rtstutter_SOURCES = tests/rtstutter.c
 rtstutter_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
-rtstutter_CFLAGS = $(AM_CFLAGS) $(LIBOIL_CFLAGS)
-rtstutter_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS) $(LIBOIL_LIBS)
+rtstutter_CFLAGS = $(AM_CFLAGS)
+rtstutter_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 
 stripnul_SOURCES = tests/stripnul.c
 stripnul_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
-stripnul_CFLAGS = $(AM_CFLAGS) $(LIBOIL_CFLAGS)
-stripnul_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS) $(LIBOIL_LIBS)
+stripnul_CFLAGS = $(AM_CFLAGS)
+stripnul_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 
 lock_autospawn_test_SOURCES = tests/lock-autospawn-test.c
 lock_autospawn_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
-lock_autospawn_test_CFLAGS = $(AM_CFLAGS) $(LIBOIL_CFLAGS)
-lock_autospawn_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS) $(LIBOIL_LIBS)
+lock_autospawn_test_CFLAGS = $(AM_CFLAGS)
+lock_autospawn_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 
 prioq_test_SOURCES = tests/prioq-test.c
 prioq_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
-prioq_test_CFLAGS = $(AM_CFLAGS) $(LIBOIL_CFLAGS)
-prioq_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS) $(LIBOIL_LIBS)
+prioq_test_CFLAGS = $(AM_CFLAGS)
+prioq_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 
 sigbus_test_SOURCES = tests/sigbus-test.c
 sigbus_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
-sigbus_test_CFLAGS = $(AM_CFLAGS) $(LIBOIL_CFLAGS)
-sigbus_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS) $(LIBOIL_LIBS)
+sigbus_test_CFLAGS = $(AM_CFLAGS)
+sigbus_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 
 gtk_test_SOURCES = tests/gtk-test.c
 gtk_test_LDADD = $(AM_LDADD) libpulse.la libpulse-mainloop-glib.la
@@ -555,6 +573,11 @@ alsa_time_test_SOURCES = tests/alsa-time-test.c
 alsa_time_test_LDADD = $(AM_LDADD)
 alsa_time_test_CFLAGS = $(AM_CFLAGS) $(ASOUNDLIB_CFLAGS)
 alsa_time_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS) $(ASOUNDLIB_LIBS)
+
+usergroup_test_SOURCES = tests/usergroup-test.c
+usergroup_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la
+usergroup_test_CFLAGS = $(AM_CFLAGS)
+usergroup_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 
 ###################################
 #         Common library          #
@@ -620,6 +643,7 @@ libpulsecommon_@PA_MAJORMINORMICRO@_la_SOURCES = \
 		pulsecore/tagstruct.c pulsecore/tagstruct.h \
 		pulsecore/time-smoother.c pulsecore/time-smoother.h \
 		pulsecore/tokenizer.c pulsecore/tokenizer.h \
+		pulsecore/usergroup.c pulsecore/usergroup.h \
 		pulsecore/sndfile-util.c pulsecore/sndfile-util.h \
 		pulsecore/winsock.h
 
@@ -680,6 +704,7 @@ pulseinclude_HEADERS = \
 		pulse/context.h \
 		pulse/def.h \
 		pulse/error.h \
+		pulse/ext-device-manager.h \
 		pulse/ext-stream-restore.h \
 		pulse/gccmacro.h \
 		pulse/introspect.h \
@@ -730,6 +755,7 @@ libpulse_la_SOURCES = \
 		pulse/context.c pulse/context.h \
 		pulse/def.h \
 		pulse/error.c pulse/error.h \
+		pulse/ext-device-manager.c pulse/ext-device-manager.h \
 		pulse/ext-stream-restore.c pulse/ext-stream-restore.h \
 		pulse/gccmacro.h \
 		pulse/internal.h \
@@ -822,11 +848,18 @@ libpulsecore_@PA_MAJORMINORMICRO@_la_SOURCES = \
 		pulsecore/object.c pulsecore/object.h \
 		pulsecore/play-memblockq.c pulsecore/play-memblockq.h \
 		pulsecore/play-memchunk.c pulsecore/play-memchunk.h \
+		pulsecore/remap.c pulsecore/remap.h \
+		pulsecore/remap_mmx.c pulsecore/remap_sse.c \
 		pulsecore/resampler.c pulsecore/resampler.h \
 		pulsecore/rtpoll.c pulsecore/rtpoll.h \
 		pulsecore/sample-util.c pulsecore/sample-util.h \
+		pulsecore/cpu-arm.c pulsecore/cpu-arm.h \
+		pulsecore/cpu-x86.c pulsecore/cpu-x86.h \
+		pulsecore/svolume_c.c pulsecore/svolume_arm.c \
+		pulsecore/svolume_mmx.c pulsecore/svolume_sse.c \
 		pulsecore/sconv-s16be.c pulsecore/sconv-s16be.h \
 		pulsecore/sconv-s16le.c pulsecore/sconv-s16le.h \
+		pulsecore/sconv_sse.c \
 		pulsecore/sconv.c pulsecore/sconv.h \
 		pulsecore/shared.c pulsecore/shared.h \
 		pulsecore/shm.c pulsecore/shm.h \
@@ -842,9 +875,9 @@ libpulsecore_@PA_MAJORMINORMICRO@_la_SOURCES = \
 		pulsecore/time-smoother.c pulsecore/time-smoother.h \
 		pulsecore/database.h
 
-libpulsecore_@PA_MAJORMINORMICRO@_la_CFLAGS = $(AM_CFLAGS) $(LIBSAMPLERATE_CFLAGS) $(LIBSPEEX_CFLAGS) $(WINSOCK_CFLAGS) $(LIBOIL_CFLAGS)
+libpulsecore_@PA_MAJORMINORMICRO@_la_CFLAGS = $(AM_CFLAGS) $(LIBSAMPLERATE_CFLAGS) $(LIBSPEEX_CFLAGS) $(WINSOCK_CFLAGS)
 libpulsecore_@PA_MAJORMINORMICRO@_la_LDFLAGS = -avoid-version
-libpulsecore_@PA_MAJORMINORMICRO@_la_LIBADD = $(AM_LIBADD) $(LIBLTDL) $(LIBSAMPLERATE_LIBS) $(LIBSPEEX_LIBS) $(WINSOCK_LIBS) $(LIBOIL_LIBS) $(LTLIBICONV) libpulsecommon-@PA_MAJORMINORMICRO@.la libpulse.la libpulsecore-foreign.la
+libpulsecore_@PA_MAJORMINORMICRO@_la_LIBADD = $(AM_LIBADD) $(LIBLTDL) $(LIBSAMPLERATE_LIBS) $(LIBSPEEX_LIBS) $(WINSOCK_LIBS) $(LTLIBICONV) libpulsecommon-@PA_MAJORMINORMICRO@.la libpulse.la libpulsecore-foreign.la
 
 if HAVE_X11
 libpulsecore_@PA_MAJORMINORMICRO@_la_SOURCES += pulsecore/x11wrap.c pulsecore/x11wrap.h
@@ -974,6 +1007,7 @@ modlibexec_LTLIBRARIES += \
 		module-sine-source.la \
 		module-detect.la \
 		module-volume-restore.la \
+		module-device-manager.la \
 		module-device-restore.la \
 		module-stream-restore.la \
 		module-card-restore.la \
@@ -995,8 +1029,8 @@ modlibexec_LTLIBRARIES += \
 		module-tunnel-source.la \
 		module-position-event-sounds.la \
 		module-augment-properties.la \
-		module-cork-music-on-phone.la
-
+		module-cork-music-on-phone.la \
+		module-loopback.la
 
 # See comment at librtp.la above
 if !OS_IS_WIN32
@@ -1054,32 +1088,14 @@ modlibexec_LTLIBRARIES += \
 		module-alsa-source.la \
 		module-alsa-card.la
 
-alsaprofilesets_DATA = \
-		modules/alsa/mixer/profile-sets/default.conf \
-		modules/alsa/mixer/profile-sets/native-instruments-audio4dj.conf \
-		modules/alsa/mixer/profile-sets/native-instruments-audio8dj.conf
+alsaprofilesets_DATA = ${ALSA_PROFILES}
 
 if HAVE_UDEV
 udevrules_DATA = \
 		modules/alsa/mixer/profile-sets/90-pulseaudio.rules
 endif
 
-alsapaths_DATA = \
-		modules/alsa/mixer/paths/analog-input-aux.conf \
-		modules/alsa/mixer/paths/analog-input.conf \
-		modules/alsa/mixer/paths/analog-input.conf.common \
-		modules/alsa/mixer/paths/analog-input-fm.conf \
-		modules/alsa/mixer/paths/analog-input-linein.conf \
-		modules/alsa/mixer/paths/analog-input-mic.conf \
-		modules/alsa/mixer/paths/analog-input-mic.conf.common \
-		modules/alsa/mixer/paths/analog-input-mic-line.conf \
-		modules/alsa/mixer/paths/analog-input-tvtuner.conf \
-		modules/alsa/mixer/paths/analog-input-video.conf \
-		modules/alsa/mixer/paths/analog-output.conf \
-		modules/alsa/mixer/paths/analog-output.conf.common \
-		modules/alsa/mixer/paths/analog-output-headphones.conf \
-		modules/alsa/mixer/paths/analog-output-lfe-on-mono.conf \
-		modules/alsa/mixer/paths/analog-output-mono.conf
+alsapaths_DATA = ${ALSA_PATHS}
 
 endif
 
@@ -1215,6 +1231,7 @@ SYMDEF_FILES = \
 		modules/jack/module-jack-sink-symdef.h \
 		modules/jack/module-jack-source-symdef.h \
 		modules/module-volume-restore-symdef.h \
+		modules/module-device-manager-symdef.h \
 		modules/module-device-restore-symdef.h \
 		modules/module-stream-restore-symdef.h \
 		modules/module-card-restore-symdef.h \
@@ -1234,7 +1251,8 @@ SYMDEF_FILES = \
 		modules/module-position-event-sounds-symdef.h \
 		modules/module-augment-properties-symdef.h \
 		modules/module-cork-music-on-phone-symdef.h \
-		modules/module-console-kit-symdef.h
+		modules/module-console-kit-symdef.h \
+		modules/module-loopback-symdef.h
 
 EXTRA_DIST += $(SYMDEF_FILES)
 BUILT_SOURCES += $(SYMDEF_FILES)
@@ -1375,6 +1393,10 @@ module_tunnel_sink_la_LIBADD = $(AM_LIBADD) libpulsecore-@PA_MAJORMINORMICRO@.la
 module_tunnel_source_la_SOURCES = modules/module-tunnel.c
 module_tunnel_source_la_LDFLAGS = $(MODULE_LDFLAGS)
 module_tunnel_source_la_LIBADD = $(AM_LIBADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la libpulse.la
+
+module_loopback_la_SOURCES = modules/module-loopback.c
+module_loopback_la_LDFLAGS = $(MODULE_LDFLAGS)
+module_loopback_la_LIBADD = $(AM_LIBADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la libpulse.la
 
 # X11
 
@@ -1517,6 +1539,12 @@ module_cork_music_on_phone_la_SOURCES = modules/module-cork-music-on-phone.c
 module_cork_music_on_phone_la_LDFLAGS = $(MODULE_LDFLAGS)
 module_cork_music_on_phone_la_LIBADD = $(AM_LIBADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la libpulse.la
 module_cork_music_on_phone_la_CFLAGS = $(AM_CFLAGS)
+
+# Device description restore module
+module_device_manager_la_SOURCES = modules/module-device-manager.c
+module_device_manager_la_LDFLAGS = $(MODULE_LDFLAGS)
+module_device_manager_la_LIBADD = $(AM_LIBADD) libprotocol-native.la libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la libpulse.la
+module_device_manager_la_CFLAGS = $(AM_CFLAGS)
 
 # Device volume/muted restore module
 module_device_restore_la_SOURCES = modules/module-device-restore.c
@@ -1680,7 +1708,7 @@ module_rygel_media_server_la_CFLAGS = $(AM_CFLAGS) $(DBUS_CFLAGS)
 #        Some minor stuff         #
 ###################################
 
-CLEANFILES = esdcompat client.conf default.pa system.pa daemon.conf start-pulseaudio-x11 daemon/pulseaudio.desktop
+CLEANFILES = esdcompat client.conf default.pa system.pa daemon.conf start-pulseaudio-x11 start-pulseaudio-kde daemon/pulseaudio.desktop daemon/pulseaudio-kde.desktop
 
 esdcompat: daemon/esdcompat.in Makefile
 	sed -e 's,@PACKAGE_VERSION\@,$(PACKAGE_VERSION),g' \
@@ -1692,6 +1720,11 @@ start-pulseaudio-x11: daemon/start-pulseaudio-x11.in Makefile
 	sed -e 's,@PA_BINARY\@,$(PA_BINARY),g' \
 		-e 's,@PACTL_BINARY\@,$(bindir)/pactl,g' < $< > $@
 	chmod +x start-pulseaudio-x11
+
+start-pulseaudio-kde: daemon/start-pulseaudio-kde.in Makefile
+	sed -e 's,@PA_BINARY\@,$(PA_BINARY),g' \
+		-e 's,@PACTL_BINARY\@,$(bindir)/pactl,g' < $< > $@
+	chmod +x start-pulseaudio-kde
 
 client.conf: pulse/client.conf.in Makefile
 	sed -e 's,@PA_BINARY\@,$(PA_BINARY),g' < $< > $@
@@ -1717,7 +1750,7 @@ daemon.conf: daemon/daemon.conf.in Makefile
 		-e 's,@PA_DEFAULT_CONFIG_FILE\@,$(DEFAULT_CONFIG_DIR),g' < $< > $@
 
 install-exec-hook:
-	chown root $(DESTDIR)$(bindir)/pulseaudio ; true
+	-chown root $(DESTDIR)$(pulselibexecdir)/proximity-helper
 	-chmod u+s $(DESTDIR)$(pulselibexecdir)/proximity-helper
 	ln -sf pacat $(DESTDIR)$(bindir)/parec
 	ln -sf pacat $(DESTDIR)$(bindir)/pamon
