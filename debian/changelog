@@ -1,3 +1,9 @@
+pulseaudio (1:0.9.22-0ubuntu3) natty; urgency=low
+
+  * debian/pulseaudio-module-jack.install: Ship the jackdbus-detect module
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Wed, 08 Dec 2010 17:57:18 +1100
+
 pulseaudio (1:0.9.22-0ubuntu2) natty; urgency=low
 
   * 0101-update-stable-queue.patch, update to latest stable queue:
