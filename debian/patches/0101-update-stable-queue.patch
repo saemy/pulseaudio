@@ -1,0 +1,914 @@
+--- pulseaudio-0.9.22/ChangeLog	2010-11-26 12:12:33.000000000 +1100
++++ pulseaudio-0.9.22-6-g205ca/ChangeLog	2010-12-08 16:00:06.194540002 +1100
+@@ -1,4 +1,20 @@
+ 
++2010-11-30	David Henningsson
++	205cad6: jack: Add module-jackdbus-detect
++
++2010-12-04	Colin Guthrie
++	e9deb97: build-sys: Include the .version file in the distribution tarball
++	a1f1255: build-sys: Fix make distcheck failure due to udev rules fixed install path
++
++2010-12-03	Colin Guthrie
++	675cc0a: build-sys: Replace dummy Makefiles with proper Makefile.am's
++
++2010-12-02	Arun Raghavan
++	bd769fa: rescue-streams: Fix segfault in some conditions
++
++2010-11-26	Arun Raghavan
++	f6574c8: volume: Add explicit checks for ARMv6 instructions
++
+ 2010-11-26	Lennart Poettering
+ 	70f69ac: build-sys: simplify things for building on fedora
+ 	1af3253: i18n: update POTFILES.in
+
+--- pulseaudio-0.9.22/git-version-gen	2010-11-26 11:45:22.000000000 +1100
++++ pulseaudio-0.9.22-6-g205ca/git-version-gen	2010-12-08 14:47:31.344540000 +1100
+@@ -67,6 +67,7 @@
+ #	echo $(VERSION) > $@-t && mv $@-t $@
+ # dist-hook:
+ #	echo $(VERSION) > $(distdir)/.tarball-version
++#	echo $(VERSION) > $(distdir)/.version
+ 
+ case $# in
+     1) ;;
+--- pulseaudio-0.9.22/Makefile.am	2010-11-26 12:08:00.000000000 +1100
++++ pulseaudio-0.9.22-6-g205ca/Makefile.am	2010-12-08 14:47:31.344540000 +1100
+@@ -77,6 +77,7 @@
+ 		( git-changelog.perl || echo "git-changelog.perl failed." ) > ${distdir}/ChangeLog 2>&1 ; \
+ 	fi
+ 	echo $(VERSION) > $(distdir)/.tarball-version
++	echo $(VERSION) > $(distdir)/.version
+ 
+ .PHONY: homepage distcleancheck doxygen
+ 
+@@ -87,3 +88,5 @@
+ 
+ DISTCLEANFILES = \
+         po/.intltool-merge-cache
++
++DISTCHECK_CONFIGURE_FLAGS = --with-udev-rules-dir="$$dc_install_base/lib/udev/rules.d"
+--- pulseaudio-0.9.22/po/ChangeLog	2010-11-26 11:58:57.000000000 +1100
++++ pulseaudio-0.9.22-6-g205ca/po/ChangeLog	2010-12-08 15:34:14.584540002 +1100
+@@ -1,12 +1,4 @@
+-2010-11-26  gettextize  <bug-gnu-gettext@gnu.org>
+-
+-	* Makefile.in.in: Upgrade to gettext-0.18.1.
+-
+-2010-11-26  gettextize  <bug-gnu-gettext@gnu.org>
+-
+-	* Makefile.in.in: Upgrade to gettext-0.18.1.
+-
+-2010-11-26  gettextize  <bug-gnu-gettext@gnu.org>
++2010-12-08  gettextize  <bug-gnu-gettext@gnu.org>
+ 
+ 	* Makefile.in.in: New file, from gettext-0.18.1.
+ 	* boldquot.sed: New file, from gettext-0.18.1.
+--- pulseaudio-0.9.22/src/daemon/Makefile.am	1970-01-01 10:00:00.000000000 +1000
++++ pulseaudio-0.9.22-6-g205ca/src/daemon/Makefile.am	2010-12-08 14:47:31.344540000 +1100
+@@ -0,0 +1,20 @@
++# This file is part of PulseAudio.
++#
++# Copyright 2010 Colin Guthrie
++#
++# PulseAudio is free software; you can redistribute it and/or modify
++# it under the terms of the GNU Lesser General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or
++# (at your option) any later version.
++#
++# PulseAudio is distributed in the hope that it will be useful, but
++# WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++# General Public License for more details.
++#
++# You should have received a copy of the GNU Lesser General Public License
++# along with PulseAudio; if not, write to the Free Software
++# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
++# USA.
++
++# This Automake file is intentionally blank.
+--- pulseaudio-0.9.22/src/Makefile.am	2010-11-26 11:45:43.000000000 +1100
++++ pulseaudio-0.9.22-6-g205ca/src/Makefile.am	2010-12-08 14:47:31.344540000 +1100
+@@ -19,6 +19,7 @@
+ # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+ # USA.
+ 
++SUBDIRS = pulsecore pulse daemon modules utils tests
+ 
+ ###################################
+ #       Extra directories         #
+@@ -1124,6 +1125,12 @@
+ modlibexec_LTLIBRARIES += \
+ 		module-jack-sink.la \
+ 		module-jack-source.la
++
++if HAVE_DBUS
++modlibexec_LTLIBRARIES += \
++		module-jackdbus-detect.la
++endif
++
+ endif
+ 
+ if HAVE_GCONF
+@@ -1228,6 +1235,7 @@
+ 		modules/module-detect-symdef.h \
+ 		modules/rtp/module-rtp-send-symdef.h \
+ 		modules/rtp/module-rtp-recv-symdef.h \
++		modules/jack/module-jackdbus-detect-symdef.h \
+ 		modules/jack/module-jack-sink-symdef.h \
+ 		modules/jack/module-jack-source-symdef.h \
+ 		modules/module-volume-restore-symdef.h \
+@@ -1607,6 +1615,11 @@
+ 
+ # JACK
+ 
++module_jackdbus_detect_la_SOURCES = modules/jack/module-jackdbus-detect.c
++module_jackdbus_detect_la_LDFLAGS = $(MODULE_LDFLAGS)
++module_jackdbus_detect_la_LIBADD = $(AM_LIBADD) $(DBUS_LIBS) libpulsecore-@PA_MAJORMINORMICRO@.la $(JACK_LIBS) libpulsecommon-@PA_MAJORMINORMICRO@.la libpulse.la
++module_jackdbus_detect_la_CFLAGS = $(AM_CFLAGS) $(DBUS_CFLAGS) $(JACK_CFLAGS)
++
+ module_jack_sink_la_SOURCES = modules/jack/module-jack-sink.c
+ module_jack_sink_la_LDFLAGS = $(MODULE_LDFLAGS)
+ module_jack_sink_la_LIBADD = $(AM_LIBADD) libpulsecore-@PA_MAJORMINORMICRO@.la $(JACK_LIBS) libpulsecommon-@PA_MAJORMINORMICRO@.la libpulse.la
+--- pulseaudio-0.9.22/src/modules/alsa/Makefile.am	1970-01-01 10:00:00.000000000 +1000
++++ pulseaudio-0.9.22-6-g205ca/src/modules/alsa/Makefile.am	2010-12-08 14:47:31.344540000 +1100
+@@ -0,0 +1,20 @@
++# This file is part of PulseAudio.
++#
++# Copyright 2010 Colin Guthrie
++#
++# PulseAudio is free software; you can redistribute it and/or modify
++# it under the terms of the GNU Lesser General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or
++# (at your option) any later version.
++#
++# PulseAudio is distributed in the hope that it will be useful, but
++# WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++# General Public License for more details.
++#
++# You should have received a copy of the GNU Lesser General Public License
++# along with PulseAudio; if not, write to the Free Software
++# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
++# USA.
++
++SUBDIRS = mixer
+--- pulseaudio-0.9.22/src/modules/alsa/mixer/Makefile.am	1970-01-01 10:00:00.000000000 +1000
++++ pulseaudio-0.9.22-6-g205ca/src/modules/alsa/mixer/Makefile.am	2010-12-08 14:47:31.344540000 +1100
+@@ -0,0 +1,20 @@
++# This file is part of PulseAudio.
++#
++# Copyright 2010 Colin Guthrie
++#
++# PulseAudio is free software; you can redistribute it and/or modify
++# it under the terms of the GNU Lesser General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or
++# (at your option) any later version.
++#
++# PulseAudio is distributed in the hope that it will be useful, but
++# WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++# General Public License for more details.
++#
++# You should have received a copy of the GNU Lesser General Public License
++# along with PulseAudio; if not, write to the Free Software
++# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
++# USA.
++
++SUBDIRS = paths profile-sets
+--- pulseaudio-0.9.22/src/modules/alsa/mixer/paths/Makefile.am	1970-01-01 10:00:00.000000000 +1000
++++ pulseaudio-0.9.22-6-g205ca/src/modules/alsa/mixer/paths/Makefile.am	2010-12-08 14:47:31.344540000 +1100
+@@ -0,0 +1,20 @@
++# This file is part of PulseAudio.
++#
++# Copyright 2010 Colin Guthrie
++#
++# PulseAudio is free software; you can redistribute it and/or modify
++# it under the terms of the GNU Lesser General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or
++# (at your option) any later version.
++#
++# PulseAudio is distributed in the hope that it will be useful, but
++# WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++# General Public License for more details.
++#
++# You should have received a copy of the GNU Lesser General Public License
++# along with PulseAudio; if not, write to the Free Software
++# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
++# USA.
++
++# This Automake file is intentionally blank.
+--- pulseaudio-0.9.22/src/modules/alsa/mixer/profile-sets/Makefile.am	1970-01-01 10:00:00.000000000 +1000
++++ pulseaudio-0.9.22-6-g205ca/src/modules/alsa/mixer/profile-sets/Makefile.am	2010-12-08 14:47:31.344540000 +1100
+@@ -0,0 +1,20 @@
++# This file is part of PulseAudio.
++#
++# Copyright 2010 Colin Guthrie
++#
++# PulseAudio is free software; you can redistribute it and/or modify
++# it under the terms of the GNU Lesser General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or
++# (at your option) any later version.
++#
++# PulseAudio is distributed in the hope that it will be useful, but
++# WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++# General Public License for more details.
++#
++# You should have received a copy of the GNU Lesser General Public License
++# along with PulseAudio; if not, write to the Free Software
++# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
++# USA.
++
++# This Automake file is intentionally blank.
+--- pulseaudio-0.9.22/src/modules/bluetooth/Makefile.am	1970-01-01 10:00:00.000000000 +1000
++++ pulseaudio-0.9.22-6-g205ca/src/modules/bluetooth/Makefile.am	2010-12-08 14:47:31.344540000 +1100
+@@ -0,0 +1,20 @@
++# This file is part of PulseAudio.
++#
++# Copyright 2010 Colin Guthrie
++#
++# PulseAudio is free software; you can redistribute it and/or modify
++# it under the terms of the GNU Lesser General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or
++# (at your option) any later version.
++#
++# PulseAudio is distributed in the hope that it will be useful, but
++# WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++# General Public License for more details.
++#
++# You should have received a copy of the GNU Lesser General Public License
++# along with PulseAudio; if not, write to the Free Software
++# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
++# USA.
++
++# This Automake file is intentionally blank.
+--- pulseaudio-0.9.22/src/modules/gconf/Makefile.am	1970-01-01 10:00:00.000000000 +1000
++++ pulseaudio-0.9.22-6-g205ca/src/modules/gconf/Makefile.am	2010-12-08 14:47:31.354540000 +1100
+@@ -0,0 +1,20 @@
++# This file is part of PulseAudio.
++#
++# Copyright 2010 Colin Guthrie
++#
++# PulseAudio is free software; you can redistribute it and/or modify
++# it under the terms of the GNU Lesser General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or
++# (at your option) any later version.
++#
++# PulseAudio is distributed in the hope that it will be useful, but
++# WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++# General Public License for more details.
++#
++# You should have received a copy of the GNU Lesser General Public License
++# along with PulseAudio; if not, write to the Free Software
++# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
++# USA.
++
++# This Automake file is intentionally blank.
+--- pulseaudio-0.9.22/src/modules/jack/Makefile.am	1970-01-01 10:00:00.000000000 +1000
++++ pulseaudio-0.9.22-6-g205ca/src/modules/jack/Makefile.am	2010-12-08 14:47:31.354540000 +1100
+@@ -0,0 +1,20 @@
++# This file is part of PulseAudio.
++#
++# Copyright 2010 Colin Guthrie
++#
++# PulseAudio is free software; you can redistribute it and/or modify
++# it under the terms of the GNU Lesser General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or
++# (at your option) any later version.
++#
++# PulseAudio is distributed in the hope that it will be useful, but
++# WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++# General Public License for more details.
++#
++# You should have received a copy of the GNU Lesser General Public License
++# along with PulseAudio; if not, write to the Free Software
++# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
++# USA.
++
++# This Automake file is intentionally blank.
+--- pulseaudio-0.9.22/src/modules/jack/module-jackdbus-detect.c	1970-01-01 10:00:00.000000000 +1000
++++ pulseaudio-0.9.22-6-g205ca/src/modules/jack/module-jackdbus-detect.c	2010-12-08 14:47:31.354540000 +1100
+@@ -0,0 +1,304 @@
++/***
++  This file is part of PulseAudio.
++
++  Written by David Henningsson <david.henningsson@canonical.com>
++  Copyright 2010 Canonical Ltd.
++
++  Some code taken from other parts of PulseAudio, these are
++  Copyright 2006-2009 Lennart Poettering
++
++  PulseAudio is free software; you can redistribute it and/or modify
++  it under the terms of the GNU Lesser General Public License as published
++  by the Free Software Foundation; either version 2.1 of the License,
++  or (at your option) any later version.
++
++  PulseAudio is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with PulseAudio; if not, write to the Free Software
++  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
++  USA.
++***/
++
++#ifdef HAVE_CONFIG_H
++#include <config.h>
++#endif
++
++#include <pulsecore/log.h>
++#include <pulsecore/modargs.h>
++#include <pulsecore/core-util.h>
++#include <pulsecore/dbus-shared.h>
++
++#include "module-jackdbus-detect-symdef.h"
++
++PA_MODULE_AUTHOR("David Henningsson");
++PA_MODULE_DESCRIPTION("Adds JACK sink/source ports when JACK is started");
++PA_MODULE_LOAD_ONCE(TRUE);
++PA_MODULE_VERSION(PACKAGE_VERSION);
++PA_MODULE_USAGE("connect=<connect ports?>");
++
++#define JACK_SERVICE_NAME "org.jackaudio.service"
++#define JACK_INTERFACE_NAME "org.jackaudio.JackControl"
++#define JACK_INTERFACE_PATH "/org/jackaudio/Controller"
++
++#define SERVICE_FILTER				\
++	"type='signal',"			\
++	"sender='" DBUS_SERVICE_DBUS "',"	\
++	"interface='" DBUS_INTERFACE_DBUS "',"	\
++	"member='NameOwnerChanged',"		\
++	"arg0='" JACK_SERVICE_NAME "'"
++
++#define RUNNING_FILTER(_a)			\
++	"type='signal',"			\
++	"sender='" JACK_SERVICE_NAME "',"	\
++	"interface='" JACK_INTERFACE_NAME "',"	\
++	"member='" _a "'"
++
++static const char* const valid_modargs[] = {
++    "connect",
++    NULL
++};
++
++#define JACK_SS_SINK 0
++#define JACK_SS_SOURCE 1
++#define JACK_SS_COUNT 2
++
++static const char* const modnames[JACK_SS_COUNT] = {
++    "module-jack-sink",
++    "module-jack-source"
++};
++
++
++struct userdata {
++    pa_module *module;
++    pa_core *core;
++    pa_dbus_connection *connection;
++    pa_bool_t filter_added, match_added;
++    pa_bool_t is_service_started;
++    pa_bool_t autoconnect_ports;
++    /* Using index here protects us from module unloading without us knowing */
++    int jack_module_index[JACK_SS_COUNT];
++};
++
++
++static void ensure_ports_stopped(struct userdata* u)
++{
++    int i;
++    pa_assert(u);
++
++    for (i = 0; i < JACK_SS_COUNT; i++)
++        if (u->jack_module_index[i]) {
++            pa_module_unload_request_by_index(u->core, u->jack_module_index[i], TRUE);
++            u->jack_module_index[i] = 0;
++            pa_log_info("Stopped %s.", modnames[i]);
++        }
++}
++
++static void ensure_ports_started(struct userdata* u)
++{
++    int i;
++    pa_assert(u);
++
++    for (i = 0; i < JACK_SS_COUNT; i++)
++        if (!u->jack_module_index[i]) {
++            char* args;
++            pa_module* m;
++            args = pa_sprintf_malloc("connect=%s", pa_yes_no(u->autoconnect_ports));
++            m = pa_module_load(u->core, modnames[i], args);
++            pa_xfree(args);
++
++            if (m) {
++                pa_log_info("Successfully started %s.", modnames[i]);
++                u->jack_module_index[i] = m->index;
++            }
++            else
++                pa_log_info("Failed to start %s.", modnames[i]);
++        }
++}
++
++
++static pa_bool_t check_service_started(struct userdata* u)
++{
++    DBusError error;
++    DBusMessage *m = NULL, *reply = NULL;
++    pa_bool_t new_status = FALSE;
++    dbus_bool_t call_result;
++    pa_assert(u);
++
++    dbus_error_init(&error);
++
++    /* Just a safety check; it isn't such a big deal if the name disappears just after the call. */
++    if (!dbus_bus_name_has_owner(pa_dbus_connection_get(u->connection),
++            JACK_SERVICE_NAME, &error)) {
++        pa_log_debug("jackdbus isn't running.");
++        goto finish;
++    }
++
++    if (!(m = dbus_message_new_method_call(JACK_SERVICE_NAME, JACK_INTERFACE_PATH, JACK_INTERFACE_NAME, "IsStarted"))) {
++        pa_log("Failed to allocate IsStarted() method call.");
++        goto finish;
++    }
++
++    if (!(reply = dbus_connection_send_with_reply_and_block(pa_dbus_connection_get(u->connection), m, -1, &error))) {
++        pa_log("IsStarted() call failed: %s: %s", error.name, error.message);
++        goto finish;
++    }
++
++    if (!dbus_message_get_args(reply, &error, DBUS_TYPE_BOOLEAN, &call_result, DBUS_TYPE_INVALID)) {
++        pa_log("IsStarted() call return failed: %s: %s", error.name, error.message);
++        goto finish;
++    }
++
++    new_status = call_result;
++
++finish:
++    if (m)
++        dbus_message_unref(m);
++    if (reply)
++        dbus_message_unref(reply);
++
++    dbus_error_free(&error);
++    if (new_status)
++        ensure_ports_started(u);
++    else
++        ensure_ports_stopped(u);
++    u->is_service_started = new_status;
++    return new_status;
++}
++
++static DBusHandlerResult dbus_filter_handler(DBusConnection *c,	DBusMessage *s,	void *userdata)
++{
++    struct userdata *u = NULL;
++    DBusError error;
++
++    pa_assert(userdata);
++    u = ((pa_module*) userdata)->userdata;
++    pa_assert(u);
++
++    dbus_error_init(&error);
++
++    if (dbus_message_is_signal(s, DBUS_INTERFACE_DBUS, "NameOwnerChanged")) {
++        const char *name, *old, *new;
++        if (!dbus_message_get_args(
++			    s,
++			    &error,
++			    DBUS_TYPE_STRING, &name,
++			    DBUS_TYPE_STRING, &old,
++			    DBUS_TYPE_STRING, &new,
++			    DBUS_TYPE_INVALID))
++            goto finish;
++        if (strcmp(name, JACK_SERVICE_NAME))
++            goto finish;
++
++        ensure_ports_stopped(u);
++        check_service_started(u);
++    }
++
++    else if (dbus_message_is_signal(s, JACK_INTERFACE_NAME, "ServerStarted")) {
++        ensure_ports_stopped(u);
++        check_service_started(u);
++    }
++
++    else if (dbus_message_is_signal(s, JACK_INTERFACE_NAME, "ServerStopped")) {
++        ensure_ports_stopped(u);
++    }
++
++finish:
++    dbus_error_free(&error);
++    return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
++}
++
++int pa__init(pa_module *m)
++{
++    DBusError error;
++    pa_dbus_connection *connection = NULL;
++    struct userdata *u = NULL;
++    pa_modargs *ma;
++
++    pa_assert(m);
++
++    dbus_error_init(&error);
++
++    if (!(ma = pa_modargs_new(m->argument, valid_modargs))) {
++        pa_log("Failed to parse module arguments");
++        goto fail;
++    }
++
++    m->userdata = u = pa_xnew0(struct userdata, 1);
++    u->core = m->core;
++    u->module = m;
++    u->autoconnect_ports = TRUE;
++
++    if (pa_modargs_get_value_boolean(ma, "connect", &u->autoconnect_ports) < 0) {
++        pa_log("Failed to parse connect= argument.");
++        goto fail;
++    }
++
++    if (!(connection = pa_dbus_bus_get(m->core, DBUS_BUS_SESSION, &error)) || dbus_error_is_set(&error)) {
++
++        if (connection)
++            pa_dbus_connection_unref(connection);
++
++        pa_log_error("Unable to contact D-Bus session bus: %s: %s", error.name, error.message);
++        goto fail;
++    }
++    u->connection = connection;
++
++    if (!dbus_connection_add_filter(pa_dbus_connection_get(connection), dbus_filter_handler, m, NULL)) {
++        pa_log_error("Unable to add D-Bus filter");
++        goto fail;
++    }
++    u->filter_added = 1;
++
++    if (pa_dbus_add_matches(
++                pa_dbus_connection_get(connection), &error, SERVICE_FILTER,
++                RUNNING_FILTER("ServerStarted"), RUNNING_FILTER("ServerStopped"), NULL) < 0) {
++        pa_log_error("Unable to subscribe to signals: %s: %s", error.name, error.message);
++        goto fail;
++    }
++    u->match_added = 1;
++
++    check_service_started(u);
++
++    return 0;
++
++fail:
++    if (ma)
++        pa_modargs_free(ma);
++
++    dbus_error_free(&error);
++    pa__done(m);
++
++    return -1;
++}
++
++void pa__done(pa_module *m)
++{
++    struct userdata *u;
++
++    pa_assert(m);
++
++    if (!(u = m->userdata))
++        return;
++
++    ensure_ports_stopped(u);
++
++    if (u->match_added) {
++        pa_dbus_remove_matches(
++                pa_dbus_connection_get(u->connection), SERVICE_FILTER,
++                RUNNING_FILTER("ServerStarted"), RUNNING_FILTER("ServerStopped"), NULL);
++    }
++
++    if (u->filter_added) {
++        dbus_connection_remove_filter(pa_dbus_connection_get(u->connection), dbus_filter_handler, m);
++    }
++
++    if (u->connection) {
++        pa_dbus_connection_unref(u->connection);
++    }
++
++    pa_xfree(u);
++}
+--- pulseaudio-0.9.22/src/modules/jack/module-jackdbus-detect-symdef.h	1970-01-01 10:00:00.000000000 +1000
++++ pulseaudio-0.9.22-6-g205ca/src/modules/jack/module-jackdbus-detect-symdef.h	2010-12-08 15:34:40.144540002 +1100
+@@ -0,0 +1,29 @@
++#ifndef foomodulejackdbusdetectsymdeffoo
++#define foomodulejackdbusdetectsymdeffoo
++
++#include <pulsecore/core.h>
++#include <pulsecore/module.h>
++#include <pulsecore/macro.h>
++
++#define pa__init module_jackdbus_detect_LTX_pa__init
++#define pa__done module_jackdbus_detect_LTX_pa__done
++#define pa__get_author module_jackdbus_detect_LTX_pa__get_author
++#define pa__get_description module_jackdbus_detect_LTX_pa__get_description
++#define pa__get_usage module_jackdbus_detect_LTX_pa__get_usage
++#define pa__get_version module_jackdbus_detect_LTX_pa__get_version
++#define pa__get_deprecated module_jackdbus_detect_LTX_pa__get_deprecated
++#define pa__load_once module_jackdbus_detect_LTX_pa__load_once
++#define pa__get_n_used module_jackdbus_detect_LTX_pa__get_n_used
++
++int pa__init(pa_module*m);
++void pa__done(pa_module*m);
++int pa__get_n_used(pa_module*m);
++
++const char* pa__get_author(void);
++const char* pa__get_description(void);
++const char* pa__get_usage(void);
++const char* pa__get_version(void);
++const char* pa__get_deprecated(void);
++pa_bool_t pa__load_once(void);
++
++#endif
+--- pulseaudio-0.9.22/src/modules/Makefile.am	1970-01-01 10:00:00.000000000 +1000
++++ pulseaudio-0.9.22-6-g205ca/src/modules/Makefile.am	2010-12-08 14:47:31.344540000 +1100
+@@ -0,0 +1,20 @@
++# This file is part of PulseAudio.
++#
++# Copyright 2010 Colin Guthrie
++#
++# PulseAudio is free software; you can redistribute it and/or modify
++# it under the terms of the GNU Lesser General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or
++# (at your option) any later version.
++#
++# PulseAudio is distributed in the hope that it will be useful, but
++# WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++# General Public License for more details.
++#
++# You should have received a copy of the GNU Lesser General Public License
++# along with PulseAudio; if not, write to the Free Software
++# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
++# USA.
++
++SUBDIRS = alsa bluetooth gconf jack oss raop rtp x11
+--- pulseaudio-0.9.22/src/modules/module-rescue-streams.c	2010-11-26 11:45:23.000000000 +1100
++++ pulseaudio-0.9.22-6-g205ca/src/modules/module-rescue-streams.c	2010-12-08 14:47:31.354540000 +1100
+@@ -159,7 +159,7 @@
+         if (target == skip)
+             continue;
+ 
+-        if (!target->monitor_of != !skip->monitor_of)
++        if (skip && !target->monitor_of != !skip->monitor_of)
+             continue;
+ 
+         if (!PA_SOURCE_IS_LINKED(pa_source_get_state(target)))
+--- pulseaudio-0.9.22/src/modules/oss/Makefile.am	1970-01-01 10:00:00.000000000 +1000
++++ pulseaudio-0.9.22-6-g205ca/src/modules/oss/Makefile.am	2010-12-08 14:47:31.354540000 +1100
+@@ -0,0 +1,20 @@
++# This file is part of PulseAudio.
++#
++# Copyright 2010 Colin Guthrie
++#
++# PulseAudio is free software; you can redistribute it and/or modify
++# it under the terms of the GNU Lesser General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or
++# (at your option) any later version.
++#
++# PulseAudio is distributed in the hope that it will be useful, but
++# WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++# General Public License for more details.
++#
++# You should have received a copy of the GNU Lesser General Public License
++# along with PulseAudio; if not, write to the Free Software
++# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
++# USA.
++
++# This Automake file is intentionally blank.
+--- pulseaudio-0.9.22/src/modules/raop/Makefile.am	1970-01-01 10:00:00.000000000 +1000
++++ pulseaudio-0.9.22-6-g205ca/src/modules/raop/Makefile.am	2010-12-08 14:47:31.374540000 +1100
+@@ -0,0 +1,20 @@
++# This file is part of PulseAudio.
++#
++# Copyright 2010 Colin Guthrie
++#
++# PulseAudio is free software; you can redistribute it and/or modify
++# it under the terms of the GNU Lesser General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or
++# (at your option) any later version.
++#
++# PulseAudio is distributed in the hope that it will be useful, but
++# WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++# General Public License for more details.
++#
++# You should have received a copy of the GNU Lesser General Public License
++# along with PulseAudio; if not, write to the Free Software
++# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
++# USA.
++
++# This Automake file is intentionally blank.
+--- pulseaudio-0.9.22/src/modules/rtp/Makefile.am	1970-01-01 10:00:00.000000000 +1000
++++ pulseaudio-0.9.22-6-g205ca/src/modules/rtp/Makefile.am	2010-12-08 14:47:31.374540000 +1100
+@@ -0,0 +1,20 @@
++# This file is part of PulseAudio.
++#
++# Copyright 2010 Colin Guthrie
++#
++# PulseAudio is free software; you can redistribute it and/or modify
++# it under the terms of the GNU Lesser General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or
++# (at your option) any later version.
++#
++# PulseAudio is distributed in the hope that it will be useful, but
++# WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++# General Public License for more details.
++#
++# You should have received a copy of the GNU Lesser General Public License
++# along with PulseAudio; if not, write to the Free Software
++# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
++# USA.
++
++# This Automake file is intentionally blank.
+--- pulseaudio-0.9.22/src/modules/x11/Makefile.am	1970-01-01 10:00:00.000000000 +1000
++++ pulseaudio-0.9.22-6-g205ca/src/modules/x11/Makefile.am	2010-12-08 14:47:31.374540000 +1100
+@@ -0,0 +1,20 @@
++# This file is part of PulseAudio.
++#
++# Copyright 2010 Colin Guthrie
++#
++# PulseAudio is free software; you can redistribute it and/or modify
++# it under the terms of the GNU Lesser General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or
++# (at your option) any later version.
++#
++# PulseAudio is distributed in the hope that it will be useful, but
++# WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++# General Public License for more details.
++#
++# You should have received a copy of the GNU Lesser General Public License
++# along with PulseAudio; if not, write to the Free Software
++# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
++# USA.
++
++# This Automake file is intentionally blank.
+--- pulseaudio-0.9.22/src/pulse/Makefile.am	1970-01-01 10:00:00.000000000 +1000
++++ pulseaudio-0.9.22-6-g205ca/src/pulse/Makefile.am	2010-12-08 14:47:31.374540000 +1100
+@@ -0,0 +1,20 @@
++# This file is part of PulseAudio.
++#
++# Copyright 2010 Colin Guthrie
++#
++# PulseAudio is free software; you can redistribute it and/or modify
++# it under the terms of the GNU Lesser General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or
++# (at your option) any later version.
++#
++# PulseAudio is distributed in the hope that it will be useful, but
++# WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++# General Public License for more details.
++#
++# You should have received a copy of the GNU Lesser General Public License
++# along with PulseAudio; if not, write to the Free Software
++# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
++# USA.
++
++# This Automake file is intentionally blank.
+--- pulseaudio-0.9.22/src/pulsecore/ffmpeg/Makefile.am	1970-01-01 10:00:00.000000000 +1000
++++ pulseaudio-0.9.22-6-g205ca/src/pulsecore/ffmpeg/Makefile.am	2010-12-08 14:47:31.374540000 +1100
+@@ -0,0 +1,20 @@
++# This file is part of PulseAudio.
++#
++# Copyright 2010 Colin Guthrie
++#
++# PulseAudio is free software; you can redistribute it and/or modify
++# it under the terms of the GNU Lesser General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or
++# (at your option) any later version.
++#
++# PulseAudio is distributed in the hope that it will be useful, but
++# WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++# General Public License for more details.
++#
++# You should have received a copy of the GNU Lesser General Public License
++# along with PulseAudio; if not, write to the Free Software
++# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
++# USA.
++
++# This Automake file is intentionally blank.
+--- pulseaudio-0.9.22/src/pulsecore/Makefile.am	1970-01-01 10:00:00.000000000 +1000
++++ pulseaudio-0.9.22-6-g205ca/src/pulsecore/Makefile.am	2010-12-08 14:47:31.374540000 +1100
+@@ -0,0 +1,20 @@
++# This file is part of PulseAudio.
++#
++# Copyright 2010 Colin Guthrie
++#
++# PulseAudio is free software; you can redistribute it and/or modify
++# it under the terms of the GNU Lesser General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or
++# (at your option) any later version.
++#
++# PulseAudio is distributed in the hope that it will be useful, but
++# WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++# General Public License for more details.
++#
++# You should have received a copy of the GNU Lesser General Public License
++# along with PulseAudio; if not, write to the Free Software
++# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
++# USA.
++
++SUBDIRS = ffmpeg
+--- pulseaudio-0.9.22/src/pulsecore/svolume_arm.c	2010-11-26 11:45:23.000000000 +1100
++++ pulseaudio-0.9.22-6-g205ca/src/pulsecore/svolume_arm.c	2010-12-08 14:47:31.374540000 +1100
+@@ -35,7 +35,7 @@
+ #include "sample-util.h"
+ #include "endianmacros.h"
+ 
+-#if defined (__arm__)
++#if defined (__arm__) && defined (HAVE_ARMV6)
+ 
+ #define MOD_INC() \
+     " subs  r0, r6, %2              \n\t" \
+@@ -182,11 +182,11 @@
+ }
+ #endif
+ 
+-#endif /* defined (__arm__) */
++#endif /* defined (__arm__) && defined (HAVE_ARMV6) */
+ 
+ 
+ void pa_volume_func_init_arm (pa_cpu_arm_flag_t flags) {
+-#if defined (__arm__)
++#if defined (__arm__) && defined (HAVE_ARMV6)
+     pa_log_info("Initialising ARM optimized functions.");
+ 
+ #ifdef RUN_TEST
+@@ -194,5 +194,5 @@
+ #endif
+ 
+     pa_set_volume_func (PA_SAMPLE_S16NE,     (pa_do_volume_func_t) pa_volume_s16ne_arm);
+-#endif /* defined (__arm__) */
++#endif /* defined (__arm__) && defined (HAVE_ARMV6) */
+ }
+--- pulseaudio-0.9.22/src/tests/Makefile.am	1970-01-01 10:00:00.000000000 +1000
++++ pulseaudio-0.9.22-6-g205ca/src/tests/Makefile.am	2010-12-08 14:47:31.374540000 +1100
+@@ -0,0 +1,20 @@
++# This file is part of PulseAudio.
++#
++# Copyright 2010 Colin Guthrie
++#
++# PulseAudio is free software; you can redistribute it and/or modify
++# it under the terms of the GNU Lesser General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or
++# (at your option) any later version.
++#
++# PulseAudio is distributed in the hope that it will be useful, but
++# WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++# General Public License for more details.
++#
++# You should have received a copy of the GNU Lesser General Public License
++# along with PulseAudio; if not, write to the Free Software
++# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
++# USA.
++
++# This Automake file is intentionally blank.
+--- pulseaudio-0.9.22/src/utils/Makefile.am	1970-01-01 10:00:00.000000000 +1000
++++ pulseaudio-0.9.22-6-g205ca/src/utils/Makefile.am	2010-12-08 14:47:31.374540000 +1100
+@@ -0,0 +1,20 @@
++# This file is part of PulseAudio.
++#
++# Copyright 2010 Colin Guthrie
++#
++# PulseAudio is free software; you can redistribute it and/or modify
++# it under the terms of the GNU Lesser General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or
++# (at your option) any later version.
++#
++# PulseAudio is distributed in the hope that it will be useful, but
++# WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++# General Public License for more details.
++#
++# You should have received a copy of the GNU Lesser General Public License
++# along with PulseAudio; if not, write to the Free Software
++# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
++# USA.
++
++# This Automake file is intentionally blank.
+--- pulseaudio-0.9.22/.tarball-version	2010-11-26 12:12:33.000000000 +1100
++++ pulseaudio-0.9.22-6-g205ca/.tarball-version	2010-12-08 15:34:43.754540002 +1100
+@@ -1 +1 @@
+-0.9.22
++0.9.22
+--- pulseaudio-0.9.22/.version	1970-01-01 10:00:00.000000000 +1000
++++ pulseaudio-0.9.22-6-g205ca/.version	2010-12-08 15:34:43.754540002 +1100
+@@ -0,0 +1 @@
++0.9.22

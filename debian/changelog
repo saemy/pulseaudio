@@ -1,3 +1,21 @@
+pulseaudio (1:0.9.22-0ubuntu2) natty; urgency=low
+
+  * 0101-update-stable-queue.patch, update to latest stable queue:
+    - 205cad6 (jack: Add module-jackdbus-detect
+    - e9deb97 (build-sys: Include the .version file in the distribution
+               tarball)
+    - a1f1255 (build-sys: Fix make distcheck failure due to udev rules
+               fixed install path)
+    - 675cc0a (build-sys: Replace dummy Makefiles with proper Makefile.am's)
+    - bd769fa (rescue-streams: Fix segfault in some conditions)
+    - f6574c8 (volume: Add explicit checks for ARMv6 instructions)
+  * 0102-autoreconf.patch: Re-generate autotools pieces for the above update
+  * 0103-JACK-Load-module-jackdbus-detect-in-default.pa.patch: Enable jackdbus
+    module by default for now, hopefully longer term there will be a better
+    way to turn this module on/off
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Wed, 08 Dec 2010 16:58:27 +1100
+
 pulseaudio (1:0.9.22-0ubuntu1) natty; urgency=low
 
   * New upstream release, based on the stable-queue branch
