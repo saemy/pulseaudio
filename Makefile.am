@@ -77,6 +77,7 @@ dist-hook:
 		( git-changelog.perl || echo "git-changelog.perl failed." ) > ${distdir}/ChangeLog 2>&1 ; \
 	fi
 	echo $(VERSION) > $(distdir)/.tarball-version
+	echo $(VERSION) > $(distdir)/.version
 
 .PHONY: homepage distcleancheck doxygen
 
@@ -87,3 +88,5 @@ $(top_srcdir)/.version:
 
 DISTCLEANFILES = \
         po/.intltool-merge-cache
+
+DISTCHECK_CONFIGURE_FLAGS = --with-udev-rules-dir="$$dc_install_base/lib/udev/rules.d"
