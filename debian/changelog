@@ -1,3 +1,46 @@
+pulseaudio (1:0.9.22+stable-queue-18-geb966-0ubuntu1) natty; urgency=low
+
+  [ Daniel T Chen ]
+  * debian/control: pulseaudio-module-zeroconf Depends on avahi-daemon
+    (LP: #689093)
+  * debian/patches/0101-update-stable-queue.patch: Apply 84c8b23c to
+    resolve incorrect header being used for libsndfile seen with pacat
+    --file-format (LP: #660504)
+  * debian/patches/0104-Load-RAOP-Zeroconf-by-default.patch: Follow
+    recommendation by Martin-Éric Racine to conditionally load support
+    by default for streaming to an Apple Airport Express (LP: #688272)
+  * debian/pulseaudio-utils.links: Also add pamon(1) and parecord(1)
+    (Closes: #599696)
+
+  [ David Henningsson ]
+  * debian/pulse-alsa.conf: Add name hint for default pcm device,
+    indicating that PulseAudio is active.
+
+  [ Luke Yelavich ]
+  * New upstream snapshot based on the stable queue branch:
+    - eb966f7 (build-sys: Make --disable-dbus actually work.)
+    - 8f8d247 (build-sys: Mention dbus support in the summary)
+    - b3ff4f4 (build-sys: Put in specific warnings when there is no udev or
+              DBUS support)
+    - 862bbee (console-kit: Console Kit support is dependent on DBUS and is
+              thus optional.)
+    - 7cb1401 (padsp: wrap __open_2 and __open64_2)
+    - 6f870f5 (fix bug about get source-output status)
+    - 4269b05 (Fix typos)
+    - 1c83b03 (Further clarify src- and speex- references in pulse-daemon.conf)
+    - 84c8b23 (Fix return value of pa_sndfile_format_from_string)
+    - d963b86 (core: Fix variable "has_whined" value bug)
+    - 52e3268 (trivial: Mention speex as a resampler reference in
+              pulse-daemon.conf)
+    - 3e6af07 (module-loopback: Prevent an infinite loop when rate adjusting
+              is disabled
+  * 0101-update-stable-queue.patch and
+    #0102-autoreconf.patch:
+    - Disable for now, since latest stable queue are roled into the snapshot
+      tarball
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Fri, 14 Jan 2011 10:03:49 -0600
+
 pulseaudio (1:0.9.22-0ubuntu3) natty; urgency=low
 
   * debian/pulseaudio-module-jack.install: Ship the jackdbus-detect module

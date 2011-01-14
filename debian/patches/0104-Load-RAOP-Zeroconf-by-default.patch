@@ -1,0 +1,21 @@
+Index: pulseaudio-0.9.22/src/daemon/default.pa.in
+===================================================================
+--- pulseaudio-0.9.22.orig/src/daemon/default.pa.in	2010-12-23 17:12:11.000000000 -0500
++++ pulseaudio-0.9.22/src/daemon/default.pa.in	2010-12-23 17:30:46.000000000 -0500
+@@ -78,6 +78,16 @@
+ #load-module module-esound-protocol-tcp
+ #load-module module-native-protocol-tcp
+ #load-module module-zeroconf-publish
++.ifexists module-zeroconf-discover@PA_SOEXT@
++.nofail
++load-module module-zeroconf-discover
++.fail
++.endif
++.ifexists module-raop-discover@PA_SOEXT@
++.nofail
++load-module module-raop-discover
++.fail
++.endif
+ 
+ ### Load the RTP reciever module (also configured via paprefs, see above)
+ #load-module module-rtp-recv

@@ -11,6 +11,7 @@
 0096-lp453966-handle-digmic-pt2.patch
 0096-lp451635-handle-dove-x0-line-hp-swap.patch
 0097-explicitly-link-libraries.patch
-0101-update-stable-queue.patch
-0102-autoreconf.patch
+#0101-update-stable-queue.patch
+#0102-autoreconf.patch
 0103-JACK-Load-module-jackdbus-detect-in-default.pa.patch
+0104-Load-RAOP-Zeroconf-by-default.patch
