@@ -1,3 +1,9 @@
+pulseaudio (1:0.9.22+stable-queue-18-geb966-0ubuntu2) natty; urgency=low
+
+  * Fix FTBFS with ld.gold.
+
+ -- Matthias Klose <doko@ubuntu.com>  Wed, 19 Jan 2011 06:57:29 +0100
+
 pulseaudio (1:0.9.22+stable-queue-18-geb966-0ubuntu1) natty; urgency=low
 
   [ Daniel T Chen ]

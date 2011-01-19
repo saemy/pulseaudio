@@ -15,3 +15,4 @@
 #0102-autoreconf.patch
 0103-JACK-Load-module-jackdbus-detect-in-default.pa.patch
 0104-Load-RAOP-Zeroconf-by-default.patch
+0105-gold.patch
