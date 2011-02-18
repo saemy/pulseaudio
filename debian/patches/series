@@ -16,3 +16,10 @@
 0103-JACK-Load-module-jackdbus-detect-in-default.pa.patch
 0104-Load-RAOP-Zeroconf-by-default.patch
 0105-gold.patch
+0201-alsa-mixer-Add-a-few-well-known-descriptions.patch
+0202-alsa-mixer-add-required-any-and-required-for-enum-op.patch
+0203-alsa-mixer-always-round-towards-0-dB.patch
+0204-alsa-mixer-Add-new-paths-for-Internal-Mic-Front-Mic-.patch
+0205-alsa-mixer-Fixup-Mic-Line-analog-input-paths-to-work.patch
+0206-alsa-mixer-Make-sure-capture-source-and-input-source.patch
+0209-alsa-mixer-Fix-makefile-in.patch

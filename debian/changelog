@@ -1,3 +1,22 @@
+pulseaudio (1:0.9.22+stable-queue-24-g67d18-0ubuntu1) natty; urgency=low
+
+  [ David Henningsson ]
+  * debian/patches/020x patches - add PulseAudio input mixer rewrite.
+    This will cause several HDA chips to have better named and controlled
+    sliders on the input side. 
+
+  [ Luke Yelavich ]
+  * New upstream snapshot based on stable queue:
+    - 67d1888 (client: Don't update smoother while corked)
+    - 6b280e9 (Fighting rewinds: Reduce calls to handle_seek)
+    - 3aeb047 (Fighting rewinds: Seek and write data in the same message)
+    - 1e1b299 (Core: Fix incorrect check of return value)
+    - 4080725 (tunnel: Fix automatic names when source/sink_name argument is
+              missing.)
+    - ec5a785 (ratelimit: fix log levels of log suppression messages)
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Fri, 18 Feb 2011 13:50:30 +1100
+
 pulseaudio (1:0.9.22+stable-queue-18-geb966-0ubuntu2) natty; urgency=low
 
   * Fix FTBFS with ld.gold.
