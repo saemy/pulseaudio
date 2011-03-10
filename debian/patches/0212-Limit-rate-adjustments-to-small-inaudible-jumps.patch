@@ -1,0 +1,176 @@
+From 90c5520e03bbccf6c1d9f87221d3742cc70b53ed Mon Sep 17 00:00:00 2001
+From: Maarten Bosmans <mkbosmans@gmail.com>
+Date: Fri, 7 Jan 2011 01:25:55 +0100
+Subject: [PATCH 2/7] Limit rate adjustments to small, inaudible jumps
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The same logic is applied to the sample rate adjustments in module-rtp-recv,
+module-loopback and module-combine:
+ - Each time an adjustment is made, the new rate can differ at most 2‰ from the
+   old rate.  Such a step is equal to 3.5 cents (a cent is 1/100th of a
+   semitone) and as 5 cents is generally considered the smallest observable
+   difference in pitch, this results in inaudible adjustments.
+ - The sample rate of the stream can only differ from the rate of the
+   corresponding sink by 25%.  As these adjustments are meant to account for
+   very small clock drifts, any large deviation from the base rate suggests
+   something is seriously wrong.
+ - If the calculated rate is within 20Hz of the base rate, set it to the base
+   rate.  This saves CPU because no resampling is necessary.
+---
+ src/modules/module-combine.c      |   26 ++++++++++++++++----------
+ src/modules/module-loopback.c     |   18 +++++++++++++++---
+ src/modules/rtp/module-rtp-recv.c |   34 +++++++++++++++++++++-------------
+ 3 files changed, 52 insertions(+), 26 deletions(-)
+
+diff --git a/src/modules/module-combine.c b/src/modules/module-combine.c
+index bcea229..3104ed6 100644
+--- a/src/modules/module-combine.c
++++ b/src/modules/module-combine.c
+@@ -217,23 +217,29 @@ static void adjust_rates(struct userdata *u) {
+     base_rate = u->sink->sample_spec.rate;
+ 
+     PA_IDXSET_FOREACH(o, u->outputs, idx) {
+-        uint32_t r = base_rate;
++        uint32_t new_rate = base_rate;
++        uint32_t current_rate = o->sink_input->sample_spec.rate;
+ 
+         if (!o->sink_input || !PA_SINK_IS_OPENED(pa_sink_get_state(o->sink)))
+             continue;
+ 
+-        if (o->total_latency < target_latency)
+-            r -= (uint32_t) ((((double) (target_latency - o->total_latency))/(double)u->adjust_time)*(double)r);
+-        else if (o->total_latency > target_latency)
+-            r += (uint32_t) ((((double) (o->total_latency - target_latency))/(double)u->adjust_time)*(double)r);
++        if (o->total_latency != target_latency)
++            new_rate += (uint32_t) (((double) o->total_latency - (double) target_latency) / (double) u->adjust_time * (double) new_rate);
+ 
+-        if (r < (uint32_t) (base_rate*0.9) || r > (uint32_t) (base_rate*1.1)) {
+-            pa_log_warn("[%s] sample rates too different, not adjusting (%u vs. %u).", o->sink_input->sink->name, base_rate, r);
+-            pa_sink_input_set_rate(o->sink_input, base_rate);
++        if (new_rate < (uint32_t) (base_rate*0.8) || new_rate > (uint32_t) (base_rate*1.25)) {
++            pa_log_warn("[%s] sample rates too different, not adjusting (%u vs. %u).", o->sink_input->sink->name, base_rate, new_rate);
++            new_rate = base_rate;
+         } else {
+-            pa_log_info("[%s] new rate is %u Hz; ratio is %0.3f; latency is %0.0f usec.", o->sink_input->sink->name, r, (double) r / base_rate, (float) o->total_latency);
+-            pa_sink_input_set_rate(o->sink_input, r);
++            if (base_rate < new_rate + 20 && new_rate < base_rate + 20)
++              new_rate = base_rate;
++            /* Do the adjustment in small steps; 2‰ can be considered inaudible */
++            if (new_rate < (uint32_t) (current_rate*0.998) || new_rate > (uint32_t) (current_rate*1.002)) {
++                pa_log_info("[%s] new rate of %u Hz not within 2‰ of %u Hz, forcing smaller adjustment", o->sink_input->sink->name, new_rate, current_rate);
++                new_rate = PA_CLAMP(new_rate, (uint32_t) (current_rate*0.998), (uint32_t) (current_rate*1.002));
++            }
++            pa_log_info("[%s] new rate is %u Hz; ratio is %0.3f; latency is %0.2f msec.", o->sink_input->sink->name, new_rate, (double) new_rate / base_rate, (double) o->total_latency / PA_USEC_PER_MSEC);
+         }
++        pa_sink_input_set_rate(o->sink_input, new_rate);
+     }
+ 
+     pa_asyncmsgq_send(u->sink->asyncmsgq, PA_MSGOBJECT(u->sink), SINK_MESSAGE_UPDATE_LATENCY, NULL, (int64_t) avg_total_latency, NULL);
+diff --git a/src/modules/module-loopback.c b/src/modules/module-loopback.c
+index ca06314..e0277c1 100644
+--- a/src/modules/module-loopback.c
++++ b/src/modules/module-loopback.c
+@@ -167,13 +167,13 @@ static void adjust_rates(struct userdata *u) {
+ 
+     buffer_latency = pa_bytes_to_usec(buffer, &u->sink_input->sample_spec);
+ 
+-    pa_log_info("Loopback overall latency is %0.2f ms + %0.2f ms + %0.2f ms = %0.2f ms",
++    pa_log_debug("Loopback overall latency is %0.2f ms + %0.2f ms + %0.2f ms = %0.2f ms",
+                 (double) u->latency_snapshot.sink_latency / PA_USEC_PER_MSEC,
+                 (double) buffer_latency / PA_USEC_PER_MSEC,
+                 (double) u->latency_snapshot.source_latency / PA_USEC_PER_MSEC,
+                 ((double) u->latency_snapshot.sink_latency + buffer_latency + u->latency_snapshot.source_latency) / PA_USEC_PER_MSEC);
+ 
+-    pa_log_info("Should buffer %zu bytes, buffered at minimum %zu bytes",
++    pa_log_debug("Should buffer %zu bytes, buffered at minimum %zu bytes",
+                 u->latency_snapshot.max_request*2,
+                 u->latency_snapshot.min_memblockq_length);
+ 
+@@ -186,9 +186,21 @@ static void adjust_rates(struct userdata *u) {
+     else
+         new_rate = base_rate + (((u->latency_snapshot.min_memblockq_length - u->latency_snapshot.max_request*2) / fs) *PA_USEC_PER_SEC)/u->adjust_time;
+ 
+-    pa_log_info("Old rate %lu Hz, new rate %lu Hz", (unsigned long) old_rate, (unsigned long) new_rate);
++    if (new_rate < (uint32_t) (base_rate*0.8) || new_rate > (uint32_t) (base_rate*1.25)) {
++        pa_log_warn("Sample rates too different, not adjusting (%u vs. %u).", base_rate, new_rate);
++        new_rate = base_rate;
++    } else {
++        if (base_rate < new_rate + 20 && new_rate < base_rate + 20)
++          new_rate = base_rate;
++        /* Do the adjustment in small steps; 2‰ can be considered inaudible */
++        if (new_rate < (uint32_t) (old_rate*0.998) || new_rate > (uint32_t) (old_rate*1.002)) {
++            pa_log_info("New rate of %u Hz not within 2‰ of %u Hz, forcing smaller adjustment", new_rate, old_rate);
++            new_rate = PA_CLAMP(new_rate, (uint32_t) (old_rate*0.998), (uint32_t) (old_rate*1.002));
++        }
++    }
+ 
+     pa_sink_input_set_rate(u->sink_input, new_rate);
++    pa_log_debug("[%s] Updated sampling rate to %lu Hz.", u->sink_input->sink->name, (unsigned long) new_rate);
+ 
+     pa_core_rttime_restart(u->core, u->time_event, pa_rtclock_now() + u->adjust_time);
+ }
+diff --git a/src/modules/rtp/module-rtp-recv.c b/src/modules/rtp/module-rtp-recv.c
+index 1a05f57..491be4d 100644
+--- a/src/modules/rtp/module-rtp-recv.c
++++ b/src/modules/rtp/module-rtp-recv.c
+@@ -288,6 +288,9 @@ static int rtpoll_work_cb(pa_rtpoll_item *i) {
+     if (s->last_rate_update + RATE_UPDATE_INTERVAL < pa_timeval_load(&now)) {
+         pa_usec_t wi, ri, render_delay, sink_delay = 0, latency, fix;
+         unsigned fix_samples;
++        uint32_t base_rate = s->sink_input->sink->sample_spec.rate;
++        uint32_t current_rate = s->sink_input->sample_spec.rate;
++        uint32_t new_rate;
+ 
+         pa_log_debug("Updating sample rate");
+ 
+@@ -309,7 +312,7 @@ static int rtpoll_work_cb(pa_rtpoll_item *i) {
+         else
+             latency = wi - ri;
+ 
+-        pa_log_debug("Write index deviates by %0.2f ms, expected %0.2f ms", (double) latency/PA_USEC_PER_MSEC, (double)  s->intended_latency/PA_USEC_PER_MSEC);
++        pa_log_debug("Write index deviates by %0.2f ms, expected %0.2f ms", (double) latency/PA_USEC_PER_MSEC, (double) s->intended_latency/PA_USEC_PER_MSEC);
+ 
+         /* Calculate deviation */
+         if (latency < s->intended_latency)
+@@ -320,19 +323,24 @@ static int rtpoll_work_cb(pa_rtpoll_item *i) {
+         /* How many samples is this per second? */
+         fix_samples = (unsigned) (fix * (pa_usec_t) s->sink_input->thread_info.sample_spec.rate / (pa_usec_t) RATE_UPDATE_INTERVAL);
+ 
+-        /* Check if deviation is in bounds */
+-        if (fix_samples > s->sink_input->sample_spec.rate*.50)
+-            pa_log_debug("Hmmm, rate fix is too large (%lu Hz), not applying.", (unsigned long) fix_samples);
+-        else {
+-            /* Fix up rate */
+-            if (latency < s->intended_latency)
+-                s->sink_input->sample_spec.rate -= fix_samples;
+-            else
+-                s->sink_input->sample_spec.rate += fix_samples;
+-
+-            if (s->sink_input->sample_spec.rate > PA_RATE_MAX)
+-                s->sink_input->sample_spec.rate = PA_RATE_MAX;
++        if (latency < s->intended_latency)
++            new_rate = current_rate - fix_samples;
++        else
++            new_rate = current_rate + fix_samples;
++
++        if (new_rate < (uint32_t) (base_rate*0.8) || new_rate > (uint32_t) (base_rate*1.25)) {
++            pa_log_warn("Sample rates too different, not adjusting (%u vs. %u).", base_rate, new_rate);
++            new_rate = base_rate;
++        } else {
++            if (base_rate < new_rate + 20 && new_rate < base_rate + 20)
++              new_rate = base_rate;
++            /* Do the adjustment in small steps; 2‰ can be considered inaudible */
++            if (new_rate < (uint32_t) (current_rate*0.998) || new_rate > (uint32_t) (current_rate*1.002)) {
++                pa_log_info("New rate of %u Hz not within 2‰ of %u Hz, forcing smaller adjustment", new_rate, current_rate);
++                new_rate = PA_CLAMP(new_rate, (uint32_t) (current_rate*0.998), (uint32_t) (current_rate*1.002));
++            }
+         }
++        s->sink_input->sample_spec.rate = new_rate;
+ 
+         pa_assert(pa_sample_spec_valid(&s->sink_input->sample_spec));
+ 
+-- 
+1.7.4.1
+

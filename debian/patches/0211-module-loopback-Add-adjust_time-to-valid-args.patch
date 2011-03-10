@@ -1,0 +1,24 @@
+From 09770e577991d49cf826bdf80b0f9559f1e67820 Mon Sep 17 00:00:00 2001
+From: Maarten Bosmans <mkbosmans@gmail.com>
+Date: Sun, 16 Jan 2011 01:42:20 +0100
+Subject: [PATCH 1/7] module-loopback: Add adjust_time to valid args
+
+---
+ src/modules/module-loopback.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/src/modules/module-loopback.c b/src/modules/module-loopback.c
+index 265a469..ca06314 100644
+--- a/src/modules/module-loopback.c
++++ b/src/modules/module-loopback.c
+@@ -102,6 +102,7 @@ struct userdata {
+ static const char* const valid_modargs[] = {
+     "source",
+     "sink",
++    "adjust_time",
+     "latency_msec",
+     "format",
+     "rate",
+-- 
+1.7.4.1
+

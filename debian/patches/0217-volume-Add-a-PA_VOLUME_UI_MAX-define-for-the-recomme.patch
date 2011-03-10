@@ -1,0 +1,50 @@
+From b872254762285597d94dd9174b8c1426dd263062 Mon Sep 17 00:00:00 2001
+From: Colin Guthrie <cguthrie@mandriva.org>
+Date: Thu, 3 Mar 2011 12:04:31 +0000
+Subject: [PATCH 7/7] volume: Add a PA_VOLUME_UI_MAX define for the recommended max volume to show in UIs
+
+This value is not a technical upper limit, it's just a 'sensible'
+value that is not crazy high, but also allows software amplification
+above 0dB (aka 100%) for very quiet audio sources.
+
+We recommend that a comprehensive volume control UI should allow
+users to set volumes up to this limit, although of course should
+deal gracefully if the user has set the volume even higher than this
+without resulting in a feedback loop that effectively limits the
+upper volume.
+
+The value chosen is +11dB. This was selected somewhat subjectively
+and is very similar to the current 150% that gnome-volume-control
+uses (which is ~+10.57dB).
+
+On the plus side, we now recommend that everyone allows
+'Volumes up to 11' which is pretty awesome.
+http://en.wikipedia.org/wiki/Up_to_eleven
+
+https://tango.0pointer.de/pipermail/pulseaudio-discuss/2010-April/006945.html
+https://tango.0pointer.de/pipermail/pulseaudio-discuss/2010-April/006950.html
+---
+ src/pulse/volume.h |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
+
+diff --git a/src/pulse/volume.h b/src/pulse/volume.h
+index d98443b..2b6637b 100644
+--- a/src/pulse/volume.h
++++ b/src/pulse/volume.h
+@@ -115,6 +115,13 @@ typedef uint32_t pa_volume_t;
+ /** Maximum valid volume we can store. \since 0.9.15 */
+ #define PA_VOLUME_MAX ((pa_volume_t) UINT32_MAX-1)
+ 
++/** Recommended maximum volume to show in user facing UIs.
++ * Note: UIs should deal gracefully with volumes greater than this value
++ * and not cause feedback loops etc. - i.e. if the volume is more than
++ * this, the UI should not limit it and push the limited value back to
++ * the server. \since 0.9.23 */
++#define PA_VOLUME_UI_MAX (pa_sw_volume_from_dB(+11.0))
++
+ /** Special 'invalid' volume. \since 0.9.16 */
+ #define PA_VOLUME_INVALID ((pa_volume_t) UINT32_MAX)
+ 
+-- 
+1.7.4.1
+

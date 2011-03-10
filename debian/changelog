@@ -1,3 +1,22 @@
+pulseaudio (1:0.9.22+stable-queue-24-g67d18-0ubuntu2) natty; urgency=low
+
+  * Update to latest stable queue patches:
+    - 09770e5 (module-loopback: Add adjust_time to valid args
+    - 90c5520 (Limit rate adjustments to small, inaudible jumps
+    - 4620039 (module-rtp-recv: Use new algorithm for adjusting sample rate
+    - 2bfc032 (module-rtp-recv: Average the estimated real sample rate
+    - 2ee4ec5 (module-rtp-recv: Remove smoother from write index (LP: #569378)
+    - a8cd9d2 (conf: Make system.pa use udev-detect and not hal-detect.
+    - b872254 (volume: Add a PA_VOLUME_UI_MAX define for the recommended max
+               volume to show in UIs)
+  * 0210-PulseAudio-added-IT-block-to-fix-thumb-conditional-i.patch:
+    - added IT block to fix thumb conditional instruction build error messages
+  * debian/rules: Remove CFLAGS that are specific to arm, the above patch
+    makes those redundant (LP: #721498)
+  * debian/control: Add a dependency on pulseaudio-module-raop
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Thu, 10 Mar 2011 07:15:02 +1100
+
 pulseaudio (1:0.9.22+stable-queue-24-g67d18-0ubuntu1) natty; urgency=low
 
   [ David Henningsson ]
