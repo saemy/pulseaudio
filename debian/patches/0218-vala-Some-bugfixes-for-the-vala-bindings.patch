@@ -1,0 +1,87 @@
+From 4fa7495a3114bb5841751537154215ebd229adf0 Mon Sep 17 00:00:00 2001
+From: Alexander Kurtz <kurtz.alex@googlemail.com>
+Date: Thu, 24 Mar 2011 21:35:17 +0000
+Subject: [PATCH 01/33] vala: Some bugfixes for the vala bindings
+
+ 1. PA uses Vala's "Posix" package (see line 23 of libpulse.vapi).
+    These dependencies have to be declared in the *.deps file.
+
+ 2. Fix obvious copy/paste error.
+
+ 3. Rename the parameter to match the C function. This simplifies
+    understanding what this parameter means.
+
+ 4. According to the official documentation the "dev" parameter
+    for playback/capture streams on connection may be NULL and this
+    is the default. Change the method definition accordingly.
+---
+ Makefile.am        |    3 ++-
+ vala/libpulse.deps |    1 +
+ vala/libpulse.vapi |    8 ++++----
+ 3 files changed, 7 insertions(+), 5 deletions(-)
+ create mode 100644 vala/libpulse.deps
+
+diff --git a/Makefile.am b/Makefile.am
+index a8a9eaa..3439c89 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -28,6 +28,7 @@ EXTRA_DIST = \
+ 	doxygen/doxygen.conf.in \
+ 	README \
+ 	todo \
++	vala/libpulse.deps \
+ 	vala/libpulse.vapi
+ 
+ SUBDIRS = src doxygen man po
+@@ -36,7 +37,7 @@ MAINTAINERCLEANFILES =
+ noinst_DATA =
+ 
+ vapidir = $(datadir)/vala/vapi
+-vapi_DATA = vala/libpulse.vapi
++vapi_DATA = vala/libpulse.deps vala/libpulse.vapi
+ 
+ pkgconfigdir = $(libdir)/pkgconfig
+ pkgconfig_DATA = libpulse.pc libpulse-simple.pc
+diff --git a/vala/libpulse.deps b/vala/libpulse.deps
+new file mode 100644
+index 0000000..b3188f7
+--- /dev/null
++++ b/vala/libpulse.deps
+@@ -0,0 +1 @@
++posix
+diff --git a/vala/libpulse.vapi b/vala/libpulse.vapi
+index 21c0f7c..aed526a 100644
+--- a/vala/libpulse.vapi
++++ b/vala/libpulse.vapi
+@@ -237,7 +237,7 @@ namespace PulseAudio {
+         [CCode (cname="PA_CHANNELS_MAX")]
+         public const int CHANNELS_MAX;
+ 
+-        [CCode (cname="PA_CHANNELS_MAX")]
++        [CCode (cname="PA_RATE_MAX")]
+         public const int RATE_MAX;
+ 
+         [CCode (cname="pa_cvolume")]
+@@ -854,7 +854,7 @@ namespace PulseAudio {
+                 public int iterate(bool block = true, out int retval = null);
+                 public int run(out int retval = null);
+                 public unowned MainLoopApi get_api();
+-                public void quit(int r);
++                public void quit(int retval);
+                 public void wakeup();
+                 public void set_poll_func(PollFunc poll_func);
+         }
+@@ -1194,8 +1194,8 @@ namespace PulseAudio {
+                 public int is_suspended();
+                 public int is_corked();
+ 
+-                public int connect_playback(string dev, BufferAttr? a = null, Flags flags = 0, CVolume? volume = null, Stream? sync_stream = null);
+-                public int connect_record(string dev, BufferAttr? a = null, Flags flags = 0);
++                public int connect_playback(string? dev = null, BufferAttr? a = null, Flags flags = 0, CVolume? volume = null, Stream? sync_stream = null);
++                public int connect_record(string? dev = null, BufferAttr? a = null, Flags flags = 0);
+                 public int connect_upload(size_t length);
+                 public int disconnect();
+                 public int finish_upload();
+-- 
+1.7.4.1
+

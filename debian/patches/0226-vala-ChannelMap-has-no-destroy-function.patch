@@ -1,0 +1,25 @@
+From 93e7a19ee67f172980f96447d50beca996fcfc8c Mon Sep 17 00:00:00 2001
+From: Sean McNamara <smcnam@gmail.com>
+Date: Wed, 30 Mar 2011 13:41:02 -0400
+Subject: [PATCH 33/33] vala: ChannelMap has no destroy function.
+
+---
+ vala/libpulse.vapi |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/vala/libpulse.vapi b/vala/libpulse.vapi
+index 4315988..06f412d 100644
+--- a/vala/libpulse.vapi
++++ b/vala/libpulse.vapi
+@@ -373,7 +373,7 @@ namespace PulseAudio {
+                 public unowned CVolume? dec(Volume minus = 1);
+         }
+ 
+-        [CCode (cname="pa_channel_map")]
++        [CCode (cname="pa_channel_map",has_destroy_function=false)]
+         public struct ChannelMap {
+                 public uint8 channels;
+                 public ChannelPosition map[];
+-- 
+1.7.4.1
+

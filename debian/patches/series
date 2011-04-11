@@ -10,7 +10,6 @@
 0096-lp533877-handle-digmic.patch
 0096-lp453966-handle-digmic-pt2.patch
 0096-lp451635-handle-dove-x0-line-hp-swap.patch
-0097-explicitly-link-libraries.patch
 #0101-update-stable-queue.patch
 #0102-autoreconf.patch
 0103-JACK-Load-module-jackdbus-detect-in-default.pa.patch
@@ -31,3 +30,14 @@
 0215-module-rtp-recv-Remove-smoother-from-write-index.patch
 0216-conf-Make-system.pa-use-udev-detect-and-not-hal-dete.patch
 0217-volume-Add-a-PA_VOLUME_UI_MAX-define-for-the-recomme.patch
+0218-vala-Some-bugfixes-for-the-vala-bindings.patch
+0219-vala-delegate-FreeCb-does-not-have-a-target.patch
+0220-vala-move-GLibMainLoop-class-into-separate-file-to-f.patch
+0221-vala-Fix-path-error-in-the-last-commit.patch
+0222-build-sys-Link-binaries-linking-libpulse-to-libpulse.patch
+0223-build-sys-Link-binaries-linking-libpulsecommon-to-li.patch
+0224-build-sys-Link-lirc-libraries-in-right-order.patch
+0225-module-jack-sink-source-protect-against-null-return-.patch
+0226-vala-ChannelMap-has-no-destroy-function.patch
+0001-alsa-mixer-Add-separate-profile-for-Nvidia.patch
+0001-alsa-mixer-Add-workaround-for-some-USB-headsets.patch

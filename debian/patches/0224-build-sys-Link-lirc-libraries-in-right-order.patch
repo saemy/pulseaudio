@@ -1,0 +1,30 @@
+From 4be49ae94b19367dc2f40f5807a825b8f6244983 Mon Sep 17 00:00:00 2001
+From: Jyri Sarha <jyri.sarha@nokia.com>
+Date: Fri, 26 Nov 2010 18:38:27 +0200
+Subject: [PATCH 31/33] build-sys: Link lirc libraries in right order
+
+Wrong order of libraries causes libtool to link primarily from lirc
+library location and not from $(libdir) location in install
+phase. This is a problem if you have an older version pulseaudio libs
+installed under same directory as liblirc and you are building a
+newer version with some other directory prefix.
+---
+ src/Makefile.am |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/src/Makefile.am b/src/Makefile.am
+index 1058f18..cc38db2 100644
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -1505,7 +1505,7 @@ module_zeroconf_discover_la_CFLAGS = $(AM_CFLAGS) $(AVAHI_CFLAGS)
+ 
+ module_lirc_la_SOURCES = modules/module-lirc.c
+ module_lirc_la_LDFLAGS = $(MODULE_LDFLAGS)
+-module_lirc_la_LIBADD = $(AM_LIBADD) $(LIRC_LIBS) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la libpulse.la
++module_lirc_la_LIBADD = $(AM_LIBADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la libpulse.la $(LIRC_LIBS)
+ module_lirc_la_CFLAGS = $(AM_CFLAGS) $(LIRC_CFLAGS)
+ 
+ # Linux evdev
+-- 
+1.7.4.1
+

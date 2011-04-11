@@ -1,3 +1,33 @@
+pulseaudio (1:0.9.22+stable-queue-24-g67d18-0ubuntu3) natty; urgency=low
+
+  [ David Henningsson ]
+  * Add separate profile for Nvidia to make it easier to select the right 
+    codec out of four (LP: #716371)
+  * Add workaround to make it possible to control the volume of some
+    USB headsets (LP: #749856, LP: #671560)
+
+  [ Luke Yelavich ]
+  * debian/control: Demote pulseaudio-module-raop to suggests, as it is
+    causing various issues, including crashers, (LP: #742281, #743073)
+    and re-opens (LP #688272)
+  * Pull some bugfixes from the stable-queue branch:
+    - 4fa7495 (vala: Some bugfixes for the vala bindings)
+    - ea0a2a6 (vala: delegate FreeCb does not have a target.)
+    - 64985aa (vala: move GLibMainLoop class into separate file to fix linker
+               errors)
+    - 9f52c10 (vala: Fix path error in the last commit.)
+    - 1ade8df (build-sys: Link binaries linking libpulse to libpulsecommon too)
+    - c25207f (build-sys: Link binaries linking libpulsecommon to libpulse too)
+    - 4be49ae (build-sys: Link lirc libraries in right order)
+    - fd5b282 (module-jack-sink/source: protect against null return in
+               jack_get_ports) (LP: #733424)
+    - 93e7a19 (vala: ChannelMap has no destroy function.)
+  * debian/patches/0097-explicitly-link-libraries.patch: Dropped, applied
+    upstream
+  * debian/control, debian/rules: Add dh-autoreconf
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Mon, 11 Apr 2011 16:58:14 +1000
+
 pulseaudio (1:0.9.22+stable-queue-24-g67d18-0ubuntu2) natty; urgency=low
 
   * Update to latest stable queue patches:

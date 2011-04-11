@@ -1,0 +1,101 @@
+From 64985aa9bb46b447973f4051d065afd9035e48ca Mon Sep 17 00:00:00 2001
+From: Alexander Kurtz <kurtz.alex@googlemail.com>
+Date: Sat, 26 Mar 2011 11:26:46 +0000
+Subject: [PATCH 03/33] vala: move GLibMainLoop class into separate file to fix linker errors
+
+Vala uses the name of the *.vapi file to determine the libraries to link
+against. Since the pa_glib_mainloop_*() functions are in a separate
+library (libpulse-mainloop-glib.so) the corresponding objects in the
+Vala bindings have to be in a separate *.vapi file.
+
+If you are compiling an app without the GLib integration you could use:
+ $ valac --pkg=libpulse test.vala
+but if you do use GLib you can use:
+ $ valac --pkg=libpulse-mainloop-glib test.vala
+(libpulse is a dep of the libpulse-mainloop-glib so no need to specify
+it explicitly)
+---
+ Makefile.am                      |    8 ++++++--
+ vala/libpulse-mainloop-glib.deps |    1 +
+ vala/libpulse-mainloop-glib.vapi |   13 +++++++++++++
+ vala/libpulse.vapi               |   10 ----------
+ 4 files changed, 20 insertions(+), 12 deletions(-)
+ create mode 100644 vala/libpulse-mainloop-glib.deps
+ create mode 100644 vala/libpulse-mainloop-glib.vapi
+
+diff --git a/Makefile.am b/Makefile.am
+index 3439c89..c764f18 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -29,7 +29,9 @@ EXTRA_DIST = \
+ 	README \
+ 	todo \
+ 	vala/libpulse.deps \
+-	vala/libpulse.vapi
++	vala/libpulse.vapi \
++	vala/libpulse-mainloop-glib.deps \
++	vala/libpulse-mainloop-glib.vapi
+ 
+ SUBDIRS = src doxygen man po
+ 
+@@ -37,7 +39,9 @@ MAINTAINERCLEANFILES =
+ noinst_DATA =
+ 
+ vapidir = $(datadir)/vala/vapi
+-vapi_DATA = vala/libpulse.deps vala/libpulse.vapi
++vapi_DATA = \
++		vala/libpulse.deps vala/libpulse.vapi \
++		libpulse-mainloop-glib.deps libpulse-mainloop-glib.vapi
+ 
+ pkgconfigdir = $(libdir)/pkgconfig
+ pkgconfig_DATA = libpulse.pc libpulse-simple.pc
+diff --git a/vala/libpulse-mainloop-glib.deps b/vala/libpulse-mainloop-glib.deps
+new file mode 100644
+index 0000000..69bebf3
+--- /dev/null
++++ b/vala/libpulse-mainloop-glib.deps
+@@ -0,0 +1 @@
++libpulse
+diff --git a/vala/libpulse-mainloop-glib.vapi b/vala/libpulse-mainloop-glib.vapi
+new file mode 100644
+index 0000000..a54cb45
+--- /dev/null
++++ b/vala/libpulse-mainloop-glib.vapi
+@@ -0,0 +1,13 @@
++using GLib;
++
++namespace PulseAudio {
++        [Compact]
++        [CCode (cheader_filename="pulse/glib-mainloop.h", cname="pa_glib_mainloop", cprefix="pa_glib_mainloop_", free_function="pa_glib_mainloop_free")]
++        public class GLibMainLoop {
++
++                [CCode (cname="pa_glib_mainloop_new")]
++                public GLibMainLoop(MainContext? c = null);
++
++                public unowned MainLoopApi get_api();
++        }
++}
+diff --git a/vala/libpulse.vapi b/vala/libpulse.vapi
+index 8304911..4315988 100644
+--- a/vala/libpulse.vapi
++++ b/vala/libpulse.vapi
+@@ -879,16 +879,6 @@ namespace PulseAudio {
+         }
+ 
+         [Compact]
+-        [CCode (cheader_filename="pulse/glib-mainloop.h", cname="pa_glib_mainloop", cprefix="pa_glib_mainloop_", free_function="pa_glib_mainloop_free")]
+-        public class GLibMainLoop {
+-
+-                [CCode (cname="pa_glib_mainloop_new")]
+-                public GLibMainLoop(MainContext? c = null);
+-
+-                public unowned MainLoopApi get_api();
+-        }
+-
+-        [Compact]
+         [CCode (cname="pa_operation", cprefix="pa_operation_", unref_function="pa_operation_unref", ref_function="pa_operation_ref")]
+         public class Operation {
+ 
+-- 
+1.7.4.1
+
