@@ -1,3 +1,13 @@
+pulseaudio (1:0.9.22+stable-queue-24-g67d18-0ubuntu4) oneiric; urgency=low
+
+  [ David Henningsson ]
+  * Fix missing Internal/Front/Rear mics on Nvidia chipsets (LP: #771739)
+
+  [ Luke Yelavich ]
+  * debian/control: Update Vcs-Bzr field
+
+ -- David Henningsson <david.henningsson@canonical.com>  Thu, 28 Apr 2011 10:31:42 +0200
+
 pulseaudio (1:0.9.22+stable-queue-24-g67d18-0ubuntu3) natty; urgency=low
 
   [ David Henningsson ]
