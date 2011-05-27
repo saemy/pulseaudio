@@ -1,3 +1,105 @@
+pulseaudio (1:0.9.22+stable-queue-69-gf8e8-0ubuntu1) oneiric; urgency=low
+
+  * Merge from unreleased Debian git, remaining changes:
+    - epoch (my stupid fault :S)
+    - use speex-float-1 and change buffer and fragment size, depending on
+      architecture
+    - Add alsa configuration files to route alsa applications via pulseaudio
+    - Move libasound2-plugins from Recommends to Depends
+    - Add pm-utils sleep hook to suspend (and resume) users' pulseaudio
+      daemons
+    - Make initscript more informative in the default case of per-user
+      sessions
+    - add status check for system wide pulseaudio instance
+    - create /var/run/pulse, and make restart more robust
+    - indicate that the system pulseaudio instance is being started from the
+      init script
+    - check whether pulseaudio is running before preloading the padsp library
+    - Add DEB_OPT_FLAG = -O3 as per recommendation from
+      pulseaudio-discuss/2007-December/001017.html
+    - Generate a PO template on build
+    - the esd wrapper script should not load pulseaudio if pulseaudio is being
+      used as a system service
+    - add a pulseaudio apport hook
+    - drop padevchooser(Recommends) and pavucontrol (Suggests)
+    - add libudev-dev as a build-dependency
+    - Fix initialization of devices with modem subdevices
+    - Disable cork-music-on-phone
+    - disable flat volume
+    - Mute IEC958 Optical Raw by default
+    - use tdd instead of gdbm
+    - Add conflicts/replaces for pulseaudio-module-udev and
+      pulseaudio-module-rygel-media-server
+    - Add replaces for pulseaudio-module-hal to the pulseaudio package to handle
+      upgrades from hardy
+    - Load module-x11-bell in the start-pulseaudio-x11 script
+    - added IT block to fix thumb conditional instruction build error messages
+    - recommend instead of suggest rtkit
+    - Ship the jackdbus-detect module
+    - Ship extra quirks to mixer profiles for various x86 and ARM hardware, as
+      well as USB hardware
+  * New snapshot based on upstream git branch stable-queue:
+    - 4f67775 (http: support HTTP HEAD)
+    - 3bb6546 (vala: More vala fixes)
+    - 7fd0771 (x11: Fix build errors with newest xcb-util.)
+    - b72fc9b (x11: More XCB fixes.)
+    - f8e8a03 (rtkit: use private bus connection in order to avoid threading
+               issues when invoking pa_make_realtime())
+    - c524b4c (memblockq: implement new call pa_memblockq_peek_fixed_size())
+    - 1a8cf00 (make echo-cancel module that exposes a new sink and source)
+    - 9fa71e7 (echo-cancel: take into account snapshot delay)
+    - 7b972f5 (echo-cancel: use the phone media role)
+    - de6cdf9 (echo-cancel: tweak the resync code a little)
+    - 1c26694 (echo-cancel: improve debug)
+    - b30bf12 (echo-cancel: keep frame_size a power of 2)
+    - 6d8a907 (echo-cancel: Move the module into it's own directory)
+    - 57c5983 (echo-cancel: Split out speex code from the core module)
+    - 668f4e4 (echo-cancel: Pass arguments to the specific canceller module)
+    - c975dfa (echo-cancel: Let AEC module determine source/sink spec)
+    - 47e4dd1 (echo-cancel: Add alternative echo-cancellation implementation)
+    - 4a9fa8c (echo-cancel: Allow selection of AEC method using modargs)
+    - b6b8a7b (echo-cancel: Make blocksize a module-wide parameter)
+    - 2923c5e (echo-cancel: Mark immutable parameters as const in vfunc)
+    - 9f79c0e (echo-cancel: rework alignment code)
+    - 56a4684 (echo-cancel: improve accuracy)
+    - e936447 (echo-cancel: pause timer when echo canceling is off)
+    - d39043c (echo-cancel: Fix make distcheck)
+    - d8fab84 (echo-cancel: Fix out-of-tree build)
+    - 1212a6f (echo-cancel: Ensure correct handling of endianness)
+    - d866ade (echo-cancel: Use S16NE for adrian module)
+    - f93b5e1 (echo-cancel: Fix source may_move_to function)
+    - 6664650 (i18n: Update POTFILES.*)
+  * debian/libpulse-dev.install: Ship vala bindings
+  * Dropped patches, either they were previously backported, or are now
+    upstream:
+    - 0005-load-sample-dir-lazy.patch
+    - 0090-disable-flat-volumes.patch
+    - 0211-module-loopback-Add-adjust_time-to-valid-args.patch
+    - 0212-Limit-rate-adjustments-to-small-inaudible-jumps.patch
+    - 0213-module-rtp-recv-Use-new-algorithm-for-adjusting-samp.patch
+    - 0214-module-rtp-recv-Average-the-estimated-real-sample-ra.patch
+    - 0215-module-rtp-recv-Remove-smoother-from-write-index.patch
+    - 0216-conf-Make-system.pa-use-udev-detect-and-not-hal-dete.patch
+    - 0217-volume-Add-a-PA_VOLUME_UI_MAX-define-for-the-recomme.patch
+    - 0218-vala-Some-bugfixes-for-the-vala-bindings.patch
+    - 0219-vala-delegate-FreeCb-does-not-have-a-target.patch
+    - 0220-vala-move-GLibMainLoop-class-into-separate-file-to-f.patch
+    - 0221-vala-Fix-path-error-in-the-last-commit.patch
+    - 0222-build-sys-Link-binaries-linking-libpulse-to-libpulse.patch
+    - 0223-build-sys-Link-binaries-linking-libpulsecommon-to-li.patch
+    - 0224-build-sys-Link-lirc-libraries-in-right-order.patch
+    - 0225-module-jack-sink-source-protect-against-null-return-.patch
+    - 0226-vala-ChannelMap-has-no-destroy-function.patch
+  * debian/patches/series: Renamed and re-ordered some patches, and clearly
+    identified distro specific patches and upstream/upstreamable patches
+  * 0209-alsa-mixer-Fix-makefile-in.patch: Drop, as we use dh-autoreconf,
+    which takes care of this for us
+  * debian/pulseaudio.install: Add the echo-cancel module
+  * 0003-Mention-speex-and-libsamplerate-in-pulse-daemon.conf.patch: Drop,
+    upstream
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Fri, 27 May 2011 14:05:01 +1000
+
 pulseaudio (1:0.9.22+stable-queue-24-g67d18-0ubuntu4) oneiric; urgency=low
 
   [ David Henningsson ]
@@ -124,6 +226,43 @@ pulseaudio (1:0.9.22+stable-queue-18-geb966-0ubuntu1) natty; urgency=low
       tarball
 
  -- Luke Yelavich <themuso@ubuntu.com>  Fri, 14 Jan 2011 10:03:49 -0600
+
+pulseaudio (0.9.22-2) UNRELEASED; urgency=low
+
+  * debian/control:
+    + Fix typo in long description of pulseaudio-module-x11, thanks to
+      Sam Morris (Closes: #500038)
+    + Clarify long description of pulseaudio-esound-compat. Many apps
+      still in use require functionality from this package
+      (Closes: #601725)
+  * debian/libpulse-dev.examples: Apply patch from Mario Lang to include
+    simple examples in the dev package. Thanks! (Closes: #561258)
+  * debian/patches/
+    0003-Mention-speex-and-libsamplerate-in-pulse-daemon.conf.patch:
+    + Mention speex in the resampling section. Currently the Resampler
+      section of "Programming with Speex (the libspeex API)" contains
+      the relevant information (Closes: #541206)
+  * debian/pulseaudio-utils.links: Also add pamon(1), parec(1), and
+    parecord(1) (Closes: #599696)
+  * debian/README.Debian: Clarify historical pulse-rt use and document
+    current recommendation of RealtimeKit (Closes: #548363)
+
+ -- Daniel T Chen <crimsun@ubuntu.com>  Sat, 18 Dec 2010 20:26:47 -0500
+
+pulseaudio (0.9.22-1) experimental; urgency=low
+
+  * New upstream release
+  * debian/patches/0002-CVE-2009-1299.patch:
+    + Dropped, fixed upstream
+  * debian/patches/0003-Re-bootstrap.patch
+    + Dropped, not needed anymore
+  * debian/rules: Stop using -g0 on mips{,el} the toolchain has been fixed
+  * debian/rules, debian/control: Update build-depends and force building
+    with X11
+  * debian/control: Suggest rtkit
+  * debian/control: Prune unneeded depends of libpulse-dev
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Sun, 05 Dec 2010 12:01:37 +0000
 
 pulseaudio (1:0.9.22-0ubuntu3) natty; urgency=low
 
@@ -571,6 +710,61 @@ pulseaudio (1:0.9.22~0.9.21+341-g62bf-0ubuntu1) lucid; urgency=low
 
  -- Daniel T Chen <crimsun@ubuntu.com>  Thu, 14 Jan 2010 20:33:05 -0500
 
+pulseaudio (0.9.21-3) unstable; urgency=low
+
+  * debian/rules: Compile with -g0 on mips{,el} to work around #519006 in
+    gcc-4.4
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Sat, 03 Jul 2010 15:12:54 +0100
+
+pulseaudio (0.9.21-2) unstable; urgency=low
+
+  * Import NMU patches into pkg-pulse git, thanks to the security team for
+    their work!
+  * debian/patches/0003-Re-bootstrap.patch
+    + Added. Update configure so we don't have to re-run autotools when
+    building the package (Closes: #576457, #576546, #576769)
+  * Install a KDE specific startup file and module-device-manager.
+    Thanks to Daniel Schaal and Zsolt Rizsanyi for patches and tips.
+    (Closes: #570487)
+  * d/p/0004-In-KDE-only-start-pulseaudio-from-the-KDE-specific-d.patch
+    + Added. When running KDE use the KDE specific autostart desktop file
+    instead of the generic pulseaudio-x11 file
+  *  Fix two typos in debian/pulseaudio.default, patch by Paul Menzel
+    (Closes: #566332)
+  *  Prepare the debian package for building on HURD again (needs some upstream
+     fixes as well). Patch by Pino Toscano (Closes: #573339)
+  * Use the pulseaudio.1 manpage from the source tree instead of the older (and
+    outdated) debian specific one.
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Sun, 27 Jun 2010 20:27:23 +0100
+
+pulseaudio (0.9.21-1.2) unstable; urgency=high
+
+  * Non-maintainer upload by the Security Team.
+  * Added autoconf, automake, and libtool in Build-Depends to regenerate
+    configure and auto* files at build time, and fixed a regression introduced
+    in previous NMU (Closes: #576457)
+
+ -- Giuseppe Iuculano <iuculano@debian.org>  Mon, 05 Apr 2010 23:02:56 +0200
+
+pulseaudio (0.9.21-1.1) unstable; urgency=high
+
+  * Non-maintainer upload.
+  * Fix insecure temporary file creation security issue (closes: #573615).
+
+ -- Michael Gilbert <michael.s.gilbert@gmail.com>  Sat, 27 Mar 2010 14:32:13 -0400
+
+pulseaudio (0.9.21-1) unstable; urgency=low
+
+  * New upstream release
+  * d/p/0002-Fix-makefiles-to-include-all-alsa-path-files-on-inst.patch
+    + Removed, merged upstream
+  * debian/copyright: Updated
+  * debian/rules: Fix build on arm (slightly changes target name)
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Mon, 23 Nov 2009 23:51:16 +0000
+
 pulseaudio (1:0.9.21-0ubuntu6) lucid; urgency=low
 
   * Backport fix from master HEAD:
@@ -655,6 +849,14 @@ pulseaudio (1:0.9.21-0ubuntu1) lucid; urgency=low
       file on upgrade, remove the 70pulseaudio X Session script on upgrade
 
  -- Daniel T Chen <crimsun@ubuntu.com>  Wed, 25 Nov 2009 16:34:54 -0500
+
+pulseaudio (0.9.20-1) unstable; urgency=low
+
+  * New upstream release
+  * d/p/0002-Fix-makefiles-to-include-all-alsa-path-files-on-inst.patch
+    + Added. Make sure all alsa path configuration files are installed
+
+ -- Sjoerd Simons <sjoerd@debian.org>  Sat, 14 Nov 2009 22:50:52 +0000
 
 pulseaudio (1:0.9.20-0ubuntu3) lucid; urgency=low
 

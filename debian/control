@@ -5,11 +5,9 @@ Maintainer: Ubuntu Core Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 XSBC-Original-Maintainer: Pulseaudio maintenance team <pkg-pulseaudio-devel@lists.alioth.debian.org>
 Uploaders: CJ van den Berg <cj@vdbonline.com>, Sjoerd Simons <sjoerd@debian.org>
 Build-Depends: debhelper (>= 5), cdbs, quilt, m4, libltdl-dev,
-    libsamplerate0-dev,
-    libsndfile1-dev (>= 1.0.20) | libsndfile-dev, libx11-dev,
-    x11proto-core-dev, libxt-dev, libglib2.0-dev,
-    libasound2-dev (>= 1.0.20) [!kfreebsd-i386 !kfreebsd-amd64 !hurd-i386],
-    libavahi-client-dev, libjack-dev, libwrap0-dev,
+    libsamplerate0-dev, libsndfile1-dev (>= 1.0.20), libglib2.0-dev,
+    libasound2-dev (>= 1.0.19) [!kfreebsd-i386 !kfreebsd-amd64 !hurd-i386],
+    libavahi-client-dev, libjack-dev, libwrap0-dev,, libasyncns-dev,
     liblircclient-dev, libgconf2-dev, libatomic-ops-dev, libspeexdsp-dev (>= 1.2~rc1),
     libbluetooth-dev (>= 3.0) [!kfreebsd-i386 !kfreebsd-amd64 !hurd-i386],
     tdb-dev, intltool, libgtk2.0-dev, libxtst-dev, libssl-dev, libudev-dev (>= 143),
@@ -119,8 +117,10 @@ Description: PulseAudio ESD compatibility layer
  WIN32 systems. It is a drop in replacement for the ESD sound server with
  much better latency, mixing/re-sampling quality and overall architecture.
  .
- This package contains the ESD compatibility components and enables a
- PulseAudio sound server to fully replace ESD.
+ This package contains the ESD compatibility components used by some
+ older versions of complete desktop environments, e.g., GNOME, and
+ many useful applications. It enables a PulseAudio sound server to
+ fully replace ESD.
 
 Package: pulseaudio-esound-compat-dbg
 Architecture: any
@@ -291,7 +291,7 @@ Description: X11 module for PulseAudio sound server
  much better latency, mixing/re-sampling quality and overall architecture.
  .
  This module enables PulseAudio to publish itself as the default sound
- server to the X11 root window automatically upon startup. The is also a
+ server to the X11 root window automatically upon startup. There is also a
  module to playback a sound file in place of the X11 bell beep.
  .
  The modules are called module-x11-publish and module-x11-bell.
@@ -395,9 +395,6 @@ Depends: ${misc:Depends},
   libpulse0 (= ${binary:Version}),
   libpulse-mainloop-glib0 (= ${binary:Version}),
   libpulse-browse0 (= ${binary:Version}),
-  libx11-dev,
-  x11proto-core-dev,
-  libxt-dev,
   libglib2.0-dev,
   libavahi-client-dev
 Description: PulseAudio client development headers and libraries
