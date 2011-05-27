@@ -1047,6 +1047,20 @@ module_device_restore_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(module_device_restore_la_CFLAGS) $(CFLAGS) \
 	$(module_device_restore_la_LDFLAGS) $(LDFLAGS) -o $@
+module_echo_cancel_la_DEPENDENCIES = $(am__DEPENDENCIES_2) \
+	libpulsecore-@PA_MAJORMINORMICRO@.la \
+	libpulsecommon-@PA_MAJORMINORMICRO@.la libpulse.la \
+	$(am__DEPENDENCIES_1)
+am_module_echo_cancel_la_OBJECTS =  \
+	module_echo_cancel_la-module-echo-cancel.lo \
+	module_echo_cancel_la-speex.lo \
+	module_echo_cancel_la-adrian-aec.lo \
+	module_echo_cancel_la-adrian.lo
+module_echo_cancel_la_OBJECTS = $(am_module_echo_cancel_la_OBJECTS)
+module_echo_cancel_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(module_echo_cancel_la_CFLAGS) $(CFLAGS) \
+	$(module_echo_cancel_la_LDFLAGS) $(LDFLAGS) -o $@
 module_esound_compat_spawnfd_la_DEPENDENCIES = $(am__DEPENDENCIES_2) \
 	libpulsecore-@PA_MAJORMINORMICRO@.la \
 	libpulsecommon-@PA_MAJORMINORMICRO@.la libpulse.la
@@ -1222,8 +1236,9 @@ module_ladspa_sink_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(module_ladspa_sink_la_CFLAGS) $(CFLAGS) \
 	$(module_ladspa_sink_la_LDFLAGS) $(LDFLAGS) -o $@
 module_lirc_la_DEPENDENCIES = $(am__DEPENDENCIES_2) \
-	$(am__DEPENDENCIES_1) libpulsecore-@PA_MAJORMINORMICRO@.la \
-	libpulsecommon-@PA_MAJORMINORMICRO@.la libpulse.la
+	libpulsecore-@PA_MAJORMINORMICRO@.la \
+	libpulsecommon-@PA_MAJORMINORMICRO@.la libpulse.la \
+	$(am__DEPENDENCIES_1)
 am_module_lirc_la_OBJECTS = module_lirc_la-module-lirc.lo
 module_lirc_la_OBJECTS = $(am_module_lirc_la_OBJECTS)
 module_lirc_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
@@ -1659,7 +1674,7 @@ alsa_time_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 am_asyncmsgq_test_OBJECTS = asyncmsgq_test-asyncmsgq-test.$(OBJEXT)
 asyncmsgq_test_OBJECTS = $(am_asyncmsgq_test_OBJECTS)
 asyncmsgq_test_DEPENDENCIES = $(am__DEPENDENCIES_2) \
-	libpulsecore-@PA_MAJORMINORMICRO@.la \
+	libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la \
 	libpulsecommon-@PA_MAJORMINORMICRO@.la
 asyncmsgq_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
@@ -1668,7 +1683,7 @@ asyncmsgq_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 am_asyncq_test_OBJECTS = asyncq_test-asyncq-test.$(OBJEXT)
 asyncq_test_OBJECTS = $(am_asyncq_test_OBJECTS)
 asyncq_test_DEPENDENCIES = $(am__DEPENDENCIES_2) \
-	libpulsecore-@PA_MAJORMINORMICRO@.la \
+	libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la \
 	libpulsecommon-@PA_MAJORMINORMICRO@.la
 asyncq_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(asyncq_test_CFLAGS) \
@@ -1676,7 +1691,8 @@ asyncq_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 am_channelmap_test_OBJECTS =  \
 	channelmap_test-channelmap-test.$(OBJEXT)
 channelmap_test_OBJECTS = $(am_channelmap_test_OBJECTS)
-channelmap_test_DEPENDENCIES = $(am__DEPENDENCIES_2) libpulse.la
+channelmap_test_DEPENDENCIES = $(am__DEPENDENCIES_2) libpulse.la \
+	libpulsecommon-@PA_MAJORMINORMICRO@.la
 channelmap_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(channelmap_test_CFLAGS) $(CFLAGS) $(channelmap_test_LDFLAGS) \
@@ -1684,7 +1700,7 @@ channelmap_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 am_close_test_OBJECTS = close_test-close-test.$(OBJEXT)
 close_test_OBJECTS = $(am_close_test_OBJECTS)
 close_test_DEPENDENCIES = $(am__DEPENDENCIES_2) $(am__DEPENDENCIES_1) \
-	libpulsecore-@PA_MAJORMINORMICRO@.la \
+	libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la \
 	libpulsecommon-@PA_MAJORMINORMICRO@.la
 close_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(close_test_CFLAGS) \
@@ -1693,7 +1709,7 @@ am_cpulimit_test_OBJECTS = cpulimit_test-cpulimit-test.$(OBJEXT) \
 	cpulimit_test-cpulimit.$(OBJEXT)
 cpulimit_test_OBJECTS = $(am_cpulimit_test_OBJECTS)
 cpulimit_test_DEPENDENCIES = $(am__DEPENDENCIES_2) \
-	libpulsecore-@PA_MAJORMINORMICRO@.la \
+	libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la \
 	libpulsecommon-@PA_MAJORMINORMICRO@.la
 cpulimit_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(cpulimit_test_CFLAGS) \
@@ -1702,7 +1718,7 @@ am_cpulimit_test2_OBJECTS = cpulimit_test2-cpulimit-test.$(OBJEXT) \
 	cpulimit_test2-cpulimit.$(OBJEXT)
 cpulimit_test2_OBJECTS = $(am_cpulimit_test2_OBJECTS)
 cpulimit_test2_DEPENDENCIES = $(am__DEPENDENCIES_2) \
-	libpulsecore-@PA_MAJORMINORMICRO@.la \
+	libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la \
 	libpulsecommon-@PA_MAJORMINORMICRO@.la
 cpulimit_test2_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
@@ -1711,7 +1727,7 @@ cpulimit_test2_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 am_envelope_test_OBJECTS = envelope_test-envelope-test.$(OBJEXT)
 envelope_test_OBJECTS = $(am_envelope_test_OBJECTS)
 envelope_test_DEPENDENCIES = $(am__DEPENDENCIES_2) \
-	libpulsecore-@PA_MAJORMINORMICRO@.la \
+	libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la \
 	libpulsecommon-@PA_MAJORMINORMICRO@.la
 envelope_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(envelope_test_CFLAGS) \
@@ -1719,7 +1735,7 @@ envelope_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 am_flist_test_OBJECTS = flist_test-flist-test.$(OBJEXT)
 flist_test_OBJECTS = $(am_flist_test_OBJECTS)
 flist_test_DEPENDENCIES = $(am__DEPENDENCIES_2) \
-	libpulsecore-@PA_MAJORMINORMICRO@.la \
+	libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la \
 	libpulsecommon-@PA_MAJORMINORMICRO@.la
 flist_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(flist_test_CFLAGS) \
@@ -1735,7 +1751,8 @@ gconf_helper_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 am_get_binary_name_test_OBJECTS =  \
 	get_binary_name_test-get-binary-name-test.$(OBJEXT)
 get_binary_name_test_OBJECTS = $(am_get_binary_name_test_OBJECTS)
-get_binary_name_test_DEPENDENCIES = $(am__DEPENDENCIES_2) libpulse.la
+get_binary_name_test_DEPENDENCIES = $(am__DEPENDENCIES_2) libpulse.la \
+	libpulsecommon-@PA_MAJORMINORMICRO@.la
 get_binary_name_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(get_binary_name_test_CFLAGS) $(CFLAGS) \
@@ -1743,14 +1760,15 @@ get_binary_name_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 am_gtk_test_OBJECTS = gtk_test-gtk-test.$(OBJEXT)
 gtk_test_OBJECTS = $(am_gtk_test_OBJECTS)
 gtk_test_DEPENDENCIES = $(am__DEPENDENCIES_2) libpulse.la \
-	libpulse-mainloop-glib.la
+	libpulse-mainloop-glib.la libpulse.la \
+	libpulsecommon-@PA_MAJORMINORMICRO@.la
 gtk_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(gtk_test_CFLAGS) \
 	$(CFLAGS) $(gtk_test_LDFLAGS) $(LDFLAGS) -o $@
 am_hook_list_test_OBJECTS = hook_list_test-hook-list-test.$(OBJEXT)
 hook_list_test_OBJECTS = $(am_hook_list_test_OBJECTS)
 hook_list_test_DEPENDENCIES = $(am__DEPENDENCIES_2) \
-	libpulsecore-@PA_MAJORMINORMICRO@.la \
+	libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la \
 	libpulsecommon-@PA_MAJORMINORMICRO@.la
 hook_list_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
@@ -1759,7 +1777,7 @@ hook_list_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 am_interpol_test_OBJECTS = interpol_test-interpol-test.$(OBJEXT)
 interpol_test_OBJECTS = $(am_interpol_test_OBJECTS)
 interpol_test_DEPENDENCIES = $(am__DEPENDENCIES_2) libpulse.la \
-	libpulsecore-@PA_MAJORMINORMICRO@.la \
+	libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la \
 	libpulsecommon-@PA_MAJORMINORMICRO@.la
 interpol_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(interpol_test_CFLAGS) \
@@ -1767,7 +1785,7 @@ interpol_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 am_ipacl_test_OBJECTS = ipacl_test-ipacl-test.$(OBJEXT)
 ipacl_test_OBJECTS = $(am_ipacl_test_OBJECTS)
 ipacl_test_DEPENDENCIES = $(am__DEPENDENCIES_2) \
-	libpulsecore-@PA_MAJORMINORMICRO@.la \
+	libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la \
 	libpulsecommon-@PA_MAJORMINORMICRO@.la
 ipacl_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(ipacl_test_CFLAGS) \
@@ -1776,7 +1794,7 @@ am_lock_autospawn_test_OBJECTS =  \
 	lock_autospawn_test-lock-autospawn-test.$(OBJEXT)
 lock_autospawn_test_OBJECTS = $(am_lock_autospawn_test_OBJECTS)
 lock_autospawn_test_DEPENDENCIES = $(am__DEPENDENCIES_2) \
-	libpulsecore-@PA_MAJORMINORMICRO@.la \
+	libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la \
 	libpulsecommon-@PA_MAJORMINORMICRO@.la
 lock_autospawn_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
@@ -1784,14 +1802,16 @@ lock_autospawn_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(lock_autospawn_test_LDFLAGS) $(LDFLAGS) -o $@
 am_mainloop_test_OBJECTS = mainloop_test-mainloop-test.$(OBJEXT)
 mainloop_test_OBJECTS = $(am_mainloop_test_OBJECTS)
-mainloop_test_DEPENDENCIES = $(am__DEPENDENCIES_2) libpulse.la
+mainloop_test_DEPENDENCIES = $(am__DEPENDENCIES_2) libpulse.la \
+	libpulsecommon-@PA_MAJORMINORMICRO@.la
 mainloop_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(mainloop_test_CFLAGS) \
 	$(CFLAGS) $(mainloop_test_LDFLAGS) $(LDFLAGS) -o $@
 am__objects_15 = mainloop_test_glib-mainloop-test.$(OBJEXT)
 am_mainloop_test_glib_OBJECTS = $(am__objects_15)
 mainloop_test_glib_OBJECTS = $(am_mainloop_test_glib_OBJECTS)
-am__DEPENDENCIES_9 = $(am__DEPENDENCIES_2) libpulse.la
+am__DEPENDENCIES_9 = $(am__DEPENDENCIES_2) libpulse.la \
+	libpulsecommon-@PA_MAJORMINORMICRO@.la
 mainloop_test_glib_DEPENDENCIES = $(am__DEPENDENCIES_9) \
 	$(am__DEPENDENCIES_1) libpulse-mainloop-glib.la
 mainloop_test_glib_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
@@ -1802,14 +1822,14 @@ am_mcalign_test_OBJECTS = mcalign_test-mcalign-test.$(OBJEXT)
 mcalign_test_OBJECTS = $(am_mcalign_test_OBJECTS)
 mcalign_test_DEPENDENCIES = $(am__DEPENDENCIES_2) \
 	$(am__DEPENDENCIES_1) libpulsecore-@PA_MAJORMINORMICRO@.la \
-	libpulsecommon-@PA_MAJORMINORMICRO@.la
+	libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 mcalign_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(mcalign_test_CFLAGS) \
 	$(CFLAGS) $(mcalign_test_LDFLAGS) $(LDFLAGS) -o $@
 am_memblock_test_OBJECTS = memblock_test-memblock-test.$(OBJEXT)
 memblock_test_OBJECTS = $(am_memblock_test_OBJECTS)
 memblock_test_DEPENDENCIES = $(am__DEPENDENCIES_2) \
-	libpulsecore-@PA_MAJORMINORMICRO@.la \
+	libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la \
 	libpulsecommon-@PA_MAJORMINORMICRO@.la
 memblock_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(memblock_test_CFLAGS) \
@@ -1818,7 +1838,7 @@ am_memblockq_test_OBJECTS = memblockq_test-memblockq-test.$(OBJEXT)
 memblockq_test_OBJECTS = $(am_memblockq_test_OBJECTS)
 memblockq_test_DEPENDENCIES = $(am__DEPENDENCIES_2) \
 	$(am__DEPENDENCIES_1) libpulsecore-@PA_MAJORMINORMICRO@.la \
-	libpulsecommon-@PA_MAJORMINORMICRO@.la
+	libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 memblockq_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(memblockq_test_CFLAGS) $(CFLAGS) $(memblockq_test_LDFLAGS) \
@@ -1826,7 +1846,7 @@ memblockq_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 am_mix_test_OBJECTS = mix_test-mix-test.$(OBJEXT)
 mix_test_OBJECTS = $(am_mix_test_OBJECTS)
 mix_test_DEPENDENCIES = $(am__DEPENDENCIES_2) \
-	libpulsecore-@PA_MAJORMINORMICRO@.la \
+	libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la \
 	libpulsecommon-@PA_MAJORMINORMICRO@.la
 mix_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(mix_test_CFLAGS) \
@@ -1848,7 +1868,7 @@ pacat_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 am_pacat_simple_OBJECTS = pacat_simple-pacat-simple.$(OBJEXT)
 pacat_simple_OBJECTS = $(am_pacat_simple_OBJECTS)
 pacat_simple_DEPENDENCIES = $(am__DEPENDENCIES_2) libpulse.la \
-	libpulse-simple.la
+	libpulse-simple.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 pacat_simple_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(pacat_simple_CFLAGS) \
 	$(CFLAGS) $(pacat_simple_LDFLAGS) $(LDFLAGS) -o $@
@@ -1869,7 +1889,7 @@ pactl_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 am_parec_simple_OBJECTS = parec_simple-parec-simple.$(OBJEXT)
 parec_simple_OBJECTS = $(am_parec_simple_OBJECTS)
 parec_simple_DEPENDENCIES = $(am__DEPENDENCIES_2) libpulse.la \
-	libpulse-simple.la
+	libpulse-simple.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 parec_simple_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(parec_simple_CFLAGS) \
 	$(CFLAGS) $(parec_simple_LDFLAGS) $(LDFLAGS) -o $@
@@ -1890,7 +1910,7 @@ pax11publish_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 am_prioq_test_OBJECTS = prioq_test-prioq-test.$(OBJEXT)
 prioq_test_OBJECTS = $(am_prioq_test_OBJECTS)
 prioq_test_DEPENDENCIES = $(am__DEPENDENCIES_2) \
-	libpulsecore-@PA_MAJORMINORMICRO@.la \
+	libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la \
 	libpulsecommon-@PA_MAJORMINORMICRO@.la
 prioq_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(prioq_test_CFLAGS) \
@@ -1898,7 +1918,7 @@ prioq_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 am_proplist_test_OBJECTS = proplist_test-proplist-test.$(OBJEXT)
 proplist_test_OBJECTS = $(am_proplist_test_OBJECTS)
 proplist_test_DEPENDENCIES = $(am__DEPENDENCIES_2) \
-	libpulsecore-@PA_MAJORMINORMICRO@.la \
+	libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la \
 	libpulsecommon-@PA_MAJORMINORMICRO@.la
 proplist_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(proplist_test_CFLAGS) \
@@ -1924,7 +1944,7 @@ pulseaudio_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 am_queue_test_OBJECTS = queue_test-queue-test.$(OBJEXT)
 queue_test_OBJECTS = $(am_queue_test_OBJECTS)
 queue_test_DEPENDENCIES = $(am__DEPENDENCIES_2) \
-	libpulsecore-@PA_MAJORMINORMICRO@.la \
+	libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la \
 	libpulsecommon-@PA_MAJORMINORMICRO@.la
 queue_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(queue_test_CFLAGS) \
@@ -1932,7 +1952,7 @@ queue_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 am_remix_test_OBJECTS = remix_test-remix-test.$(OBJEXT)
 remix_test_OBJECTS = $(am_remix_test_OBJECTS)
 remix_test_DEPENDENCIES = $(am__DEPENDENCIES_2) \
-	libpulsecore-@PA_MAJORMINORMICRO@.la \
+	libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la \
 	libpulsecommon-@PA_MAJORMINORMICRO@.la
 remix_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(remix_test_CFLAGS) \
@@ -1940,7 +1960,7 @@ remix_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 am_resampler_test_OBJECTS = resampler_test-resampler-test.$(OBJEXT)
 resampler_test_OBJECTS = $(am_resampler_test_OBJECTS)
 resampler_test_DEPENDENCIES = $(am__DEPENDENCIES_2) \
-	libpulsecore-@PA_MAJORMINORMICRO@.la \
+	libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la \
 	libpulsecommon-@PA_MAJORMINORMICRO@.la
 resampler_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
@@ -1949,7 +1969,7 @@ resampler_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 am_rtpoll_test_OBJECTS = rtpoll_test-rtpoll-test.$(OBJEXT)
 rtpoll_test_OBJECTS = $(am_rtpoll_test_OBJECTS)
 rtpoll_test_DEPENDENCIES = $(am__DEPENDENCIES_2) \
-	libpulsecore-@PA_MAJORMINORMICRO@.la \
+	libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la \
 	libpulsecommon-@PA_MAJORMINORMICRO@.la
 rtpoll_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(rtpoll_test_CFLAGS) \
@@ -1957,7 +1977,7 @@ rtpoll_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 am_rtstutter_OBJECTS = rtstutter-rtstutter.$(OBJEXT)
 rtstutter_OBJECTS = $(am_rtstutter_OBJECTS)
 rtstutter_DEPENDENCIES = $(am__DEPENDENCIES_2) \
-	libpulsecore-@PA_MAJORMINORMICRO@.la \
+	libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la \
 	libpulsecommon-@PA_MAJORMINORMICRO@.la
 rtstutter_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(rtstutter_CFLAGS) \
@@ -1965,7 +1985,7 @@ rtstutter_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 am_sig2str_test_OBJECTS = sig2str_test-sig2str-test.$(OBJEXT)
 sig2str_test_OBJECTS = $(am_sig2str_test_OBJECTS)
 sig2str_test_DEPENDENCIES = $(am__DEPENDENCIES_2) \
-	libpulsecore-@PA_MAJORMINORMICRO@.la \
+	libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la \
 	libpulsecommon-@PA_MAJORMINORMICRO@.la
 sig2str_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(sig2str_test_CFLAGS) \
@@ -1973,7 +1993,7 @@ sig2str_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 am_sigbus_test_OBJECTS = sigbus_test-sigbus-test.$(OBJEXT)
 sigbus_test_OBJECTS = $(am_sigbus_test_OBJECTS)
 sigbus_test_DEPENDENCIES = $(am__DEPENDENCIES_2) \
-	libpulsecore-@PA_MAJORMINORMICRO@.la \
+	libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la \
 	libpulsecommon-@PA_MAJORMINORMICRO@.la
 sigbus_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(sigbus_test_CFLAGS) \
@@ -1981,7 +2001,7 @@ sigbus_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 am_smoother_test_OBJECTS = smoother_test-smoother-test.$(OBJEXT)
 smoother_test_OBJECTS = $(am_smoother_test_OBJECTS)
 smoother_test_DEPENDENCIES = $(am__DEPENDENCIES_2) \
-	libpulsecore-@PA_MAJORMINORMICRO@.la \
+	libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la \
 	libpulsecommon-@PA_MAJORMINORMICRO@.la
 smoother_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(smoother_test_CFLAGS) \
@@ -1989,7 +2009,7 @@ smoother_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 am_stripnul_OBJECTS = stripnul-stripnul.$(OBJEXT)
 stripnul_OBJECTS = $(am_stripnul_OBJECTS)
 stripnul_DEPENDENCIES = $(am__DEPENDENCIES_2) \
-	libpulsecore-@PA_MAJORMINORMICRO@.la \
+	libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la \
 	libpulsecommon-@PA_MAJORMINORMICRO@.la
 stripnul_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(stripnul_CFLAGS) \
@@ -1998,13 +2018,14 @@ am_strlist_test_OBJECTS = strlist_test-strlist-test.$(OBJEXT)
 strlist_test_OBJECTS = $(am_strlist_test_OBJECTS)
 strlist_test_DEPENDENCIES = $(am__DEPENDENCIES_2) \
 	$(am__DEPENDENCIES_1) libpulsecore-@PA_MAJORMINORMICRO@.la \
-	libpulsecommon-@PA_MAJORMINORMICRO@.la
+	libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 strlist_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(strlist_test_CFLAGS) \
 	$(CFLAGS) $(strlist_test_LDFLAGS) $(LDFLAGS) -o $@
 am_sync_playback_OBJECTS = sync_playback-sync-playback.$(OBJEXT)
 sync_playback_OBJECTS = $(am_sync_playback_OBJECTS)
-sync_playback_DEPENDENCIES = $(am__DEPENDENCIES_2) libpulse.la
+sync_playback_DEPENDENCIES = $(am__DEPENDENCIES_2) libpulse.la \
+	libpulsecommon-@PA_MAJORMINORMICRO@.la
 sync_playback_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(sync_playback_CFLAGS) \
 	$(CFLAGS) $(sync_playback_LDFLAGS) $(LDFLAGS) -o $@
@@ -2021,7 +2042,7 @@ thread_mainloop_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 am_thread_test_OBJECTS = thread_test-thread-test.$(OBJEXT)
 thread_test_OBJECTS = $(am_thread_test_OBJECTS)
 thread_test_DEPENDENCIES = $(am__DEPENDENCIES_2) \
-	libpulsecore-@PA_MAJORMINORMICRO@.la \
+	libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la \
 	libpulsecommon-@PA_MAJORMINORMICRO@.la
 thread_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(thread_test_CFLAGS) \
@@ -2029,7 +2050,8 @@ thread_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 am_usergroup_test_OBJECTS = usergroup_test-usergroup-test.$(OBJEXT)
 usergroup_test_OBJECTS = $(am_usergroup_test_OBJECTS)
 usergroup_test_DEPENDENCIES = $(am__DEPENDENCIES_2) \
-	libpulsecore-@PA_MAJORMINORMICRO@.la
+	libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la \
+	libpulsecommon-@PA_MAJORMINORMICRO@.la
 usergroup_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(usergroup_test_CFLAGS) $(CFLAGS) $(usergroup_test_LDFLAGS) \
@@ -2037,7 +2059,7 @@ usergroup_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 am_utf8_test_OBJECTS = utf8_test-utf8-test.$(OBJEXT)
 utf8_test_OBJECTS = $(am_utf8_test_OBJECTS)
 utf8_test_DEPENDENCIES = $(am__DEPENDENCIES_2) \
-	libpulsecore-@PA_MAJORMINORMICRO@.la \
+	libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la \
 	libpulsecommon-@PA_MAJORMINORMICRO@.la
 utf8_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(utf8_test_CFLAGS) \
@@ -2045,14 +2067,15 @@ utf8_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 am_vector_test_OBJECTS = vector_test-vector-test.$(OBJEXT)
 vector_test_OBJECTS = $(am_vector_test_OBJECTS)
 vector_test_DEPENDENCIES = $(am__DEPENDENCIES_2) \
-	libpulsecore-@PA_MAJORMINORMICRO@.la \
+	libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la \
 	libpulsecommon-@PA_MAJORMINORMICRO@.la
 vector_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(vector_test_CFLAGS) \
 	$(CFLAGS) $(vector_test_LDFLAGS) $(LDFLAGS) -o $@
 am_voltest_OBJECTS = voltest-voltest.$(OBJEXT)
 voltest_OBJECTS = $(am_voltest_OBJECTS)
-voltest_DEPENDENCIES = $(am__DEPENDENCIES_2) libpulse.la
+voltest_DEPENDENCIES = $(am__DEPENDENCIES_2) libpulse.la \
+	libpulsecommon-@PA_MAJORMINORMICRO@.la
 voltest_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(voltest_CFLAGS) \
 	$(CFLAGS) $(voltest_LDFLAGS) $(LDFLAGS) -o $@
@@ -2114,6 +2137,7 @@ SOURCES = $(libalsa_util_la_SOURCES) $(libavahi_wrap_la_SOURCES) \
 	$(module_detect_la_SOURCES) \
 	$(module_device_manager_la_SOURCES) \
 	$(module_device_restore_la_SOURCES) \
+	$(module_echo_cancel_la_SOURCES) \
 	$(module_esound_compat_spawnfd_la_SOURCES) \
 	$(module_esound_compat_spawnpid_la_SOURCES) \
 	$(module_esound_protocol_tcp_la_SOURCES) \
@@ -2211,6 +2235,7 @@ DIST_SOURCES = $(am__libalsa_util_la_SOURCES_DIST) \
 	$(module_detect_la_SOURCES) \
 	$(module_device_manager_la_SOURCES) \
 	$(module_device_restore_la_SOURCES) \
+	$(module_echo_cancel_la_SOURCES) \
 	$(module_esound_compat_spawnfd_la_SOURCES) \
 	$(module_esound_compat_spawnpid_la_SOURCES) \
 	$(module_esound_protocol_tcp_la_SOURCES) \
@@ -2611,6 +2636,8 @@ AM_CFLAGS = \
 	-I$(top_builddir)/src/modules/x11 \
 	-I$(top_srcdir)/src/modules/jack \
 	-I$(top_builddir)/src/modules/jack \
+	-I$(top_srcdir)/src/modules/echo-cancel \
+	-I$(top_builddir)/src/modules/echo-cancel \
 	$(PTHREAD_CFLAGS) -D_POSIX_PTHREAD_SEMANTICS \
 	$(LIBSAMPLERATE_CFLAGS) \
 	$(LIBSNDFILE_CFLAGS) \
@@ -2675,6 +2702,7 @@ EXTRA_DIST = pulse/client.conf.in pulse/version.h.in \
 	utils/padsp modules/module-defs.h.m4 \
 	daemon/pulseaudio.desktop.in daemon/pulseaudio-kde.desktop.in \
 	map-file daemon/pulseaudio-system.conf \
+	modules/echo-cancel/adrian-license.txt \
 	modules/alsa/mixer/profile-sets/90-pulseaudio.rules \
 	${ALSA_PROFILES} ${ALSA_PATHS} $(SYMDEF_FILES)
 pulseconf_DATA = \
@@ -2747,7 +2775,7 @@ TESTS_BINARIES = mainloop-test mcalign-test pacat-simple parec-simple \
 	$(am__append_7) $(am__append_8) $(am__append_9)
 mainloop_test_SOURCES = tests/mainloop-test.c
 mainloop_test_CFLAGS = $(AM_CFLAGS)
-mainloop_test_LDADD = $(AM_LDADD) libpulse.la
+mainloop_test_LDADD = $(AM_LDADD) libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 mainloop_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 thread_mainloop_test_SOURCES = tests/thread-mainloop-test.c
 thread_mainloop_test_CFLAGS = $(AM_CFLAGS)
@@ -2755,87 +2783,87 @@ thread_mainloop_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la li
 thread_mainloop_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 utf8_test_SOURCES = tests/utf8-test.c
 utf8_test_CFLAGS = $(AM_CFLAGS)
-utf8_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
+utf8_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 utf8_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 get_binary_name_test_SOURCES = tests/get-binary-name-test.c
 get_binary_name_test_CFLAGS = $(AM_CFLAGS)
-get_binary_name_test_LDADD = $(AM_LDADD) libpulse.la
+get_binary_name_test_LDADD = $(AM_LDADD) libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 get_binary_name_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 ipacl_test_SOURCES = tests/ipacl-test.c
 ipacl_test_CFLAGS = $(AM_CFLAGS)
-ipacl_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
+ipacl_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 ipacl_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 hook_list_test_SOURCES = tests/hook-list-test.c
 hook_list_test_CFLAGS = $(AM_CFLAGS)
-hook_list_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
+hook_list_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 hook_list_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 memblock_test_SOURCES = tests/memblock-test.c
 memblock_test_CFLAGS = $(AM_CFLAGS)
-memblock_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
+memblock_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 memblock_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 thread_test_SOURCES = tests/thread-test.c
 thread_test_CFLAGS = $(AM_CFLAGS)
-thread_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
+thread_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 thread_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 flist_test_SOURCES = tests/flist-test.c
 flist_test_CFLAGS = $(AM_CFLAGS)
-flist_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
+flist_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 flist_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 asyncq_test_SOURCES = tests/asyncq-test.c
 asyncq_test_CFLAGS = $(AM_CFLAGS)
-asyncq_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
+asyncq_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 asyncq_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 asyncmsgq_test_SOURCES = tests/asyncmsgq-test.c
 asyncmsgq_test_CFLAGS = $(AM_CFLAGS)
-asyncmsgq_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
+asyncmsgq_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 asyncmsgq_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 queue_test_SOURCES = tests/queue-test.c
 queue_test_CFLAGS = $(AM_CFLAGS)
-queue_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
+queue_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 queue_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 rtpoll_test_SOURCES = tests/rtpoll-test.c
 rtpoll_test_CFLAGS = $(AM_CFLAGS)
-rtpoll_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
+rtpoll_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 rtpoll_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 mcalign_test_SOURCES = tests/mcalign-test.c
 mcalign_test_CFLAGS = $(AM_CFLAGS)
-mcalign_test_LDADD = $(AM_LDADD) $(WINSOCK_LIBS) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
+mcalign_test_LDADD = $(AM_LDADD) $(WINSOCK_LIBS) libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 mcalign_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 pacat_simple_SOURCES = tests/pacat-simple.c
-pacat_simple_LDADD = $(AM_LDADD) libpulse.la libpulse-simple.la
+pacat_simple_LDADD = $(AM_LDADD) libpulse.la libpulse-simple.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 pacat_simple_CFLAGS = $(AM_CFLAGS)
 pacat_simple_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 parec_simple_SOURCES = tests/parec-simple.c
-parec_simple_LDADD = $(AM_LDADD) libpulse.la libpulse-simple.la
+parec_simple_LDADD = $(AM_LDADD) libpulse.la libpulse-simple.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 parec_simple_CFLAGS = $(AM_CFLAGS)
 parec_simple_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 strlist_test_SOURCES = tests/strlist-test.c
 strlist_test_CFLAGS = $(AM_CFLAGS)
-strlist_test_LDADD = $(AM_LDADD) $(WINSOCK_LIBS) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
+strlist_test_LDADD = $(AM_LDADD) $(WINSOCK_LIBS) libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 strlist_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 close_test_SOURCES = tests/close-test.c
 close_test_CFLAGS = $(AM_CFLAGS)
-close_test_LDADD = $(AM_LDADD) $(WINSOCK_LIBS) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
+close_test_LDADD = $(AM_LDADD) $(WINSOCK_LIBS) libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 close_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 voltest_SOURCES = tests/voltest.c
 voltest_CFLAGS = $(AM_CFLAGS)
-voltest_LDADD = $(AM_LDADD) libpulse.la
+voltest_LDADD = $(AM_LDADD) libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 voltest_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 vector_test_SOURCES = tests/vector-test.c
 vector_test_CFLAGS = $(AM_CFLAGS)
-vector_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
+vector_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 vector_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 channelmap_test_SOURCES = tests/channelmap-test.c
 channelmap_test_CFLAGS = $(AM_CFLAGS)
-channelmap_test_LDADD = $(AM_LDADD) libpulse.la
+channelmap_test_LDADD = $(AM_LDADD) libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 channelmap_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 cpulimit_test_SOURCES = tests/cpulimit-test.c daemon/cpulimit.c daemon/cpulimit.h
 cpulimit_test_CFLAGS = $(AM_CFLAGS)
-cpulimit_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
+cpulimit_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 cpulimit_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 cpulimit_test2_SOURCES = tests/cpulimit-test.c daemon/cpulimit.c daemon/cpulimit.h
 cpulimit_test2_CFLAGS = $(AM_CFLAGS) -DTEST2
-cpulimit_test2_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
+cpulimit_test2_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 cpulimit_test2_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 mainloop_test_glib_SOURCES = $(mainloop_test_SOURCES)
 mainloop_test_glib_CFLAGS = $(mainloop_test_CFLAGS) $(GLIB20_CFLAGS) -DGLIB_MAIN_LOOP
@@ -2843,66 +2871,66 @@ mainloop_test_glib_LDADD = $(mainloop_test_LDADD) $(GLIB20_LIBS) libpulse-mainlo
 mainloop_test_glib_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 memblockq_test_SOURCES = tests/memblockq-test.c
 memblockq_test_CFLAGS = $(AM_CFLAGS)
-memblockq_test_LDADD = $(AM_LDADD) $(WINSOCK_LIBS) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
+memblockq_test_LDADD = $(AM_LDADD) $(WINSOCK_LIBS) libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 memblockq_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 sync_playback_SOURCES = tests/sync-playback.c
-sync_playback_LDADD = $(AM_LDADD) libpulse.la
+sync_playback_LDADD = $(AM_LDADD) libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 sync_playback_CFLAGS = $(AM_CFLAGS)
 sync_playback_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 interpol_test_SOURCES = tests/interpol-test.c
-interpol_test_LDADD = $(AM_LDADD) libpulse.la libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
+interpol_test_LDADD = $(AM_LDADD) libpulse.la libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 interpol_test_CFLAGS = $(AM_CFLAGS)
 interpol_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 sig2str_test_SOURCES = tests/sig2str-test.c
-sig2str_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
+sig2str_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 sig2str_test_CFLAGS = $(AM_CFLAGS)
 sig2str_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 resampler_test_SOURCES = tests/resampler-test.c
-resampler_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
+resampler_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 resampler_test_CFLAGS = $(AM_CFLAGS)
 resampler_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 mix_test_SOURCES = tests/mix-test.c
-mix_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
+mix_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 mix_test_CFLAGS = $(AM_CFLAGS)
 mix_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 remix_test_SOURCES = tests/remix-test.c
-remix_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
+remix_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 remix_test_CFLAGS = $(AM_CFLAGS)
 remix_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 smoother_test_SOURCES = tests/smoother-test.c
-smoother_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
+smoother_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 smoother_test_CFLAGS = $(AM_CFLAGS)
 smoother_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 envelope_test_SOURCES = tests/envelope-test.c
-envelope_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
+envelope_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 envelope_test_CFLAGS = $(AM_CFLAGS)
 envelope_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 proplist_test_SOURCES = tests/proplist-test.c
-proplist_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
+proplist_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 proplist_test_CFLAGS = $(AM_CFLAGS)
 proplist_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 rtstutter_SOURCES = tests/rtstutter.c
-rtstutter_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
+rtstutter_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 rtstutter_CFLAGS = $(AM_CFLAGS)
 rtstutter_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 stripnul_SOURCES = tests/stripnul.c
-stripnul_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
+stripnul_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 stripnul_CFLAGS = $(AM_CFLAGS)
 stripnul_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 lock_autospawn_test_SOURCES = tests/lock-autospawn-test.c
-lock_autospawn_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
+lock_autospawn_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 lock_autospawn_test_CFLAGS = $(AM_CFLAGS)
 lock_autospawn_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 prioq_test_SOURCES = tests/prioq-test.c
-prioq_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
+prioq_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 prioq_test_CFLAGS = $(AM_CFLAGS)
 prioq_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 sigbus_test_SOURCES = tests/sigbus-test.c
-sigbus_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la
+sigbus_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 sigbus_test_CFLAGS = $(AM_CFLAGS)
 sigbus_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 gtk_test_SOURCES = tests/gtk-test.c
-gtk_test_LDADD = $(AM_LDADD) libpulse.la libpulse-mainloop-glib.la
+gtk_test_LDADD = $(AM_LDADD) libpulse.la libpulse-mainloop-glib.la libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 gtk_test_CFLAGS = $(AM_CFLAGS) $(GTK20_CFLAGS)
 gtk_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS) $(GTK20_LIBS)
 alsa_time_test_SOURCES = tests/alsa-time-test.c
@@ -2910,7 +2938,7 @@ alsa_time_test_LDADD = $(AM_LDADD)
 alsa_time_test_CFLAGS = $(AM_CFLAGS) $(ASOUNDLIB_CFLAGS)
 alsa_time_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS) $(ASOUNDLIB_LIBS)
 usergroup_test_SOURCES = tests/usergroup-test.c
-usergroup_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la
+usergroup_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulse.la libpulsecommon-@PA_MAJORMINORMICRO@.la
 usergroup_test_CFLAGS = $(AM_CFLAGS)
 usergroup_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 
@@ -3116,10 +3144,10 @@ modlibexec_LTLIBRARIES = libcli.la libprotocol-cli.la \
 	module-card-restore.la module-default-device-restore.la \
 	module-always-sink.la module-rescue-streams.la \
 	module-intended-roles.la module-suspend-on-idle.la \
-	module-http-protocol-tcp.la module-sine.la \
-	module-native-protocol-tcp.la module-native-protocol-fd.la \
-	module-esound-protocol-tcp.la module-combine.la \
-	module-remap-sink.la module-ladspa-sink.la \
+	module-echo-cancel.la module-http-protocol-tcp.la \
+	module-sine.la module-native-protocol-tcp.la \
+	module-native-protocol-fd.la module-esound-protocol-tcp.la \
+	module-combine.la module-remap-sink.la module-ladspa-sink.la \
 	module-esound-sink.la module-tunnel-sink.la \
 	module-tunnel-source.la module-position-event-sounds.la \
 	module-augment-properties.la module-cork-music-on-phone.la \
@@ -3236,6 +3264,7 @@ SYMDEF_FILES = \
 		modules/module-rescue-streams-symdef.h \
 		modules/module-intended-roles-symdef.h \
 		modules/module-suspend-on-idle-symdef.h \
+		modules/echo-cancel/module-echo-cancel-symdef.h \
 		modules/module-hal-detect-symdef.h \
 		modules/module-udev-detect-symdef.h \
 		modules/bluetooth/module-bluetooth-proximity-symdef.h \
@@ -3433,7 +3462,7 @@ module_zeroconf_discover_la_CFLAGS = $(AM_CFLAGS) $(AVAHI_CFLAGS)
 # LIRC
 module_lirc_la_SOURCES = modules/module-lirc.c
 module_lirc_la_LDFLAGS = $(MODULE_LDFLAGS)
-module_lirc_la_LIBADD = $(AM_LIBADD) $(LIRC_LIBS) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la libpulse.la
+module_lirc_la_LIBADD = $(AM_LIBADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la libpulse.la $(LIRC_LIBS)
 module_lirc_la_CFLAGS = $(AM_CFLAGS) $(LIRC_CFLAGS)
 
 # Linux evdev
@@ -3533,6 +3562,16 @@ module_suspend_on_idle_la_SOURCES = modules/module-suspend-on-idle.c
 module_suspend_on_idle_la_LDFLAGS = $(MODULE_LDFLAGS)
 module_suspend_on_idle_la_LIBADD = $(AM_LIBADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la libpulse.la
 module_suspend_on_idle_la_CFLAGS = $(AM_CFLAGS)
+
+# echo-cancel module
+module_echo_cancel_la_SOURCES = modules/echo-cancel/module-echo-cancel.c modules/echo-cancel/echo-cancel.h \
+				modules/echo-cancel/speex.c \
+				modules/echo-cancel/adrian-aec.c modules/echo-cancel/adrian-aec.h \
+				modules/echo-cancel/adrian.c modules/echo-cancel/adrian.h
+
+module_echo_cancel_la_LDFLAGS = $(MODULE_LDFLAGS)
+module_echo_cancel_la_LIBADD = $(AM_LIBADD) libpulsecore-@PA_MAJORMINORMICRO@.la libpulsecommon-@PA_MAJORMINORMICRO@.la libpulse.la $(LIBSPEEX_LIBS)
+module_echo_cancel_la_CFLAGS = $(AM_CFLAGS) $(LIBSPEEX_CFLAGS)
 
 # RTP modules
 module_rtp_send_la_SOURCES = modules/rtp/module-rtp-send.c
@@ -3824,6 +3863,8 @@ module-device-manager.la: $(module_device_manager_la_OBJECTS) $(module_device_ma
 	$(AM_V_CCLD)$(module_device_manager_la_LINK) -rpath $(modlibexecdir) $(module_device_manager_la_OBJECTS) $(module_device_manager_la_LIBADD) $(LIBS)
 module-device-restore.la: $(module_device_restore_la_OBJECTS) $(module_device_restore_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(module_device_restore_la_LINK) -rpath $(modlibexecdir) $(module_device_restore_la_OBJECTS) $(module_device_restore_la_LIBADD) $(LIBS)
+module-echo-cancel.la: $(module_echo_cancel_la_OBJECTS) $(module_echo_cancel_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(module_echo_cancel_la_LINK) -rpath $(modlibexecdir) $(module_echo_cancel_la_OBJECTS) $(module_echo_cancel_la_LIBADD) $(LIBS)
 module-esound-compat-spawnfd.la: $(module_esound_compat_spawnfd_la_OBJECTS) $(module_esound_compat_spawnfd_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(module_esound_compat_spawnfd_la_LINK) $(am_module_esound_compat_spawnfd_la_rpath) $(module_esound_compat_spawnfd_la_OBJECTS) $(module_esound_compat_spawnfd_la_LIBADD) $(LIBS)
 module-esound-compat-spawnpid.la: $(module_esound_compat_spawnpid_la_OBJECTS) $(module_esound_compat_spawnpid_la_DEPENDENCIES) 
@@ -4447,6 +4488,10 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/module_detect_la-module-detect.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/module_device_manager_la-module-device-manager.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/module_device_restore_la-module-device-restore.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/module_echo_cancel_la-adrian-aec.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/module_echo_cancel_la-adrian.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/module_echo_cancel_la-module-echo-cancel.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/module_echo_cancel_la-speex.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/module_esound_protocol_tcp_la-module-protocol-stub.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/module_esound_protocol_unix_la-module-protocol-stub.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/module_gconf_la-module-gconf.Plo@am__quote@
@@ -6120,6 +6165,38 @@ module_device_restore_la-module-device-restore.lo: modules/module-device-restore
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/module-device-restore.c' object='module_device_restore_la-module-device-restore.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(module_device_restore_la_CFLAGS) $(CFLAGS) -c -o module_device_restore_la-module-device-restore.lo `test -f 'modules/module-device-restore.c' || echo '$(srcdir)/'`modules/module-device-restore.c
+
+module_echo_cancel_la-module-echo-cancel.lo: modules/echo-cancel/module-echo-cancel.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(module_echo_cancel_la_CFLAGS) $(CFLAGS) -MT module_echo_cancel_la-module-echo-cancel.lo -MD -MP -MF $(DEPDIR)/module_echo_cancel_la-module-echo-cancel.Tpo -c -o module_echo_cancel_la-module-echo-cancel.lo `test -f 'modules/echo-cancel/module-echo-cancel.c' || echo '$(srcdir)/'`modules/echo-cancel/module-echo-cancel.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/module_echo_cancel_la-module-echo-cancel.Tpo $(DEPDIR)/module_echo_cancel_la-module-echo-cancel.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/echo-cancel/module-echo-cancel.c' object='module_echo_cancel_la-module-echo-cancel.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(module_echo_cancel_la_CFLAGS) $(CFLAGS) -c -o module_echo_cancel_la-module-echo-cancel.lo `test -f 'modules/echo-cancel/module-echo-cancel.c' || echo '$(srcdir)/'`modules/echo-cancel/module-echo-cancel.c
+
+module_echo_cancel_la-speex.lo: modules/echo-cancel/speex.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(module_echo_cancel_la_CFLAGS) $(CFLAGS) -MT module_echo_cancel_la-speex.lo -MD -MP -MF $(DEPDIR)/module_echo_cancel_la-speex.Tpo -c -o module_echo_cancel_la-speex.lo `test -f 'modules/echo-cancel/speex.c' || echo '$(srcdir)/'`modules/echo-cancel/speex.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/module_echo_cancel_la-speex.Tpo $(DEPDIR)/module_echo_cancel_la-speex.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/echo-cancel/speex.c' object='module_echo_cancel_la-speex.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(module_echo_cancel_la_CFLAGS) $(CFLAGS) -c -o module_echo_cancel_la-speex.lo `test -f 'modules/echo-cancel/speex.c' || echo '$(srcdir)/'`modules/echo-cancel/speex.c
+
+module_echo_cancel_la-adrian-aec.lo: modules/echo-cancel/adrian-aec.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(module_echo_cancel_la_CFLAGS) $(CFLAGS) -MT module_echo_cancel_la-adrian-aec.lo -MD -MP -MF $(DEPDIR)/module_echo_cancel_la-adrian-aec.Tpo -c -o module_echo_cancel_la-adrian-aec.lo `test -f 'modules/echo-cancel/adrian-aec.c' || echo '$(srcdir)/'`modules/echo-cancel/adrian-aec.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/module_echo_cancel_la-adrian-aec.Tpo $(DEPDIR)/module_echo_cancel_la-adrian-aec.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/echo-cancel/adrian-aec.c' object='module_echo_cancel_la-adrian-aec.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(module_echo_cancel_la_CFLAGS) $(CFLAGS) -c -o module_echo_cancel_la-adrian-aec.lo `test -f 'modules/echo-cancel/adrian-aec.c' || echo '$(srcdir)/'`modules/echo-cancel/adrian-aec.c
+
+module_echo_cancel_la-adrian.lo: modules/echo-cancel/adrian.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(module_echo_cancel_la_CFLAGS) $(CFLAGS) -MT module_echo_cancel_la-adrian.lo -MD -MP -MF $(DEPDIR)/module_echo_cancel_la-adrian.Tpo -c -o module_echo_cancel_la-adrian.lo `test -f 'modules/echo-cancel/adrian.c' || echo '$(srcdir)/'`modules/echo-cancel/adrian.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/module_echo_cancel_la-adrian.Tpo $(DEPDIR)/module_echo_cancel_la-adrian.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='modules/echo-cancel/adrian.c' object='module_echo_cancel_la-adrian.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(module_echo_cancel_la_CFLAGS) $(CFLAGS) -c -o module_echo_cancel_la-adrian.lo `test -f 'modules/echo-cancel/adrian.c' || echo '$(srcdir)/'`modules/echo-cancel/adrian.c
 
 module-esound-compat-spawnfd.lo: modules/module-esound-compat-spawnfd.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT module-esound-compat-spawnfd.lo -MD -MP -MF $(DEPDIR)/module-esound-compat-spawnfd.Tpo -c -o module-esound-compat-spawnfd.lo `test -f 'modules/module-esound-compat-spawnfd.c' || echo '$(srcdir)/'`modules/module-esound-compat-spawnfd.c

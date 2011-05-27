@@ -28,7 +28,10 @@ EXTRA_DIST = \
 	doxygen/doxygen.conf.in \
 	README \
 	todo \
-	vala/libpulse.vapi
+	vala/libpulse.deps \
+	vala/libpulse.vapi \
+	vala/libpulse-mainloop-glib.deps \
+	vala/libpulse-mainloop-glib.vapi
 
 SUBDIRS = src doxygen man po
 
@@ -36,7 +39,9 @@ MAINTAINERCLEANFILES =
 noinst_DATA =
 
 vapidir = $(datadir)/vala/vapi
-vapi_DATA = vala/libpulse.vapi
+vapi_DATA = \
+		vala/libpulse.deps vala/libpulse.vapi \
+		vala/libpulse-mainloop-glib.deps vala/libpulse-mainloop-glib.vapi
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libpulse.pc libpulse-simple.pc
