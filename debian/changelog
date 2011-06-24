@@ -1,3 +1,24 @@
+pulseaudio (1:0.9.23-0ubuntu1) oneiric; urgency=low
+
+  * New upstream release, the following commits from the stable-queue branch
+    are included in this release:
+    - d4c9ad1 (streams: Fix the actual resampler method shown in debug
+               messages.)
+    - cc91a8f (module-combine-sink: Initialize smoother with offset
+               pa_rtclock_now())
+    - 8a437ee (module-combine-sink: Initialize smoother in paused state)
+    - b54a43a (module-combine-sink: Check running flag before rendering in null
+               mode
+    - b3e4152 (pulsecore: Add a couple pa_asserts() on pa_tagstruct* calls.)
+    - 22c0dcb (device-manager: Free a hook slot to prevent segv on unload)
+    - c3bfcc9 (SSE/MMX: Fix problem with highpitched noise on i386)
+    - 9ee4229 (build-sys: Add echo-cancel dummy Makefile)
+    - f558189 (build-sys: bump soname)
+  * Bumped shlibs
+  * debian/rules: Exclude 0.9.23 modules from shlibs
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Fri, 24 Jun 2011 10:18:17 +1000
+
 pulseaudio (1:0.9.22+stable-queue-69-gf8e8-0ubuntu1) oneiric; urgency=low
 
   * Merge from unreleased Debian git, remaining changes:
