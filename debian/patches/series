@@ -15,6 +15,7 @@
 0013-Load-RAOP-Zeroconf-by-default.patch
 0014-alsa-mixer-Add-separate-profile-for-Nvidia.patch
 0015-alsa-mixer-Add-workaround-for-some-USB-headsets.patch
+0016-nodisplay-autostart.patch
 
 # Patches from upstream/patches that need to be sent upstream
 0200-gold.patch
@@ -25,3 +26,5 @@
 0205-alsa-mixer-Fixup-Mic-Line-analog-input-paths-to-work.patch
 0206-alsa-mixer-Make-sure-capture-source-and-input-source.patch
 0207-PulseAudio-added-IT-block-to-fix-thumb-conditional-i.patch
+0208-alsa-sink-Fix-incorrect-work_done-value-to-prevent-expensive-update_smoother-calls.patch
+0209-sndfile-pacat-Use-file-extension-and-fix-format-from-string.patch

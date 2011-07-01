@@ -1,3 +1,18 @@
+pulseaudio (1:0.9.23-0ubuntu2) oneiric; urgency=low
+
+  [ Daniel T Chen ]
+  * Add the following patches backported from upstream git:
+    - aa7bc32 (parecord: Automatically detect file format from extension)
+      [series patch 0208]
+    - 226ddb1 (alsa-sink: fix mmap_write() work_done) [series patch 0209]
+  * Update debian/copyright to cover echo-cancel files.
+
+  [ Michael Terry ]
+  * 0016-nodisplay-autostart.patch:
+    - Don't show in "Startup Applications" (LP: #803917)
+
+ -- Michael Terry <mterry@ubuntu.com>  Fri, 01 Jul 2011 12:56:15 +0100
+
 pulseaudio (1:0.9.23-0ubuntu1) oneiric; urgency=low
 
   * New upstream release, the following commits from the stable-queue branch
