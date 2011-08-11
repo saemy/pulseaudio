@@ -1,3 +1,47 @@
+pulseaudio (1:0.99.1-0ubuntu1) oneiric; urgency=low
+
+  [ Daniel T Chen ]
+  * 0017-Make-dbus-error-more-polite.patch: Remove language that doesn't
+    add anything to the error message (LP: #444400).
+
+  [ David Henningsson ]
+  * New upstream release, remaining patches:
+  * Add build dependency on libjson0-dev
+  * Dropped patches (implemented upstream):
+    0001-Work-around-some-platforms-not-having-O_CLOEXEC.patch
+    0009-lp533877-handle-digmic.patch
+    0015-alsa-mixer-Add-workaround-for-some-USB-headsets.patch
+    0200-gold.patch
+    0201-alsa-mixer-Add-a-few-well-known-descriptions.patch
+    0202-alsa-mixer-add-required-any-and-required-for-enum-op.patch
+    0203-alsa-mixer-always-round-towards-0-dB.patch
+    0204-alsa-mixer-Add-new-paths-for-Internal-Mic-Front-Mic-.patch
+    0205-alsa-mixer-Fixup-Mic-Line-analog-input-paths-to-work.patch
+    0206-alsa-mixer-Make-sure-capture-source-and-input-source.patch
+    0207-PulseAudio-added-IT-block-to-fix-thumb-conditional-i.patch
+    0208-alsa-sink-Fix-incorrect-work_done-value-to-prevent-expensive-update...
+    _smoother-calls.patch
+    0209-sndfile-pacat-Use-file-extension-and-fix-format-from-string.patch
+  * Refreshed patches:
+    0005-dont-load-cork-music-on-phone.patch
+    0012-JACK-Load-module-jackdbus-detect-in-default.pa.patch
+    0013-Load-RAOP-Zeroconf-by-default.patch
+    0014-alsa-mixer-Add-separate-profile-for-Nvidia.patch
+    0017-Make-dbus-error-more-polite.patch
+  * Upstream has removed libpulsebrowse, replace with dummy packages for the
+    time being.
+  * Updated shlibs files and debian/rules with new version number
+  * Add new modules to the pulseaudio package
+  * Initial pulseaudio support for jack detection
+
+  [ Luke Yelavich ]
+  * debian/control: Remove the libpulse-browse0 package, and add set
+    pulseaudio to replace that package until after the next LTS
+  * Add symbols files for libpulse0 and libpulse-mainloop-glib0 and adjust
+    other shlibs files as necessary
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Thu, 11 Aug 2011 14:30:44 +1000
+
 pulseaudio (1:0.9.23-0ubuntu2) oneiric; urgency=low
 
   [ Daniel T Chen ]

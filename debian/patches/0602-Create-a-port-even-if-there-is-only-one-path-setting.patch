@@ -1,0 +1,76 @@
+From 215ea86c5fed73b72d6f12d7044b3ef39a4e1706 Mon Sep 17 00:00:00 2001
+From: David Henningsson <david.henningsson@canonical.com>
+Date: Wed, 6 Jul 2011 13:20:58 +0200
+Subject: [PATCH 602/603] Create a port even if there is only one path/setting
+ combination
+
+Signed-off-by: David Henningsson <david.henningsson@canonical.com>
+---
+ src/modules/alsa/alsa-mixer.c |   40 ++++++++++++++++++++++++++++------------
+ 1 files changed, 28 insertions(+), 12 deletions(-)
+
+diff --git a/src/modules/alsa/alsa-mixer.c b/src/modules/alsa/alsa-mixer.c
+index 4542ac3..f5fcae0 100644
+--- a/src/modules/alsa/alsa-mixer.c
++++ b/src/modules/alsa/alsa-mixer.c
+@@ -4267,29 +4267,45 @@ void pa_alsa_add_ports(pa_hashmap **p, pa_alsa_path_set *ps) {
+     if (!ps->paths->next){
+         pa_alsa_setting *s;
+ 
+-        /* If there is only one path, but no or only one setting, then
+-         * we want a port list either */
+-        if (!ps->paths->settings || !ps->paths->settings->next)
+-            return;
+-
+-        /* Ok, there is only one path, however with multiple settings,
+-         * so let's create a port for each setting */
+         *p = pa_hashmap_new(pa_idxset_string_hash_func, pa_idxset_string_compare_func);
++        path = ps->paths;
+ 
+-        PA_LLIST_FOREACH(s, ps->paths->settings) {
++        /* Only one path, and no settings, then just create one port */
++        if (!path->settings || !path->settings->next) {
+             pa_device_port *port;
+             pa_alsa_port_data *data;
+ 
+-            port = pa_device_port_new(s->name, s->description, sizeof(pa_alsa_port_data));
+-            port->priority = s->priority;
++            /* If there is no or just one setting we only need a
++             * single entry */
++
++            port = pa_device_port_new(path->name, path->description, sizeof(pa_alsa_port_data));
++            port->priority = path->priority * 100;
+ 
+             data = PA_DEVICE_PORT_DATA(port);
+-            data->path = ps->paths;
+-            data->setting = s;
++            data->path = path;
++            data->setting = path->settings;
+ 
+             pa_hashmap_put(*p, port->name, port);
+         }
+ 
++        /* Ok, there is only one path, however with multiple settings,
++         * so let's create a port for each setting */
++        else {
++            PA_LLIST_FOREACH(s, ps->paths->settings) {
++                pa_device_port *port;
++                pa_alsa_port_data *data;
++
++                port = pa_device_port_new(s->name, s->description, sizeof(pa_alsa_port_data));
++                port->priority = s->priority;
++
++                data = PA_DEVICE_PORT_DATA(port);
++                data->path = path;
++                data->setting = s;
++
++                pa_hashmap_put(*p, port->name, port);
++            }
++        }
++
+     } else {
+ 
+         /* We have multiple paths, so let's create a port for each
+-- 
+1.7.5.4
+

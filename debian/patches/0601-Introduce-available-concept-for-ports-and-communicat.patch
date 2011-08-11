@@ -1,0 +1,148 @@
+From b2f0aa538d4645c93f9e02a3fb9e87cbec83eda5 Mon Sep 17 00:00:00 2001
+From: David Henningsson <david.henningsson@canonical.com>
+Date: Wed, 6 Jul 2011 11:37:27 +0200
+Subject: [PATCH] Introduce "available" concept for ports, and communicate
+ that to clients. Bump protocol version to 24.
+
+Signed-off-by: David Henningsson <david.henningsson@canonical.com>
+---
+ configure.ac                    |    2 +-
+ src/pulse/def.h                 |   17 +++++++++++++++++
+ src/pulse/introspect.c          |   16 ++++++++++++++++
+ src/pulse/introspect.h          |    2 ++
+ src/pulsecore/protocol-native.c |    4 ++++
+ src/pulsecore/sink.h            |    1 +
+ 6 files changed, 41 insertions(+), 1 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index 1bc858f..6fbfd30 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -36,7 +36,7 @@ AC_SUBST(PA_MINOR, pa_minor)
+ AC_SUBST(PA_MAJORMINOR, pa_major.pa_minor)
+ 
+ AC_SUBST(PA_API_VERSION, 12)
+-AC_SUBST(PA_PROTOCOL_VERSION, 23)
++AC_SUBST(PA_PROTOCOL_VERSION, 24)
+ 
+ # The stable ABI for client applications, for the version info x:y:z
+ # always will hold y=z
+diff --git a/src/pulse/def.h b/src/pulse/def.h
+index 32169de..e09b8d2 100644
+--- a/src/pulse/def.h
++++ b/src/pulse/def.h
+@@ -952,6 +952,23 @@ typedef void (*pa_free_cb_t)(void *p);
+  * playback, \since 1.0 */
+ #define PA_STREAM_EVENT_FORMAT_LOST "format-lost"
+ 
++/** Port availability / jack detection status
++ * \since MERGE_OF_JACK_DETECTION */
++typedef enum pa_port_available {
++    PA_PORT_AVAILABLE_UNKNOWN = 0, /**< This port does not support jack detection \since MERGE_OF_JACK_DETECTION */
++    PA_PORT_AVAILABLE_NO = 1,      /**< This port is not available, likely because the jack is not plugged in. \since MERGE_OF_JACK_DETECTION */
++    PA_PORT_AVAILABLE_YES = 2,     /**< This port is available, likely because the jack is plugged in. \since MERGE_OF_JACK_DETECTION */
++} pa_port_available_t;
++
++/** \cond fulldocs */
++#define PA_PORT_AVAILABLE_UNKNOWN PA_PORT_AVAILABLE_UNKNOWN
++#define PA_PORT_AVAILABLE_NO PA_PORT_AVAILABLE_NO
++#define PA_PORT_AVAILABLE_YES PA_PORT_AVAILABLE_YES
++
++/* FIXME: Remove the line below when this actually gets merged. Protocol version number */
++#define JACK_DETECTION_PROTOCOL_VERSION 24
++/** \endcond */
++
+ PA_C_DECL_END
+ 
+ #endif
+diff --git a/src/pulse/introspect.c b/src/pulse/introspect.c
+index 27a298c..d1a0ed1 100644
+--- a/src/pulse/introspect.c
++++ b/src/pulse/introspect.c
+@@ -211,6 +211,14 @@ static void context_get_sink_info_callback(pa_pdispatch *pd, uint32_t command, u
+                             goto fail;
+                         }
+ 
++                        i.ports[0][j].available = PA_PORT_AVAILABLE_UNKNOWN;
++                        if (o->context->version >= JACK_DETECTION_PROTOCOL_VERSION) {
++                            uint32_t av;
++                            if (pa_tagstruct_getu32(t, &av) < 0 || av > PA_PORT_AVAILABLE_YES)
++                                goto fail;
++                            i.ports[0][j].available = av;
++                        }
++
+                         i.ports[j] = &i.ports[0][j];
+                     }
+ 
+@@ -476,6 +484,14 @@ static void context_get_source_info_callback(pa_pdispatch *pd, uint32_t command,
+                             goto fail;
+                         }
+ 
++                        i.ports[0][j].available = PA_PORT_AVAILABLE_UNKNOWN;
++                        if (o->context->version >= JACK_DETECTION_PROTOCOL_VERSION) {
++                            uint32_t av;
++                            if (pa_tagstruct_getu32(t, &av) < 0 || av > PA_PORT_AVAILABLE_YES)
++                                goto fail;
++                            i.ports[0][j].available = av;
++                        }
++
+                         i.ports[j] = &i.ports[0][j];
+                     }
+ 
+diff --git a/src/pulse/introspect.h b/src/pulse/introspect.h
+index 196d44d..8e4cc97 100644
+--- a/src/pulse/introspect.h
++++ b/src/pulse/introspect.h
+@@ -202,6 +202,7 @@ typedef struct pa_sink_port_info {
+     const char *name;                   /**< Name of this port */
+     const char *description;            /**< Description of this port */
+     uint32_t priority;                  /**< The higher this value is the more useful this port is as a default */
++    pa_port_available_t available;      /**< PA_PORT_AVAILABLE_UNKNOWN, PA_PORT_AVAILABLE_NO or PA_PORT_AVAILABLE_YES \since MERGE_OF_JACK_DETECTION */
+ } pa_sink_port_info;
+ 
+ /** Stores information about sinks. Please note that this structure
+@@ -281,6 +282,7 @@ typedef struct pa_source_port_info {
+     const char *name;                   /**< Name of this port */
+     const char *description;            /**< Description of this port */
+     uint32_t priority;                  /**< The higher this value is the more useful this port is as a default */
++    pa_port_available_t available;      /**< PA_PORT_AVAILABLE_UNKNOWN, PA_PORT_AVAILABLE_NO or PA_PORT_AVAILABLE_YES \since MERGE_OF_JACK_DETECTION */
+ } pa_source_port_info;
+ 
+ /** Stores information about sources. Please note that this structure
+diff --git a/src/pulsecore/protocol-native.c b/src/pulsecore/protocol-native.c
+index 3ed9f1a..ab8c5f8 100644
+--- a/src/pulsecore/protocol-native.c
++++ b/src/pulsecore/protocol-native.c
+@@ -3093,6 +3093,8 @@ static void sink_fill_tagstruct(pa_native_connection *c, pa_tagstruct *t, pa_sin
+                 pa_tagstruct_puts(t, p->name);
+                 pa_tagstruct_puts(t, p->description);
+                 pa_tagstruct_putu32(t, p->priority);
++                if (c->version >= JACK_DETECTION_PROTOCOL_VERSION)
++                    pa_tagstruct_putu32(t, p->available);
+             }
+         }
+ 
+@@ -3164,6 +3166,8 @@ static void source_fill_tagstruct(pa_native_connection *c, pa_tagstruct *t, pa_s
+                 pa_tagstruct_puts(t, p->name);
+                 pa_tagstruct_puts(t, p->description);
+                 pa_tagstruct_putu32(t, p->priority);
++                if (c->version >= JACK_DETECTION_PROTOCOL_VERSION)
++                    pa_tagstruct_putu32(t, p->available);
+             }
+         }
+ 
+diff --git a/src/pulsecore/sink.h b/src/pulsecore/sink.h
+index 239936b..6c6ffdb 100644
+--- a/src/pulsecore/sink.h
++++ b/src/pulsecore/sink.h
+@@ -59,6 +59,7 @@ struct pa_device_port {
+     char *description;
+ 
+     unsigned priority;
++    pa_port_available_t available;         /**< PA_PORT_AVAILABLE_UNKNOWN, PA_PORT_AVAILABLE_NO or PA_PORT_AVAILABLE_YES \since MERGE_OF_JACK_DETECTION */
+ 
+     /* .. followed by some implementation specific data */
+ };
+-- 
+1.7.5.4
+

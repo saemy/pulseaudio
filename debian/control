@@ -12,7 +12,7 @@ Build-Depends: debhelper (>= 5), cdbs, quilt, m4, libltdl-dev,
     libbluetooth-dev (>= 3.0) [!kfreebsd-i386 !kfreebsd-amd64 !hurd-i386],
     tdb-dev, intltool, libgtk2.0-dev, libxtst-dev, libssl-dev, libudev-dev (>= 143),
     libice-dev, libxi-dev, x11proto-core-dev, libxcb-atom1-dev, libx11-xcb-dev,
-    dh-buildinfo, automake, autoconf, libtool, dh-autoreconf
+    dh-buildinfo, automake, autoconf, libtool, libjson0-dev, dh-autoreconf
 Standards-Version: 3.8.1
 XS-Debian-Vcs-Git: git://git.debian.org/git/pkg-pulseaudio/pulseaudio.git
 XS-Debian-Vcs-Browser: http://git.debian.org/?p=pkg-pulseaudio/pulseaudio.git
@@ -26,7 +26,8 @@ Depends: ${shlibs:Depends}, ${misc:Depends}, adduser,
 Conflicts: libltdl3 (<< 1.5.24-1), pulseaudio-module-udev (<< ${binary:Version}),
   pulseaudio-module-rygel-media-server (<< ${binary:Version})
 Replaces: pulseaudio-module-hal, pulseaudio-module-udev (<< ${binary:Version}),
-  pulseaudio-module-rygel-media-server (<< ${binary:Version})
+  pulseaudio-module-rygel-media-server (<< ${binary:Version}),
+  libpulse-browse0 (<< ${binary:Version})
 Provides: pulseaudio-module-hal, pulseaudio-module-udev,
   pulseaudio-module-rygel-media-server
 Recommends: pulseaudio-module-x11, gstreamer0.10-pulseaudio, pulseaudio-esound-compat, rtkit
@@ -84,7 +85,6 @@ Description: Command line tools for the PulseAudio sound server
  These tools provide command line access to various features of the
  PulseAudio sound server. Included tools are:
  .
-   pabrowse - Browse available PulseAudio servers on the local network.
    paplay - Playback a WAV file via a PulseAudio sink.
    pacat - Cat raw audio data to a PulseAudio sink.
    parec - Cat raw audio data from a PulseAudio source.
@@ -361,40 +361,12 @@ Description: PulseAudio client libraries (glib support) debugging symbols
  This package contains detached debugging symbols for the PulseAudio native
  interface glib support client libraries.
 
-Package: libpulse-browse0
-Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: PulseAudio client libraries (zeroconf support)
- PulseAudio, previously known as Polypaudio, is a sound server for POSIX and
- WIN32 systems. It is a drop in replacement for the ESD sound server with
- much better latency, mixing/re-sampling quality and overall architecture.
- .
- Client libraries used by applications that access a PulseAudio sound server
- via PulseAudio's native interface.
- .
- This package adds support for zeroconf (aka. Avahi, mdns) discovery of
- PulseAudio sinks and sources by client applications.
-
-Package: libpulse-browse0-dbg
-Section: debug
-Architecture: any
-Priority: extra
-Depends: ${misc:Depends}, libpulse-browse0 (= ${binary:Version})
-Description: PulseAudio client libraries (zeroconf support) debugging symbols
- PulseAudio, previously known as Polypaudio, is a sound server for POSIX and
- WIN32 systems. It is a drop in replacement for the ESD sound server with
- much better latency, mixing/re-sampling quality and overall architecture.
- .
- This package contains detached debugging symbols for the PulseAudio native
- interface zeroconf support client libraries.
-
 Package: libpulse-dev
 Section: libdevel
 Architecture: any
 Depends: ${misc:Depends},
   libpulse0 (= ${binary:Version}),
   libpulse-mainloop-glib0 (= ${binary:Version}),
-  libpulse-browse0 (= ${binary:Version}),
   libglib2.0-dev,
   libavahi-client-dev
 Description: PulseAudio client development headers and libraries

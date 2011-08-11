@@ -19,33 +19,33 @@ Signed-off-by: David Henningsson <david.henningsson@canonical.com>
  3 files changed, 162 insertions(+), 0 deletions(-)
  create mode 100644 src/modules/alsa/mixer/profile-sets/nvidia.conf
 
-Index: pulseaudio-0.9.22+stable-queue-24-g67d18/src/Makefile.am
+Index: pulseaudio-0.99.1/src/Makefile.am
 ===================================================================
---- pulseaudio-0.9.22+stable-queue-24-g67d18.orig/src/Makefile.am	2011-03-14 13:02:17.205663627 +0100
-+++ pulseaudio-0.9.22+stable-queue-24-g67d18/src/Makefile.am	2011-03-14 13:02:17.535663651 +0100
-@@ -109,6 +109,7 @@
+--- pulseaudio-0.99.1.orig/src/Makefile.am	2011-07-20 23:23:11.000000000 +0200
++++ pulseaudio-0.99.1/src/Makefile.am	2011-08-03 12:17:46.971234645 +0200
+@@ -1063,6 +1063,7 @@
  
- ALSA_PROFILES = \
+ dist_alsaprofilesets_DATA = \
  		modules/alsa/mixer/profile-sets/default.conf \
 +		modules/alsa/mixer/profile-sets/nvidia.conf \
  		modules/alsa/mixer/profile-sets/maudio-fasttrack-pro.conf \
  		modules/alsa/mixer/profile-sets/native-instruments-audio4dj.conf \
  		modules/alsa/mixer/profile-sets/native-instruments-audio8dj.conf \
-Index: pulseaudio-0.9.22+stable-queue-24-g67d18/src/modules/alsa/mixer/profile-sets/90-pulseaudio.rules
+Index: pulseaudio-0.99.1/src/modules/alsa/mixer/profile-sets/90-pulseaudio.rules
 ===================================================================
---- pulseaudio-0.9.22+stable-queue-24-g67d18.orig/src/modules/alsa/mixer/profile-sets/90-pulseaudio.rules	2011-03-14 13:00:42.375663641 +0100
-+++ pulseaudio-0.9.22+stable-queue-24-g67d18/src/modules/alsa/mixer/profile-sets/90-pulseaudio.rules	2011-03-14 13:02:17.535663651 +0100
-@@ -25,5 +25,6 @@
- SUBSYSTEMS=="usb", ATTRS{idVendor}=="17cc", ATTRS{idProduct}=="baff", ENV{PULSE_PROFILE_SET}="native-instruments-traktorkontrol-s4.conf"
- SUBSYSTEMS=="usb", ATTRS{idVendor}=="17cc", ATTRS{idProduct}=="4711", ENV{PULSE_PROFILE_SET}="native-instruments-korecontroller.conf"
+--- pulseaudio-0.99.1.orig/src/modules/alsa/mixer/profile-sets/90-pulseaudio.rules	2011-07-20 23:23:11.000000000 +0200
++++ pulseaudio-0.99.1/src/modules/alsa/mixer/profile-sets/90-pulseaudio.rules	2011-08-03 12:17:46.971234645 +0200
+@@ -27,5 +27,6 @@
+ SUBSYSTEMS=="usb", ATTRS{idVendor}=="17cc", ATTRS{idProduct}=="1011", ENV{PULSE_PROFILE_SET}="native-instruments-traktor-audio6.conf"
+ SUBSYSTEMS=="usb", ATTRS{idVendor}=="17cc", ATTRS{idProduct}=="1021", ENV{PULSE_PROFILE_SET}="native-instruments-traktor-audio10.conf"
  SUBSYSTEMS=="usb", ATTRS{idVendor}=="0763", ATTRS{idProduct}=="2012", ENV{PULSE_PROFILE_SET}="maudio-fasttrack-pro.conf"
 +ATTRS{vendor}=="0x10de", ENV{PULSE_PROFILE_SET}="nvidia.conf"
  
  LABEL="pulseaudio_end"
-Index: pulseaudio-0.9.22+stable-queue-24-g67d18/src/modules/alsa/mixer/profile-sets/nvidia.conf
+Index: pulseaudio-0.99.1/src/modules/alsa/mixer/profile-sets/nvidia.conf
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ pulseaudio-0.9.22+stable-queue-24-g67d18/src/modules/alsa/mixer/profile-sets/nvidia.conf	2011-03-14 13:02:17.535663651 +0100
++++ pulseaudio-0.99.1/src/modules/alsa/mixer/profile-sets/nvidia.conf	2011-08-03 12:17:46.971234645 +0200
 @@ -0,0 +1,160 @@
 +# This file is part of PulseAudio.
 +#
@@ -207,15 +207,23 @@ Index: pulseaudio-0.9.22+stable-queue-24-g67d18/src/modules/alsa/mixer/profile-s
 +#description = Foobar
 +#output-mappings = analog-stereo iec958-stereo
 +#input-mappings = analog-stereo
-Index: pulseaudio-0.9.22+stable-queue-24-g67d18/src/Makefile.in
+Index: pulseaudio-0.99.1/src/Makefile.in
 ===================================================================
---- pulseaudio-0.9.22+stable-queue-24-g67d18.orig/src/Makefile.in	2011-03-14 13:06:15.535663640 +0100
-+++ pulseaudio-0.9.22+stable-queue-24-g67d18/src/Makefile.in	2011-03-14 13:07:01.315663627 +0100
-@@ -2645,6 +2645,7 @@
- ###################################
- ALSA_PROFILES = \
- 		modules/alsa/mixer/profile-sets/default.conf \
-+		modules/alsa/mixer/profile-sets/nvidia.conf \
- 		modules/alsa/mixer/profile-sets/maudio-fasttrack-pro.conf \
- 		modules/alsa/mixer/profile-sets/native-instruments-audio4dj.conf \
- 		modules/alsa/mixer/profile-sets/native-instruments-audio8dj.conf \
+--- pulseaudio-0.99.1.orig/src/Makefile.in	2011-08-02 17:20:54.000000000 +0200
++++ pulseaudio-0.99.1/src/Makefile.in	2011-08-03 12:19:25.091234524 +0200
+@@ -2465,6 +2465,7 @@
+ 	modules/alsa/mixer/paths/iec958-stereo-output.conf
+ am__dist_alsaprofilesets_DATA_DIST =  \
+ 	modules/alsa/mixer/profile-sets/default.conf \
++	modules/alsa/mixer/profile-sets/nvidia.conf \
+ 	modules/alsa/mixer/profile-sets/maudio-fasttrack-pro.conf \
+ 	modules/alsa/mixer/profile-sets/native-instruments-audio4dj.conf \
+ 	modules/alsa/mixer/profile-sets/native-instruments-audio8dj.conf \
+@@ -3322,6 +3323,7 @@
+ libavahi_wrap_la_LIBADD = $(AM_LIBADD) $(AVAHI_CFLAGS) libpulsecore-@PA_MAJORMINOR@.la libpulsecommon-@PA_MAJORMINOR@.la libpulse.la
+ @HAVE_ALSA_TRUE@dist_alsaprofilesets_DATA = \
+ @HAVE_ALSA_TRUE@		modules/alsa/mixer/profile-sets/default.conf \
++@HAVE_ALSA_TRUE@		modules/alsa/mixer/profile-sets/nvidia.conf \
+ @HAVE_ALSA_TRUE@		modules/alsa/mixer/profile-sets/maudio-fasttrack-pro.conf \
+ @HAVE_ALSA_TRUE@		modules/alsa/mixer/profile-sets/native-instruments-audio4dj.conf \
+ @HAVE_ALSA_TRUE@		modules/alsa/mixer/profile-sets/native-instruments-audio8dj.conf \
