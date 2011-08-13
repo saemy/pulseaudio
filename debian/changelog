@@ -1,3 +1,14 @@
+pulseaudio (1:0.99.1-0ubuntu2) oneiric; urgency=low
+
+  * Build for multiarch:
+    - libpulse{,-mainloop-glib}0{,-dbg} and libpulse-dev are Multi-Arch: same.
+    - pulseaudio itself should be Multi-Arch: foreign, since it's a daemon.
+    - drop dh-buildinfo build-dependency, incompatible with multiarch and not
+      relevant in Ubuntu where we have build logs for all builds.
+    - LP: #825342.
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Sat, 13 Aug 2011 02:22:42 +0000
+
 pulseaudio (1:0.99.1-0ubuntu1) oneiric; urgency=low
 
   [ Daniel T Chen ]
