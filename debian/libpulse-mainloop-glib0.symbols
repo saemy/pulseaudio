@@ -1,9 +1,9 @@
-libpulse-mainloop-glib.so.0 libpulse-glib-mainloop0 #MINVER#
+libpulse-mainloop-glib.so.0 libpulse-mainloop-glib0 #MINVER#
  PULSE_0@PULSE_0 1:0.99.1
  pa_glib_mainloop_free@PULSE_0 1:0.99.1
  pa_glib_mainloop_get_api@PULSE_0 1:0.99.1
  pa_glib_mainloop_new@PULSE_0 1:0.99.1
-libpulse-simple.so.0 libpulse-glib-mainloop0 #MINVER#
+libpulse-simple.so.0 libpulse-mainloop-glib0 #MINVER#
  PULSE_0@PULSE_0 1:0.99.1
  pa_simple_drain@PULSE_0 1:0.99.1
  pa_simple_flush@PULSE_0 1:0.99.1
@@ -12,7 +12,7 @@ libpulse-simple.so.0 libpulse-glib-mainloop0 #MINVER#
  pa_simple_new@PULSE_0 1:0.99.1
  pa_simple_read@PULSE_0 1:0.99.1
  pa_simple_write@PULSE_0 1:0.99.1
-libpulse.so.0 libpulse-glib-mainloop0 #MINVER#
+libpulse.so.0 libpulse-mainloop-glib0 #MINVER#
  PULSE_0@PULSE_0 1:0.99.1
  pa_ascii_filter@PULSE_0 1:0.99.1
  pa_ascii_valid@PULSE_0 1:0.99.1
@@ -340,7 +340,7 @@ libpulse.so.0 libpulse-glib-mainloop0 #MINVER#
  pa_xrealloc@PULSE_0 1:0.99.1
  pa_xstrdup@PULSE_0 1:0.99.1
  pa_xstrndup@PULSE_0 1:0.99.1
-libpulsecommon-0.99.so libpulse-glib-mainloop0 #MINVER#
+libpulsecommon-0.99.so libpulse-mainloop-glib0 #MINVER#
  pa_accept_cloexec@Base 1:0.99.1
  pa_ascii_filter@Base 1:0.99.1
  pa_ascii_valid@Base 1:0.99.1
@@ -1001,7 +1001,7 @@ libpulsecommon-0.99.so libpulse-glib-mainloop0 #MINVER#
  rtkit_make_high_priority@Base 1:0.99.1
  rtkit_make_realtime@Base 1:0.99.1
  table@Base 1:0.99.1
-libpulsecore-0.99.so libpulse-glib-mainloop0 #MINVER#
+libpulsecore-0.99.so libpulse-mainloop-glib0 #MINVER#
  av_build_filter@Base 1:0.99.1
  av_resample@Base 1:0.99.1
  av_resample_close@Base 1:0.99.1
@@ -1612,7 +1612,7 @@ libpulsecore-0.99.so libpulse-glib-mainloop0 #MINVER#
  st_14linear2ulaw@Base 1:0.99.1
  st_alaw2linear16@Base 1:0.99.1
  st_ulaw2linear16@Base 1:0.99.1
-libpulsedsp.so libpulse-glib-mainloop0 #MINVER#
+libpulsedsp.so libpulse-mainloop-glib0 #MINVER#
  __open64_2@Base 1:0.99.1
  __open_2@Base 1:0.99.1
  __xstat64@Base 1:0.99.1

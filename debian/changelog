@@ -1,3 +1,10 @@
+pulseaudio (1:0.99.1-0ubuntu3) oneiric; urgency=low
+
+  * debian/libpulse-glib-mainloop0.symbols: Fix a typo in the package name
+    which was made at the time of symbol generation
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Tue, 16 Aug 2011 15:20:47 +1000
+
 pulseaudio (1:0.99.1-0ubuntu2) oneiric; urgency=low
 
   * Build for multiarch:
