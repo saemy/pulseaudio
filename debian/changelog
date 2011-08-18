@@ -1,3 +1,11 @@
+pulseaudio (1:0.99.2-0ubuntu2) oneiric; urgency=low
+
+  * Build-depend on libxcb1-dev (>= 1.6) rather than libxcb-atom1-dev, in
+    line with the packaging in Debian experimental.
+  * Build-depend on libtdb-dev rather than tdb-dev.
+
+ -- Colin Watson <cjwatson@ubuntu.com>  Thu, 18 Aug 2011 16:10:53 +0100
+
 pulseaudio (1:0.99.2-0ubuntu1) oneiric; urgency=low
 
   * New upstream bugfix release
