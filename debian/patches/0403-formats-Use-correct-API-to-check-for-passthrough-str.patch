@@ -1,0 +1,40 @@
+From adbdb6259becab57fff893671e58fff5786420db Mon Sep 17 00:00:00 2001
+From: Arun Raghavan <arun.raghavan@collabora.co.uk>
+Date: Wed, 17 Aug 2011 14:58:23 +0530
+Subject: [PATCH 403/403] formats: Use correct API to check for passthrough
+ streams
+
+---
+ src/pulsecore/sink-input.c    |    2 +-
+ src/pulsecore/source-output.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/pulsecore/sink-input.c b/src/pulsecore/sink-input.c
+index 22de3bc..4cd51d7 100644
+--- a/src/pulsecore/sink-input.c
++++ b/src/pulsecore/sink-input.c
+@@ -321,7 +321,7 @@ int pa_sink_input_new(
+     pa_return_val_if_fail(pa_channel_map_compatible(&data->channel_map, &data->sample_spec), -PA_ERR_INVALID);
+ 
+     /* Don't restore (or save) stream volume for passthrough streams */
+-    if (!pa_format_info_is_pcm(data->format)) {
++    if (!pa_sink_input_new_data_is_passthrough(data)) {
+         data->volume_is_set = FALSE;
+         data->volume_factor_is_set = FALSE;
+     }
+diff --git a/src/pulsecore/source-output.c b/src/pulsecore/source-output.c
+index cd2e126..d99bafe 100644
+--- a/src/pulsecore/source-output.c
++++ b/src/pulsecore/source-output.c
+@@ -299,7 +299,7 @@ int pa_source_output_new(
+     pa_return_val_if_fail(pa_channel_map_compatible(&data->channel_map, &data->sample_spec), -PA_ERR_INVALID);
+ 
+     /* Don't restore (or save) stream volume for passthrough streams */
+-    if (!pa_format_info_is_pcm(data->format)) {
++    if (!pa_source_output_new_data_is_passthrough(data)) {
+         data->volume_is_set = FALSE;
+         data->volume_factor_is_set = FALSE;
+     }
+-- 
+1.7.5.4
+

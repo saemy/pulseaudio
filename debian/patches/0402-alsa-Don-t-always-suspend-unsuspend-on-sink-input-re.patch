@@ -1,0 +1,34 @@
+From dde09c7fac33de99f77fb90076bd4b45896d1dc5 Mon Sep 17 00:00:00 2001
+From: Arun Raghavan <arun.raghavan@collabora.co.uk>
+Date: Wed, 17 Aug 2011 13:33:50 +0530
+Subject: [PATCH 402/403] alsa: Don't always suspend/unsuspend on sink-input
+ removal
+
+If the sink was already suspended, this avoids and assert when calling
+suspend() again, and prevents an unnecessary unsuspend.
+---
+ src/modules/alsa/alsa-sink.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/modules/alsa/alsa-sink.c b/src/modules/alsa/alsa-sink.c
+index eec38d8..2bf19c6 100644
+--- a/src/modules/alsa/alsa-sink.c
++++ b/src/modules/alsa/alsa-sink.c
+@@ -1106,12 +1106,12 @@ static int sink_process_msg(pa_msgobject *o, int code, void *data, int64_t offse
+                 break;
+ 
+             /* .. we do */
+-            if ((r = suspend(u)) < 0)
++            if (PA_SINK_IS_OPENED(u->sink->thread_info.state) && ((r = suspend(u)) < 0))
+                 return r;
+ 
+             u->sink->sample_spec.rate = u->old_rate;
+ 
+-            if ((r = unsuspend(u)) < 0)
++            if (PA_SINK_IS_OPENED(u->sink->thread_info.state) && ((r = unsuspend(u)) < 0))
+                 return r;
+ 
+             break;
+-- 
+1.7.5.4
+

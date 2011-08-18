@@ -1,3 +1,19 @@
+pulseaudio (1:0.99.2-0ubuntu1) oneiric; urgency=low
+
+  * New upstream bugfix release
+  * 0005-dont-load-cork-music-on-phone.patch: Refreshed
+  * Dropped patches, applied upstream
+    - 0400-Fix-crash-in-path-subset-elimination.patch
+    - 0402-source-output-Fix-resampling.patch
+    - 0403-stream-restore-Save-restore-source-output-volume-mut.patch
+  * Pull some post 0.99.2 fixes from upstream git master:
+    - 7ed177d (introspect: fix typo in default sink/source docs)
+    - 2677911 (source: Remove the PA_SOURCE_PASSTHROUGH flag)
+    - dde09c7 (alsa: Don't always suspend/unsuspend on sink-input removal)
+    - adbdb62 (formats: Use correct API to check for passthrough streams)
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Thu, 18 Aug 2011 09:17:09 +1000
+
 pulseaudio (1:0.99.1-0ubuntu3) oneiric; urgency=low
 
   * debian/libpulse-glib-mainloop0.symbols: Fix a typo in the package name

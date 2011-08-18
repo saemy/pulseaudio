@@ -15,10 +15,11 @@
 0016-nodisplay-autostart.patch
 0017-Make-dbus-error-more-polite.patch
 
-# bug-fix patches from git master (post 0.99.1)
-0400-Fix-crash-in-path-subset-elimination.patch
-0402-source-output-Fix-resampling.patch
-0403-stream-restore-Save-restore-source-output-volume-mut.patch
+# Patches post 0.99.2 release from upstrea git master
+0400-introspect-fix-typo-in-default-sink-source-docs.patch
+0401-source-Remove-the-PA_SOURCE_PASSTHROUGH-flag.patch
+0402-alsa-Don-t-always-suspend-unsuspend-on-sink-input-re.patch
+0403-formats-Use-correct-API-to-check-for-passthrough-str.patch
 
 # Jack detection patches
 0601-Introduce-available-concept-for-ports-and-communicat.patch

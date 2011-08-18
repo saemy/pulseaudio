@@ -1,0 +1,26 @@
+From 7ed177dc296a72a8ebb714dfa8775fe8f887c29d Mon Sep 17 00:00:00 2001
+From: Jonny Lamb <jonny.lamb@collabora.co.uk>
+Date: Tue, 16 Aug 2011 15:02:51 +0000
+Subject: [PATCH 400/403] introspect: fix typo in default sink/source docs
+
+Signed-off-by: Jonny Lamb <jonny.lamb@collabora.co.uk>
+---
+ src/pulse/introspect.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/src/pulse/introspect.h b/src/pulse/introspect.h
+index 0ec2bf6..1d77d45 100644
+--- a/src/pulse/introspect.h
++++ b/src/pulse/introspect.h
+@@ -363,7 +363,7 @@ typedef struct pa_server_info {
+     const char *server_name;            /**< Server package name (usually "pulseaudio") */
+     pa_sample_spec sample_spec;         /**< Default sample specification */
+     const char *default_sink_name;      /**< Name of default sink. */
+-    const char *default_source_name;    /**< Name of default sink. */
++    const char *default_source_name;    /**< Name of default source. */
+     uint32_t cookie;                    /**< A random cookie for identifying this instance of PulseAudio. */
+     pa_channel_map channel_map;         /**< Default channel map. \since 0.9.15 */
+ } pa_server_info;
+-- 
+1.7.5.4
+
