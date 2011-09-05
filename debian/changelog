@@ -1,3 +1,9 @@
+pulseaudio (1:0.99.3-0ubuntu3) oneiric; urgency=low
+
+  * Jack detection support, second version, now with HDMI support
+
+ -- David Henningsson <david.henningsson@canonical.com>  Mon, 05 Sep 2011 16:41:12 +0200
+
 pulseaudio (1:0.99.3-0ubuntu2) oneiric; urgency=low
 
   * Dropped patches (applied upstream):

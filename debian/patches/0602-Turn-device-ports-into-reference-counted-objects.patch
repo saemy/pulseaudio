@@ -1,7 +1,7 @@
-From 54d6dad178ba27ddc4e41f385c43d680ae343af2 Mon Sep 17 00:00:00 2001
+From 9b7464e4ed58719abf23e139994c996c55be465f Mon Sep 17 00:00:00 2001
 From: David Henningsson <david.henningsson@canonical.com>
 Date: Thu, 7 Jul 2011 11:19:36 +0200
-Subject: [PATCH 603/603] Turn device-ports into reference counted objects
+Subject: [PATCH 602/613] Turn device-ports into reference counted objects
 
 Signed-off-by: David Henningsson <david.henningsson@canonical.com>
 ---
@@ -17,7 +17,7 @@ Signed-off-by: David Henningsson <david.henningsson@canonical.com>
  create mode 100644 src/pulsecore/device-port.h
 
 diff --git a/src/Makefile.am b/src/Makefile.am
-index ebf5ebc..769a24d 100644
+index f02dded..1fb2ad2 100644
 --- a/src/Makefile.am
 +++ b/src/Makefile.am
 @@ -809,6 +809,7 @@ libpulsecore_@PA_MAJORMINOR@_la_SOURCES = \
@@ -165,10 +165,10 @@ index 0000000..23f6444
 +
 +#endif
 diff --git a/src/pulsecore/sink.c b/src/pulsecore/sink.c
-index 77c665f..33b70f3 100644
+index 041295c..a715a5d 100644
 --- a/src/pulsecore/sink.c
 +++ b/src/pulsecore/sink.c
-@@ -131,40 +131,11 @@ void pa_sink_new_data_done(pa_sink_new_data *data) {
+@@ -132,40 +132,11 @@ void pa_sink_new_data_done(pa_sink_new_data *data) {
  
      pa_proplist_free(data->proplist);
  
@@ -210,7 +210,7 @@ index 77c665f..33b70f3 100644
  
  /* Called from main context */
  static void reset_callbacks(pa_sink *s) {
-@@ -740,15 +711,7 @@ static void sink_free(pa_object *o) {
+@@ -743,15 +714,7 @@ static void sink_free(pa_object *o) {
      if (s->proplist)
          pa_proplist_free(s->proplist);
  
@@ -228,7 +228,7 @@ index 77c665f..33b70f3 100644
  }
  
 diff --git a/src/pulsecore/sink.h b/src/pulsecore/sink.h
-index 6c6ffdb..3aef698 100644
+index 39b2806..88f4f3a 100644
 --- a/src/pulsecore/sink.h
 +++ b/src/pulsecore/sink.h
 @@ -24,7 +24,6 @@
@@ -239,7 +239,7 @@ index 6c6ffdb..3aef698 100644
  typedef struct pa_sink_volume_change pa_sink_volume_change;
  
  #include <inttypes.h>
-@@ -42,6 +41,7 @@ typedef struct pa_sink_volume_change pa_sink_volume_change;
+@@ -43,6 +42,7 @@ typedef struct pa_sink_volume_change pa_sink_volume_change;
  #include <pulsecore/asyncmsgq.h>
  #include <pulsecore/msgobject.h>
  #include <pulsecore/rtpoll.h>
@@ -247,7 +247,7 @@ index 6c6ffdb..3aef698 100644
  #include <pulsecore/card.h>
  #include <pulsecore/queue.h>
  #include <pulsecore/thread-mq.h>
-@@ -54,18 +54,6 @@ static inline pa_bool_t PA_SINK_IS_LINKED(pa_sink_state_t x) {
+@@ -55,18 +55,6 @@ static inline pa_bool_t PA_SINK_IS_LINKED(pa_sink_state_t x) {
      return x == PA_SINK_RUNNING || x == PA_SINK_IDLE || x == PA_SINK_SUSPENDED;
  }
  
@@ -266,7 +266,7 @@ index 6c6ffdb..3aef698 100644
  /* A generic definition for void callback functions */
  typedef void(*pa_sink_cb_t)(pa_sink *s);
  
-@@ -471,9 +459,6 @@ void pa_sink_invalidate_requested_latency(pa_sink *s, pa_bool_t dynamic);
+@@ -486,9 +474,6 @@ void pa_sink_invalidate_requested_latency(pa_sink *s, pa_bool_t dynamic);
  
  pa_usec_t pa_sink_get_latency_within_thread(pa_sink *s);
  
@@ -277,10 +277,10 @@ index 6c6ffdb..3aef698 100644
   * the sink is not yet set up, i.e. the thread not set up yet. See
   * pa_assert_io_context() in thread-mq.h for more information. */
 diff --git a/src/pulsecore/source.c b/src/pulsecore/source.c
-index 9764a88..11c4f9d 100644
+index bc951af..3b3cdf9 100644
 --- a/src/pulsecore/source.c
 +++ b/src/pulsecore/source.c
-@@ -123,15 +123,7 @@ void pa_source_new_data_done(pa_source_new_data *data) {
+@@ -124,15 +124,7 @@ void pa_source_new_data_done(pa_source_new_data *data) {
  
      pa_proplist_free(data->proplist);
  
@@ -297,7 +297,7 @@ index 9764a88..11c4f9d 100644
      pa_xfree(data->name);
      pa_xfree(data->active_port);
  }
-@@ -651,15 +643,7 @@ static void source_free(pa_object *o) {
+@@ -653,15 +645,7 @@ static void source_free(pa_object *o) {
      if (s->proplist)
          pa_proplist_free(s->proplist);
  
@@ -315,10 +315,10 @@ index 9764a88..11c4f9d 100644
  }
  
 diff --git a/src/pulsecore/source.h b/src/pulsecore/source.h
-index 13d279d..0fcc7bb 100644
+index 52e9be6..b73807e 100644
 --- a/src/pulsecore/source.h
 +++ b/src/pulsecore/source.h
-@@ -42,6 +42,7 @@ typedef struct pa_source_volume_change pa_source_volume_change;
+@@ -43,6 +43,7 @@ typedef struct pa_source_volume_change pa_source_volume_change;
  #include <pulsecore/msgobject.h>
  #include <pulsecore/rtpoll.h>
  #include <pulsecore/card.h>

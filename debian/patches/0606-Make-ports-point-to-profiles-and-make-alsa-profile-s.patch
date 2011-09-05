@@ -1,0 +1,618 @@
+From 2a0584315f5cef85692054b78eef06df7dd91b75 Mon Sep 17 00:00:00 2001
+From: David Henningsson <david.henningsson@canonical.com>
+Date: Thu, 18 Aug 2011 08:32:47 +0200
+Subject: [PATCH 606/613] Make ports point to profiles, and make alsa profile
+ set be owner of paths. Probe all profile paths at
+ startup (to get to the ports) and use that when
+ changing profiles/ports at runtime.
+
+Signed-off-by: David Henningsson <david.henningsson@canonical.com>
+---
+ src/modules/alsa/alsa-mixer.c       |  192 ++++++++++++++++++++++++++++++++---
+ src/modules/alsa/alsa-mixer.h       |    7 +-
+ src/modules/alsa/alsa-sink.c        |   16 +--
+ src/modules/alsa/alsa-source.c      |   14 +--
+ src/modules/alsa/module-alsa-card.c |   20 +++-
+ src/pulsecore/card.c                |   21 ++++-
+ src/pulsecore/device-port.c         |    4 +
+ src/pulsecore/device-port.h         |    1 +
+ 8 files changed, 231 insertions(+), 44 deletions(-)
+
+diff --git a/src/modules/alsa/alsa-mixer.c b/src/modules/alsa/alsa-mixer.c
+index a40dbc5..1926117 100644
+--- a/src/modules/alsa/alsa-mixer.c
++++ b/src/modules/alsa/alsa-mixer.c
+@@ -541,7 +541,7 @@ void pa_alsa_path_set_free(pa_alsa_path_set *ps) {
+ 
+     while ((p = ps->paths)) {
+         PA_LLIST_REMOVE(pa_alsa_path, ps->paths, p);
+-        pa_alsa_path_free(p);
++        /* pa_alsa_path_free(p); Paths are now owned by the profile set */
+     }
+ 
+     pa_xfree(ps);
+@@ -2542,7 +2542,7 @@ int pa_alsa_path_probe(pa_alsa_path *p, snd_mixer_t *m, pa_bool_t ignore_dB) {
+     pa_assert(m);
+ 
+     if (p->probed)
+-        return 0;
++        return p->supported ? 0 : -1;
+ 
+     pa_zero(min_dB);
+     pa_zero(max_dB);
+@@ -2552,6 +2552,7 @@ int pa_alsa_path_probe(pa_alsa_path *p, snd_mixer_t *m, pa_bool_t ignore_dB) {
+     PA_LLIST_FOREACH(e, p->elements) {
+         if (element_probe(e, m) < 0) {
+             p->supported = FALSE;
++            p->probed = TRUE;
+             pa_log_debug("Probe of element '%s' failed.", e->alsa_name);
+             return -1;
+         }
+@@ -2608,6 +2609,7 @@ int pa_alsa_path_probe(pa_alsa_path *p, snd_mixer_t *m, pa_bool_t ignore_dB) {
+ 
+     if (p->has_req_any && !p->req_any_present) {
+         p->supported = FALSE;
++        p->probed = TRUE;
+         pa_log_debug("Skipping path '%s', none of required-any elements preset.", p->name);
+         return -1;
+     }
+@@ -2748,6 +2750,7 @@ pa_alsa_path_set *pa_alsa_path_set_new(pa_alsa_mapping *m, pa_alsa_direction_t d
+     char **pn = NULL, **en = NULL, **ie;
+     pa_alsa_decibel_fix *db_fix;
+     void *state;
++    pa_hashmap *cache;
+ 
+     pa_assert(m);
+     pa_assert(m->profile_set);
+@@ -2760,18 +2763,22 @@ pa_alsa_path_set *pa_alsa_path_set_new(pa_alsa_mapping *m, pa_alsa_direction_t d
+     ps = pa_xnew0(pa_alsa_path_set, 1);
+     ps->direction = direction;
+ 
+-    if (direction == PA_ALSA_DIRECTION_OUTPUT)
++    if (direction == PA_ALSA_DIRECTION_OUTPUT) {
+         pn = m->output_path_names;
+-    else if (direction == PA_ALSA_DIRECTION_INPUT)
++        cache = m->profile_set->output_paths;
++    }
++    else if (direction == PA_ALSA_DIRECTION_INPUT) {
+         pn = m->input_path_names;
++        cache = m->profile_set->input_paths;
++    }
+ 
+     if (pn) {
+         char **in;
+ 
+         for (in = pn; *in; in++) {
+-            pa_alsa_path *p;
++            pa_alsa_path *p = NULL;
+             pa_bool_t duplicate = FALSE;
+-            char **kn, *fn;
++            char **kn;
+ 
+             for (kn = pn; kn < in; kn++)
+                 if (pa_streq(*kn, *in)) {
+@@ -2782,15 +2789,21 @@ pa_alsa_path_set *pa_alsa_path_set_new(pa_alsa_mapping *m, pa_alsa_direction_t d
+             if (duplicate)
+                 continue;
+ 
+-            fn = pa_sprintf_malloc("%s.conf", *in);
+-
+-            if ((p = pa_alsa_path_new(fn, direction))) {
+-                p->path_set = ps;
++            p = pa_hashmap_get(cache, *in);
++            if (!p) {
++                char *fn = pa_sprintf_malloc("%s.conf", *in);
++                p = pa_alsa_path_new(fn, direction);
++                pa_xfree(fn);
++                if (p)
++                    pa_hashmap_put(cache, *in, p);
++            }
++            pa_assert(pa_hashmap_get(cache, *in) == p);
++            pa_log_debug("in = %s, probed = %d, supported = %d", *in, p->probed, p->supported);
++            if (p) {
+                 PA_LLIST_INSERT_AFTER(pa_alsa_path, ps->paths, ps->last_path, p);
+                 ps->last_path = p;
+             }
+ 
+-            pa_xfree(fn);
+         }
+ 
+         goto finish;
+@@ -2811,7 +2824,6 @@ pa_alsa_path_set *pa_alsa_path_set_new(pa_alsa_mapping *m, pa_alsa_direction_t d
+         pa_alsa_path *p;
+ 
+         p = pa_alsa_path_synthesize(*ie, direction);
+-        p->path_set = ps;
+ 
+         /* Mark all other passed elements for require-absent */
+         for (je = en; *je; je++) {
+@@ -3058,7 +3070,7 @@ static void path_set_condense(pa_alsa_path_set *ps, snd_mixer_t *m) {
+             if (is_subset) {
+                 pa_log_debug("Removing path '%s' as it is a subset of '%s'.", p->name, p2->name);
+                 PA_LLIST_REMOVE(pa_alsa_path, ps->paths, p);
+-                pa_alsa_path_free(p);
++                /* pa_alsa_path_free(p); Paths are now owned by the profile set */
+                 break;
+             }
+         }
+@@ -3103,6 +3115,7 @@ static void path_set_make_paths_unique(pa_alsa_path_set *ps) {
+     }
+ }
+ 
++/* This function is no longer used. */
+ void pa_alsa_path_set_probe(pa_alsa_path_set *ps, snd_mixer_t *m, pa_bool_t ignore_dB) {
+     pa_alsa_path *p, *n;
+ 
+@@ -3116,7 +3129,7 @@ void pa_alsa_path_set_probe(pa_alsa_path_set *ps, snd_mixer_t *m, pa_bool_t igno
+ 
+         if (pa_alsa_path_probe(p, m, ignore_dB) < 0) {
+             PA_LLIST_REMOVE(pa_alsa_path, ps->paths, p);
+-            pa_alsa_path_free(p);
++            /* pa_alsa_path_free(p); Paths are now owned by the profile set */
+         }
+     }
+ 
+@@ -3170,6 +3183,24 @@ static void profile_free(pa_alsa_profile *p) {
+ void pa_alsa_profile_set_free(pa_alsa_profile_set *ps) {
+     pa_assert(ps);
+ 
++    if (ps->input_paths) {
++        pa_alsa_path *p;
++
++        while ((p = pa_hashmap_steal_first(ps->input_paths)))
++            pa_alsa_path_free(p);
++
++        pa_hashmap_free(ps->input_paths, NULL, NULL);
++    }
++
++    if (ps->output_paths) {
++        pa_alsa_path *p;
++
++        while ((p = pa_hashmap_steal_first(ps->output_paths)))
++            pa_alsa_path_free(p);
++
++        pa_hashmap_free(ps->output_paths, NULL, NULL);
++    }
++
+     if (ps->profiles) {
+         pa_alsa_profile *p;
+ 
+@@ -3655,6 +3686,51 @@ fail:
+     return -1;
+ }
+ 
++static void mapping_paths_probe(pa_alsa_mapping *m, pa_alsa_profile *profile, pa_alsa_direction_t direction) {
++    pa_alsa_path *p, *np;
++    snd_pcm_t *pcm_handle;
++    pa_alsa_path_set *ps;
++    snd_mixer_t *mixer_handle;
++
++    if (direction == PA_ALSA_DIRECTION_OUTPUT) {
++        if (m->output_path_set)
++            return; /* Already probed */
++        m->output_path_set = ps = pa_alsa_path_set_new(m, direction);
++        pcm_handle = m->output_pcm;
++    } else {
++        if (m->input_path_set)
++            return; /* Already probed */
++        m->input_path_set = ps = pa_alsa_path_set_new(m, direction);
++        pcm_handle = m->input_pcm;
++    }
++
++    if (!ps)
++        return; /* No paths */
++
++    pa_assert(pcm_handle);
++
++    mixer_handle = pa_alsa_open_mixer_for_pcm(pcm_handle, NULL);
++    if (!mixer_handle)
++        return; /* Cannot open mixer :-( */
++
++    for (p = ps->paths; p; p = np) {
++        np = p->next;
++        if (pa_alsa_path_probe(p, mixer_handle, m->profile_set->ignore_dB) < 0) {
++            PA_LLIST_REMOVE(pa_alsa_path, ps->paths, p);
++        }
++    }
++
++    path_set_condense(ps, mixer_handle);
++    path_set_make_paths_unique(ps);
++    ps->probed = TRUE;
++
++    if (mixer_handle)
++        snd_mixer_close(mixer_handle);
++
++    pa_log_debug("Available mixer paths (after tidying):");
++    pa_alsa_path_set_dump(ps);
++}
++
+ static int mapping_verify(pa_alsa_mapping *m, const pa_channel_map *bonus) {
+ 
+     static const struct description_map well_known_descriptions[] = {
+@@ -4018,6 +4094,8 @@ pa_alsa_profile_set* pa_alsa_profile_set_new(const char *fname, const pa_channel
+     ps->mappings = pa_hashmap_new(pa_idxset_string_hash_func, pa_idxset_string_compare_func);
+     ps->profiles = pa_hashmap_new(pa_idxset_string_hash_func, pa_idxset_string_compare_func);
+     ps->decibel_fixes = pa_hashmap_new(pa_idxset_string_hash_func, pa_idxset_string_compare_func);
++    ps->input_paths = pa_hashmap_new(pa_idxset_string_hash_func, pa_idxset_string_compare_func);
++    ps->output_paths = pa_hashmap_new(pa_idxset_string_hash_func, pa_idxset_string_compare_func);
+ 
+     items[0].data = &ps->auto_profiles;
+ 
+@@ -4180,8 +4258,21 @@ void pa_alsa_profile_set_probe(
+ 
+         last = p;
+ 
+-        if (p->supported)
+-            pa_log_debug("Profile %s supported.", p->name);
++        if (!p->supported)
++            continue;
++
++        pa_log_debug("Profile %s supported.", p->name);
++
++        if (p->output_mappings)
++            PA_IDXSET_FOREACH(m, p->output_mappings, idx)
++                if (m->output_pcm)
++                    mapping_paths_probe(m, p, PA_ALSA_DIRECTION_OUTPUT);
++
++        if (p->input_mappings)
++            PA_IDXSET_FOREACH(m, p->input_mappings, idx)
++                if (m->input_pcm)
++                    mapping_paths_probe(m, p, PA_ALSA_DIRECTION_INPUT);
++
+     }
+ 
+     /* Clean up */
+@@ -4253,6 +4344,75 @@ void pa_alsa_profile_set_dump(pa_alsa_profile_set *ps) {
+         pa_alsa_decibel_fix_dump(db_fix);
+ }
+ 
++static pa_device_port* device_port_alsa_init(pa_hashmap *ports,
++    const char* name,
++    const char* description,
++    pa_alsa_path *path,
++    pa_alsa_setting *setting,
++    pa_card_profile *cp) {
++
++    pa_device_port * p = pa_hashmap_get(ports, name);
++    if (!p) {
++        pa_alsa_port_data *data;
++
++        p = pa_device_port_new(name, description, sizeof(pa_alsa_port_data));
++        pa_assert(p);
++        pa_hashmap_put(ports, name, p);
++        p->profiles = pa_hashmap_new(pa_idxset_string_hash_func, pa_idxset_string_compare_func);
++
++        data = PA_DEVICE_PORT_DATA(p);
++        data->path = path;
++        data->setting = setting;
++    }
++    pa_hashmap_put(p->profiles, cp->name, cp);
++
++    return p;
++}
++
++void pa_alsa_path_set_add_ports(pa_alsa_path_set *ps, pa_card_profile *cp, pa_hashmap *ports)
++{
++    pa_alsa_path *path;
++
++    pa_assert(cp);
++    pa_assert(ports);
++
++    if (!ps)
++        return;
++
++    PA_LLIST_FOREACH(path, ps->paths) {
++        if (!path->settings || !path->settings->next) {
++            /* If there is no or just one setting we only need a
++             * single entry */
++            pa_device_port *port = device_port_alsa_init(ports, path->name,
++                path->description, path, path->settings, cp);
++            port->priority = path->priority * 100;
++
++        } else {
++            pa_alsa_setting *s;
++            PA_LLIST_FOREACH(s, path->settings) {
++                pa_device_port *port;
++                char *n, *d;
++
++                n = pa_sprintf_malloc("%s;%s", path->name, s->name);
++
++                if (s->description[0])
++                    d = pa_sprintf_malloc(_("%s / %s"), path->description, s->description);
++                else
++                    d = pa_xstrdup(path->description);
++
++                port = device_port_alsa_init(ports, n, d, path, s, cp);
++                port->priority = path->priority * 100 + s->priority;
++
++                pa_xfree(n);
++                pa_xfree(d);
++            }
++        }
++
++    }
++}
++
++
++
+ void pa_alsa_add_ports(pa_hashmap **p, pa_alsa_path_set *ps) {
+     pa_alsa_path *path;
+ 
+diff --git a/src/modules/alsa/alsa-mixer.h b/src/modules/alsa/alsa-mixer.h
+index b146a41..c20904b 100644
+--- a/src/modules/alsa/alsa-mixer.h
++++ b/src/modules/alsa/alsa-mixer.h
+@@ -158,7 +158,6 @@ struct pa_alsa_element {
+  * used to control it as if it had a single volume slider, a single
+  * mute switch and a single list of selectable options. */
+ struct pa_alsa_path {
+-    pa_alsa_path_set *path_set;
+     PA_LLIST_FIELDS(pa_alsa_path);
+ 
+     pa_alsa_direction_t direction;
+@@ -248,6 +247,8 @@ struct pa_alsa_mapping {
+     /* Temporarily used during probing */
+     snd_pcm_t *input_pcm;
+     snd_pcm_t *output_pcm;
++    pa_alsa_path_set *input_path_set;
++    pa_alsa_path_set *output_path_set;
+ 
+     pa_sink *sink;
+     pa_source *source;
+@@ -289,8 +290,11 @@ struct pa_alsa_profile_set {
+     pa_hashmap *mappings;
+     pa_hashmap *profiles;
+     pa_hashmap *decibel_fixes;
++    pa_hashmap *input_paths;
++    pa_hashmap *output_paths;
+ 
+     pa_bool_t auto_profiles;
++    pa_bool_t ignore_dB:1;
+     pa_bool_t probed:1;
+ };
+ 
+@@ -324,5 +328,6 @@ struct pa_alsa_port_data {
+ };
+ 
+ void pa_alsa_add_ports(pa_hashmap **p, pa_alsa_path_set *ps);
++void pa_alsa_path_set_add_ports(pa_alsa_path_set *ps, pa_card_profile *cp, pa_hashmap *ports);
+ 
+ #endif
+diff --git a/src/modules/alsa/alsa-sink.c b/src/modules/alsa/alsa-sink.c
+index 2394455..612ad5b 100644
+--- a/src/modules/alsa/alsa-sink.c
++++ b/src/modules/alsa/alsa-sink.c
+@@ -1802,21 +1802,15 @@ static void find_mixer(struct userdata *u, pa_alsa_mapping *mapping, const char
+         pa_log_debug("Probed mixer path %s:", u->mixer_path->name);
+         pa_alsa_path_dump(u->mixer_path);
+     } else {
+-
+-        if (!(u->mixer_path_set = pa_alsa_path_set_new(mapping, PA_ALSA_DIRECTION_OUTPUT)))
++        if (!(u->mixer_path_set = mapping->output_path_set))
+             goto fail;
+-
+-        pa_alsa_path_set_probe(u->mixer_path_set, u->mixer_handle, ignore_dB);
+     }
+ 
+     return;
+ 
+ fail:
+ 
+-    if (u->mixer_path_set) {
+-        pa_alsa_path_set_free(u->mixer_path_set);
+-        u->mixer_path_set = NULL;
+-    } else if (u->mixer_path) {
++    if (u->mixer_path) {
+         pa_alsa_path_free(u->mixer_path);
+         u->mixer_path = NULL;
+     }
+@@ -2318,9 +2312,9 @@ static void userdata_free(struct userdata *u) {
+     if (u->mixer_fdl)
+         pa_alsa_fdlist_free(u->mixer_fdl);
+ 
+-    if (u->mixer_path_set)
+-        pa_alsa_path_set_free(u->mixer_path_set);
+-    else if (u->mixer_path)
++/*    if (u->mixer_path_set)
++        pa_alsa_path_set_free(u->mixer_path_set); Owned by the profile set */
++    if (u->mixer_path && !u->mixer_path_set)
+         pa_alsa_path_free(u->mixer_path);
+ 
+     if (u->mixer_handle)
+diff --git a/src/modules/alsa/alsa-source.c b/src/modules/alsa/alsa-source.c
+index fa8d892..8318498 100644
+--- a/src/modules/alsa/alsa-source.c
++++ b/src/modules/alsa/alsa-source.c
+@@ -1514,21 +1514,15 @@ static void find_mixer(struct userdata *u, pa_alsa_mapping *mapping, const char
+         pa_log_debug("Probed mixer path %s:", u->mixer_path->name);
+         pa_alsa_path_dump(u->mixer_path);
+     } else {
+-
+-        if (!(u->mixer_path_set = pa_alsa_path_set_new(mapping, PA_ALSA_DIRECTION_INPUT)))
++        if (!(u->mixer_path_set = mapping->input_path_set))
+             goto fail;
+-
+-        pa_alsa_path_set_probe(u->mixer_path_set, u->mixer_handle, ignore_dB);
+     }
+ 
+     return;
+ 
+ fail:
+ 
+-    if (u->mixer_path_set) {
+-        pa_alsa_path_set_free(u->mixer_path_set);
+-        u->mixer_path_set = NULL;
+-    } else if (u->mixer_path) {
++    if (u->mixer_path) {
+         pa_alsa_path_free(u->mixer_path);
+         u->mixer_path = NULL;
+     }
+@@ -1992,9 +1986,7 @@ static void userdata_free(struct userdata *u) {
+     if (u->mixer_fdl)
+         pa_alsa_fdlist_free(u->mixer_fdl);
+ 
+-    if (u->mixer_path_set)
+-        pa_alsa_path_set_free(u->mixer_path_set);
+-    else if (u->mixer_path)
++    if (u->mixer_path && !u->mixer_path_set)
+         pa_alsa_path_free(u->mixer_path);
+ 
+     if (u->mixer_handle)
+diff --git a/src/modules/alsa/module-alsa-card.c b/src/modules/alsa/module-alsa-card.c
+index 8b19d42..7b120be 100644
+--- a/src/modules/alsa/module-alsa-card.c
++++ b/src/modules/alsa/module-alsa-card.c
+@@ -112,7 +112,7 @@ struct profile_data {
+     pa_alsa_profile *profile;
+ };
+ 
+-static void add_profiles(struct userdata *u, pa_hashmap *h) {
++static void add_profiles(struct userdata *u, pa_hashmap *h, pa_hashmap *ports) {
+     pa_alsa_profile *ap;
+     void *state;
+ 
+@@ -131,17 +131,21 @@ static void add_profiles(struct userdata *u, pa_hashmap *h) {
+         if (ap->output_mappings) {
+             cp->n_sinks = pa_idxset_size(ap->output_mappings);
+ 
+-            PA_IDXSET_FOREACH(m, ap->output_mappings, idx)
++            PA_IDXSET_FOREACH(m, ap->output_mappings, idx) {
++                pa_alsa_path_set_add_ports(m->output_path_set, cp, ports);
+                 if (m->channel_map.channels > cp->max_sink_channels)
+                     cp->max_sink_channels = m->channel_map.channels;
++            }
+         }
+ 
+         if (ap->input_mappings) {
+             cp->n_sources = pa_idxset_size(ap->input_mappings);
+ 
+-            PA_IDXSET_FOREACH(m, ap->input_mappings, idx)
++            PA_IDXSET_FOREACH(m, ap->input_mappings, idx) {
++                pa_alsa_path_set_add_ports(m->input_path_set, cp, ports);
+                 if (m->channel_map.channels > cp->max_source_channels)
+                     cp->max_source_channels = m->channel_map.channels;
++            }
+         }
+ 
+         d = PA_CARD_PROFILE_DATA(cp);
+@@ -288,6 +292,7 @@ int pa__init(pa_module *m) {
+     pa_card_new_data data;
+     pa_modargs *ma;
+     int alsa_card_index;
++    pa_bool_t ignore_dB = FALSE;
+     struct userdata *u;
+     pa_reserve_wrapper *reserve = NULL;
+     const char *description;
+@@ -303,6 +308,11 @@ int pa__init(pa_module *m) {
+         goto fail;
+     }
+ 
++    if (pa_modargs_get_value_boolean(ma, "ignore_dB", &ignore_dB) < 0) {
++        pa_log("Failed to parse ignore_dB argument.");
++        goto fail;
++    }
++
+     m->userdata = u = pa_xnew0(struct userdata, 1);
+     u->core = m->core;
+     u->module = m;
+@@ -338,6 +348,8 @@ int pa__init(pa_module *m) {
+     u->profile_set = pa_alsa_profile_set_new(fn, &u->core->default_channel_map);
+     pa_xfree(fn);
+ 
++    u->profile_set->ignore_dB = ignore_dB;
++
+     if (!u->profile_set)
+         goto fail;
+ 
+@@ -371,7 +383,7 @@ int pa__init(pa_module *m) {
+             pa_reserve_wrapper_set_application_device_name(reserve, description);
+ 
+     data.profiles = pa_hashmap_new(pa_idxset_string_hash_func, pa_idxset_string_compare_func);
+-    add_profiles(u, data.profiles);
++    add_profiles(u, data.profiles, data.ports);
+ 
+     if (pa_hashmap_isempty(data.profiles)) {
+         pa_log("Failed to find a working profile.");
+diff --git a/src/pulsecore/card.c b/src/pulsecore/card.c
+index d155e8c..daf21be 100644
+--- a/src/pulsecore/card.c
++++ b/src/pulsecore/card.c
+@@ -67,7 +67,7 @@ pa_card_new_data* pa_card_new_data_init(pa_card_new_data *data) {
+ 
+     memset(data, 0, sizeof(*data));
+     data->proplist = pa_proplist_new();
+-    data->ports = pa_hashmap_new(pa_idxset_trivial_hash_func, pa_idxset_trivial_compare_func);
++    data->ports = pa_hashmap_new(pa_idxset_string_hash_func, pa_idxset_string_compare_func);
+     return data;
+ }
+ 
+@@ -106,6 +106,23 @@ void pa_card_new_data_done(pa_card_new_data *data) {
+     pa_xfree(data->active_profile);
+ }
+ 
++static void card_port_dump(pa_card *c) {
++    void* state, *state2;
++    pa_device_port *port;
++    pa_card_profile *profile;
++
++    if (!c->ports)
++        return;
++    PA_HASHMAP_FOREACH(port, c->ports, state) {
++        pa_log_debug("Port %s", port->name);
++        if (!port->profiles)
++            continue;
++        PA_HASHMAP_FOREACH(profile, port->profiles, state2)
++            pa_log_debug("Profile %s", profile->name);
++    }
++
++}
++
+ pa_card *pa_card_new(pa_core *core, pa_card_new_data *data) {
+     pa_card *c;
+     const char *name;
+@@ -173,6 +190,8 @@ pa_card *pa_card_new(pa_core *core, pa_card_new_data *data) {
+     pa_log_info("Created %u \"%s\"", c->index, c->name);
+     pa_subscription_post(core, PA_SUBSCRIPTION_EVENT_CARD|PA_SUBSCRIPTION_EVENT_NEW, c->index);
+ 
++    card_port_dump(c);
++
+     pa_hook_fire(&core->hooks[PA_CORE_HOOK_CARD_PUT], c);
+     return c;
+ }
+diff --git a/src/pulsecore/device-port.c b/src/pulsecore/device-port.c
+index 5e6a492..2651f0b 100644
+--- a/src/pulsecore/device-port.c
++++ b/src/pulsecore/device-port.c
+@@ -43,6 +43,9 @@ static void device_port_free(pa_object *o) {
+     pa_assert(p);
+     pa_assert(pa_device_port_refcnt(p) == 0);
+ 
++    if (p->profiles)
++        pa_hashmap_free(p->profiles, NULL, NULL);
++
+     pa_xfree(p->name);
+     pa_xfree(p->description);
+     pa_xfree(p);
+@@ -61,6 +64,7 @@ pa_device_port *pa_device_port_new(const char *name, const char *description, si
+     p->description = pa_xstrdup(description);
+     p->priority = 0;
+     p->available = PA_PORT_AVAILABLE_UNKNOWN;
++    p->profiles = NULL;
+ 
+     return p;
+ }
+diff --git a/src/pulsecore/device-port.h b/src/pulsecore/device-port.h
+index 355a4a1..cffd2a7 100644
+--- a/src/pulsecore/device-port.h
++++ b/src/pulsecore/device-port.h
+@@ -45,6 +45,7 @@ struct pa_device_port {
+     unsigned priority;
+     pa_port_available_t available;         /**< PA_PORT_AVAILABLE_UNKNOWN, PA_PORT_AVAILABLE_NO or PA_PORT_AVAILABLE_YES \since MERGE_OF_JACK_DETECTION */
+ 
++    pa_hashmap *profiles; /* Can be NULL. Does not own the profiles */
+     /* .. followed by some implementation specific data */
+ };
+ 
+-- 
+1.7.5.4
+

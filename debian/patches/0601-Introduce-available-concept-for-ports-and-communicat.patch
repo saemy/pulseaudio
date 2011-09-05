@@ -1,8 +1,9 @@
-From b2f0aa538d4645c93f9e02a3fb9e87cbec83eda5 Mon Sep 17 00:00:00 2001
+From 5132f71f32b66e612f21e6a32acec39552f856ea Mon Sep 17 00:00:00 2001
 From: David Henningsson <david.henningsson@canonical.com>
 Date: Wed, 6 Jul 2011 11:37:27 +0200
-Subject: [PATCH] Introduce "available" concept for ports, and communicate
- that to clients. Bump protocol version to 24.
+Subject: [PATCH 601/613] Introduce "available" concept for ports, and
+ communicate that to clients. Bump protocol version
+ to 24.
 
 Signed-off-by: David Henningsson <david.henningsson@canonical.com>
 ---
@@ -15,7 +16,7 @@ Signed-off-by: David Henningsson <david.henningsson@canonical.com>
  6 files changed, 41 insertions(+), 1 deletions(-)
 
 diff --git a/configure.ac b/configure.ac
-index 1bc858f..6fbfd30 100644
+index b1118c7..9cfc57e 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -36,7 +36,7 @@ AC_SUBST(PA_MINOR, pa_minor)
@@ -28,10 +29,10 @@ index 1bc858f..6fbfd30 100644
  # The stable ABI for client applications, for the version info x:y:z
  # always will hold y=z
 diff --git a/src/pulse/def.h b/src/pulse/def.h
-index 32169de..e09b8d2 100644
+index 386ea2b..ef10bc8 100644
 --- a/src/pulse/def.h
 +++ b/src/pulse/def.h
-@@ -952,6 +952,23 @@ typedef void (*pa_free_cb_t)(void *p);
+@@ -962,6 +962,23 @@ typedef void (*pa_free_cb_t)(void *p);
   * playback, \since 1.0 */
  #define PA_STREAM_EVENT_FORMAT_LOST "format-lost"
  
@@ -56,7 +57,7 @@ index 32169de..e09b8d2 100644
  
  #endif
 diff --git a/src/pulse/introspect.c b/src/pulse/introspect.c
-index 27a298c..d1a0ed1 100644
+index 0d1d03f..7a472d3 100644
 --- a/src/pulse/introspect.c
 +++ b/src/pulse/introspect.c
 @@ -211,6 +211,14 @@ static void context_get_sink_info_callback(pa_pdispatch *pd, uint32_t command, u
@@ -90,7 +91,7 @@ index 27a298c..d1a0ed1 100644
                      }
  
 diff --git a/src/pulse/introspect.h b/src/pulse/introspect.h
-index 196d44d..8e4cc97 100644
+index 1d77d45..eba1471 100644
 --- a/src/pulse/introspect.h
 +++ b/src/pulse/introspect.h
 @@ -202,6 +202,7 @@ typedef struct pa_sink_port_info {
@@ -110,10 +111,10 @@ index 196d44d..8e4cc97 100644
  
  /** Stores information about sources. Please note that this structure
 diff --git a/src/pulsecore/protocol-native.c b/src/pulsecore/protocol-native.c
-index 3ed9f1a..ab8c5f8 100644
+index 3cffecb..efbc1ba 100644
 --- a/src/pulsecore/protocol-native.c
 +++ b/src/pulsecore/protocol-native.c
-@@ -3093,6 +3093,8 @@ static void sink_fill_tagstruct(pa_native_connection *c, pa_tagstruct *t, pa_sin
+@@ -3094,6 +3094,8 @@ static void sink_fill_tagstruct(pa_native_connection *c, pa_tagstruct *t, pa_sin
                  pa_tagstruct_puts(t, p->name);
                  pa_tagstruct_puts(t, p->description);
                  pa_tagstruct_putu32(t, p->priority);
@@ -122,7 +123,7 @@ index 3ed9f1a..ab8c5f8 100644
              }
          }
  
-@@ -3164,6 +3166,8 @@ static void source_fill_tagstruct(pa_native_connection *c, pa_tagstruct *t, pa_s
+@@ -3165,6 +3167,8 @@ static void source_fill_tagstruct(pa_native_connection *c, pa_tagstruct *t, pa_s
                  pa_tagstruct_puts(t, p->name);
                  pa_tagstruct_puts(t, p->description);
                  pa_tagstruct_putu32(t, p->priority);
@@ -132,10 +133,10 @@ index 3ed9f1a..ab8c5f8 100644
          }
  
 diff --git a/src/pulsecore/sink.h b/src/pulsecore/sink.h
-index 239936b..6c6ffdb 100644
+index e5eaab3..39b2806 100644
 --- a/src/pulsecore/sink.h
 +++ b/src/pulsecore/sink.h
-@@ -59,6 +59,7 @@ struct pa_device_port {
+@@ -60,6 +60,7 @@ struct pa_device_port {
      char *description;
  
      unsigned priority;

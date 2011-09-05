@@ -8,7 +8,6 @@
 0008-delay-gnome-autostart.patch
 0010-lp453966-handle-digmic-pt2.patch
 0013-Load-RAOP-Zeroconf-by-default.patch
-0014-alsa-mixer-Add-separate-profile-for-Nvidia.patch
 0016-nodisplay-autostart.patch
 
 # Patches post 0.99.2 release from upstream git master
@@ -27,6 +26,16 @@
 
 # Jack detection patches
 0601-Introduce-available-concept-for-ports-and-communicat.patch
-0602-Create-a-port-even-if-there-is-only-one-path-setting.patch
-0603-Turn-device-ports-into-reference-counted-objects.patch
-0604-ALSA-part-of-jack-detection-and-a-small-policy-modul.patch
+0602-Turn-device-ports-into-reference-counted-objects.patch
+0603-Cards-now-has-ports-directly.patch
+0604-Fire-a-hook-when-port-available-status-is-changed.patch
+0605-cli-Show-card-ports-and-jack-detection-status.patch
+0606-Make-ports-point-to-profiles-and-make-alsa-profile-s.patch
+0607-Add-possibility-to-configure-connection-to-jack-inpu.patch
+0608-alsa-jack-input-device-implementation.patch
+0609-Jack-detection-Make-alsa-path-set-have-paths-in-a-ha.patch
+0610-Make-sure-sink-source-allocates-ports-from-the-same-.patch
+0611-Add-is_input-and-is_output-to-device_port-to-simplif.patch
+0612-Add-a-new-module-switch-on-port-available-that-acts-.patch
+0613-Load-switch-on-port-available-module-by-default.patch
+0614-HDMI-Add-jack-detection-for-HDMI-as-well-as-probing-.patch

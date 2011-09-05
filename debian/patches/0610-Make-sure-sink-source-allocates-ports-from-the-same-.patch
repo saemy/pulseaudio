@@ -1,0 +1,147 @@
+From 6668aec1cbf116a685431c53feb4f3dcdf5a54d0 Mon Sep 17 00:00:00 2001
+From: David Henningsson <david.henningsson@canonical.com>
+Date: Tue, 30 Aug 2011 17:13:47 +0200
+Subject: [PATCH 610/613] Make sure sink/source allocates ports from the same
+ pool as its card
+
+Signed-off-by: David Henningsson <david.henningsson@canonical.com>
+---
+ src/modules/alsa/alsa-mixer.c       |   19 ++++++++++++-------
+ src/modules/alsa/alsa-mixer.h       |    4 ++--
+ src/modules/alsa/alsa-sink.c        |    2 +-
+ src/modules/alsa/alsa-source.c      |    2 +-
+ src/modules/alsa/module-alsa-card.c |    4 ++--
+ 5 files changed, 18 insertions(+), 13 deletions(-)
+
+diff --git a/src/modules/alsa/alsa-mixer.c b/src/modules/alsa/alsa-mixer.c
+index 38a1650..90e1df5 100644
+--- a/src/modules/alsa/alsa-mixer.c
++++ b/src/modules/alsa/alsa-mixer.c
+@@ -4348,7 +4348,8 @@ static pa_device_port* device_port_alsa_init(pa_hashmap *ports,
+     const char* description,
+     pa_alsa_path *path,
+     pa_alsa_setting *setting,
+-    pa_card_profile *cp) {
++    pa_card_profile *cp,
++    pa_hashmap *extra) {
+ 
+     pa_device_port * p = pa_hashmap_get(ports, name);
+     if (!p) {
+@@ -4372,11 +4373,14 @@ static pa_device_port* device_port_alsa_init(pa_hashmap *ports,
+         pa_log_debug("Adding port %s to profile %s", p->name, cp->name);
+         pa_hashmap_put(p->profiles, cp->name, cp);
+     }
+-
++    if (extra) {
++        pa_hashmap_put(extra, name, p);
++        pa_device_port_ref(p);
++    }
+     return p;
+ }
+ 
+-void pa_alsa_path_set_add_ports(pa_alsa_path_set *ps, pa_card_profile *cp, pa_hashmap *ports)
++void pa_alsa_path_set_add_ports(pa_alsa_path_set *ps, pa_card_profile *cp, pa_hashmap *ports, pa_hashmap *extra)
+ {
+     pa_alsa_path *path;
+     void *state;
+@@ -4394,7 +4398,7 @@ void pa_alsa_path_set_add_ports(pa_alsa_path_set *ps, pa_card_profile *cp, pa_ha
+             /* If there is no or just one setting we only need a
+              * single entry */
+             pa_device_port *port = device_port_alsa_init(ports, path->name,
+-                path->description, path, path->settings, cp);
++                path->description, path, path->settings, cp, extra);
+             port->priority = path->priority * 100;
+ 
+         } else {
+@@ -4410,7 +4414,7 @@ void pa_alsa_path_set_add_ports(pa_alsa_path_set *ps, pa_card_profile *cp, pa_ha
+                 else
+                     d = pa_xstrdup(path->description);
+ 
+-                port = device_port_alsa_init(ports, n, d, path, s, cp);
++                port = device_port_alsa_init(ports, n, d, path, s, cp, extra);
+                 port->priority = path->priority * 100 + s->priority;
+ 
+                 pa_xfree(n);
+@@ -4420,14 +4424,15 @@ void pa_alsa_path_set_add_ports(pa_alsa_path_set *ps, pa_card_profile *cp, pa_ha
+     }
+ }
+ 
+-void pa_alsa_add_ports(pa_hashmap **p, pa_alsa_path_set *ps) {
++void pa_alsa_add_ports(pa_hashmap **p, pa_alsa_path_set *ps, pa_card *card) {
+     pa_assert(p);
+     pa_assert(!*p);
+     pa_assert(ps);
+ 
+     if (ps->paths && pa_hashmap_size(ps->paths) > 0) {
++        pa_assert(card);
+         *p = pa_hashmap_new(pa_idxset_string_hash_func, pa_idxset_string_compare_func);
+-        pa_alsa_path_set_add_ports(ps, NULL, *p);
++        pa_alsa_path_set_add_ports(ps, NULL, card->ports, *p);
+     }
+     pa_log_debug("Added %u ports", *p ? pa_hashmap_size(*p) : 0);
+ }
+diff --git a/src/modules/alsa/alsa-mixer.h b/src/modules/alsa/alsa-mixer.h
+index e5d0307..6139ba5 100644
+--- a/src/modules/alsa/alsa-mixer.h
++++ b/src/modules/alsa/alsa-mixer.h
+@@ -328,7 +328,7 @@ struct pa_alsa_port_data {
+     pa_alsa_setting *setting;
+ };
+ 
+-void pa_alsa_add_ports(pa_hashmap **p, pa_alsa_path_set *ps);
+-void pa_alsa_path_set_add_ports(pa_alsa_path_set *ps, pa_card_profile *cp, pa_hashmap *ports);
++void pa_alsa_add_ports(pa_hashmap **p, pa_alsa_path_set *ps, pa_card *card);
++void pa_alsa_path_set_add_ports(pa_alsa_path_set *ps, pa_card_profile *cp, pa_hashmap *ports, pa_hashmap *extra);
+ 
+ #endif
+diff --git a/src/modules/alsa/alsa-sink.c b/src/modules/alsa/alsa-sink.c
+index 0f3fe8c..3792554 100644
+--- a/src/modules/alsa/alsa-sink.c
++++ b/src/modules/alsa/alsa-sink.c
+@@ -2135,7 +2135,7 @@ pa_sink *pa_alsa_sink_new(pa_module *m, pa_modargs *ma, const char*driver, pa_ca
+     }
+ 
+     if (u->mixer_path_set)
+-        pa_alsa_add_ports(&data.ports, u->mixer_path_set);
++        pa_alsa_add_ports(&data.ports, u->mixer_path_set, card);
+ 
+     u->sink = pa_sink_new(m->core, &data, PA_SINK_HARDWARE | PA_SINK_LATENCY | (u->use_tsched ? PA_SINK_DYNAMIC_LATENCY : 0) |
+                           (set_formats ? PA_SINK_SET_FORMATS : 0));
+diff --git a/src/modules/alsa/alsa-source.c b/src/modules/alsa/alsa-source.c
+index 9c21c3c..cac074d 100644
+--- a/src/modules/alsa/alsa-source.c
++++ b/src/modules/alsa/alsa-source.c
+@@ -1836,7 +1836,7 @@ pa_source *pa_alsa_source_new(pa_module *m, pa_modargs *ma, const char*driver, p
+     }
+ 
+     if (u->mixer_path_set)
+-        pa_alsa_add_ports(&data.ports, u->mixer_path_set);
++        pa_alsa_add_ports(&data.ports, u->mixer_path_set, card);
+ 
+     u->source = pa_source_new(m->core, &data, PA_SOURCE_HARDWARE|PA_SOURCE_LATENCY|(u->use_tsched ? PA_SOURCE_DYNAMIC_LATENCY : 0));
+     pa_source_new_data_done(&data);
+diff --git a/src/modules/alsa/module-alsa-card.c b/src/modules/alsa/module-alsa-card.c
+index 3eea300..878351a 100644
+--- a/src/modules/alsa/module-alsa-card.c
++++ b/src/modules/alsa/module-alsa-card.c
+@@ -133,7 +133,7 @@ static void add_profiles(struct userdata *u, pa_hashmap *h, pa_hashmap *ports) {
+             cp->n_sinks = pa_idxset_size(ap->output_mappings);
+ 
+             PA_IDXSET_FOREACH(m, ap->output_mappings, idx) {
+-                pa_alsa_path_set_add_ports(m->output_path_set, cp, ports);
++                pa_alsa_path_set_add_ports(m->output_path_set, cp, ports, NULL);
+                 if (m->channel_map.channels > cp->max_sink_channels)
+                     cp->max_sink_channels = m->channel_map.channels;
+             }
+@@ -143,7 +143,7 @@ static void add_profiles(struct userdata *u, pa_hashmap *h, pa_hashmap *ports) {
+             cp->n_sources = pa_idxset_size(ap->input_mappings);
+ 
+             PA_IDXSET_FOREACH(m, ap->input_mappings, idx) {
+-                pa_alsa_path_set_add_ports(m->input_path_set, cp, ports);
++                pa_alsa_path_set_add_ports(m->input_path_set, cp, ports, NULL);
+                 if (m->channel_map.channels > cp->max_source_channels)
+                     cp->max_source_channels = m->channel_map.channels;
+             }
+-- 
+1.7.5.4
+

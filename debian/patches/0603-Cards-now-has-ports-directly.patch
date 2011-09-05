@@ -1,0 +1,84 @@
+From da98d2a5d3d45687df13f9929f4ea03796fd43fd Mon Sep 17 00:00:00 2001
+From: David Henningsson <david.henningsson@canonical.com>
+Date: Wed, 17 Aug 2011 10:44:35 +0200
+Subject: [PATCH 603/613] Cards now has ports directly
+
+Signed-off-by: David Henningsson <david.henningsson@canonical.com>
+---
+ src/pulsecore/card.c |    9 ++++++++-
+ src/pulsecore/card.h |    4 ++++
+ 2 files changed, 12 insertions(+), 1 deletions(-)
+
+diff --git a/src/pulsecore/card.c b/src/pulsecore/card.c
+index feaa444..d155e8c 100644
+--- a/src/pulsecore/card.c
++++ b/src/pulsecore/card.c
+@@ -34,6 +34,7 @@
+ #include <pulsecore/macro.h>
+ #include <pulsecore/core-util.h>
+ #include <pulsecore/namereg.h>
++#include <pulsecore/device-port.h>
+ 
+ #include "card.h"
+ 
+@@ -66,7 +67,7 @@ pa_card_new_data* pa_card_new_data_init(pa_card_new_data *data) {
+ 
+     memset(data, 0, sizeof(*data));
+     data->proplist = pa_proplist_new();
+-
++    data->ports = pa_hashmap_new(pa_idxset_trivial_hash_func, pa_idxset_trivial_compare_func);
+     return data;
+ }
+ 
+@@ -99,6 +100,8 @@ void pa_card_new_data_done(pa_card_new_data *data) {
+         pa_hashmap_free(data->profiles, NULL, NULL);
+     }
+ 
++    pa_device_port_hashmap_free(data->ports);
++
+     pa_xfree(data->name);
+     pa_xfree(data->active_profile);
+ }
+@@ -139,6 +142,8 @@ pa_card *pa_card_new(pa_core *core, pa_card_new_data *data) {
+      * copying it here */
+     c->profiles = data->profiles;
+     data->profiles = NULL;
++    c->ports = data->ports;
++    data->ports = NULL;
+ 
+     c->active_profile = NULL;
+     c->save_profile = FALSE;
+@@ -195,6 +200,8 @@ void pa_card_free(pa_card *c) {
+     pa_assert(pa_idxset_isempty(c->sources));
+     pa_idxset_free(c->sources, NULL, NULL);
+ 
++    pa_device_port_hashmap_free(c->ports);
++
+     if (c->profiles) {
+         pa_card_profile *p;
+ 
+diff --git a/src/pulsecore/card.h b/src/pulsecore/card.h
+index 2d691b6..6f942e8 100644
+--- a/src/pulsecore/card.h
++++ b/src/pulsecore/card.h
+@@ -63,6 +63,8 @@ struct pa_card {
+     pa_hashmap *profiles;
+     pa_card_profile *active_profile;
+ 
++    pa_hashmap *ports;
++
+     pa_bool_t save_profile:1;
+ 
+     void *userdata;
+@@ -80,6 +82,8 @@ typedef struct pa_card_new_data {
+     pa_hashmap *profiles;
+     char *active_profile;
+ 
++    pa_hashmap *ports;
++
+     pa_bool_t namereg_fail:1;
+ 
+     pa_bool_t save_profile:1;
+-- 
+1.7.5.4
+
