@@ -1,0 +1,256 @@
+From 3d04a057363026b59462ef1b00d4e2f38b9b193a Mon Sep 17 00:00:00 2001
+From: Maarten Bosmans <mkbosmans@gmail.com>
+Date: Fri, 2 Sep 2011 14:11:49 +0200
+Subject: [PATCH 105/111] bluetooth/sbc: Use __asm__ keyword
+
+---
+ src/modules/bluetooth/sbc/sbc_primitives_armv6.c  |    4 +-
+ src/modules/bluetooth/sbc/sbc_primitives_iwmmxt.c |    4 +-
+ src/modules/bluetooth/sbc/sbc_primitives_mmx.c    |   14 +++++-----
+ src/modules/bluetooth/sbc/sbc_primitives_neon.c   |   28 ++++++++++----------
+ 4 files changed, 25 insertions(+), 25 deletions(-)
+
+diff --git a/src/modules/bluetooth/sbc/sbc_primitives_armv6.c b/src/modules/bluetooth/sbc/sbc_primitives_armv6.c
+index 9586098..b321272 100644
+--- a/src/modules/bluetooth/sbc/sbc_primitives_armv6.c
++++ b/src/modules/bluetooth/sbc/sbc_primitives_armv6.c
+@@ -41,7 +41,7 @@
+ static void __attribute__((naked)) sbc_analyze_four_armv6()
+ {
+ 	/* r0 = in, r1 = out, r2 = consts */
+-	asm volatile (
++	__asm__ volatile (
+ 		"push   {r1, r4-r7, lr}\n"
+ 		"push   {r8-r11}\n"
+ 		"ldrd   r4,  r5,  [r0, #0]\n"
+@@ -112,7 +112,7 @@ static void __attribute__((naked)) sbc_analyze_four_armv6()
+ static void __attribute__((naked)) sbc_analyze_eight_armv6()
+ {
+ 	/* r0 = in, r1 = out, r2 = consts */
+-	asm volatile (
++	__asm__ volatile (
+ 		"push   {r1, r4-r7, lr}\n"
+ 		"push   {r8-r11}\n"
+ 		"ldrd   r4,  r5,  [r0, #24]\n"
+diff --git a/src/modules/bluetooth/sbc/sbc_primitives_iwmmxt.c b/src/modules/bluetooth/sbc/sbc_primitives_iwmmxt.c
+index 213967e..e0bd060 100644
+--- a/src/modules/bluetooth/sbc/sbc_primitives_iwmmxt.c
++++ b/src/modules/bluetooth/sbc/sbc_primitives_iwmmxt.c
+@@ -42,7 +42,7 @@
+ static inline void sbc_analyze_four_iwmmxt(const int16_t *in, int32_t *out,
+ 					const FIXED_T *consts)
+ {
+-	asm volatile (
++	__asm__ volatile (
+ 		"wldrd        wr0, [%0]\n"
+ 		"tbcstw       wr4, %2\n"
+ 		"wldrd        wr2, [%1]\n"
+@@ -115,7 +115,7 @@ static inline void sbc_analyze_four_iwmmxt(const int16_t *in, int32_t *out,
+ static inline void sbc_analyze_eight_iwmmxt(const int16_t *in, int32_t *out,
+ 							const FIXED_T *consts)
+ {
+-	asm volatile (
++	__asm__ volatile (
+ 		"wldrd        wr0, [%0]\n"
+ 		"tbcstw       wr15, %2\n"
+ 		"wldrd        wr1, [%0, #8]\n"
+diff --git a/src/modules/bluetooth/sbc/sbc_primitives_mmx.c b/src/modules/bluetooth/sbc/sbc_primitives_mmx.c
+index 7f2fbc3..27e9a56 100644
+--- a/src/modules/bluetooth/sbc/sbc_primitives_mmx.c
++++ b/src/modules/bluetooth/sbc/sbc_primitives_mmx.c
+@@ -45,7 +45,7 @@ static inline void sbc_analyze_four_mmx(const int16_t *in, int32_t *out,
+ 		1 << (SBC_PROTO_FIXED4_SCALE - 1),
+ 		1 << (SBC_PROTO_FIXED4_SCALE - 1),
+ 	};
+-	asm volatile (
++	__asm__ volatile (
+ 		"movq        (%0), %%mm0\n"
+ 		"movq       8(%0), %%mm1\n"
+ 		"pmaddwd     (%1), %%mm0\n"
+@@ -111,7 +111,7 @@ static inline void sbc_analyze_eight_mmx(const int16_t *in, int32_t *out,
+ 		1 << (SBC_PROTO_FIXED8_SCALE - 1),
+ 		1 << (SBC_PROTO_FIXED8_SCALE - 1),
+ 	};
+-	asm volatile (
++	__asm__ volatile (
+ 		"movq        (%0), %%mm0\n"
+ 		"movq       8(%0), %%mm1\n"
+ 		"movq      16(%0), %%mm2\n"
+@@ -258,7 +258,7 @@ static inline void sbc_analyze_4b_4s_mmx(int16_t *x, int32_t *out,
+ 	out += out_stride;
+ 	sbc_analyze_four_mmx(x + 0, out, analysis_consts_fixed4_simd_even);
+ 
+-	asm volatile ("emms\n");
++	__asm__ volatile ("emms\n");
+ }
+ 
+ static inline void sbc_analyze_4b_8s_mmx(int16_t *x, int32_t *out,
+@@ -273,7 +273,7 @@ static inline void sbc_analyze_4b_8s_mmx(int16_t *x, int32_t *out,
+ 	out += out_stride;
+ 	sbc_analyze_eight_mmx(x + 0, out, analysis_consts_fixed8_simd_even);
+ 
+-	asm volatile ("emms\n");
++	__asm__ volatile ("emms\n");
+ }
+ 
+ static void sbc_calc_scalefactors_mmx(
+@@ -291,7 +291,7 @@ static void sbc_calc_scalefactors_mmx(
+ 		for (sb = 0; sb < subbands; sb += 2) {
+ 			blk = (blocks - 1) * (((char *) &sb_sample_f[1][0][0] -
+ 				(char *) &sb_sample_f[0][0][0]));
+-			asm volatile (
++			__asm__ volatile (
+ 				"movq         (%4), %%mm0\n"
+ 			"1:\n"
+ 				"movq     (%1, %0), %%mm1\n"
+@@ -326,7 +326,7 @@ static void sbc_calc_scalefactors_mmx(
+ 			: "cc", "memory");
+ 		}
+ 	}
+-	asm volatile ("emms\n");
++	__asm__ volatile ("emms\n");
+ }
+ 
+ static int check_mmx_support(void)
+@@ -335,7 +335,7 @@ static int check_mmx_support(void)
+ 	return 1; /* We assume that all 64-bit processors have MMX support */
+ #else
+ 	int cpuid_feature_information;
+-	asm volatile (
++	__asm__ volatile (
+ 		/* According to Intel manual, CPUID instruction is supported
+ 		 * if the value of ID bit (bit 21) in EFLAGS can be modified */
+ 		"pushf\n"
+diff --git a/src/modules/bluetooth/sbc/sbc_primitives_neon.c b/src/modules/bluetooth/sbc/sbc_primitives_neon.c
+index 0572158..5d4d0e3 100644
+--- a/src/modules/bluetooth/sbc/sbc_primitives_neon.c
++++ b/src/modules/bluetooth/sbc/sbc_primitives_neon.c
+@@ -44,7 +44,7 @@ static inline void _sbc_analyze_four_neon(const int16_t *in, int32_t *out,
+ 	/* TODO: merge even and odd cases (or even merge all four calls to this
+ 	 * function) in order to have only aligned reads from 'in' array
+ 	 * and reduce number of load instructions */
+-	asm volatile (
++	__asm__ volatile (
+ 		"vld1.16    {d4, d5}, [%0, :64]!\n"
+ 		"vld1.16    {d8, d9}, [%1, :128]!\n"
+ 
+@@ -104,7 +104,7 @@ static inline void _sbc_analyze_eight_neon(const int16_t *in, int32_t *out,
+ 	/* TODO: merge even and odd cases (or even merge all four calls to this
+ 	 * function) in order to have only aligned reads from 'in' array
+ 	 * and reduce number of load instructions */
+-	asm volatile (
++	__asm__ volatile (
+ 		"vld1.16    {d4, d5}, [%0, :64]!\n"
+ 		"vld1.16    {d8, d9}, [%1, :128]!\n"
+ 
+@@ -247,7 +247,7 @@ static void sbc_calc_scalefactors_neon(
+ 		for (sb = 0; sb < subbands; sb += 4) {
+ 			int blk = blocks;
+ 			int32_t *in = &sb_sample_f[0][ch][sb];
+-			asm volatile (
++			__asm__ volatile (
+ 				"vmov.s32  q0, #0\n"
+ 				"vmov.s32  q1, %[c1]\n"
+ 				"vmov.s32  q14, #1\n"
+@@ -306,7 +306,7 @@ int sbc_calc_scalefactors_j_neon(
+ 
+ 	i = subbands;
+ 
+-	asm volatile (
++	__asm__ volatile (
+ 		/*
+ 		 * constants: q13 = (31 - SCALE_OUT_BITS), q14 = 1
+ 		 * input:     q0  = ((1 << SCALE_OUT_BITS) + 1)
+@@ -561,7 +561,7 @@ static SBC_ALWAYS_INLINE int sbc_enc_process_input_4s_neon_internal(
+ 	if (position < nsamples) {
+ 		int16_t *dst = &X[0][SBC_X_BUFFER_SIZE - 40];
+ 		int16_t *src = &X[0][position];
+-		asm volatile (
++		__asm__ volatile (
+ 			"vld1.16 {d0, d1, d2, d3}, [%[src], :128]!\n"
+ 			"vst1.16 {d0, d1, d2, d3}, [%[dst], :128]!\n"
+ 			"vld1.16 {d0, d1, d2, d3}, [%[src], :128]!\n"
+@@ -575,7 +575,7 @@ static SBC_ALWAYS_INLINE int sbc_enc_process_input_4s_neon_internal(
+ 		if (nchannels > 1) {
+ 			dst = &X[1][SBC_X_BUFFER_SIZE - 40];
+ 			src = &X[1][position];
+-			asm volatile (
++			__asm__ volatile (
+ 				"vld1.16 {d0, d1, d2, d3}, [%[src], :128]!\n"
+ 				"vst1.16 {d0, d1, d2, d3}, [%[dst], :128]!\n"
+ 				"vld1.16 {d0, d1, d2, d3}, [%[src], :128]!\n"
+@@ -594,7 +594,7 @@ static SBC_ALWAYS_INLINE int sbc_enc_process_input_4s_neon_internal(
+ 		/* poor 'pcm' alignment */
+ 		int16_t *x = &X[0][position];
+ 		int16_t *y = &X[1][position];
+-		asm volatile (
++		__asm__ volatile (
+ 			"vld1.8  {d0, d1}, [%[perm], :128]\n"
+ 		"1:\n"
+ 			"sub     %[x], %[x], #16\n"
+@@ -628,7 +628,7 @@ static SBC_ALWAYS_INLINE int sbc_enc_process_input_4s_neon_internal(
+ 		/* proper 'pcm' alignment */
+ 		int16_t *x = &X[0][position];
+ 		int16_t *y = &X[1][position];
+-		asm volatile (
++		__asm__ volatile (
+ 			"vld1.8  {d0, d1}, [%[perm], :128]\n"
+ 		"1:\n"
+ 			"sub     %[x], %[x], #16\n"
+@@ -658,7 +658,7 @@ static SBC_ALWAYS_INLINE int sbc_enc_process_input_4s_neon_internal(
+ 			  "d20", "d21", "d22", "d23");
+ 	} else {
+ 		int16_t *x = &X[0][position];
+-		asm volatile (
++		__asm__ volatile (
+ 			"vld1.8  {d0, d1}, [%[perm], :128]\n"
+ 		"1:\n"
+ 			"sub     %[x], %[x], #16\n"
+@@ -703,7 +703,7 @@ static SBC_ALWAYS_INLINE int sbc_enc_process_input_8s_neon_internal(
+ 	if (position < nsamples) {
+ 		int16_t *dst = &X[0][SBC_X_BUFFER_SIZE - 72];
+ 		int16_t *src = &X[0][position];
+-		asm volatile (
++		__asm__ volatile (
+ 			"vld1.16 {d0, d1, d2, d3}, [%[src], :128]!\n"
+ 			"vst1.16 {d0, d1, d2, d3}, [%[dst], :128]!\n"
+ 			"vld1.16 {d0, d1, d2, d3}, [%[src], :128]!\n"
+@@ -721,7 +721,7 @@ static SBC_ALWAYS_INLINE int sbc_enc_process_input_8s_neon_internal(
+ 		if (nchannels > 1) {
+ 			dst = &X[1][SBC_X_BUFFER_SIZE - 72];
+ 			src = &X[1][position];
+-			asm volatile (
++			__asm__ volatile (
+ 				"vld1.16 {d0, d1, d2, d3}, [%[src], :128]!\n"
+ 				"vst1.16 {d0, d1, d2, d3}, [%[dst], :128]!\n"
+ 				"vld1.16 {d0, d1, d2, d3}, [%[src], :128]!\n"
+@@ -744,7 +744,7 @@ static SBC_ALWAYS_INLINE int sbc_enc_process_input_8s_neon_internal(
+ 		/* poor 'pcm' alignment */
+ 		int16_t *x = &X[0][position];
+ 		int16_t *y = &X[1][position];
+-		asm volatile (
++		__asm__ volatile (
+ 			"vld1.8  {d0, d1, d2, d3}, [%[perm], :128]\n"
+ 		"1:\n"
+ 			"sub     %[x], %[x], #32\n"
+@@ -782,7 +782,7 @@ static SBC_ALWAYS_INLINE int sbc_enc_process_input_8s_neon_internal(
+ 		/* proper 'pcm' alignment */
+ 		int16_t *x = &X[0][position];
+ 		int16_t *y = &X[1][position];
+-		asm volatile (
++		__asm__ volatile (
+ 			"vld1.8  {d0, d1, d2, d3}, [%[perm], :128]\n"
+ 		"1:\n"
+ 			"sub     %[x], %[x], #32\n"
+@@ -816,7 +816,7 @@ static SBC_ALWAYS_INLINE int sbc_enc_process_input_8s_neon_internal(
+ 			  "d20", "d21", "d22", "d23");
+ 	} else {
+ 		int16_t *x = &X[0][position];
+-		asm volatile (
++		__asm__ volatile (
+ 			"vld1.8  {d0, d1, d2, d3}, [%[perm], :128]\n"
+ 		"1:\n"
+ 			"sub     %[x], %[x], #32\n"
+-- 
+1.7.5.4
+

@@ -5,36 +5,33 @@ Subject: [PATCH] ALSA part of jack detection, and a small policy module
 
 Signed-off-by: David Henningsson <david.henningsson@canonical.com>
 ---
- src/Makefile.am                                    |    1 +
- src/daemon/default.pa.in                           |    2 +
- src/modules/alsa/alsa-jack-inputdev.c              |  397 ++++++++++++++++++++
- src/modules/alsa/alsa-jack-inputdev.h              |   32 ++
- src/modules/alsa/alsa-mixer.c                      |   34 ++
- src/modules/alsa/alsa-mixer.h                      |    4 +
- src/modules/alsa/mixer/paths/analog-input-aux.conf |    2 +-
- .../alsa/mixer/paths/analog-input-dock-mic.conf    |    6 +-
- .../alsa/mixer/paths/analog-input-front-mic.conf   |    6 +-
- .../alsa/mixer/paths/analog-input-linein.conf      |    2 +-
- .../alsa/mixer/paths/analog-input-mic-line.conf    |    2 +-
- src/modules/alsa/mixer/paths/analog-input-mic.conf |    5 +-
- .../alsa/mixer/paths/analog-input-rear-mic.conf    |    6 +-
- .../alsa/mixer/paths/analog-output-headphones.conf |    3 +
- src/modules/alsa/module-alsa-card.c                |   56 +++-
- src/modules/module-switch-on-connect.c             |  138 +++++++-
- src/pulsecore/card.c                               |    4 +
- src/pulsecore/card.h                               |    4 +
- src/pulsecore/core.h                               |    1 +
- src/pulsecore/device-port.c                        |    9 +
- src/pulsecore/device-port.h                        |    2 +
- 21 files changed, 705 insertions(+), 11 deletions(-)
+ src/Makefile.am                                            |    1 
+ src/daemon/default.pa.in                                   |    2 
+ src/modules/alsa/alsa-jack-inputdev.c                      |  397 +++++++++++++
+ src/modules/alsa/alsa-jack-inputdev.h                      |   32 +
+ src/modules/alsa/alsa-mixer.c                              |   34 +
+ src/modules/alsa/alsa-mixer.h                              |    4 
+ src/modules/alsa/mixer/paths/analog-input-dock-mic.conf    |    4 
+ src/modules/alsa/mixer/paths/analog-input-front-mic.conf   |    4 
+ src/modules/alsa/mixer/paths/analog-input-mic.conf         |    3 
+ src/modules/alsa/mixer/paths/analog-input-rear-mic.conf    |    4 
+ src/modules/alsa/mixer/paths/analog-output-headphones.conf |    3 
+ src/modules/alsa/module-alsa-card.c                        |   56 +
+ src/modules/module-switch-on-connect.c                     |  138 ++++
+ src/pulsecore/card.c                                       |    4 
+ src/pulsecore/card.h                                       |    4 
+ src/pulsecore/core.h                                       |    1 
+ src/pulsecore/device-port.c                                |    9 
+ src/pulsecore/device-port.h                                |    2 
+ 18 files changed, 698 insertions(+), 4 deletions(-)
  create mode 100644 src/modules/alsa/alsa-jack-inputdev.c
  create mode 100644 src/modules/alsa/alsa-jack-inputdev.h
 
-diff --git a/src/Makefile.am b/src/Makefile.am
-index 769a24d..0bd9b1f 100644
---- a/src/Makefile.am
-+++ b/src/Makefile.am
-@@ -1543,6 +1543,7 @@ module_coreaudio_device_la_LIBADD = $(MODULE_LIBADD)
+Index: pulseaudio-0.99.3/src/Makefile.am
+===================================================================
+--- pulseaudio-0.99.3.orig/src/Makefile.am	2011-09-05 10:55:44.439926927 +1000
++++ pulseaudio-0.99.3/src/Makefile.am	2011-09-05 10:55:44.459926927 +1000
+@@ -1544,6 +1544,7 @@
  libalsa_util_la_SOURCES = \
  		modules/alsa/alsa-util.c modules/alsa/alsa-util.h \
  		modules/alsa/alsa-mixer.c modules/alsa/alsa-mixer.h \
@@ -42,21 +39,20 @@ index 769a24d..0bd9b1f 100644
  		modules/alsa/alsa-sink.c modules/alsa/alsa-sink.h \
  		modules/alsa/alsa-source.c modules/alsa/alsa-source.h \
  		modules/reserve-wrap.c modules/reserve-wrap.h
-diff --git a/src/daemon/default.pa.in b/src/daemon/default.pa.in
-index 605f42c..e5dceaf 100755
---- a/src/daemon/default.pa.in
-+++ b/src/daemon/default.pa.in
-@@ -174,3 +174,5 @@ ifelse(@HAVE_X11@, 1, [dnl
+Index: pulseaudio-0.99.3/src/daemon/default.pa.in
+===================================================================
+--- pulseaudio-0.99.3.orig/src/daemon/default.pa.in	2011-09-05 10:55:44.359926927 +1000
++++ pulseaudio-0.99.3/src/daemon/default.pa.in	2011-09-05 10:55:44.459926927 +1000
+@@ -205,3 +205,5 @@
  ### Make some devices default
  #set-default-sink output
  #set-default-source input
 +
 +load-module module-switch-on-connect
-diff --git a/src/modules/alsa/alsa-jack-inputdev.c b/src/modules/alsa/alsa-jack-inputdev.c
-new file mode 100644
-index 0000000..6b5a020
---- /dev/null
-+++ b/src/modules/alsa/alsa-jack-inputdev.c
+Index: pulseaudio-0.99.3/src/modules/alsa/alsa-jack-inputdev.c
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ pulseaudio-0.99.3/src/modules/alsa/alsa-jack-inputdev.c	2011-09-05 10:55:44.459926927 +1000
 @@ -0,0 +1,397 @@
 +/***
 +  This file is part of PulseAudio.
@@ -455,11 +451,10 @@ index 0000000..6b5a020
 +        return;
 +    pa_idxset_free(p, (pa_free2_cb_t) jack_inputdev_free, NULL);
 +}
-diff --git a/src/modules/alsa/alsa-jack-inputdev.h b/src/modules/alsa/alsa-jack-inputdev.h
-new file mode 100644
-index 0000000..00a6b61
---- /dev/null
-+++ b/src/modules/alsa/alsa-jack-inputdev.h
+Index: pulseaudio-0.99.3/src/modules/alsa/alsa-jack-inputdev.h
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ pulseaudio-0.99.3/src/modules/alsa/alsa-jack-inputdev.h	2011-09-05 10:55:44.459926927 +1000
 @@ -0,0 +1,32 @@
 +/***
 +  This file is part of PulseAudio.
@@ -493,11 +488,11 @@ index 0000000..00a6b61
 +void pa_alsa_jack_inputdevs_free(pa_idxset* p);
 +
 +#endif
-diff --git a/src/modules/alsa/alsa-mixer.c b/src/modules/alsa/alsa-mixer.c
-index f5fcae0..80a7d63 100644
---- a/src/modules/alsa/alsa-mixer.c
-+++ b/src/modules/alsa/alsa-mixer.c
-@@ -355,6 +355,28 @@ static int prepare_mixer(snd_mixer_t *mixer, const char *dev) {
+Index: pulseaudio-0.99.3/src/modules/alsa/alsa-mixer.c
+===================================================================
+--- pulseaudio-0.99.3.orig/src/modules/alsa/alsa-mixer.c	2011-09-05 10:55:44.429926927 +1000
++++ pulseaudio-0.99.3/src/modules/alsa/alsa-mixer.c	2011-09-05 10:55:44.459926927 +1000
+@@ -355,6 +355,28 @@
      return 0;
  }
  
@@ -526,7 +521,7 @@ index f5fcae0..80a7d63 100644
  snd_mixer_t *pa_alsa_open_mixer_for_pcm(snd_pcm_t *pcm, char **ctl_device) {
      int err;
      snd_mixer_t *m;
-@@ -2325,6 +2347,10 @@ pa_alsa_path* pa_alsa_path_new(const char *fname, pa_alsa_direction_t direction)
+@@ -2325,6 +2347,10 @@
          { "description",         pa_config_parse_string,            NULL, "General" },
          { "name",                pa_config_parse_string,            NULL, "General" },
  
@@ -537,7 +532,7 @@ index f5fcae0..80a7d63 100644
          /* [Option ...] */
          { "priority",            option_parse_priority,             NULL, NULL },
          { "name",                option_parse_name,                 NULL, NULL },
-@@ -2356,6 +2382,9 @@ pa_alsa_path* pa_alsa_path_new(const char *fname, pa_alsa_direction_t direction)
+@@ -2356,6 +2382,9 @@
      items[1].data = &p->description;
      items[2].data = &p->name;
  
@@ -547,7 +542,7 @@ index f5fcae0..80a7d63 100644
      fn = pa_maybe_prefix_path(fname,
                                pa_run_from_build_tree() ? PA_BUILDDIR "/modules/alsa/mixer/paths/" :
                                PA_ALSA_PATHS_DIR);
-@@ -3035,6 +3064,11 @@ static void path_set_condense(pa_alsa_path_set *ps, snd_mixer_t *m) {
+@@ -3035,6 +3064,11 @@
              if (p == p2)
                  continue;
  
@@ -559,11 +554,11 @@ index f5fcae0..80a7d63 100644
              /* Compare the elements of each set... */
              pa_assert_se(ea = p->elements);
              pa_assert_se(eb = p2->elements);
-diff --git a/src/modules/alsa/alsa-mixer.h b/src/modules/alsa/alsa-mixer.h
-index d92d3e9..5098e86 100644
---- a/src/modules/alsa/alsa-mixer.h
-+++ b/src/modules/alsa/alsa-mixer.h
-@@ -167,6 +167,9 @@ struct pa_alsa_path {
+Index: pulseaudio-0.99.3/src/modules/alsa/alsa-mixer.h
+===================================================================
+--- pulseaudio-0.99.3.orig/src/modules/alsa/alsa-mixer.h	2011-08-25 20:27:47.625236000 +1000
++++ pulseaudio-0.99.3/src/modules/alsa/alsa-mixer.h	2011-09-05 10:55:44.459926927 +1000
+@@ -167,6 +167,9 @@
      char *description;
      unsigned priority;
  
@@ -573,7 +568,7 @@ index d92d3e9..5098e86 100644
      pa_bool_t probed:1;
      pa_bool_t supported:1;
      pa_bool_t has_mute:1;
-@@ -304,6 +307,7 @@ void pa_alsa_profile_set_free(pa_alsa_profile_set *s);
+@@ -304,6 +307,7 @@
  void pa_alsa_profile_set_dump(pa_alsa_profile_set *s);
  
  snd_mixer_t *pa_alsa_open_mixer_for_pcm(snd_pcm_t *pcm, char **ctl_device);
@@ -581,29 +576,12 @@ index d92d3e9..5098e86 100644
  
  pa_alsa_fdlist *pa_alsa_fdlist_new(void);
  void pa_alsa_fdlist_free(pa_alsa_fdlist *fdl);
-diff --git a/src/modules/alsa/mixer/paths/analog-input-aux.conf b/src/modules/alsa/mixer/paths/analog-input-aux.conf
-index 3a7cb7b..e6aa064 100644
---- a/src/modules/alsa/mixer/paths/analog-input-aux.conf
-+++ b/src/modules/alsa/mixer/paths/analog-input-aux.conf
-@@ -19,7 +19,7 @@
- ; See analog-output.conf.common for an explanation on the directives
- 
- [General]
--priority = 90
-+priority = 80
- name = analog-input
- 
- [Element Capture]
-diff --git a/src/modules/alsa/mixer/paths/analog-input-dock-mic.conf b/src/modules/alsa/mixer/paths/analog-input-dock-mic.conf
-index 74826a9..9d9fc0a 100644
---- a/src/modules/alsa/mixer/paths/analog-input-dock-mic.conf
-+++ b/src/modules/alsa/mixer/paths/analog-input-dock-mic.conf
-@@ -19,9 +19,13 @@
- ; See analog-output.conf.common for an explanation on the directives
- 
- [General]
--priority = 80
-+priority = 78
+Index: pulseaudio-0.99.3/src/modules/alsa/mixer/paths/analog-input-dock-mic.conf
+===================================================================
+--- pulseaudio-0.99.3.orig/src/modules/alsa/mixer/paths/analog-input-dock-mic.conf	2011-08-29 19:05:24.421447000 +1000
++++ pulseaudio-0.99.3/src/modules/alsa/mixer/paths/analog-input-dock-mic.conf	2011-09-05 10:55:44.459926927 +1000
+@@ -22,6 +22,10 @@
+ priority = 78
  name = analog-input-microphone-dock
  
 +[Jack_InputDevice]
@@ -613,16 +591,12 @@ index 74826a9..9d9fc0a 100644
  [Element Dock Mic Boost]
  required-any = any
  switch = select
-diff --git a/src/modules/alsa/mixer/paths/analog-input-front-mic.conf b/src/modules/alsa/mixer/paths/analog-input-front-mic.conf
-index 6c58ece..12da7d8 100644
---- a/src/modules/alsa/mixer/paths/analog-input-front-mic.conf
-+++ b/src/modules/alsa/mixer/paths/analog-input-front-mic.conf
-@@ -19,9 +19,13 @@
- ; See analog-output.conf.common for an explanation on the directives
- 
- [General]
--priority = 90
-+priority = 85
+Index: pulseaudio-0.99.3/src/modules/alsa/mixer/paths/analog-input-front-mic.conf
+===================================================================
+--- pulseaudio-0.99.3.orig/src/modules/alsa/mixer/paths/analog-input-front-mic.conf	2011-08-29 19:05:24.421447000 +1000
++++ pulseaudio-0.99.3/src/modules/alsa/mixer/paths/analog-input-front-mic.conf	2011-09-05 10:55:44.459926927 +1000
+@@ -22,6 +22,10 @@
+ priority = 85
  name = analog-input-microphone-front
  
 +[Jack_InputDevice]
@@ -632,42 +606,12 @@ index 6c58ece..12da7d8 100644
  [Element Front Mic Boost]
  required-any = any
  switch = select
-diff --git a/src/modules/alsa/mixer/paths/analog-input-linein.conf b/src/modules/alsa/mixer/paths/analog-input-linein.conf
-index 461cebd..d5ffd65 100644
---- a/src/modules/alsa/mixer/paths/analog-input-linein.conf
-+++ b/src/modules/alsa/mixer/paths/analog-input-linein.conf
-@@ -19,7 +19,7 @@
- ; See analog-output.conf.common for an explanation on the directives
- 
- [General]
--priority = 90
-+priority = 80
- 
- [Element Capture]
- switch = mute
-diff --git a/src/modules/alsa/mixer/paths/analog-input-mic-line.conf b/src/modules/alsa/mixer/paths/analog-input-mic-line.conf
-index fa680aa..fb80838 100644
---- a/src/modules/alsa/mixer/paths/analog-input-mic-line.conf
-+++ b/src/modules/alsa/mixer/paths/analog-input-mic-line.conf
-@@ -19,7 +19,7 @@
- ; See analog-output.conf.common for an explanation on the directives
- 
- [General]
--priority = 90
-+priority = 85
- name = analog-input
- 
- [Element Capture]
-diff --git a/src/modules/alsa/mixer/paths/analog-input-mic.conf b/src/modules/alsa/mixer/paths/analog-input-mic.conf
-index d88028b..8ca00fd 100644
---- a/src/modules/alsa/mixer/paths/analog-input-mic.conf
-+++ b/src/modules/alsa/mixer/paths/analog-input-mic.conf
-@@ -19,9 +19,12 @@
- ; See analog-output.conf.common for an explanation on the directives
- 
- [General]
--priority = 89
-+priority = 87
+Index: pulseaudio-0.99.3/src/modules/alsa/mixer/paths/analog-input-mic.conf
+===================================================================
+--- pulseaudio-0.99.3.orig/src/modules/alsa/mixer/paths/analog-input-mic.conf	2011-08-29 19:05:24.422447000 +1000
++++ pulseaudio-0.99.3/src/modules/alsa/mixer/paths/analog-input-mic.conf	2011-09-05 10:55:44.459926927 +1000
+@@ -22,6 +22,9 @@
+ priority = 87
  name = analog-input-microphone
  
 +[Jack_InputDevice]
@@ -676,16 +620,12 @@ index d88028b..8ca00fd 100644
  [Element Mic Boost]
  required-any = any
  switch = select
-diff --git a/src/modules/alsa/mixer/paths/analog-input-rear-mic.conf b/src/modules/alsa/mixer/paths/analog-input-rear-mic.conf
-index 75ed61b..deeb812 100644
---- a/src/modules/alsa/mixer/paths/analog-input-rear-mic.conf
-+++ b/src/modules/alsa/mixer/paths/analog-input-rear-mic.conf
-@@ -19,9 +19,13 @@
- ; See analog-output.conf.common for an explanation on the directives
- 
- [General]
--priority = 89
-+priority = 82
+Index: pulseaudio-0.99.3/src/modules/alsa/mixer/paths/analog-input-rear-mic.conf
+===================================================================
+--- pulseaudio-0.99.3.orig/src/modules/alsa/mixer/paths/analog-input-rear-mic.conf	2011-08-29 19:05:24.422447000 +1000
++++ pulseaudio-0.99.3/src/modules/alsa/mixer/paths/analog-input-rear-mic.conf	2011-09-05 10:55:44.459926927 +1000
+@@ -22,6 +22,10 @@
+ priority = 82
  name = analog-input-microphone-rear
  
 +[Jack_InputDevice]
@@ -695,10 +635,10 @@ index 75ed61b..deeb812 100644
  [Element Rear Mic Boost]
  required-any = any
  switch = select
-diff --git a/src/modules/alsa/mixer/paths/analog-output-headphones.conf b/src/modules/alsa/mixer/paths/analog-output-headphones.conf
-index 1d7bb0b..ccc2d88 100644
---- a/src/modules/alsa/mixer/paths/analog-output-headphones.conf
-+++ b/src/modules/alsa/mixer/paths/analog-output-headphones.conf
+Index: pulseaudio-0.99.3/src/modules/alsa/mixer/paths/analog-output-headphones.conf
+===================================================================
+--- pulseaudio-0.99.3.orig/src/modules/alsa/mixer/paths/analog-output-headphones.conf	2011-09-05 10:55:44.399926927 +1000
++++ pulseaudio-0.99.3/src/modules/alsa/mixer/paths/analog-output-headphones.conf	2011-09-05 10:55:44.459926927 +1000
 @@ -22,6 +22,9 @@
  priority = 90
  name = analog-output-headphones
@@ -709,10 +649,10 @@ index 1d7bb0b..ccc2d88 100644
  [Element Hardware Master]
  switch = mute
  volume = merge
-diff --git a/src/modules/alsa/module-alsa-card.c b/src/modules/alsa/module-alsa-card.c
-index e60aa5e..a837ca8 100644
---- a/src/modules/alsa/module-alsa-card.c
-+++ b/src/modules/alsa/module-alsa-card.c
+Index: pulseaudio-0.99.3/src/modules/alsa/module-alsa-card.c
+===================================================================
+--- pulseaudio-0.99.3.orig/src/modules/alsa/module-alsa-card.c	2011-08-11 21:23:42.864066000 +1000
++++ pulseaudio-0.99.3/src/modules/alsa/module-alsa-card.c	2011-09-05 10:55:44.459926927 +1000
 @@ -39,6 +39,7 @@
  #include "alsa-util.h"
  #include "alsa-sink.h"
@@ -721,7 +661,7 @@ index e60aa5e..a837ca8 100644
  #include "module-alsa-card-symdef.h"
  
  PA_MODULE_AUTHOR("Lennart Poettering");
-@@ -106,12 +107,51 @@ struct userdata {
+@@ -106,12 +107,51 @@
      pa_modargs *modargs;
  
      pa_alsa_profile_set *profile_set;
@@ -773,7 +713,7 @@ index e60aa5e..a837ca8 100644
  static void add_profiles(struct userdata *u, pa_hashmap *h) {
      pa_alsa_profile *ap;
      void *state;
-@@ -130,18 +170,23 @@ static void add_profiles(struct userdata *u, pa_hashmap *h) {
+@@ -130,18 +170,23 @@
  
          if (ap->output_mappings) {
              cp->n_sinks = pa_idxset_size(ap->output_mappings);
@@ -800,7 +740,7 @@ index e60aa5e..a837ca8 100644
          }
  
          d = PA_CARD_PROFILE_DATA(cp);
-@@ -387,6 +432,8 @@ int pa__init(pa_module *m) {
+@@ -387,6 +432,8 @@
          goto fail;
      }
  
@@ -809,7 +749,7 @@ index e60aa5e..a837ca8 100644
      u->card = pa_card_new(m->core, &data);
      pa_card_new_data_done(&data);
  
-@@ -448,6 +495,9 @@ void pa__done(pa_module*m) {
+@@ -448,6 +495,9 @@
      if (!(u = m->userdata))
          goto finish;
  
@@ -819,11 +759,11 @@ index e60aa5e..a837ca8 100644
      if (u->card && u->card->sinks) {
          pa_sink *s;
  
-diff --git a/src/modules/module-switch-on-connect.c b/src/modules/module-switch-on-connect.c
-index b121fd9..3ee38b8 100644
---- a/src/modules/module-switch-on-connect.c
-+++ b/src/modules/module-switch-on-connect.c
-@@ -32,6 +32,9 @@
+Index: pulseaudio-0.99.3/src/modules/module-switch-on-connect.c
+===================================================================
+--- pulseaudio-0.99.3.orig/src/modules/module-switch-on-connect.c	2011-08-25 04:37:37.939673000 +1000
++++ pulseaudio-0.99.3/src/modules/module-switch-on-connect.c	2011-09-05 10:55:44.459926927 +1000
+@@ -33,6 +33,9 @@
  #include <pulsecore/modargs.h>
  #include <pulsecore/log.h>
  #include <pulsecore/namereg.h>
@@ -833,7 +773,7 @@ index b121fd9..3ee38b8 100644
  #include <pulsecore/core-util.h>
  
  #include "module-switch-on-connect-symdef.h"
-@@ -48,9 +51,138 @@ static const char* const valid_modargs[] = {
+@@ -49,9 +52,138 @@
  struct userdata {
      pa_hook_slot
          *sink_put_slot,
@@ -973,7 +913,7 @@ index b121fd9..3ee38b8 100644
  static pa_hook_result_t sink_put_hook_callback(pa_core *c, pa_sink *sink, void* userdata) {
      pa_sink_input *i;
      uint32_t idx;
-@@ -165,6 +297,8 @@ int pa__init(pa_module*m) {
+@@ -170,6 +302,8 @@
      /* A little bit later than module-rescue-streams... */
      u->sink_put_slot = pa_hook_connect(&m->core->hooks[PA_CORE_HOOK_SINK_PUT], PA_HOOK_LATE+30, (pa_hook_cb_t) sink_put_hook_callback, u);
      u->source_put_slot = pa_hook_connect(&m->core->hooks[PA_CORE_HOOK_SOURCE_PUT], PA_HOOK_LATE+20, (pa_hook_cb_t) source_put_hook_callback, u);
@@ -982,7 +922,7 @@ index b121fd9..3ee38b8 100644
  
      pa_modargs_free(ma);
      return 0;
-@@ -178,6 +312,8 @@ void pa__done(pa_module*m) {
+@@ -183,6 +317,8 @@
      if (!(u = m->userdata))
          return;
  
@@ -991,11 +931,11 @@ index b121fd9..3ee38b8 100644
      if (u->sink_put_slot)
          pa_hook_slot_free(u->sink_put_slot);
      if (u->source_put_slot)
-diff --git a/src/pulsecore/card.c b/src/pulsecore/card.c
-index feaa444..c760f70 100644
---- a/src/pulsecore/card.c
-+++ b/src/pulsecore/card.c
-@@ -49,6 +49,8 @@ pa_card_profile *pa_card_profile_new(const char *name, const char *description,
+Index: pulseaudio-0.99.3/src/pulsecore/card.c
+===================================================================
+--- pulseaudio-0.99.3.orig/src/pulsecore/card.c	2011-06-24 09:29:11.560898000 +1000
++++ pulseaudio-0.99.3/src/pulsecore/card.c	2011-09-05 10:55:44.459926927 +1000
+@@ -49,6 +49,8 @@
      c->priority = 0;
      c->n_sinks = c->n_sources = 0;
      c->max_sink_channels = c->max_source_channels = 0;
@@ -1004,7 +944,7 @@ index feaa444..c760f70 100644
  
      return c;
  }
-@@ -56,6 +58,8 @@ pa_card_profile *pa_card_profile_new(const char *name, const char *description,
+@@ -56,6 +58,8 @@
  void pa_card_profile_free(pa_card_profile *c) {
      pa_assert(c);
  
@@ -1013,11 +953,11 @@ index feaa444..c760f70 100644
      pa_xfree(c->name);
      pa_xfree(c->description);
      pa_xfree(c);
-diff --git a/src/pulsecore/card.h b/src/pulsecore/card.h
-index 2d691b6..a50a6c1 100644
---- a/src/pulsecore/card.h
-+++ b/src/pulsecore/card.h
-@@ -28,6 +28,7 @@ typedef struct pa_card pa_card;
+Index: pulseaudio-0.99.3/src/pulsecore/card.h
+===================================================================
+--- pulseaudio-0.99.3.orig/src/pulsecore/card.h	2011-01-11 22:56:53.041206000 +1100
++++ pulseaudio-0.99.3/src/pulsecore/card.h	2011-09-05 10:55:44.459926927 +1000
+@@ -28,6 +28,7 @@
  #include <pulsecore/core.h>
  #include <pulsecore/module.h>
  #include <pulsecore/idxset.h>
@@ -1025,7 +965,7 @@ index 2d691b6..a50a6c1 100644
  
  typedef struct pa_card_profile {
      char *name;
-@@ -42,6 +43,9 @@ typedef struct pa_card_profile {
+@@ -42,6 +43,9 @@
      unsigned max_sink_channels;
      unsigned max_source_channels;
  
@@ -1035,11 +975,11 @@ index 2d691b6..a50a6c1 100644
      /* .. followed by some implementation specific data */
  } pa_card_profile;
  
-diff --git a/src/pulsecore/core.h b/src/pulsecore/core.h
-index 61c8690..a75a47b 100644
---- a/src/pulsecore/core.h
-+++ b/src/pulsecore/core.h
-@@ -113,6 +113,7 @@ typedef enum pa_core_hook {
+Index: pulseaudio-0.99.3/src/pulsecore/core.h
+===================================================================
+--- pulseaudio-0.99.3.orig/src/pulsecore/core.h	2011-08-25 20:27:47.660235000 +1000
++++ pulseaudio-0.99.3/src/pulsecore/core.h	2011-09-05 10:55:44.459926927 +1000
+@@ -113,6 +113,7 @@
      PA_CORE_HOOK_CARD_PUT,
      PA_CORE_HOOK_CARD_UNLINK,
      PA_CORE_HOOK_CARD_PROFILE_CHANGED,
@@ -1047,11 +987,11 @@ index 61c8690..a75a47b 100644
      PA_CORE_HOOK_MAX
  } pa_core_hook_t;
  
-diff --git a/src/pulsecore/device-port.c b/src/pulsecore/device-port.c
-index 9e6ad43..b3f6f84 100644
---- a/src/pulsecore/device-port.c
-+++ b/src/pulsecore/device-port.c
-@@ -62,3 +62,12 @@ void pa_device_port_hashmap_free(pa_hashmap *h) {
+Index: pulseaudio-0.99.3/src/pulsecore/device-port.c
+===================================================================
+--- pulseaudio-0.99.3.orig/src/pulsecore/device-port.c	2011-09-05 10:55:44.439926927 +1000
++++ pulseaudio-0.99.3/src/pulsecore/device-port.c	2011-09-05 10:55:44.459926927 +1000
+@@ -62,3 +62,12 @@
          pa_hashmap_free(h, NULL, NULL);
      }
  }
@@ -1064,11 +1004,11 @@ index 9e6ad43..b3f6f84 100644
 +    pa_log_debug("Setting port %s to status %s", p->name, status == PA_PORT_AVAILABLE_YES ? "yes" : "no");
 +    /* FIXME: Now fire a hook or something? */
 +}
-diff --git a/src/pulsecore/device-port.h b/src/pulsecore/device-port.h
-index 23f6444..4c15268 100644
---- a/src/pulsecore/device-port.h
-+++ b/src/pulsecore/device-port.h
-@@ -55,6 +55,8 @@ PA_DECLARE_PUBLIC_CLASS(pa_device_port);
+Index: pulseaudio-0.99.3/src/pulsecore/device-port.h
+===================================================================
+--- pulseaudio-0.99.3.orig/src/pulsecore/device-port.h	2011-09-05 10:55:44.439926927 +1000
++++ pulseaudio-0.99.3/src/pulsecore/device-port.h	2011-09-05 10:55:44.469926927 +1000
+@@ -55,6 +55,8 @@
  
  pa_device_port *pa_device_port_new(const char *name, const char *description, size_t extra);
  
@@ -1077,6 +1017,3 @@ index 23f6444..4c15268 100644
  void pa_device_port_hashmap_free(pa_hashmap *h);
  
  #endif
--- 
-1.7.5.4
-

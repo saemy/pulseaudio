@@ -72,6 +72,7 @@
 #include <pulsecore/socket.h>
 #include <pulsecore/core-error.h>
 #include <pulsecore/core-rtclock.h>
+#include <pulsecore/core-scache.h>
 #include <pulsecore/core.h>
 #include <pulsecore/module.h>
 #include <pulsecore/cli-command.h>
@@ -377,7 +378,7 @@ static pa_dbus_connection *register_dbus_name(pa_core *c, DBusBusType bus, const
     if (dbus_error_is_set(&error))
         pa_log_error("Failed to acquire %s: %s: %s", name, error.name, error.message);
     else
-        pa_log_error("D-Bus name %s already taken. Weird shit!", name);
+        pa_log_error("D-Bus name %s already taken.", name);
 
     /* PA cannot be started twice by the same user and hence we can
      * ignore mostly the case that a name is already taken. */

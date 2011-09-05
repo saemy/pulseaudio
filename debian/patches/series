@@ -13,13 +13,20 @@
 0013-Load-RAOP-Zeroconf-by-default.patch
 0014-alsa-mixer-Add-separate-profile-for-Nvidia.patch
 0016-nodisplay-autostart.patch
-0017-Make-dbus-error-more-polite.patch
 
-# Patches post 0.99.2 release from upstrea git master
-0400-introspect-fix-typo-in-default-sink-source-docs.patch
-0401-source-Remove-the-PA_SOURCE_PASSTHROUGH-flag.patch
-0402-alsa-Don-t-always-suspend-unsuspend-on-sink-input-re.patch
-0403-formats-Use-correct-API-to-check-for-passthrough-str.patch
+# Patches post 0.99.2 release from upstream git master
+0100-vala-Add-has_type_id-false-to-all-enums-structs-and-.patch
+0101-module-switch-on-connect-Don-t-switch-unlinked-sink-.patch
+0102-alsa-mixer-Set-Front-control-to-0-dB-on-headphone-pa.patch
+0103-module-equalizer-sink-Use-z-for-printf-of-size_t-var.patch
+0104-module-equalizer-sink-Use-in-initialising-variables.patch
+0105-bluetooth-sbc-Use-__asm__-keyword.patch
+0106-module-equalizer-sink-Use-correct-limit-in-loop.patch
+0107-Squash-the-last-gcc-warnings.patch
+0108-Make-gcc-std-c99-happy.patch
+0109-device-restore-Simplify-the-migration-of-data-to-per.patch
+0110-stream-restore-Add-in-some-variable-sets-that-were-m.patch
+0111-stream-restore-Add-proper-data-validity-checks-to-th.patch
 
 # Jack detection patches
 0601-Introduce-available-concept-for-ports-and-communicat.patch

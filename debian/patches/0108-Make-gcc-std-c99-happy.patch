@@ -1,0 +1,84 @@
+From 9133c6c9359b6f22b25176fbd2c435a21590230c Mon Sep 17 00:00:00 2001
+From: Maarten Bosmans <mkbosmans@gmail.com>
+Date: Fri, 2 Sep 2011 14:11:52 +0200
+Subject: [PATCH 108/111] Make gcc --std=c99 happy
+
+We're now more or less C99 compliant
+---
+ src/modules/echo-cancel/adrian-aec.c    |    4 ++++
+ src/modules/module-rygel-media-server.c |    1 +
+ src/pulsecore/flist.c                   |    2 +-
+ src/pulsecore/macro.h                   |    4 ++++
+ src/tests/alsa-time-test.c              |    4 ++++
+ 5 files changed, 14 insertions(+), 1 deletions(-)
+
+diff --git a/src/modules/echo-cancel/adrian-aec.c b/src/modules/echo-cancel/adrian-aec.c
+index e969e8c..1476ee4 100644
+--- a/src/modules/echo-cancel/adrian-aec.c
++++ b/src/modules/echo-cancel/adrian-aec.c
+@@ -10,6 +10,10 @@
+  * Version 0.4 Leaky Normalized LMS - pre whitening algorithm
+  */
+ 
++#ifndef _GNU_SOURCE
++#define _GNU_SOURCE
++#endif
++
+ #include <math.h>
+ #include <string.h>
+ #include <stdint.h>
+diff --git a/src/modules/module-rygel-media-server.c b/src/modules/module-rygel-media-server.c
+index 9af0ceb..94b2d68 100644
+--- a/src/modules/module-rygel-media-server.c
++++ b/src/modules/module-rygel-media-server.c
+@@ -37,6 +37,7 @@
+ #include <pulsecore/source.h>
+ #include <pulsecore/core-util.h>
+ #include <pulsecore/log.h>
++#include <pulsecore/macro.h>
+ #include <pulsecore/modargs.h>
+ #include <pulsecore/dbus-shared.h>
+ #include <pulsecore/namereg.h>
+diff --git a/src/pulsecore/flist.c b/src/pulsecore/flist.c
+index acdeff3..d279271 100644
+--- a/src/pulsecore/flist.c
++++ b/src/pulsecore/flist.c
+@@ -53,7 +53,7 @@ struct pa_flist {
+     pa_atomic_ptr_t stored;
+     /* Stack that contains empty list elements */
+     pa_atomic_ptr_t empty;
+-    pa_flist_elem table[0];
++    pa_flist_elem table[];
+ };
+ 
+ /* Lock free pop from linked list stack */
+diff --git a/src/pulsecore/macro.h b/src/pulsecore/macro.h
+index 1207a10..7459e6f 100644
+--- a/src/pulsecore/macro.h
++++ b/src/pulsecore/macro.h
+@@ -84,6 +84,10 @@ static inline size_t PA_PAGE_ALIGN(size_t l) {
+     #define PA_DECLARE_ALIGNED(n,t,v)      t v
+ #endif
+ 
++#ifdef __GNUC__
++#define typeof __typeof__
++#endif
++
+ /* The users of PA_MIN and PA_MAX, PA_CLAMP, PA_ROUND_UP should be
+  * aware that these macros on non-GCC executed code with side effects
+  * twice. It is thus considered misuse to use code with side effects
+diff --git a/src/tests/alsa-time-test.c b/src/tests/alsa-time-test.c
+index 1a572b3..ab194ee 100644
+--- a/src/tests/alsa-time-test.c
++++ b/src/tests/alsa-time-test.c
+@@ -1,3 +1,7 @@
++#ifndef _GNU_SOURCE
++#define _GNU_SOURCE
++#endif
++
+ #include <assert.h>
+ #include <inttypes.h>
+ #include <time.h>
+-- 
+1.7.5.4
+
