@@ -1752,7 +1752,8 @@ am__EXEEXT_10 = mcalign-test$(EXEEXT) once-test$(EXEEXT) \
 PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS) $(pulselibexec_PROGRAMS)
 am_alsa_time_test_OBJECTS = alsa_time_test-alsa-time-test.$(OBJEXT)
 alsa_time_test_OBJECTS = $(am_alsa_time_test_OBJECTS)
-alsa_time_test_DEPENDENCIES = $(am__DEPENDENCIES_2)
+alsa_time_test_DEPENDENCIES = $(am__DEPENDENCIES_2) \
+	$(am__DEPENDENCIES_1)
 alsa_time_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(alsa_time_test_CFLAGS) $(CFLAGS) $(alsa_time_test_LDFLAGS) \
@@ -1861,8 +1862,8 @@ get_binary_name_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(get_binary_name_test_LDFLAGS) $(LDFLAGS) -o $@
 am_gtk_test_OBJECTS = gtk_test-gtk-test.$(OBJEXT)
 gtk_test_OBJECTS = $(am_gtk_test_OBJECTS)
-gtk_test_DEPENDENCIES = $(am__DEPENDENCIES_2) libpulse.la \
-	libpulse-mainloop-glib.la libpulse.la \
+gtk_test_DEPENDENCIES = $(am__DEPENDENCIES_2) $(am__DEPENDENCIES_1) \
+	libpulse.la libpulse-mainloop-glib.la libpulse.la \
 	libpulsecommon-@PA_MAJORMINOR@.la
 gtk_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(gtk_test_CFLAGS) \
@@ -3021,13 +3022,13 @@ sigbus_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINOR@.la libpulse.la libp
 sigbus_test_CFLAGS = $(AM_CFLAGS)
 sigbus_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 gtk_test_SOURCES = tests/gtk-test.c
-gtk_test_LDADD = $(AM_LDADD) libpulse.la libpulse-mainloop-glib.la libpulse.la libpulsecommon-@PA_MAJORMINOR@.la
+gtk_test_LDADD = $(AM_LDADD) $(GTK20_LIBS) libpulse.la libpulse-mainloop-glib.la libpulse.la libpulsecommon-@PA_MAJORMINOR@.la
 gtk_test_CFLAGS = $(AM_CFLAGS) $(GTK20_CFLAGS)
-gtk_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS) $(GTK20_LIBS)
+gtk_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 alsa_time_test_SOURCES = tests/alsa-time-test.c
-alsa_time_test_LDADD = $(AM_LDADD)
+alsa_time_test_LDADD = $(AM_LDADD) $(ASOUNDLIB_LIBS)
 alsa_time_test_CFLAGS = $(AM_CFLAGS) $(ASOUNDLIB_CFLAGS)
-alsa_time_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS) $(ASOUNDLIB_LIBS)
+alsa_time_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 usergroup_test_SOURCES = tests/usergroup-test.c
 usergroup_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINOR@.la libpulse.la libpulsecommon-@PA_MAJORMINOR@.la
 usergroup_test_CFLAGS = $(AM_CFLAGS)

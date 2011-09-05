@@ -83,9 +83,11 @@ struct userdata {
     pa_hook_slot
         *sink_new_hook_slot,
         *sink_fixate_hook_slot,
+        *sink_port_hook_slot,
         *sink_put_hook_slot,
         *source_new_hook_slot,
         *source_fixate_hook_slot,
+        *source_port_hook_slot,
         *connection_unlink_hook_slot;
     pa_time_event *save_time_event;
     pa_database *database;
@@ -93,20 +95,20 @@ struct userdata {
     pa_native_protocol *protocol;
     pa_idxset *subscribed;
 
-    pa_bool_t restore_volume;
-    pa_bool_t restore_muted;
-    pa_bool_t restore_port;
-    pa_bool_t restore_formats;
+    pa_bool_t restore_volume:1;
+    pa_bool_t restore_muted:1;
+    pa_bool_t restore_port:1;
+    pa_bool_t restore_formats:1;
 };
 
-/* Protocol extention commands */
+/* Protocol extension commands */
 enum {
     SUBCOMMAND_TEST,
     SUBCOMMAND_SUBSCRIBE,
     SUBCOMMAND_EVENT,
-    SUBCOMMAND_READ_SINK_FORMATS_ALL,
-    SUBCOMMAND_READ_SINK_FORMATS,
-    SUBCOMMAND_SAVE_SINK_FORMATS
+    SUBCOMMAND_READ_FORMATS_ALL,
+    SUBCOMMAND_READ_FORMATS,
+    SUBCOMMAND_SAVE_FORMATS
 };
 
 
@@ -114,11 +116,18 @@ enum {
 
 struct entry {
     uint8_t version;
-    pa_bool_t muted_valid, volume_valid, port_valid;
+    pa_bool_t port_valid;
+    char *port;
+};
+
+#define PERPORTENTRY_VERSION 1
+
+struct perportentry {
+    uint8_t version;
+    pa_bool_t muted_valid, volume_valid;
     pa_bool_t muted;
     pa_channel_map channel_map;
     pa_cvolume volume;
-    char *port;
     pa_idxset *formats;
 };
 
@@ -137,7 +146,7 @@ static void save_time_callback(pa_mainloop_api*a, pa_time_event* e, const struct
     pa_log_info("Synced.");
 }
 
-static void trigger_save(struct userdata *u, uint32_t sink_idx) {
+static void trigger_save(struct userdata *u, pa_device_type_t type, uint32_t sink_idx) {
     pa_native_connection *c;
     uint32_t idx;
 
@@ -151,6 +160,7 @@ static void trigger_save(struct userdata *u, uint32_t sink_idx) {
             pa_tagstruct_putu32(t, u->module->index);
             pa_tagstruct_puts(t, u->module->name);
             pa_tagstruct_putu32(t, SUBCOMMAND_EVENT);
+            pa_tagstruct_putu32(t, type);
             pa_tagstruct_putu32(t, sink_idx);
 
             pa_pstream_send_tagstruct(pa_native_connection_get_pstream(c), t);
@@ -163,9 +173,190 @@ static void trigger_save(struct userdata *u, uint32_t sink_idx) {
     u->save_time_event = pa_core_rttime_new(u->core, pa_rtclock_now() + SAVE_INTERVAL, save_time_callback, u);
 }
 
-static struct entry* entry_new(pa_bool_t add_pcm_format) {
+
+#ifdef ENABLE_LEGACY_DATABASE_ENTRY_FORMAT
+/* Some forward declarations */
+static pa_bool_t legacy_entry_read(struct userdata *u, pa_datum *data, struct entry **entry, struct perportentry **perportentry);
+static pa_bool_t perportentry_write(struct userdata *u, const char *name, const struct perportentry *e);
+static void perportentry_free(struct perportentry* e);
+#endif
+
+static struct entry* entry_new() {
     struct entry *r = pa_xnew0(struct entry, 1);
     r->version = ENTRY_VERSION;
+    return r;
+}
+
+static void entry_free(struct entry* e) {
+    pa_assert(e);
+
+    pa_xfree(e->port);
+    pa_xfree(e);
+}
+
+static pa_bool_t entry_write(struct userdata *u, const char *name, const struct entry *e) {
+    pa_tagstruct *t;
+    pa_datum key, data;
+    pa_bool_t r;
+
+    pa_assert(u);
+    pa_assert(name);
+    pa_assert(e);
+
+    t = pa_tagstruct_new(NULL, 0);
+    pa_tagstruct_putu8(t, e->version);
+    pa_tagstruct_put_boolean(t, e->port_valid);
+    pa_tagstruct_puts(t, e->port);
+
+    key.data = (char *) name;
+    key.size = strlen(name);
+
+    data.data = (void*)pa_tagstruct_data(t, &data.size);
+
+    r = (pa_database_set(u->database, &key, &data, TRUE) == 0);
+
+    pa_tagstruct_free(t);
+
+    return r;
+}
+
+static struct entry* entry_read(struct userdata *u, const char *name) {
+    pa_datum key, data;
+    struct entry *e = NULL;
+    pa_tagstruct *t = NULL;
+    const char* port;
+
+    pa_assert(u);
+    pa_assert(name);
+
+    key.data = (char*) name;
+    key.size = strlen(name);
+
+    pa_zero(data);
+
+    if (!pa_database_get(u->database, &key, &data))
+        goto fail;
+
+    t = pa_tagstruct_new(data.data, data.size);
+    e = entry_new(FALSE);
+
+    if (pa_tagstruct_getu8(t, &e->version) < 0 ||
+        e->version > ENTRY_VERSION ||
+        pa_tagstruct_get_boolean(t, &e->port_valid) < 0 ||
+        pa_tagstruct_gets(t, &port) < 0) {
+
+        goto fail;
+    }
+
+    if (!pa_tagstruct_eof(t))
+        goto fail;
+
+    e->port = pa_xstrdup(port);
+
+    pa_tagstruct_free(t);
+    pa_datum_free(&data);
+
+    return e;
+
+fail:
+
+    pa_log_debug("Database contains invalid data for key: %s (probably pre-v1.0 data)", name);
+
+    if (e)
+        entry_free(e);
+    if (t)
+        pa_tagstruct_free(t);
+
+#ifdef ENABLE_LEGACY_DATABASE_ENTRY_FORMAT
+{
+    struct perportentry *ppe;
+    pa_log_debug("Attempting to load legacy (pre-v1.0) data for key: %s", name);
+    if (legacy_entry_read(u, &data, &e, &ppe)) {
+        pa_bool_t written = FALSE;
+        pa_device_port *dport;
+        char *ppename;
+        void *state = NULL;
+
+        pa_log_debug("Success. Saving new format for key: %s", name);
+        written = entry_write(u, name, e);
+
+        /* Now convert the legacy entry into per-port entries */
+        if (0 == strncmp("sink:", name, 5)) {
+            pa_sink *sink;
+
+            if ((sink = pa_namereg_get(u->core, name+5, PA_NAMEREG_SINK))) {
+                if (sink->ports) {
+                    PA_HASHMAP_FOREACH(dport, sink->ports, state) {
+                        ppename = pa_sprintf_malloc("%s:%s", name, dport->name);
+                        written = perportentry_write(u, ppename, ppe) || written;
+                        pa_xfree(ppename);
+                    }
+                } else {
+                    ppename = pa_sprintf_malloc("%s:%s", name, "null");
+                    written = perportentry_write(u, ppename, ppe) || written;
+                    pa_xfree(ppename);
+                }
+            }
+        } else if (0 == strncmp("source:", name, 7)) {
+            pa_source *source;
+
+            if ((source = pa_namereg_get(u->core, name+7, PA_NAMEREG_SOURCE))) {
+                if (source->ports) {
+                    PA_HASHMAP_FOREACH(dport, source->ports, state) {
+                        ppename = pa_sprintf_malloc("%s:%s", name, dport->name);
+                        written = perportentry_write(u, ppename, ppe) || written;
+                        pa_xfree(ppename);
+                    }
+                } else {
+                    ppename = pa_sprintf_malloc("%s:%s", name, "null");
+                    written = perportentry_write(u, ppename, ppe) || written;
+                    pa_xfree(ppename);
+                }
+            }
+        }
+        perportentry_free(ppe);
+
+        if (written)
+            /* NB The device type doesn't matter when we pass in an invalid index. */
+            trigger_save(u, PA_DEVICE_TYPE_SINK, PA_INVALID_INDEX);
+
+        pa_datum_free(&data);
+        return e;
+    }
+    pa_log_debug("Unable to load legacy (pre-v1.0) data for key: %s. Ignoring.", name);
+}
+#endif
+
+    pa_datum_free(&data);
+    return NULL;
+}
+
+static struct entry* entry_copy(const struct entry *e) {
+    struct entry* r;
+
+    pa_assert(e);
+    r = entry_new();
+    r->version = e->version;
+    r->port_valid = e->port_valid;
+    r->port = pa_xstrdup(e->port);
+
+    return r;
+}
+
+static pa_bool_t entries_equal(const struct entry *a, const struct entry *b) {
+
+    pa_assert(a && b);
+
+    if (a->port_valid != b->port_valid ||
+        (a->port_valid && !pa_streq(a->port, b->port)))
+        return FALSE;
+
+    return TRUE;
+}
+
+static struct perportentry* perportentry_new(pa_bool_t add_pcm_format) {
+    struct perportentry *r = pa_xnew0(struct perportentry, 1);
+    r->version = PERPORTENTRY_VERSION;
     r->formats = pa_idxset_new(NULL, NULL);
     if (add_pcm_format) {
         pa_format_info *f = pa_format_info_new();
@@ -175,15 +366,14 @@ static struct entry* entry_new(pa_bool_t add_pcm_format) {
     return r;
 }
 
-static void entry_free(struct entry* e) {
+static void perportentry_free(struct perportentry* e) {
     pa_assert(e);
 
     pa_idxset_free(e->formats, (pa_free2_cb_t) pa_format_info_free2, NULL);
-    pa_xfree(e->port);
     pa_xfree(e);
 }
 
-static pa_bool_t entry_write(struct userdata *u, const char *name, const struct entry *e) {
+static pa_bool_t perportentry_write(struct userdata *u, const char *name, const struct perportentry *e) {
     pa_tagstruct *t;
     pa_datum key, data;
     pa_bool_t r;
@@ -205,8 +395,6 @@ static pa_bool_t entry_write(struct userdata *u, const char *name, const struct 
     pa_tagstruct_put_cvolume(t, &e->volume);
     pa_tagstruct_put_boolean(t, e->muted_valid);
     pa_tagstruct_put_boolean(t, e->muted);
-    pa_tagstruct_put_boolean(t, e->port_valid);
-    pa_tagstruct_puts(t, e->port);
     pa_tagstruct_putu8(t, n_formats);
 
     PA_IDXSET_FOREACH(f, e->formats, i) {
@@ -225,68 +413,10 @@ static pa_bool_t entry_write(struct userdata *u, const char *name, const struct 
     return r;
 }
 
-#ifdef ENABLE_LEGACY_DATABASE_ENTRY_FORMAT
-
-#define LEGACY_ENTRY_VERSION 2
-static struct entry* legacy_entry_read(struct userdata *u, pa_datum *data) {
-    struct legacy_entry {
-        uint8_t version;
-        pa_bool_t muted_valid:1, volume_valid:1, port_valid:1;
-        pa_bool_t muted:1;
-        pa_channel_map channel_map;
-        pa_cvolume volume;
-        char port[PA_NAME_MAX];
-    } PA_GCC_PACKED;
-    struct legacy_entry *le;
-    struct entry *e;
-
-    pa_assert(u);
-    pa_assert(data);
-
-    if (data->size != sizeof(struct legacy_entry)) {
-        pa_log_debug("Size does not match.");
-        return NULL;
-    }
-
-    le = (struct legacy_entry*)data->data;
-
-    if (le->version != LEGACY_ENTRY_VERSION) {
-        pa_log_debug("Version mismatch.");
-        return NULL;
-    }
-
-    if (!memchr(le->port, 0, sizeof(le->port))) {
-        pa_log_warn("Port has missing NUL byte.");
-        return NULL;
-    }
-
-    if (le->volume_valid && !pa_channel_map_valid(&le->channel_map)) {
-        pa_log_warn("Invalid channel map.");
-        return NULL;
-    }
-
-    if (le->volume_valid && (!pa_cvolume_valid(&le->volume) || !pa_cvolume_compatible_with_channel_map(&le->volume, &le->channel_map))) {
-        pa_log_warn("Volume and channel map don't match.");
-        return NULL;
-    }
-
-    e = entry_new(TRUE);
-    e->muted_valid = le->muted_valid;
-    e->volume_valid = le->volume_valid;
-    e->port_valid = le->port_valid;
-    e->muted = le->muted;
-    e->channel_map = le->channel_map;
-    e->volume = le->volume;
-    e->port = pa_xstrdup(le->port);
-    return e;
-}
-#endif
-
-static struct entry* entry_read(struct userdata *u, const char *name) {
+static struct perportentry* perportentry_read(struct userdata *u, const char *name) {
     pa_datum key, data;
-    struct entry *e = NULL;
+    struct perportentry *e = NULL;
     pa_tagstruct *t = NULL;
-    const char* port;
     uint8_t i, n_formats;
 
     pa_assert(u);
@@ -301,23 +431,19 @@ static struct entry* entry_read(struct userdata *u, const char *name) {
         goto fail;
 
     t = pa_tagstruct_new(data.data, data.size);
-    e = entry_new(FALSE);
+    e = perportentry_new(FALSE);
 
     if (pa_tagstruct_getu8(t, &e->version) < 0 ||
-        e->version > ENTRY_VERSION ||
+        e->version > PERPORTENTRY_VERSION ||
         pa_tagstruct_get_boolean(t, &e->volume_valid) < 0 ||
         pa_tagstruct_get_channel_map(t, &e->channel_map) < 0 ||
         pa_tagstruct_get_cvolume(t, &e->volume) < 0 ||
         pa_tagstruct_get_boolean(t, &e->muted_valid) < 0 ||
         pa_tagstruct_get_boolean(t, &e->muted) < 0 ||
-        pa_tagstruct_get_boolean(t, &e->port_valid) < 0 ||
-        pa_tagstruct_gets(t, &port) < 0 ||
         pa_tagstruct_getu8(t, &n_formats) < 0 || n_formats < 1) {
 
         goto fail;
     }
-
-    e->port = pa_xstrdup(port);
 
     for (i = 0; i < n_formats; ++i) {
         pa_format_info *f = pa_format_info_new();
@@ -348,44 +474,30 @@ static struct entry* entry_read(struct userdata *u, const char *name) {
 
 fail:
 
-    pa_log_debug("Database contains invalid data for key: %s (probably pre-v1.0 data)", name);
+    pa_log_debug("Database contains invalid data for key: %s", name);
 
     if (e)
-        entry_free(e);
+        perportentry_free(e);
     if (t)
         pa_tagstruct_free(t);
-
-#ifdef ENABLE_LEGACY_DATABASE_ENTRY_FORMAT
-    pa_log_debug("Attempting to load legacy (pre-v1.0) data for key: %s", name);
-    if ((e = legacy_entry_read(u, &data))) {
-        pa_log_debug("Success. Saving new format for key: %s", name);
-        if (entry_write(u, name, e))
-            trigger_save(u, PA_INVALID_INDEX);
-        pa_datum_free(&data);
-        return e;
-    } else
-        pa_log_debug("Unable to load legacy (pre-v1.0) data for key: %s. Ignoring.", name);
-#endif
 
     pa_datum_free(&data);
     return NULL;
 }
 
-static struct entry* entry_copy(const struct entry *e) {
-    struct entry* r;
+static struct perportentry* perportentry_copy(const struct perportentry *e) {
+    struct perportentry* r;
     uint32_t idx;
     pa_format_info *f;
 
     pa_assert(e);
-    r = entry_new(FALSE);
+    r = perportentry_new(FALSE);
     r->version = e->version;
     r->muted_valid = e->muted_valid;
     r->volume_valid = e->volume_valid;
-    r->port_valid = e->port_valid;
     r->muted = e->muted;
     r->channel_map = e->channel_map;
     r->volume = e->volume;
-    r->port = pa_xstrdup(e->port);
 
     PA_IDXSET_FOREACH(f, e->formats, idx) {
         pa_idxset_put(r->formats, pa_format_info_copy(f), NULL);
@@ -393,12 +505,10 @@ static struct entry* entry_copy(const struct entry *e) {
     return r;
 }
 
-static pa_bool_t entries_equal(const struct entry *a, const struct entry *b) {
+static pa_bool_t perportentries_equal(const struct perportentry *a, const struct perportentry *b) {
     pa_cvolume t;
 
-    if (a->port_valid != b->port_valid ||
-        (a->port_valid && !pa_streq(a->port, b->port)))
-        return FALSE;
+    pa_assert(a && b);
 
     if (a->muted_valid != b->muted_valid ||
         (a->muted_valid && (a->muted != b->muted)))
@@ -417,10 +527,74 @@ static pa_bool_t entries_equal(const struct entry *a, const struct entry *b) {
     return TRUE;
 }
 
+#ifdef ENABLE_LEGACY_DATABASE_ENTRY_FORMAT
+
+#define LEGACY_ENTRY_VERSION 2
+static pa_bool_t legacy_entry_read(struct userdata *u, pa_datum *data, struct entry **entry, struct perportentry **perportentry) {
+    struct legacy_entry {
+        uint8_t version;
+        pa_bool_t muted_valid:1, volume_valid:1, port_valid:1;
+        pa_bool_t muted:1;
+        pa_channel_map channel_map;
+        pa_cvolume volume;
+        char port[PA_NAME_MAX];
+    } PA_GCC_PACKED;
+    struct legacy_entry *le;
+
+    pa_assert(u);
+    pa_assert(data);
+    pa_assert(entry);
+    pa_assert(perportentry);
+
+    if (data->size != sizeof(struct legacy_entry)) {
+        pa_log_debug("Size does not match.");
+        return FALSE;
+    }
+
+    le = (struct legacy_entry*)data->data;
+
+    if (le->version != LEGACY_ENTRY_VERSION) {
+        pa_log_debug("Version mismatch.");
+        return FALSE;
+    }
+
+    if (!memchr(le->port, 0, sizeof(le->port))) {
+        pa_log_warn("Port has missing NUL byte.");
+        return FALSE;
+    }
+
+    if (le->volume_valid && !pa_channel_map_valid(&le->channel_map)) {
+        pa_log_warn("Invalid channel map.");
+        return FALSE;
+    }
+
+    if (le->volume_valid && (!pa_cvolume_valid(&le->volume) || !pa_cvolume_compatible_with_channel_map(&le->volume, &le->channel_map))) {
+        pa_log_warn("Volume and channel map don't match.");
+        return FALSE;
+    }
+
+    *entry = entry_new();
+    (*entry)->port_valid = le->port_valid;
+    (*entry)->port = pa_xstrdup(le->port);
+
+    *perportentry = perportentry_new(TRUE);
+    (*perportentry)->muted_valid = le->muted_valid;
+    (*perportentry)->volume_valid = le->volume_valid;
+    (*perportentry)->muted = le->muted;
+    (*perportentry)->channel_map = le->channel_map;
+    (*perportentry)->volume = le->volume;
+
+    return TRUE;
+}
+#endif
+
 static void subscribe_callback(pa_core *c, pa_subscription_event_type_t t, uint32_t idx, void *userdata) {
     struct userdata *u = userdata;
-    struct entry *entry, *old;
-    char *name;
+    struct entry *e, *olde;
+    struct perportentry *ppe, *oldppe;
+    char *ename, *ppename;
+    pa_device_type_t type;
+    pa_bool_t written = FALSE;
 
     pa_assert(c);
     pa_assert(u);
@@ -437,30 +611,36 @@ static void subscribe_callback(pa_core *c, pa_subscription_event_type_t t, uint3
         if (!(sink = pa_idxset_get_by_index(c->sinks, idx)))
             return;
 
-        name = pa_sprintf_malloc("sink:%s", sink->name);
+        type = PA_DEVICE_TYPE_SINK;
 
-        if ((old = entry_read(u, name)))
-            entry = entry_copy(old);
+        ename = pa_sprintf_malloc("sink:%s", sink->name);
+        if ((olde = entry_read(u, ename)))
+            e = entry_copy(olde);
         else
-            entry = entry_new(TRUE);
+            e = entry_new();
+
+        if (sink->save_port) {
+            pa_xfree(e->port);
+            e->port = pa_xstrdup(sink->active_port ? sink->active_port->name : "");
+            e->port_valid = TRUE;
+        }
+
+        ppename = pa_sprintf_malloc("sink:%s:%s", sink->name, (sink->active_port ? sink->active_port->name : "null"));
+        if ((oldppe = perportentry_read(u, ppename)))
+            ppe = perportentry_copy(oldppe);
+        else
+            ppe = perportentry_new(TRUE);
 
         if (sink->save_volume) {
-            entry->channel_map = sink->channel_map;
-            entry->volume = *pa_sink_get_volume(sink, FALSE);
-            entry->volume_valid = TRUE;
+            ppe->channel_map = sink->channel_map;
+            ppe->volume = *pa_sink_get_volume(sink, FALSE);
+            ppe->volume_valid = TRUE;
         }
 
         if (sink->save_muted) {
-            entry->muted = pa_sink_get_mute(sink, FALSE);
-            entry->muted_valid = TRUE;
+            ppe->muted = pa_sink_get_mute(sink, FALSE);
+            ppe->muted_valid = TRUE;
         }
-
-        if (sink->save_port) {
-            pa_xfree(entry->port);
-            entry->port = pa_xstrdup(sink->active_port ? sink->active_port->name : "");
-            entry->port_valid = TRUE;
-        }
-
     } else {
         pa_source *source;
 
@@ -469,52 +649,84 @@ static void subscribe_callback(pa_core *c, pa_subscription_event_type_t t, uint3
         if (!(source = pa_idxset_get_by_index(c->sources, idx)))
             return;
 
-        name = pa_sprintf_malloc("source:%s", source->name);
+        type = PA_DEVICE_TYPE_SOURCE;
 
-        if ((old = entry_read(u, name)))
-            entry = entry_copy(old);
+        ename = pa_sprintf_malloc("source:%s", source->name);
+        if ((olde = entry_read(u, ename)))
+            e = entry_copy(olde);
         else
-            entry = entry_new(TRUE);
+            e = entry_new();
+
+        if (source->save_port) {
+            pa_xfree(e->port);
+            e->port = pa_xstrdup(source->active_port ? source->active_port->name : "");
+            e->port_valid = TRUE;
+        }
+
+        ppename = pa_sprintf_malloc("source:%s:%s", source->name, (source->active_port ? source->active_port->name : "null"));
+        if ((oldppe = perportentry_read(u, ppename)))
+            ppe = perportentry_copy(oldppe);
+        else
+            ppe = perportentry_new(TRUE);
 
         if (source->save_volume) {
-            entry->channel_map = source->channel_map;
-            entry->volume = *pa_source_get_volume(source, FALSE);
-            entry->volume_valid = TRUE;
+            ppe->channel_map = source->channel_map;
+            ppe->volume = *pa_source_get_volume(source, FALSE);
+            ppe->volume_valid = TRUE;
         }
 
         if (source->save_muted) {
-            entry->muted = pa_source_get_mute(source, FALSE);
-            entry->muted_valid = TRUE;
-        }
-
-        if (source->save_port) {
-            pa_xfree(entry->port);
-            entry->port = pa_xstrdup(source->active_port ? source->active_port->name : "");
-            entry->port_valid = TRUE;
+            ppe->muted = pa_source_get_mute(source, FALSE);
+            ppe->muted_valid = TRUE;
         }
     }
 
-    pa_assert(entry);
 
-    if (old) {
+    pa_assert(e);
 
-        if (entries_equal(old, entry)) {
-            entry_free(old);
-            entry_free(entry);
-            pa_xfree(name);
-            return;
-        }
+    if (olde) {
 
-        entry_free(old);
+        if (entries_equal(olde, e)) {
+            entry_free(olde);
+            entry_free(e);
+            e = NULL;
+        } else
+            entry_free(olde);
     }
 
-    pa_log_info("Storing volume/mute/port for device %s.", name);
+    if (e) {
+        pa_log_info("Storing port for device %s.", ename);
 
-    if (entry_write(u, name, entry))
-        trigger_save(u, idx);
+        written = entry_write(u, ename, e);
 
-    entry_free(entry);
-    pa_xfree(name);
+        entry_free(e);
+    }
+    pa_xfree(ename);
+
+
+    pa_assert(ppe);
+
+    if (oldppe) {
+
+        if (perportentries_equal(oldppe, ppe)) {
+            perportentry_free(oldppe);
+            perportentry_free(ppe);
+            ppe = NULL;
+        } else
+            perportentry_free(oldppe);
+    }
+
+    if (ppe) {
+        pa_log_info("Storing volume/mute for device+port %s.", ppename);
+
+        written = perportentry_write(u, ppename, ppe) || written;
+
+        perportentry_free(ppe);
+    }
+    pa_xfree(ppename);
+
+    if (written)
+        trigger_save(u, type, idx);
 }
 
 static pa_hook_result_t sink_new_hook_callback(pa_core *c, pa_sink_new_data *new_data, struct userdata *u) {
@@ -549,16 +761,16 @@ static pa_hook_result_t sink_new_hook_callback(pa_core *c, pa_sink_new_data *new
 
 static pa_hook_result_t sink_fixate_hook_callback(pa_core *c, pa_sink_new_data *new_data, struct userdata *u) {
     char *name;
-    struct entry *e;
+    struct perportentry *e;
 
     pa_assert(c);
     pa_assert(new_data);
     pa_assert(u);
     pa_assert(u->restore_volume || u->restore_muted);
 
-    name = pa_sprintf_malloc("sink:%s", new_data->name);
+    name = pa_sprintf_malloc("sink:%s:%s", new_data->name, (new_data->active_port ? new_data->active_port : "null"));
 
-    if ((e = entry_read(u, name))) {
+    if ((e = perportentry_read(u, name))) {
 
         if (u->restore_volume && e->volume_valid) {
 
@@ -586,7 +798,47 @@ static pa_hook_result_t sink_fixate_hook_callback(pa_core *c, pa_sink_new_data *
                 pa_log_debug("Not restoring mute state for sink %s, because already set.", new_data->name);
         }
 
-        entry_free(e);
+        perportentry_free(e);
+    }
+
+    pa_xfree(name);
+
+    return PA_HOOK_OK;
+}
+
+static pa_hook_result_t sink_port_hook_callback(pa_core *c, pa_sink *sink, struct userdata *u) {
+    char *name;
+    struct perportentry *e;
+
+    pa_assert(c);
+    pa_assert(sink);
+    pa_assert(u);
+    pa_assert(u->restore_volume || u->restore_muted);
+
+    name = pa_sprintf_malloc("sink:%s:%s", sink->name, (sink->active_port ? sink->active_port->name : "null"));
+
+    if ((e = perportentry_read(u, name))) {
+
+        if (u->restore_volume && e->volume_valid) {
+
+            pa_cvolume v;
+
+            pa_log_info("Restoring volume for sink %s.", sink->name);
+
+            v = e->volume;
+            pa_cvolume_remap(&v, &e->channel_map, &sink->channel_map);
+            pa_sink_set_volume(sink, &v, TRUE, FALSE);
+            sink->save_volume = TRUE;
+        }
+
+        if (u->restore_muted && e->muted_valid) {
+
+            pa_log_info("Restoring mute state for sink %s.", sink->name);
+            pa_sink_set_mute(sink, e->muted, FALSE);
+            sink->save_muted = TRUE;
+        }
+
+        perportentry_free(e);
     }
 
     pa_xfree(name);
@@ -596,21 +848,21 @@ static pa_hook_result_t sink_fixate_hook_callback(pa_core *c, pa_sink_new_data *
 
 static pa_hook_result_t sink_put_hook_callback(pa_core *c, pa_sink *sink, struct userdata *u) {
     char *name;
-    struct entry *e;
+    struct perportentry *e;
 
     pa_assert(c);
     pa_assert(sink);
     pa_assert(u);
     pa_assert(u->restore_formats);
 
-    name = pa_sprintf_malloc("sink:%s", sink->name);
+    name = pa_sprintf_malloc("sink:%s:%s", sink->name, (sink->active_port ? sink->active_port->name : "null"));
 
-    if ((e = entry_read(u, name))) {
+    if ((e = perportentry_read(u, name))) {
 
         if (!pa_sink_set_formats(sink, e->formats))
             pa_log_debug("Could not set format on sink %s", sink->name);
 
-        entry_free(e);
+        perportentry_free(e);
     }
 
     pa_xfree(name);
@@ -650,16 +902,16 @@ static pa_hook_result_t source_new_hook_callback(pa_core *c, pa_source_new_data 
 
 static pa_hook_result_t source_fixate_hook_callback(pa_core *c, pa_source_new_data *new_data, struct userdata *u) {
     char *name;
-    struct entry *e;
+    struct perportentry *e;
 
     pa_assert(c);
     pa_assert(new_data);
     pa_assert(u);
     pa_assert(u->restore_volume || u->restore_muted);
 
-    name = pa_sprintf_malloc("source:%s", new_data->name);
+    name = pa_sprintf_malloc("source:%s:%s", new_data->name, (new_data->active_port ? new_data->active_port : "null"));
 
-    if ((e = entry_read(u, name))) {
+    if ((e = perportentry_read(u, name))) {
 
         if (u->restore_volume && e->volume_valid) {
 
@@ -687,7 +939,47 @@ static pa_hook_result_t source_fixate_hook_callback(pa_core *c, pa_source_new_da
                 pa_log_debug("Not restoring mute state for source %s, because already set.", new_data->name);
         }
 
-        entry_free(e);
+        perportentry_free(e);
+    }
+
+    pa_xfree(name);
+
+    return PA_HOOK_OK;
+}
+
+static pa_hook_result_t source_port_hook_callback(pa_core *c, pa_source *source, struct userdata *u) {
+    char *name;
+    struct perportentry *e;
+
+    pa_assert(c);
+    pa_assert(source);
+    pa_assert(u);
+    pa_assert(u->restore_volume || u->restore_muted);
+
+    name = pa_sprintf_malloc("source:%s:%s", source->name, (source->active_port ? source->active_port->name : "null"));
+
+    if ((e = perportentry_read(u, name))) {
+
+        if (u->restore_volume && e->volume_valid) {
+
+            pa_cvolume v;
+
+            pa_log_info("Restoring volume for source %s.", source->name);
+
+            v = e->volume;
+            pa_cvolume_remap(&v, &e->channel_map, &source->channel_map);
+            pa_source_set_volume(source, &v, TRUE, FALSE);
+            source->save_volume = TRUE;
+        }
+
+        if (u->restore_muted && e->muted_valid) {
+
+            pa_log_info("Restoring mute state for source %s.", source->name);
+            pa_source_set_mute(source, e->muted, FALSE);
+            source->save_muted = TRUE;
+        }
+
+        perportentry_free(e);
     }
 
     pa_xfree(name);
@@ -698,18 +990,19 @@ static pa_hook_result_t source_fixate_hook_callback(pa_core *c, pa_source_new_da
 #define EXT_VERSION 1
 
 static void read_sink_format_reply(struct userdata *u, pa_tagstruct *reply, pa_sink *sink) {
-    struct entry *e;
+    struct perportentry *e;
     char *name;
 
     pa_assert(u);
     pa_assert(reply);
     pa_assert(sink);
 
+    pa_tagstruct_putu32(reply, PA_DEVICE_TYPE_SINK);
     pa_tagstruct_putu32(reply, sink->index);
 
     /* Read or create an entry */
-    name = pa_sprintf_malloc("sink:%s", sink->name);
-    if (!(e = entry_read(u, name))) {
+    name = pa_sprintf_malloc("sink:%s:%s", sink->name, (sink->active_port ? sink->active_port->name : "null"));
+    if (!(e = perportentry_read(u, name))) {
         /* Fake a reply with PCM encoding supported */
         pa_format_info *f = pa_format_info_new();
 
@@ -775,7 +1068,7 @@ static int extension_cb(pa_native_protocol *p, pa_module *m, pa_native_connectio
             break;
         }
 
-        case SUBCOMMAND_READ_SINK_FORMATS_ALL: {
+        case SUBCOMMAND_READ_FORMATS_ALL: {
             pa_sink *sink;
             uint32_t idx;
 
@@ -788,15 +1081,22 @@ static int extension_cb(pa_native_protocol *p, pa_module *m, pa_native_connectio
 
             break;
         }
-        case SUBCOMMAND_READ_SINK_FORMATS: {
+        case SUBCOMMAND_READ_FORMATS: {
+            pa_device_type_t type;
             uint32_t sink_index;
             pa_sink *sink;
 
             pa_assert(reply);
 
             /* Get the sink index and the number of formats from the tagstruct */
-            if (pa_tagstruct_getu32(t, &sink_index) < 0)
+            if (pa_tagstruct_getu32(t, &type) < 0 ||
+                pa_tagstruct_getu32(t, &sink_index) < 0)
                 goto fail;
+
+            if (type != PA_DEVICE_TYPE_SINK) {
+                pa_log("Device format reading is only supported on sinks");
+                goto fail;
+            }
 
             if (!pa_tagstruct_eof(t))
                 goto fail;
@@ -810,18 +1110,25 @@ static int extension_cb(pa_native_protocol *p, pa_module *m, pa_native_connectio
             break;
         }
 
-        case SUBCOMMAND_SAVE_SINK_FORMATS: {
+        case SUBCOMMAND_SAVE_FORMATS: {
 
-            struct entry *e;
+            struct perportentry *e;
+            pa_device_type_t type;
             uint32_t sink_index;
             char *name;
             pa_sink *sink;
             uint8_t i, n_formats;
 
             /* Get the sink index and the number of formats from the tagstruct */
-            if (pa_tagstruct_getu32(t, &sink_index) < 0 ||
+            if (pa_tagstruct_getu32(t, &type) < 0 ||
+                pa_tagstruct_getu32(t, &sink_index) < 0 ||
                 pa_tagstruct_getu8(t, &n_formats) < 0 || n_formats < 1) {
 
+                goto fail;
+            }
+
+            if (type != PA_DEVICE_TYPE_SINK) {
+                pa_log("Device format saving is only supported on sinks");
                 goto fail;
             }
 
@@ -832,9 +1139,9 @@ static int extension_cb(pa_native_protocol *p, pa_module *m, pa_native_connectio
             }
 
             /* Read or create an entry */
-            name = pa_sprintf_malloc("sink:%s", sink->name);
-            if (!(e = entry_read(u, name)))
-                e = entry_new(FALSE);
+            name = pa_sprintf_malloc("sink:%s:%s", sink->name, (sink->active_port ? sink->active_port->name : "null"));
+            if (!(e = perportentry_read(u, name)))
+                e = perportentry_new(FALSE);
             else {
                 /* Clean out any saved formats */
                 pa_idxset_free(e->formats, (pa_free2_cb_t) pa_format_info_free2, NULL);
@@ -853,18 +1160,18 @@ static int extension_cb(pa_native_protocol *p, pa_module *m, pa_native_connectio
             }
 
             if (!pa_tagstruct_eof(t)) {
-                entry_free(e);
+                perportentry_free(e);
                 pa_xfree(name);
                 goto fail;
             }
 
-            if (pa_sink_set_formats(sink, e->formats) && entry_write(u, name, e))
-                trigger_save(u, sink_index);
+            if (pa_sink_set_formats(sink, e->formats) && perportentry_write(u, name, e))
+                trigger_save(u, type, sink_index);
             else
                 pa_log_warn("Could not save format info for sink %s", sink->name);
 
             pa_xfree(name);
-            entry_free(e);
+            perportentry_free(e);
 
             break;
         }
@@ -945,6 +1252,9 @@ int pa__init(pa_module*m) {
     if (restore_muted || restore_volume) {
         u->sink_fixate_hook_slot = pa_hook_connect(&m->core->hooks[PA_CORE_HOOK_SINK_FIXATE], PA_HOOK_EARLY, (pa_hook_cb_t) sink_fixate_hook_callback, u);
         u->source_fixate_hook_slot = pa_hook_connect(&m->core->hooks[PA_CORE_HOOK_SOURCE_FIXATE], PA_HOOK_EARLY, (pa_hook_cb_t) source_fixate_hook_callback, u);
+
+        u->sink_port_hook_slot = pa_hook_connect(&m->core->hooks[PA_CORE_HOOK_SINK_PORT_CHANGED], PA_HOOK_EARLY, (pa_hook_cb_t) sink_port_hook_callback, u);
+        u->source_port_hook_slot = pa_hook_connect(&m->core->hooks[PA_CORE_HOOK_SOURCE_PORT_CHANGED], PA_HOOK_EARLY, (pa_hook_cb_t) source_port_hook_callback, u);
     }
 
     if (restore_formats)
@@ -999,6 +1309,10 @@ void pa__done(pa_module*m) {
         pa_hook_slot_free(u->sink_new_hook_slot);
     if (u->source_new_hook_slot)
         pa_hook_slot_free(u->source_new_hook_slot);
+    if (u->sink_port_hook_slot)
+        pa_hook_slot_free(u->sink_port_hook_slot);
+    if (u->source_port_hook_slot)
+        pa_hook_slot_free(u->source_port_hook_slot);
     if (u->sink_put_hook_slot)
         pa_hook_slot_free(u->sink_put_hook_slot);
 
