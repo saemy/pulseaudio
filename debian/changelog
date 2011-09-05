@@ -1,3 +1,12 @@
+pulseaudio (1:0.99.3-0ubuntu2) oneiric; urgency=low
+
+  * Dropped patches (applied upstream):
+    - 0004-mute-iec958-optical-raw-for-audigyX.patch
+    - 0011-lp451635-handle-dove-x0-line-hp-swap.patch
+    - 0012-JACK-Load-module-jackdbus-detect-in-default.pa.patch
+
+ -- David Henningsson <david.henningsson@canonical.com>  Mon, 05 Sep 2011 11:55:59 +0200
+
 pulseaudio (1:0.99.3-0ubuntu1) oneiric; urgency=low
 
   [ David Henningsson ]

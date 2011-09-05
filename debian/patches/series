@@ -2,14 +2,11 @@
 0002-In-KDE-only-start-pulseaudio-from-the-KDE-specific-d.patch
 0002-add-padsp-wrapper-check.patch
 0003-esd-honour-system-pulseaudio.patch
-0004-mute-iec958-optical-raw-for-audigyX.patch
 0005-dont-load-cork-music-on-phone.patch
 0006-load-module-x11-bell.patch
 0007-handle-Master-Front.patch
 0008-delay-gnome-autostart.patch
 0010-lp453966-handle-digmic-pt2.patch
-0011-lp451635-handle-dove-x0-line-hp-swap.patch
-0012-JACK-Load-module-jackdbus-detect-in-default.pa.patch
 0013-Load-RAOP-Zeroconf-by-default.patch
 0014-alsa-mixer-Add-separate-profile-for-Nvidia.patch
 0016-nodisplay-autostart.patch
