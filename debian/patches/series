@@ -9,6 +9,8 @@
 0010-lp453966-handle-digmic-pt2.patch
 0013-Load-RAOP-Zeroconf-by-default.patch
 0016-nodisplay-autostart.patch
+0017-Avoid-crash-by-not-updating-volume-on-shutdown.patch
+0018-RAOP-Don-t-crash-if-fd-is-not-open-when-trying-to-cl.patch
 
 # Patches post 0.99.2 release from upstream git master
 0100-vala-Add-has_type_id-false-to-all-enums-structs-and-.patch
@@ -39,3 +41,4 @@
 0612-Add-a-new-module-switch-on-port-available-that-acts-.patch
 0613-Load-switch-on-port-available-module-by-default.patch
 0614-HDMI-Add-jack-detection-for-HDMI-as-well-as-probing-.patch
+0615-lp845468.patch

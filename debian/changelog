@@ -1,3 +1,11 @@
+pulseaudio (1:0.99.3-0ubuntu4) oneiric; urgency=low
+
+  * Fix crash in jack detection patches (LP: #845468)
+  * Fix crash when reading volume when sink/source is unlinked (LP: #841968)
+  * Fix crash in RAOP (LP: #845286)
+
+ -- David Henningsson <david.henningsson@canonical.com>  Mon, 12 Sep 2011 10:29:00 +0200
+
 pulseaudio (1:0.99.3-0ubuntu3) oneiric; urgency=low
 
   * Jack detection support, second version, now with HDMI support
