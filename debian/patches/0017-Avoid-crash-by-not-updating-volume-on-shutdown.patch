@@ -24,7 +24,7 @@ index 2394455..b0e4b04 100644
      if (mask == SND_CTL_EVENT_MASK_REMOVE)
          return 0;
  
-+    if (!PA_SOURCE_IS_LINKED(u->sink->state))
++    if (!PA_SINK_IS_LINKED(u->sink->state))
 +        return 0;
 +
      if (u->sink->suspend_cause & PA_SUSPEND_SESSION)

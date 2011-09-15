@@ -1,3 +1,15 @@
+pulseaudio (1:0.99.3-0ubuntu5) oneiric; urgency=low
+
+  [ David Henningsson ]
+  * 0017-Avoid-crash-by-not-updating-volume-on-shutdown.patch:
+    Fix typo in patch
+
+  [ Luke Yelavich ]
+  * Patch from David Henningssen to make sure module-dbus-protocol is loaded
+    after module-device-restore (LP: #843780)
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Thu, 15 Sep 2011 09:59:20 +1000
+
 pulseaudio (1:0.99.3-0ubuntu4) oneiric; urgency=low
 
   * Fix crash in jack detection patches (LP: #845468)
