@@ -1,0 +1,69 @@
+From 6878140662a9de50942dfe9fc24b8139e29289cf Mon Sep 17 00:00:00 2001
+From: Arun Raghavan <arun.raghavan@collabora.co.uk>
+Date: Tue, 27 Sep 2011 18:57:48 +0530
+Subject: [PATCH 100/101] extended: Fix doxygen comment style typos
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Thanks to Rémi Denis-Courmont for pointing this out on IRC.
+---
+ src/pulse/format.h |   10 +++++-----
+ src/pulse/stream.h |    2 +-
+ 2 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/src/pulse/format.h b/src/pulse/format.h
+index b8b829e..67996c5 100644
+--- a/src/pulse/format.h
++++ b/src/pulse/format.h
+@@ -32,7 +32,7 @@
+ 
+ PA_C_DECL_BEGIN
+ 
+-/**< Represents the type of encoding used in a stream or accepted by a sink. \since 1.0 */
++/** Represents the type of encoding used in a stream or accepted by a sink. \since 1.0 */
+ typedef enum pa_encoding {
+     PA_ENCODING_ANY,
+     /**< Any encoding format, PCM or compressed */
+@@ -65,7 +65,7 @@ const char *pa_encoding_to_string(pa_encoding_t e) PA_GCC_CONST;
+ /** Converts a string of the form returned by \a pa_encoding_to_string() back to a \a pa_encoding_t. \since 1.0 */
+ pa_encoding_t pa_encoding_from_string(const char *encoding);
+ 
+-/**< Represents the format of data provided in a stream or processed by a sink. \since 1.0 */
++/** Represents the format of data provided in a stream or processed by a sink. \since 1.0 */
+ typedef struct pa_format_info {
+     pa_encoding_t encoding;
+     /**< The encoding used for the format */
+@@ -74,13 +74,13 @@ typedef struct pa_format_info {
+     /**< Additional encoding-specific properties such as sample rate, bitrate, etc. */
+ } pa_format_info;
+ 
+-/**< Allocates a new \a pa_format_info structure. Clients must initialise at least the encoding field themselves. */
++/** Allocates a new \a pa_format_info structure. Clients must initialise at least the encoding field themselves. */
+ pa_format_info* pa_format_info_new(void);
+ 
+-/**< Returns a new \a pa_format_info struct and representing the same format as \a src */
++/** Returns a new \a pa_format_info struct and representing the same format as \a src */
+ pa_format_info* pa_format_info_copy(const pa_format_info *src);
+ 
+-/**< Frees a \a pa_format_info structure */
++/** Frees a \a pa_format_info structure */
+ void pa_format_info_free(pa_format_info *f);
+ 
+ /** Returns non-zero when the format info structure is valid */
+diff --git a/src/pulse/stream.h b/src/pulse/stream.h
+index 50b01d0..44a1d48 100644
+--- a/src/pulse/stream.h
++++ b/src/pulse/stream.h
+@@ -357,7 +357,7 @@ pa_stream* pa_stream_new_with_proplist(
+         const pa_channel_map *map         /**< The desired channel map, or NULL for default */,
+         pa_proplist *p                    /**< The initial property list */);
+ 
+-/* Create a new, unconnected stream with the specified name, the set of formats
++/** Create a new, unconnected stream with the specified name, the set of formats
+  * this client can provide, and an initial list of properties. While
+  * connecting, the server will select the most appropriate format which the
+  * client must then provide. \since 1.0 */
+-- 
+1.7.5.4
+

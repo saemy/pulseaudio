@@ -81,6 +81,7 @@ PA_MODULE_USAGE(
           "channels=<number of channels> "
           "channel_map=<channel map> "
           "autoloaded=<set if this module is being loaded automatically> "
+          "use_volume_sharing=<yes or no> "
          ));
 
 #define MEMBLOCKQ_MAXLENGTH (16*1024*1024)
@@ -139,6 +140,7 @@ static const char* const valid_modargs[] = {
     "channels",
     "channel_map",
     "autoloaded",
+    "use_volume_sharing",
     NULL
 };
 
@@ -909,7 +911,7 @@ static void save_profile(struct userdata *u, size_t channel, char *name){
     profile[0] = u->Xs[a_i][channel];
     H = u->Hs[channel][a_i];
     H_n = profile + 1;
-    for(size_t i = 0 ; i <= FILTER_SIZE(u); ++i){
+    for(size_t i = 0 ; i < FILTER_SIZE(u); ++i){
         H_n[i] = H[i] * u->fft_size;
         //H_n[i] = H[i];
     }
@@ -1083,6 +1085,7 @@ int pa__init(pa_module*m) {
     unsigned c;
     float *H;
     unsigned a_i;
+    pa_bool_t use_volume_sharing = TRUE;
 
     pa_assert(m);
 
@@ -1106,13 +1109,18 @@ int pa__init(pa_module*m) {
 
     fs = pa_frame_size(&ss);
 
+    if (pa_modargs_get_value_boolean(ma, "use_volume_sharing", &use_volume_sharing) < 0) {
+        pa_log("use_volume_sharing= expects a boolean argument");
+        goto fail;
+    }
+
     u = pa_xnew0(struct userdata, 1);
     u->module = m;
     m->userdata = u;
 
     u->channels = ss.channels;
     u->fft_size = pow(2, ceil(log(ss.rate) / log(2)));//probably unstable near corner cases of powers of 2
-    pa_log_debug("fft size: %ld", u->fft_size);
+    pa_log_debug("fft size: %zd", u->fft_size);
     u->window_size = 15999;
     if (u->window_size % 2 == 0)
         u->window_size--;
@@ -1179,8 +1187,8 @@ int pa__init(pa_module*m) {
         goto fail;
     }
 
-    u->sink = pa_sink_new(m->core, &sink_data,
-                          (master->flags & (PA_SINK_LATENCY|PA_SINK_DYNAMIC_LATENCY)));
+    u->sink = pa_sink_new(m->core, &sink_data, (master->flags & (PA_SINK_LATENCY | PA_SINK_DYNAMIC_LATENCY))
+                                               | (use_volume_sharing ? PA_SINK_SHARE_VOLUME_WITH_MASTER : 0));
     pa_sink_new_data_done(&sink_data);
 
     if (!u->sink) {
@@ -1192,9 +1200,11 @@ int pa__init(pa_module*m) {
     u->sink->set_state = sink_set_state_cb;
     u->sink->update_requested_latency = sink_update_requested_latency_cb;
     u->sink->request_rewind = sink_request_rewind_cb;
-    pa_sink_enable_decibel_volume(u->sink, TRUE);
-    pa_sink_set_set_volume_callback(u->sink, sink_set_volume_cb);
     pa_sink_set_set_mute_callback(u->sink, sink_set_mute_cb);
+    if (!use_volume_sharing) {
+        pa_sink_set_set_volume_callback(u->sink, sink_set_volume_cb);
+        pa_sink_enable_decibel_volume(u->sink, TRUE);
+    }
     u->sink->userdata = u;
 
     u->input_q = pa_memblockq_new(0,  MEMBLOCKQ_MAXLENGTH, 0, fs, 1, 1, 0, &u->sink->silence);
@@ -1235,7 +1245,8 @@ int pa__init(pa_module*m) {
     u->sink_input->state_change = sink_input_state_change_cb;
     u->sink_input->may_move_to = sink_input_may_move_to_cb;
     u->sink_input->moving = sink_input_moving_cb;
-    u->sink_input->volume_changed = sink_input_volume_changed_cb;
+    if (!use_volume_sharing)
+        u->sink_input->volume_changed = sink_input_volume_changed_cb;
     u->sink_input->mute_changed = sink_input_mute_changed_cb;
     u->sink_input->userdata = u;
 
@@ -1381,7 +1392,7 @@ pa_dbus_arg_info remove_profile_args[]={
 };
 
 static pa_dbus_method_handler manager_methods[MANAGER_METHOD_MAX]={
-    [MANAGER_METHOD_REMOVE_PROFILE]{
+    [MANAGER_METHOD_REMOVE_PROFILE]={
         .method_name="RemoveProfile",
         .arguments=remove_profile_args,
         .n_arguments=sizeof(remove_profile_args)/sizeof(pa_dbus_arg_info),
@@ -1488,42 +1499,42 @@ pa_dbus_arg_info base_profile_name_args[]={
 };
 
 static pa_dbus_method_handler equalizer_methods[EQUALIZER_METHOD_MAX]={
-    [EQUALIZER_METHOD_SEED_FILTER]{
+    [EQUALIZER_METHOD_SEED_FILTER]={
         .method_name="SeedFilter",
         .arguments=seed_filter_args,
         .n_arguments=sizeof(seed_filter_args)/sizeof(pa_dbus_arg_info),
         .receive_cb=equalizer_handle_seed_filter},
-    [EQUALIZER_METHOD_FILTER_POINTS]{
+    [EQUALIZER_METHOD_FILTER_POINTS]={
         .method_name="FilterAtPoints",
         .arguments=filter_points_args,
         .n_arguments=sizeof(filter_points_args)/sizeof(pa_dbus_arg_info),
         .receive_cb=equalizer_handle_get_filter_points},
-    [EQUALIZER_METHOD_SET_FILTER]{
+    [EQUALIZER_METHOD_SET_FILTER]={
         .method_name="SetFilter",
         .arguments=set_filter_args,
         .n_arguments=sizeof(set_filter_args)/sizeof(pa_dbus_arg_info),
         .receive_cb=equalizer_handle_set_filter},
-    [EQUALIZER_METHOD_GET_FILTER]{
+    [EQUALIZER_METHOD_GET_FILTER]={
         .method_name="GetFilter",
         .arguments=get_filter_args,
         .n_arguments=sizeof(get_filter_args)/sizeof(pa_dbus_arg_info),
         .receive_cb=equalizer_handle_get_filter},
-    [EQUALIZER_METHOD_SAVE_PROFILE]{
+    [EQUALIZER_METHOD_SAVE_PROFILE]={
         .method_name="SaveProfile",
         .arguments=save_profile_args,
         .n_arguments=sizeof(save_profile_args)/sizeof(pa_dbus_arg_info),
         .receive_cb=equalizer_handle_save_profile},
-    [EQUALIZER_METHOD_LOAD_PROFILE]{
+    [EQUALIZER_METHOD_LOAD_PROFILE]={
         .method_name="LoadProfile",
         .arguments=load_profile_args,
         .n_arguments=sizeof(load_profile_args)/sizeof(pa_dbus_arg_info),
         .receive_cb=equalizer_handle_load_profile},
-    [EQUALIZER_METHOD_SAVE_STATE]{
+    [EQUALIZER_METHOD_SAVE_STATE]={
         .method_name="SaveState",
         .arguments=NULL,
         .n_arguments=0,
         .receive_cb=equalizer_handle_save_state},
-    [EQUALIZER_METHOD_GET_PROFILE_NAME]{
+    [EQUALIZER_METHOD_GET_PROFILE_NAME]={
         .method_name="BaseProfile",
         .arguments=base_profile_name_args,
         .n_arguments=sizeof(base_profile_name_args)/sizeof(pa_dbus_arg_info),
@@ -1532,10 +1543,10 @@ static pa_dbus_method_handler equalizer_methods[EQUALIZER_METHOD_MAX]={
 
 static pa_dbus_property_handler equalizer_handlers[EQUALIZER_HANDLER_MAX]={
     [EQUALIZER_HANDLER_REVISION]={.property_name="InterfaceRevision",.type="u",.get_cb=equalizer_get_revision,.set_cb=NULL},
-    [EQUALIZER_HANDLER_SAMPLERATE]{.property_name="SampleRate",.type="u",.get_cb=equalizer_get_sample_rate,.set_cb=NULL},
-    [EQUALIZER_HANDLER_FILTERSAMPLERATE]{.property_name="FilterSampleRate",.type="u",.get_cb=equalizer_get_filter_rate,.set_cb=NULL},
-    [EQUALIZER_HANDLER_N_COEFS]{.property_name="NFilterCoefficients",.type="u",.get_cb=equalizer_get_n_coefs,.set_cb=NULL},
-    [EQUALIZER_HANDLER_N_CHANNELS]{.property_name="NChannels",.type="u",.get_cb=equalizer_get_n_channels,.set_cb=NULL},
+    [EQUALIZER_HANDLER_SAMPLERATE]={.property_name="SampleRate",.type="u",.get_cb=equalizer_get_sample_rate,.set_cb=NULL},
+    [EQUALIZER_HANDLER_FILTERSAMPLERATE]={.property_name="FilterSampleRate",.type="u",.get_cb=equalizer_get_filter_rate,.set_cb=NULL},
+    [EQUALIZER_HANDLER_N_COEFS]={.property_name="NFilterCoefficients",.type="u",.get_cb=equalizer_get_n_coefs,.set_cb=NULL},
+    [EQUALIZER_HANDLER_N_CHANNELS]={.property_name="NChannels",.type="u",.get_cb=equalizer_get_n_channels,.set_cb=NULL},
 };
 
 enum equalizer_signal_index{
@@ -1802,11 +1813,11 @@ void equalizer_handle_seed_filter(DBusConnection *conn, DBusMessage *msg, void *
         }
     }
     if(!is_monotonic(xs, x_npoints) || !points_good){
-        pa_dbus_send_error(conn, msg, DBUS_ERROR_INVALID_ARGS, "xs must be monotonic and 0<=x<=%ld", u->fft_size / 2);
+        pa_dbus_send_error(conn, msg, DBUS_ERROR_INVALID_ARGS, "xs must be monotonic and 0<=x<=%zd", u->fft_size / 2);
         dbus_error_free(&error);
         return;
     }else if(x_npoints != y_npoints || x_npoints < 2 || x_npoints > FILTER_SIZE(u)){
-        pa_dbus_send_error(conn, msg, DBUS_ERROR_INVALID_ARGS, "xs and ys must be the same length and 2<=l<=%ld!", FILTER_SIZE(u));
+        pa_dbus_send_error(conn, msg, DBUS_ERROR_INVALID_ARGS, "xs and ys must be the same length and 2<=l<=%zd!", FILTER_SIZE(u));
         dbus_error_free(&error);
         return;
     }else if(xs[0] != 0 || xs[x_npoints - 1] != u->fft_size / 2){
@@ -1883,7 +1894,7 @@ void equalizer_handle_get_filter_points(DBusConnection *conn, DBusMessage *msg, 
     }
 
     if(x_npoints > FILTER_SIZE(u) || !points_good){
-        pa_dbus_send_error(conn, msg, DBUS_ERROR_INVALID_ARGS, "xs indices/length must be <= %ld!", FILTER_SIZE(u));
+        pa_dbus_send_error(conn, msg, DBUS_ERROR_INVALID_ARGS, "xs indices/length must be <= %zd!", FILTER_SIZE(u));
         dbus_error_free(&error);
         return;
     }
@@ -2015,7 +2026,7 @@ void equalizer_handle_set_filter(DBusConnection *conn, DBusMessage *msg, void *_
         return;
     }
     if(_n_coefs != FILTER_SIZE(u)){
-        pa_dbus_send_error(conn, msg, DBUS_ERROR_INVALID_ARGS, "This filter takes exactly %ld coefficients, you gave %d", FILTER_SIZE(u), _n_coefs);
+        pa_dbus_send_error(conn, msg, DBUS_ERROR_INVALID_ARGS, "This filter takes exactly %zd coefficients, you gave %d", FILTER_SIZE(u), _n_coefs);
         return;
     }
     set_filter(u, channel, H, preamp);

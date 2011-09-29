@@ -1,3 +1,92 @@
+pulseaudio (1:1.0-0ubuntu1) oneiric; urgency=low
+
+  [ David Henningsson ]
+  * Fix "Parse failure" error with remote sources/sinks,
+    thanks to Martin-Eric Racine for reporting/testing! (LP: #852902)
+  * Fix crash when dbus module does not load (LP: #855729)
+  * Add more bug fixes from upstream git
+
+  [ Daniel T Chen ]
+  * debian/copyright: Update all shipped sources
+  * Various xcb_*() bugs already fixed in Sep 2010 (LP: #642030,
+    LP: #646583, LP: #646616, LP: #648104)
+  * Passthrough is supported in 1.0 (LP: #448024)
+  * PulseAudio + alsa-plugins route through PulseAudio by default
+    (LP: #378382)
+
+  [ Luke Yelavich ]
+  * New upstream bugfix release
+    - vala: Add has_type_id=false to all enums, structs and classes
+    - module-switch-on-connect: Don't switch unlinked sink input and source
+      outputs
+    - alsa-mixer: Set "Front" control to 0 dB on headphone path
+    - module-equalizer-sink: Use %z for printf of size_t variables
+    - module-equalizer-sink: Use = in initialising variables
+    - bluetooth/sbc: Use __asm__ keyword
+    - module-equalizer-sink: Use correct limit in loop
+    - Squash the last gcc warnings
+    - Make gcc --std=c99 happy
+    - device-restore: Simplify the migration of data to per-port keys.
+    - stream-restore: Add in some variable sets that were missing from 9ffa93.
+    - stream-restore: Add proper data validity checks to the legacy database
+      entry read.
+    - formats: The format code should be in libpulse, not libpulsecommon
+    - formats: Export more functions needed for a clean build.
+    - device-restore: Fix use-after-free error.
+    - raop: Use the port supplied by avahi when connecting to RAOP devices.
+    - loopback: New modargs: sink_input_properties and
+      source_output_properties.
+    - bluetooth: Bump DBus version to 1.3.0 and drop conditional code.
+    - alsa: Tidy up argument descriptions
+    - module-suspend-on-idle: Move vacuum code to core
+    - alsa-mixer: Add support for the Microsoft Kinect Sensor device
+    - modargs: Ensure modargs can be accessed in their raw form.
+    - raop: Properly deal with the name coming from the device.
+    - build-sys: Oops forgot to add the Kinect profile to the build system.
+    - volume: Rename 'sync volume' to 'deferred volume'.
+    - raop: Don't crash if fd is not open when trying to close it
+    - doc: Update README with fresh links.
+    - doc: Add info about running pulseaudio from the build dir
+    - stream: Relax assert for extended API
+    - def: Hide server-side sink/source flags
+    - volume: Handle varying channel count for shared volumes
+    - virtual: Make volume sharing on by default
+    - equalizer: Use volume sharing by default
+    - echo-cancel: Use volume sharing by default
+    - sink,source: Avoid crash by not updating volume on shutdown
+    - conf: Make sure module-dbus-protocol is loaded after
+      module-default-device-restore
+    - build-sys: bump soname
+    - sink,source: Handle missing in the shared volume case
+    - dbus: Don't crash if the module does not load
+    - Fix crash in threaded message queues
+    - build-sys: Switch to the tar-ustar format (as per a lot of GNOME stuff
+      for 3.2) and distribute .xz files.
+    - build-sys: bump soname
+  * Dropped patches, all applied upstream:
+    - 0017-Avoid-crash-by-not-updating-volume-on-shutdown.patch
+    - 0018-RAOP-Don-t-crash-if-fd-is-not-open-when-trying-to-cl.patch
+    - 0019-Make-sure-module-dbus-protocol-is-loaded-after-modul.patch
+    - 0100-vala-Add-has_type_id-false-to-all-enums-structs-and-.patch
+    - 0101-module-switch-on-connect-Don-t-switch-unlinked-sink-.patch
+    - 0102-alsa-mixer-Set-Front-control-to-0-dB-on-headphone-pa.patch
+    - 0103-module-equalizer-sink-Use-z-for-printf-of-size_t-var.patch
+    - 0104-module-equalizer-sink-Use-in-initialising-variables.patch
+    - 0105-bluetooth-sbc-Use-__asm__-keyword.patch
+    - 0106-module-equalizer-sink-Use-correct-limit-in-loop.patch
+    - 0107-Squash-the-last-gcc-warnings.patch
+    - 0108-Make-gcc-std-c99-happy.patch
+    - 0109-device-restore-Simplify-the-migration-of-data-to-per.patch
+    - 0110-stream-restore-Add-in-some-variable-sets-that-were-m.patch
+    - 0111-stream-restore-Add-proper-data-validity-checks-to-th.patch
+  * Pull some post-1.0 fixes from upstream git master
+    - 6878140 (extended: Fix doxygen comment style typos)
+    - 6a9272f (sink,source: Avoid unnecessary call to pa_rtclock_now())
+  * debian/rules: Modules are now in a 1.0 directory
+  * Update symbols
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Thu, 29 Sep 2011 10:01:56 +1000
+
 pulseaudio (1:0.99.3-0ubuntu5) oneiric; urgency=low
 
   [ David Henningsson ]

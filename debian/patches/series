@@ -9,23 +9,10 @@
 0010-lp453966-handle-digmic-pt2.patch
 0013-Load-RAOP-Zeroconf-by-default.patch
 0016-nodisplay-autostart.patch
-0017-Avoid-crash-by-not-updating-volume-on-shutdown.patch
-0018-RAOP-Don-t-crash-if-fd-is-not-open-when-trying-to-cl.patch
-0019-Make-sure-module-dbus-protocol-is-loaded-after-modul.patch
 
-# Patches post 0.99.2 release from upstream git master
-0100-vala-Add-has_type_id-false-to-all-enums-structs-and-.patch
-0101-module-switch-on-connect-Don-t-switch-unlinked-sink-.patch
-0102-alsa-mixer-Set-Front-control-to-0-dB-on-headphone-pa.patch
-0103-module-equalizer-sink-Use-z-for-printf-of-size_t-var.patch
-0104-module-equalizer-sink-Use-in-initialising-variables.patch
-0105-bluetooth-sbc-Use-__asm__-keyword.patch
-0106-module-equalizer-sink-Use-correct-limit-in-loop.patch
-0107-Squash-the-last-gcc-warnings.patch
-0108-Make-gcc-std-c99-happy.patch
-0109-device-restore-Simplify-the-migration-of-data-to-per.patch
-0110-stream-restore-Add-in-some-variable-sets-that-were-m.patch
-0111-stream-restore-Add-proper-data-validity-checks-to-th.patch
+# Upstream patches post 1.0 from git master
+0100-extended-Fix-doxygen-comment-style-typos.patch
+0101-sink-source-Avoid-unnecessary-call-to-pa_rtclock_now.patch
 
 # Jack detection patches
 0601-Introduce-available-concept-for-ports-and-communicat.patch
@@ -43,3 +30,4 @@
 0613-Load-switch-on-port-available-module-by-default.patch
 0614-HDMI-Add-jack-detection-for-HDMI-as-well-as-probing-.patch
 0615-lp845468.patch
+0616-lp852902.patch

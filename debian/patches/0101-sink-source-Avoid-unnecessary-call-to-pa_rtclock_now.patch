@@ -1,0 +1,94 @@
+From 6a9272f950649fdf3650e23d08320093d6ef7a64 Mon Sep 17 00:00:00 2001
+From: Arun Raghavan <arun.raghavan@collabora.co.uk>
+Date: Tue, 27 Sep 2011 21:52:24 +0530
+Subject: [PATCH 101/101] sink,source: Avoid unnecessary call to
+ pa_rtclock_now()
+
+pa_{sink,source}_volume_change_apply were being called by the ALSA I/O
+thread on every iteration, causing a pa_rtclock_now() call, which can
+sometimes be heavy. We avoid this call by making sure there actually are
+changes to apply before proceeding into the function.
+
+While we're at it, also dropping a redundant check on s->write_volume.
+---
+ src/pulsecore/sink.c   |    8 +++++---
+ src/pulsecore/source.c |    8 +++++---
+ 2 files changed, 10 insertions(+), 6 deletions(-)
+
+diff --git a/src/pulsecore/sink.c b/src/pulsecore/sink.c
+index 21c6723..05b08aa 100644
+--- a/src/pulsecore/sink.c
++++ b/src/pulsecore/sink.c
+@@ -3400,12 +3400,12 @@ static void pa_sink_volume_change_flush(pa_sink *s) {
+ 
+ /* Called from the IO thread. */
+ pa_bool_t pa_sink_volume_change_apply(pa_sink *s, pa_usec_t *usec_to_next) {
+-    pa_usec_t now = pa_rtclock_now();
++    pa_usec_t now;
+     pa_bool_t ret = FALSE;
+ 
+     pa_assert(s);
+ 
+-    if (!PA_SINK_IS_LINKED(s->state)) {
++    if (!s->thread_info.volume_changes || !PA_SINK_IS_LINKED(s->state)) {
+         if (usec_to_next)
+             *usec_to_next = 0;
+         return ret;
+@@ -3413,6 +3413,8 @@ pa_bool_t pa_sink_volume_change_apply(pa_sink *s, pa_usec_t *usec_to_next) {
+ 
+     pa_assert(s->write_volume);
+ 
++    now = pa_rtclock_now();
++
+     while (s->thread_info.volume_changes && now >= s->thread_info.volume_changes->at) {
+         pa_sink_volume_change *c = s->thread_info.volume_changes;
+         PA_LLIST_REMOVE(pa_sink_volume_change, s->thread_info.volume_changes, c);
+@@ -3423,7 +3425,7 @@ pa_bool_t pa_sink_volume_change_apply(pa_sink *s, pa_usec_t *usec_to_next) {
+         pa_sink_volume_change_free(c);
+     }
+ 
+-    if (s->write_volume && ret)
++    if (ret)
+         s->write_volume(s);
+ 
+     if (s->thread_info.volume_changes) {
+diff --git a/src/pulsecore/source.c b/src/pulsecore/source.c
+index 5239610..d47280c 100644
+--- a/src/pulsecore/source.c
++++ b/src/pulsecore/source.c
+@@ -2575,12 +2575,12 @@ static void pa_source_volume_change_flush(pa_source *s) {
+ 
+ /* Called from the IO thread. */
+ pa_bool_t pa_source_volume_change_apply(pa_source *s, pa_usec_t *usec_to_next) {
+-    pa_usec_t now = pa_rtclock_now();
++    pa_usec_t now;
+     pa_bool_t ret = FALSE;
+ 
+     pa_assert(s);
+ 
+-    if (!PA_SOURCE_IS_LINKED(s->state)) {
++    if (!s->thread_info.volume_changes || !PA_SOURCE_IS_LINKED(s->state)) {
+         if (usec_to_next)
+             *usec_to_next = 0;
+         return ret;
+@@ -2588,6 +2588,8 @@ pa_bool_t pa_source_volume_change_apply(pa_source *s, pa_usec_t *usec_to_next) {
+ 
+     pa_assert(s->write_volume);
+ 
++    now = pa_rtclock_now();
++
+     while (s->thread_info.volume_changes && now >= s->thread_info.volume_changes->at) {
+         pa_source_volume_change *c = s->thread_info.volume_changes;
+         PA_LLIST_REMOVE(pa_source_volume_change, s->thread_info.volume_changes, c);
+@@ -2598,7 +2600,7 @@ pa_bool_t pa_source_volume_change_apply(pa_source *s, pa_usec_t *usec_to_next) {
+         pa_source_volume_change_free(c);
+     }
+ 
+-    if (s->write_volume && ret)
++    if (ret)
+         s->write_volume(s);
+ 
+     if (s->thread_info.volume_changes) {
+-- 
+1.7.5.4
+

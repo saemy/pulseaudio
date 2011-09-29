@@ -1,0 +1,130 @@
+From a629076b6131adecfe3e53a512021330bb56b3c2 Mon Sep 17 00:00:00 2001
+From: David Henningsson <david.henningsson@canonical.com>
+Date: Mon, 19 Sep 2011 17:23:48 +0200
+Subject: [PATCH] Update also tunnel protocol to version 24
+
+BugLink: http://bugs.launchpad.net/bugs/852902
+Signed-off-by: David Henningsson <david.henningsson@canonical.com>
+---
+ src/modules/module-tunnel.c |   91 ++++++++++++++++++------------------------
+ 1 files changed, 39 insertions(+), 52 deletions(-)
+
+diff --git a/src/modules/module-tunnel.c b/src/modules/module-tunnel.c
+index faee995..0422c87 100644
+--- a/src/modules/module-tunnel.c
++++ b/src/modules/module-tunnel.c
+@@ -996,6 +996,41 @@ fail:
+     pa_module_unload_request(u->module, TRUE);
+ }
+ 
++static pa_bool_t read_ports(struct userdata *u, pa_tagstruct *t)
++{
++    if (u->version >= 16) {
++        uint32_t n_ports;
++        const char *s;
++
++        if (pa_tagstruct_getu32(t, &n_ports)) {
++            pa_log("Parse failure");
++            return FALSE;
++        }
++
++        for (uint32_t j = 0; j < n_ports; j++) {
++            uint32_t priority;
++
++            if (pa_tagstruct_gets(t, &s) < 0 || /* name */
++                pa_tagstruct_gets(t, &s) < 0 || /* description */
++                pa_tagstruct_getu32(t, &priority) < 0) {
++
++                pa_log("Parse failure");
++                return FALSE;
++            }
++            if (u->version >= 24 && pa_tagstruct_getu32(t, &priority) < 0) { /* available */
++                pa_log("Parse failure");
++                return FALSE;
++            }
++        }
++
++        if (pa_tagstruct_gets(t, &s) < 0) { /* active port */
++            pa_log("Parse failure");
++            return FALSE;
++        }
++    }
++    return TRUE;
++}
++
+ #ifdef TUNNEL_SINK
+ 
+ /* Called from main context */
+@@ -1066,32 +1101,8 @@ static void sink_info_cb(pa_pdispatch *pd, uint32_t command,  uint32_t tag, pa_t
+         }
+     }
+ 
+-    if (u->version >= 16) {
+-        uint32_t n_ports;
+-        const char *s;
+-
+-        if (pa_tagstruct_getu32(t, &n_ports)) {
+-            pa_log("Parse failure");
+-            goto fail;
+-        }
+-
+-        for (uint32_t j = 0; j < n_ports; j++) {
+-            uint32_t priority;
+-
+-            if (pa_tagstruct_gets(t, &s) < 0 || /* name */
+-                pa_tagstruct_gets(t, &s) < 0 || /* description */
+-                pa_tagstruct_getu32(t, &priority) < 0) {
+-
+-                pa_log("Parse failure");
+-                goto fail;
+-            }
+-        }
+-
+-        if (pa_tagstruct_gets(t, &s) < 0) { /* active port */
+-            pa_log("Parse failure");
+-            goto fail;
+-        }
+-    }
++    if (!read_ports(u, t))
++        goto fail;
+ 
+     if (u->version >= 21) {
+         uint8_t n_formats;
+@@ -1318,32 +1329,8 @@ static void source_info_cb(pa_pdispatch *pd, uint32_t command,  uint32_t tag, pa
+         }
+     }
+ 
+-    if (u->version >= 16) {
+-        uint32_t n_ports;
+-        const char *s;
+-
+-        if (pa_tagstruct_getu32(t, &n_ports)) {
+-            pa_log("Parse failure");
+-            goto fail;
+-        }
+-
+-        for (uint32_t j = 0; j < n_ports; j++) {
+-            uint32_t priority;
+-
+-            if (pa_tagstruct_gets(t, &s) < 0 || /* name */
+-                pa_tagstruct_gets(t, &s) < 0 || /* description */
+-                pa_tagstruct_getu32(t, &priority) < 0) {
+-
+-                pa_log("Parse failure");
+-                goto fail;
+-            }
+-        }
+-
+-        if (pa_tagstruct_gets(t, &s) < 0) { /* active port */
+-            pa_log("Parse failure");
+-            goto fail;
+-        }
+-    }
++    if (!read_ports(u, t))
++        goto fail;
+ 
+     if (!pa_tagstruct_eof(t)) {
+         pa_log("Packet too long");
+-- 
+1.7.5.4
+

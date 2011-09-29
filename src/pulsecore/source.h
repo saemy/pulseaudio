@@ -133,9 +133,9 @@ struct pa_source {
      * set this callback. */
     pa_source_cb_t set_volume; /* may be NULL */
 
-    /* Source drivers that set PA_SOURCE_SYNC_VOLUME must provide this
+    /* Source drivers that set PA_SOURCE_DEFERRED_VOLUME must provide this
      * callback. This callback is not used with source that do not set
-     * PA_SOURCE_SYNC_VOLUME. This is called from the IO thread when a
+     * PA_SOURCE_DEFERRED_VOLUME. This is called from the IO thread when a
      * pending hardware volume change has to be written to the
      * hardware. The requested volume is passed to the callback
      * implementation in s->thread_info.current_hw_volume.
@@ -207,7 +207,7 @@ struct pa_source {
         PA_LLIST_HEAD(pa_source_volume_change, volume_changes);
         pa_source_volume_change *volume_changes_tail;
         /* This value is updated in pa_source_volume_change_apply() and
-         * used only by sources with PA_SOURCE_SYNC_VOLUME. */
+         * used only by sources with PA_SOURCE_DEFERRED_VOLUME. */
         pa_cvolume current_hw_volume;
 
         /* The amount of usec volume up events are delayed and volume
@@ -338,6 +338,9 @@ int pa_source_suspend_all(pa_core *c, pa_bool_t suspend, pa_suspend_cause_t caus
 
 /* Use this instead of checking s->flags & PA_SOURCE_FLAT_VOLUME directly. */
 pa_bool_t pa_source_flat_volume_enabled(pa_source *s);
+
+/* Get the master source when sharing volumes */
+pa_source *pa_source_get_master(pa_source *s);
 
 /* Is the source in passthrough mode? (that is, is this a monitor source for a sink
  * that has a passthrough sink input connected to it. */
