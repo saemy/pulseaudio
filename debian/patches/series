@@ -13,6 +13,7 @@
 # Upstream patches post 1.0 from git master
 0100-extended-Fix-doxygen-comment-style-typos.patch
 0101-sink-source-Avoid-unnecessary-call-to-pa_rtclock_now.patch
+0102-Always-return-a-three-part-version-number-in-API-cal.patch
 
 # Jack detection patches
 0601-Introduce-available-concept-for-ports-and-communicat.patch

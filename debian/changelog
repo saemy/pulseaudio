@@ -1,3 +1,17 @@
+pulseaudio (1:1.0-0ubuntu2) oneiric; urgency=low
+
+  [ Matthias Klose ]
+  * Drop build dependency on libatomic-ops-dev. Not needed on !ia64.
+
+  [ Scott Kitterman ]
+  * Add debian/patches/0102-Always-return-a-three-part-version-number-in-API
+    -cal.patch to fix regression in pulseaudio version detection by
+    applications depending on the three part version number previously used by
+    pulseaudio (including phonon)
+      - Cherrypicked from upstream
+
+ -- Scott Kitterman <scott@kitterman.com>  Tue, 04 Oct 2011 22:06:39 -0500
+
 pulseaudio (1:1.0-0ubuntu1) oneiric; urgency=low
 
   [ David Henningsson ]
