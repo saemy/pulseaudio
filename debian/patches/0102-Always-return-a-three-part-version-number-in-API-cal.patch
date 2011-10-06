@@ -1,7 +1,8 @@
 From 7563e0bbb54fbac54e77f3a62d9761a70f3a559c Mon Sep 17 00:00:00 2001
 From: Colin Guthrie <colin@mageia.org>
-Date: Sat, 01 Oct 2011 11:03:44 +0000
-Subject: libpulse: Always return a three part version number in API calls.
+Date: Sat, 1 Oct 2011 12:03:44 +0100
+Subject: [PATCH] libpulse: Always return a three part version number in API
+ calls.
 
 For both the headers and the library we should provide clean, three part
 strings as this has been what we've previously done in the past
@@ -11,8 +12,23 @@ to us to change it so let's not try to tidy things up too much
 considering some third party apps (e.g. Skype) seem to dislike a two
 part version string.
 ---
-(limited to 'src/pulse/version.h.in')
+ src/pulse/context.c    |    2 +-
+ src/pulse/version.h.in |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/src/pulse/context.c b/src/pulse/context.c
+index 25d04a1..af144aa 100644
+--- a/src/pulse/context.c
++++ b/src/pulse/context.c
+@@ -1281,7 +1281,7 @@ pa_operation* pa_context_set_name(pa_context *c, const char *name, pa_context_su
+ }
+ 
+ const char* pa_get_library_version(void) {
+-    return PACKAGE_VERSION;
++    return pa_get_headers_version();
+ }
+ 
+ const char* pa_context_get_server(pa_context *c) {
 diff --git a/src/pulse/version.h.in b/src/pulse/version.h.in
 index 7e00c5e..1be4c75 100644
 --- a/src/pulse/version.h.in
@@ -26,5 +42,6 @@ index 7e00c5e..1be4c75 100644
  
  /** Return the version of the library the current application is
   * linked to. */
---
-cgit v0.9.0.2-2-gbebe
+-- 
+1.7.5.4
+

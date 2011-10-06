@@ -1,3 +1,10 @@
+pulseaudio (1:1.0-0ubuntu3) oneiric; urgency=low
+
+  * debian/patches/0102-Always-return-a-three-part-version-number-in-API
+    -cal.patch: Update to fix skype regression as well (LP: #865820)
+
+ -- David Henningsson <david.henningsson@canonical.com>  Thu, 06 Oct 2011 10:39:49 +0200
+
 pulseaudio (1:1.0-0ubuntu2) oneiric; urgency=low
 
   [ Matthias Klose ]
