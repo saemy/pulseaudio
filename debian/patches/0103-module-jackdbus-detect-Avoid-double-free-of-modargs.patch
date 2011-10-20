@@ -1,0 +1,37 @@
+From 58585db8084675b6e1999b7ad5b0d89d98f71db8 Mon Sep 17 00:00:00 2001
+From: David Henningsson <david.henningsson@canonical.com>
+Date: Wed, 5 Oct 2011 10:28:50 +0200
+Subject: [PATCH] module-jackdbus-detect: Avoid double-free of modargs
+
+If module-jackdbus-detect failed in the later part of initialization,
+the ma variable was freed twice.
+
+BugLink: http://bugs.launchpad.net/bugs/867444
+Signed-off-by: David Henningsson <david.henningsson@canonical.com>
+---
+ src/modules/jack/module-jackdbus-detect.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/src/modules/jack/module-jackdbus-detect.c b/src/modules/jack/module-jackdbus-detect.c
+index 6bbf38b..41933c7 100644
+--- a/src/modules/jack/module-jackdbus-detect.c
++++ b/src/modules/jack/module-jackdbus-detect.c
+@@ -231,7 +231,6 @@ int pa__init(pa_module *m) {
+         pa_log("Failed to parse connect= argument.");
+         goto fail;
+     }
+-    pa_modargs_free(ma);
+ 
+     if (!(connection = pa_dbus_bus_get(m->core, DBUS_BUS_SESSION, &error)) || dbus_error_is_set(&error)) {
+ 
+@@ -259,6 +258,7 @@ int pa__init(pa_module *m) {
+ 
+     check_service_started(u);
+ 
++    pa_modargs_free(ma);
+     return 0;
+ 
+ fail:
+-- 
+1.7.5.4
+

@@ -1,0 +1,34 @@
+From 8a5e6e8356254b9b81093bb2ab131b83d3df15d0 Mon Sep 17 00:00:00 2001
+From: Arun Raghavan <arun.raghavan@collabora.co.uk>
+Date: Thu, 6 Oct 2011 14:36:50 +0530
+Subject: [PATCH 120/125] echo-cancel: Don't crash if adjust_time = 0
+
+---
+ src/modules/echo-cancel/module-echo-cancel.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/modules/echo-cancel/module-echo-cancel.c b/src/modules/echo-cancel/module-echo-cancel.c
+index 89638b7..97df0b1 100644
+--- a/src/modules/echo-cancel/module-echo-cancel.c
++++ b/src/modules/echo-cancel/module-echo-cancel.c
+@@ -405,7 +405,7 @@ static int source_set_state_cb(pa_source *s, pa_source_state_t state) {
+     if (state == PA_SOURCE_RUNNING) {
+         /* restart timer when both sink and source are active */
+         u->active_mask |= 1;
+-        if (u->active_mask == 3)
++        if (u->active_mask == 3 && u->adjust_time)
+             pa_core_rttime_restart(u->core, u->time_event, pa_rtclock_now() + u->adjust_time);
+ 
+         pa_atomic_store(&u->request_resync, 1);
+@@ -433,7 +433,7 @@ static int sink_set_state_cb(pa_sink *s, pa_sink_state_t state) {
+     if (state == PA_SINK_RUNNING) {
+         /* restart timer when both sink and source are active */
+         u->active_mask |= 2;
+-        if (u->active_mask == 3)
++        if (u->active_mask == 3 && u->adjust_time)
+             pa_core_rttime_restart(u->core, u->time_event, pa_rtclock_now() + u->adjust_time);
+ 
+         pa_atomic_store(&u->request_resync, 1);
+-- 
+1.7.5.4
+

@@ -1,3 +1,44 @@
+pulseaudio (1:1.0-0ubuntu4) precise; urgency=low
+
+  [ David Henningsson ]
+  * Added patches:
+    0103-module-jackdbus-detect-Avoid-double-free-of-modargs.patch:
+      (LP: #867444)
+    0104-source-output-Do-not-use-unset-channel-map-in-pa_sou.patch: 
+      (LP: #864071)
+    0105-Fix-deferred-volume-not-being-applied-if-sink-is-clo.patch,
+    0017-Hack-around-a-bug-in-the-core-causing-volumes-not-to.patch:
+      These two patches affect users not having their volume correctly
+      set on port change (LP: #877954)
+
+  [ Luke Yelavich ]
+  * debian/control: Update Vcs-Bzr field
+  * 0102-Always-return-a-three-part-version-number-in-API-cal.patch: Refresh
+    the patch from upstrea git, to refer to the correct commit hash, and
+    update the description
+  * Pull some bug fixes from the stable-1.x upstream git branch:
+    - 411af6b (sink: Move updating the requested latency after the rewind
+               request when finishing a stream move.)
+    - 87f70c6 (null-sink: Set latency range at the time of initialization of
+               module.)
+    - d71a291 (Make pulse build with clang again)
+    - 4e5943b (alsa: Give compressed formats preference over PCM)
+    - 867170a (alsa: Better error handling in mixer rtpoll callback)
+    - c055c55 (echo-cancel: Fail if loaded between a sink and its monitor)
+    - 8754e0c (doc: Add some more doxygen tags to existing comments)
+    - 2c30c07 (alsa: Make mixer error handling more robust still)
+    - 8a5e6e8 (echo-cancel: Don't crash if adjust_time = 0)
+    - 7b13a79 (echo-cancel: Close debug files on module unload)
+    - 6bf0489 (tests: Fix calculation of memblock size in resampler-test)
+    - 93f55a4 (filter-apply: Move sink/source unlink callbacks before m-s-r)
+    - b1dabfb (build-sys: Drop libsamplerate from pulsecommon deps)
+    - 743a4d0 (build-sys: Provide a simple CMake Config setup (similar to
+               pkgconfig))
+  * Add liborc-0.4-dev as a build dependency to add orc support
+  * debian/libpulse-dev.install: Ship cmake files
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Thu, 20 Oct 2011 11:36:43 +1100
+
 pulseaudio (1:1.0-0ubuntu3) oneiric; urgency=low
 
   * debian/patches/0102-Always-return-a-three-part-version-number-in-API

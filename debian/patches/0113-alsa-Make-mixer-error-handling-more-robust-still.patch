@@ -1,0 +1,57 @@
+From 2c30c0751f2234e316264fae0f82a23d569cd8f4 Mon Sep 17 00:00:00 2001
+From: Arun Raghavan <arun.raghavan@collabora.co.uk>
+Date: Wed, 5 Oct 2011 00:58:52 +0530
+Subject: [PATCH 117/125] alsa: Make mixer error handling more robust still
+
+Instead of relying on the snd_mixer_* functions failing, we check for
+POLLERR and POLLNVAL first. After this, any errors in handling the mixer
+events are deemed fatal (that is we cause the ALSA source/sink thread to
+terminate).
+
+The case where POLLERR is set but POLLNVAL is not does not actually
+occur, but we're making this a soft failure (stop polling the mixer, but
+don't kill the I/O thread). If other conditions where POLLERR occurs
+turn up, we need to handle them explicitly.
+
+Thanks to Linus Torvalds for helping get this right.
+---
+ src/modules/alsa/alsa-mixer.c |   19 ++++++++++++++-----
+ 1 files changed, 14 insertions(+), 5 deletions(-)
+
+diff --git a/src/modules/alsa/alsa-mixer.c b/src/modules/alsa/alsa-mixer.c
+index ebb3b0f..b6cf085 100644
+--- a/src/modules/alsa/alsa-mixer.c
++++ b/src/modules/alsa/alsa-mixer.c
+@@ -286,15 +286,24 @@ static int rtpoll_work_cb(pa_rtpoll_item *i) {
+     }
+ 
+     if (revents) {
++        if (revents & (POLLNVAL | POLLERR)) {
++            pa_log_debug("Device disconnected, stopping poll on mixer");
++            goto fail;
++        } else if (revents & POLLERR) {
++            /* This shouldn't happen. */
++            pa_log_error("Got a POLLERR (revents = %04x), stopping poll on mixer", revents);
++            goto fail;
++        }
++
+         err = snd_mixer_handle_events(pd->mixer);
+ 
+-        if (PA_UNLIKELY(err == -ENODEV)) {
+-            /* The card has been disconnected, stop polling */
+-            goto fail;
+-        } else {
+-            /* Success, or at least an error we're likely to recover from */
++        if (PA_LIKELY(err >= 0)) {
+             pa_rtpoll_item_free(i);
+             pa_alsa_set_mixer_rtpoll(pd, pd->mixer, pd->rtpoll);
++        } else {
++            pa_log_error("Error handling mixer event: %s", pa_alsa_strerror(err));
++            ret = -1;
++            goto fail;
+         }
+     }
+ 
+-- 
+1.7.5.4
+

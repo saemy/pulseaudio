@@ -1,0 +1,99 @@
+From 743a4d00deb3b556753d2eb8521c187c62f51775 Mon Sep 17 00:00:00 2001
+From: Colin Guthrie <colin@mageia.org>
+Date: Tue, 11 Oct 2011 20:42:42 +0100
+Subject: [PATCH] build-sys: Provide a simple CMake Config setup (similar to
+ pkgconfig)
+
+I'd rather not have to do this, as I don't really see the point in
+duplicating what is done in pkgconfig, but this is likely the
+easiest way to avoid nasty hacks.
+---
+ Makefile.am                      |    3 +++
+ PulseAudioConfig.cmake.in        |   12 ++++++++++++
+ PulseAudioConfigVersion.cmake.in |   11 +++++++++++
+ configure.ac                     |   11 +++++++++++
+ 4 files changed, 37 insertions(+), 0 deletions(-)
+ create mode 100644 PulseAudioConfig.cmake.in
+ create mode 100644 PulseAudioConfigVersion.cmake.in
+
+diff --git a/Makefile.am b/Makefile.am
+index b010701..8a94a7c 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -51,6 +51,9 @@ pkgconfig_DATA += \
+ 	 libpulse-mainloop-glib.pc
+ endif
+ 
++cmakedir = $(libdir)/cmake/PulseAudio
++cmake_DATA = PulseAudioConfig.cmake PulseAudioConfigVersion.cmake
++
+ homepage: all dist doxygen
+ 	test -d $$HOME/homepage/private
+ 	mkdir -p $$HOME/homepage/private/projects/pulseaudio $$HOME/homepage/private/projects/pulseaudio/doxygen
+diff --git a/PulseAudioConfig.cmake.in b/PulseAudioConfig.cmake.in
+new file mode 100644
+index 0000000..191eb67
+--- /dev/null
++++ b/PulseAudioConfig.cmake.in
+@@ -0,0 +1,12 @@
++set(PULSEAUDIO_FOUND TRUE)
++
++set(PULSEAUDIO_VERSION_MAJOR @PA_MAJOR@)
++set(PULSEAUDIO_VERSION_MINOR @PA_MINOR@)
++set(PULSEAUDIO_VERSION @PA_MAJOR@.@PA_MINOR@)
++set(PULSEAUDIO_VERSION_STRING "@PA_MAJOR@.@PA_MINOR@")
++
++find_path(PULSEAUDIO_INCLUDE_DIR pulse/pulseaudio.h HINTS "@PA_INCDIR@")
++find_library(PULSEAUDIO_LIBRARY NAMES pulse libpulse HINTS "@PA_LIBDIR@")
++ifelse(@HAVE_GLIB20@, 1, dnl
++find_library(PULSEAUDIO_MAINLOOP_LIBRARY NAMES pulse-mainloop-glib libpulse-mainloop-glib HINTS "@PA_LIBDIR@")
++)dnl
+diff --git a/PulseAudioConfigVersion.cmake.in b/PulseAudioConfigVersion.cmake.in
+new file mode 100644
+index 0000000..e2947de
+--- /dev/null
++++ b/PulseAudioConfigVersion.cmake.in
+@@ -0,0 +1,11 @@
++set(PACKAGE_VERSION @PA_MAJOR@.@PA_MINOR@)
++
++if("${PACKAGE_VERSION}" VERSION_LESS "${PACKAGE_FIND_VERSION}" )
++  set(PACKAGE_VERSION_COMPATIBLE FALSE)
++else("${PACKAGE_VERSION}" VERSION_LESS "${PACKAGE_FIND_VERSION}" )
++  set(PACKAGE_VERSION_COMPATIBLE TRUE)
++  if( "${PACKAGE_FIND_VERSION}" STREQUAL "${PACKAGE_VERSION}")
++    set(PACKAGE_VERSION_EXACT TRUE)
++  endif( "${PACKAGE_FIND_VERSION}" STREQUAL "${PACKAGE_VERSION}")
++endif("${PACKAGE_VERSION}" VERSION_LESS "${PACKAGE_FIND_VERSION}" )
++
+diff --git a/configure.ac b/configure.ac
+index 0bf40a8..6b358cb 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -776,6 +776,7 @@ AS_IF([test "x$enable_glib2" = "xyes" && test "x$HAVE_GLIB20" = "x0"],
+ 
+ AC_SUBST(GLIB20_CFLAGS)
+ AC_SUBST(GLIB20_LIBS)
++AC_SUBST(HAVE_GLIB20)
+ AM_CONDITIONAL([HAVE_GLIB20], [test "x$HAVE_GLIB20" = x1])
+ AS_IF([test "x$HAVE_GLIB20" = "x1"], AC_DEFINE([HAVE_GLIB], 1, [Have GLIB?]))
+ 
+@@ -1246,6 +1247,16 @@ AC_CONFIG_FILES([src/default.pa:src/daemon/default.pa.in],
+ AC_CONFIG_FILES([src/system.pa:src/daemon/system.pa.in],
+     [m4 src/system.pa > src/system.pa.gen && mv src/system.pa.gen src/system.pa])
+ 
++# CMake related ProjectConfig files
++PA_LIBDIR="$libdir"
++AX_DEFINE_DIR(PA_LIBDIR, PA_LIBDIR, [PulseAudio library dir])
++PA_INCDIR="$includedir"
++AX_DEFINE_DIR(PA_INCDIR, PA_INCDIR, [PulseAudio include dir])
++
++AC_CONFIG_FILES([PulseAudioConfig.cmake:PulseAudioConfig.cmake.in],
++    [m4 PulseAudioConfig.cmake > PulseAudioConfig.cmake.gen && mv PulseAudioConfig.cmake.gen PulseAudioConfig.cmake])
++AC_CONFIG_FILES([PulseAudioConfigVersion.cmake])
++
+ AC_OUTPUT
+ 
+ # ==========================================================================
+-- 
+1.7.5.4
+

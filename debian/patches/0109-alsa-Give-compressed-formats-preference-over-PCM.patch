@@ -1,0 +1,45 @@
+From 4e5943b6ba8b8f6bc45da24bf81d0828d990da20 Mon Sep 17 00:00:00 2001
+From: Arun Raghavan <arun.raghavan@collabora.co.uk>
+Date: Tue, 4 Oct 2011 11:05:59 +0530
+Subject: [PATCH 113/125] alsa: Give compressed formats preference over PCM
+
+This makes set_formats() put PCM formats lower down the list than
+compressed formats since we negotiate by picking the first format in
+this list that is also in the client-provided list of possible formats
+during sink input creation.
+
+This will be incorrect if we ever decide to do encoding in PA (for
+things like AC3/DTS encoding for multichannel output over S/PDIF).
+---
+ src/modules/alsa/alsa-sink.c |   14 +++++++++++++-
+ 1 files changed, 13 insertions(+), 1 deletions(-)
+
+diff --git a/src/modules/alsa/alsa-sink.c b/src/modules/alsa/alsa-sink.c
+index 5b8dd31..80bd6ba 100644
+--- a/src/modules/alsa/alsa-sink.c
++++ b/src/modules/alsa/alsa-sink.c
+@@ -1534,8 +1534,20 @@ static pa_bool_t sink_set_formats(pa_sink *s, pa_idxset *formats) {
+     pa_idxset_free(u->formats, (pa_free2_cb_t) pa_format_info_free2, NULL);
+     u->formats = pa_idxset_new(NULL, NULL);
+ 
++    /* Note: the logic below won't apply if we're using software encoding.
++     * This is fine for now since we don't support that via the passthrough
++     * framework, but this must be changed if we do. */
++
++    /* First insert non-PCM formats since we prefer those. */
++    PA_IDXSET_FOREACH(f, formats, idx) {
++        if (!pa_format_info_is_pcm(f))
++            pa_idxset_put(u->formats, pa_format_info_copy(f), NULL);
++    }
++
++    /* Now add any PCM formats */
+     PA_IDXSET_FOREACH(f, formats, idx) {
+-        pa_idxset_put(u->formats, pa_format_info_copy(f), NULL);
++        if (pa_format_info_is_pcm(f))
++            pa_idxset_put(u->formats, pa_format_info_copy(f), NULL);
+     }
+ 
+     return TRUE;
+-- 
+1.7.5.4
+

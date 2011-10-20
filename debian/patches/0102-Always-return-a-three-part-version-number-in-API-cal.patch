@@ -1,8 +1,8 @@
-From 7563e0bbb54fbac54e77f3a62d9761a70f3a559c Mon Sep 17 00:00:00 2001
+From f425519443f98a486de117e86e77a6e59c8f20a1 Mon Sep 17 00:00:00 2001
 From: Colin Guthrie <colin@mageia.org>
 Date: Sat, 1 Oct 2011 12:03:44 +0100
-Subject: [PATCH] libpulse: Always return a three part version number in API
- calls.
+Subject: [PATCH 108/125] libpulse: Always return a three part version number
+ in API calls.
 
 For both the headers and the library we should provide clean, three part
 strings as this has been what we've previously done in the past

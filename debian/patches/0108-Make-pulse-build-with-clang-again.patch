@@ -1,0 +1,58 @@
+From d71a291721f6e61f8e874d4906ee012a3f5b2a63 Mon Sep 17 00:00:00 2001
+From: Maarten Bosmans <mkbosmans@gmail.com>
+Date: Wed, 28 Sep 2011 09:50:26 +0200
+Subject: [PATCH 112/125] Make pulse build with clang again
+
+The casts are not supported there.
+---
+ src/pulsecore/svolume_mmx.c |    4 ++--
+ src/pulsecore/svolume_sse.c |    4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/src/pulsecore/svolume_mmx.c b/src/pulsecore/svolume_mmx.c
+index ae2cf05..87d29e8 100644
+--- a/src/pulsecore/svolume_mmx.c
++++ b/src/pulsecore/svolume_mmx.c
+@@ -153,7 +153,7 @@ static void pa_volume_s16ne_mmx(int16_t *samples, int32_t *volumes, unsigned cha
+ 
+         : "+r" (samples), "+r" (volumes), "+r" (length), "=D" (channel), "=&r" (temp)
+ #if defined (__i386__)
+-        : "m" ((pa_reg_x86)channels)
++        : "m" (channels)
+ #else
+         : "r" ((pa_reg_x86)channels)
+ #endif
+@@ -232,7 +232,7 @@ static void pa_volume_s16re_mmx(int16_t *samples, int32_t *volumes, unsigned cha
+ 
+         : "+r" (samples), "+r" (volumes), "+r" (length), "=D" (channel), "=&r" (temp)
+ #if defined (__i386__)
+-        : "m" ((pa_reg_x86)channels)
++        : "m" (channels)
+ #else
+         : "r" ((pa_reg_x86)channels)
+ #endif
+diff --git a/src/pulsecore/svolume_sse.c b/src/pulsecore/svolume_sse.c
+index 6a73270..99a1adb 100644
+--- a/src/pulsecore/svolume_sse.c
++++ b/src/pulsecore/svolume_sse.c
+@@ -152,7 +152,7 @@ static void pa_volume_s16ne_sse2(int16_t *samples, int32_t *volumes, unsigned ch
+ 
+         : "+r" (samples), "+r" (volumes), "+r" (length), "=D" (channel), "=&r" (temp)
+ #if defined (__i386__)
+-        : "m" ((pa_reg_x86)channels)
++        : "m" (channels)
+ #else
+         : "r" ((pa_reg_x86)channels)
+ #endif
+@@ -244,7 +244,7 @@ static void pa_volume_s16re_sse2(int16_t *samples, int32_t *volumes, unsigned ch
+ 
+         : "+r" (samples), "+r" (volumes), "+r" (length), "=D" (channel), "=&r" (temp)
+ #if defined (__i386__)
+-        : "m" ((pa_reg_x86)channels)
++        : "m" (channels)
+ #else
+         : "r" ((pa_reg_x86)channels)
+ #endif
+-- 
+1.7.5.4
+
