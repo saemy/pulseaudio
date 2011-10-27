@@ -1,3 +1,35 @@
+pulseaudio (1:1.1-0ubuntu1) precise; urgency=low
+
+  * New upstream release
+  * debian/watch: Update to new location
+  * Dropped patches, as these were from upstream:
+    - 0100-extended-Fix-doxygen-comment-style-typos.patch
+    - 0101-sink-source-Avoid-unnecessary-call-to-pa_rtclock_now.patch
+    - 0102-Always-return-a-three-part-version-number-in-API-cal.patch
+    - 0103-module-jackdbus-detect-Avoid-double-free-of-modargs.patch
+    - 0104-source-output-Do-not-use-unset-channel-map-in-pa_sou.patch
+    - 0105-Fix-deferred-volume-not-being-applied-if-sink-is-clo.patch
+    - 0106-sink-Move-updating-the-requested-latency-after-the-r.patch
+    - 0107-n ull-sink-Set-latency-range-at-the-time-of-initializ.patch
+    - 0108-Make-pulse-build-with-clang-again.patch
+    - 0109-alsa-Give-compressed-formats-preference-over-PCM.patch
+    - 0110-alsa-Better-error-handling-in-mixer-rtpoll-callback.patch
+    - 0111-echo-cancel-Fail-if-loaded-between-a-sink-and-its-mo.patch
+    - 0112-doc-Add-some-more-doxygen-tags-to-existing-comments.patch
+    - 0113-alsa-Make-mixer-error-handling-more-robust-still.patch
+    - 0114-echo-cancel-Don-t-crash-if-adjust_time-0.patch
+    - 0115-echo-cancel-Close-debug-files-on-module-unload.patch
+    - 0116-tests-Fix-calculation-of-memblock-size-in-resampler-.patch
+    - 0117-filter-apply-Move-sink-source-unlink-callbacks-befor.patch
+    - 0118-build-sys-Drop-libsamplerate-from-pulsecommon-deps.patch
+    - 0119-build-sys-Provide-a-simple-CMake-Config-setup-simila.patch
+  * Put libpulsedsp.so into its own package, so it can be built for
+    multi-arch
+  * debian/rules: Update for 1.1
+  * Update shlib files
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Thu, 27 Oct 2011 12:36:17 +1100
+
 pulseaudio (1:1.0-0ubuntu4) precise; urgency=low
 
   [ David Henningsson ]
