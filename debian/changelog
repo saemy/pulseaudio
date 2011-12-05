@@ -1,3 +1,9 @@
+pulseaudio (1:1.1-0ubuntu3) precise; urgency=low
+
+  * Allow pulseaudio-module-bluetooth to build on armhf.
+
+ -- Adam Conrad <adconrad@ubuntu.com>  Mon, 05 Dec 2011 12:57:06 -0700
+
 pulseaudio (1:1.1-0ubuntu2) precise; urgency=low
 
   * No-change rebuild to drop spurious libsfgcc1 dependency on armhf.
