@@ -7,7 +7,6 @@
 0007-handle-Master-Front.patch
 0008-delay-gnome-autostart.patch
 0010-lp453966-handle-digmic-pt2.patch
-0013-Load-RAOP-Zeroconf-by-default.patch
 0016-nodisplay-autostart.patch
 0017-Hack-around-a-bug-in-the-core-causing-volumes-not-to.patch
 

@@ -1,3 +1,14 @@
+pulseaudio (1:1.1-0ubuntu4) precise; urgency=low
+
+  [ Daniel T Chen ]
+  * Don't load module-raop-discover by default. (LP: #782860)
+
+  [ Gabor Kelemen ]
+  * Run dh_translations to generate translation template, add it as build-dep.
+    (LP: #876866)
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Wed, 14 Dec 2011 10:50:16 +1100
+
 pulseaudio (1:1.1-0ubuntu3) precise; urgency=low
 
   * Allow pulseaudio-module-bluetooth to build on armhf.
