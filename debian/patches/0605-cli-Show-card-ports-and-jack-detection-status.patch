@@ -1,7 +1,9 @@
-From bf87150f8c7b5b60a75a70e8eb42183507672115 Mon Sep 17 00:00:00 2001
+From 9699881db0bb8734b3deaf8b26be4600708572d9 Mon Sep 17 00:00:00 2001
 From: David Henningsson <david.henningsson@canonical.com>
-Date: Tue, 30 Aug 2011 12:17:35 +0200
-Subject: [PATCH 605/613] cli: Show card ports and jack detection status
+Date: Fri, 25 Nov 2011 15:17:15 +0100
+Subject: [PATCH 605/614] cli: Show card ports and jack detection status
+
+Expose the new stuff through pacmd.
 
 Signed-off-by: David Henningsson <david.henningsson@canonical.com>
 ---
@@ -9,7 +11,7 @@ Signed-off-by: David Henningsson <david.henningsson@canonical.com>
  1 files changed, 31 insertions(+), 17 deletions(-)
 
 diff --git a/src/pulsecore/cli-text.c b/src/pulsecore/cli-text.c
-index 5498744..e2566a4 100644
+index 5498744..2253635 100644
 --- a/src/pulsecore/cli-text.c
 +++ b/src/pulsecore/cli-text.c
 @@ -102,6 +102,33 @@ char *pa_client_list_to_string(pa_core *c) {
@@ -25,7 +27,7 @@ index 5498744..e2566a4 100644
 +        case PA_PORT_AVAILABLE_YES:
 +            return "yes";
 +        default:
-+            return "invalid";
++            return "invalid"; /* Should never happen! */
 +    }
 +}
 +
@@ -89,5 +91,5 @@ index 5498744..e2566a4 100644
          if (source->active_port)
              pa_strbuf_printf(
 -- 
-1.7.5.4
+1.7.7.3
 

@@ -1,7 +1,7 @@
-From a79b6d9cd8596e36bf70c3aa656c6f9d875e2468 Mon Sep 17 00:00:00 2001
+From c03b5dc144cb491ccaf4596cc39d759006137b52 Mon Sep 17 00:00:00 2001
 From: David Henningsson <david.henningsson@canonical.com>
 Date: Mon, 5 Sep 2011 14:20:48 +0200
-Subject: [PATCH 612/613] Add a new module switch-on-port-available that acts
+Subject: [PATCH 613/614] Add a new module switch-on-port-available that acts
  on port changes
 
 ---
@@ -11,10 +11,10 @@ Subject: [PATCH 612/613] Add a new module switch-on-port-available that acts
  create mode 100644 src/modules/module-switch-on-port-available.c
 
 diff --git a/src/Makefile.am b/src/Makefile.am
-index 159c960..ce5ba5c 100644
+index 4260060..9fa7ea8 100644
 --- a/src/Makefile.am
 +++ b/src/Makefile.am
-@@ -997,6 +997,7 @@ modlibexec_LTLIBRARIES += \
+@@ -1002,6 +1002,7 @@ modlibexec_LTLIBRARIES += \
  		module-virtual-sink.la \
  		module-virtual-source.la \
  		module-switch-on-connect.la \
@@ -22,7 +22,7 @@ index 159c960..ce5ba5c 100644
  		module-filter-apply.la \
  		module-filter-heuristics.la
  
-@@ -1290,6 +1291,7 @@ SYMDEF_FILES = \
+@@ -1301,6 +1302,7 @@ SYMDEF_FILES = \
  		module-virtual-sink-symdef.h \
  		module-virtual-source-symdef.h \
  		module-switch-on-connect-symdef.h \
@@ -30,7 +30,7 @@ index 159c960..ce5ba5c 100644
  		module-filter-apply-symdef.h \
  		module-filter-heuristics-symdef.h
  
-@@ -1445,6 +1447,10 @@ module_switch_on_connect_la_SOURCES = modules/module-switch-on-connect.c
+@@ -1456,6 +1458,10 @@ module_switch_on_connect_la_SOURCES = modules/module-switch-on-connect.c
  module_switch_on_connect_la_LDFLAGS = $(MODULE_LDFLAGS)
  module_switch_on_connect_la_LIBADD = $(MODULE_LIBADD)
  
@@ -247,5 +247,5 @@ index 0000000..5b4a518
 +    pa_xfree(u);
 +}
 -- 
-1.7.5.4
+1.7.7.3
 

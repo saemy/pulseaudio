@@ -1,0 +1,61 @@
+Index: pulseaudio-1.1/src/modules/alsa/alsa-mixer.c
+===================================================================
+--- pulseaudio-1.1.orig/src/modules/alsa/alsa-mixer.c	2012-01-19 14:47:38.920456672 +0100
++++ pulseaudio-1.1/src/modules/alsa/alsa-mixer.c	2012-01-19 14:49:34.964454947 +0100
+@@ -2322,21 +2322,23 @@
+ static int path_verify(pa_alsa_path *p) {
+     static const struct description_map well_known_descriptions[] = {
+         { "analog-input",               N_("Analog Input") },
+-        { "analog-input-microphone",    N_("Analog Microphone") },
++        { "analog-input-microphone",    N_("Microphone") },
+         { "analog-input-microphone-front",    N_("Front Microphone") },
+         { "analog-input-microphone-rear",     N_("Rear Microphone") },
+-        { "analog-input-microphone-dock",     N_("Docking Station Microphone") },
++        { "analog-input-microphone-dock",     N_("Dock Microphone") },
+         { "analog-input-microphone-internal", N_("Internal Microphone") },
+-        { "analog-input-linein",        N_("Analog Line-In") },
+-        { "analog-input-radio",         N_("Analog Radio") },
+-        { "analog-input-video",         N_("Analog Video") },
++        { "analog-input-linein",        N_("Line In") },
++        { "analog-input-radio",         N_("Radio") },
++        { "analog-input-video",         N_("Video") },
+         { "analog-output",              N_("Analog Output") },
+-        { "analog-output-headphones",   N_("Analog Headphones") },
+-        { "analog-output-lfe-on-mono",  N_("Analog Output (LFE)") },
++        { "analog-output-headphones",   N_("Headphones") },
++        { "analog-output-lfe-on-mono",  N_("LFE on Mono") },
++        { "analog-output-lineout",      N_("Line Out") },
+         { "analog-output-mono",         N_("Analog Mono Output") },
+-        { "analog-output-speaker",      N_("Analog Speakers") },
+-        { "iec958-stereo-output",       N_("Digital Output (IEC958)") },
+-        { "iec958-passthrough-output",  N_("Digital Passthrough (IEC958)") }
++        { "analog-output-speaker",      N_("Speakers") },
++        { "hdmi-output",                N_("HDMI / DisplayPort") },
++        { "iec958-stereo-output",       N_("Digital Output (S/PDIF)") },
++        { "iec958-passthrough-output",  N_("Digital Passthrough (S/PDIF)") }
+     };
+ 
+     pa_alsa_element *e;
+@@ -3819,7 +3821,8 @@
+         { "iec958-passthrough",     N_("Digital Passthrough  (IEC958)") },
+         { "iec958-ac3-surround-40", N_("Digital Surround 4.0 (IEC958/AC3)") },
+         { "iec958-ac3-surround-51", N_("Digital Surround 5.1 (IEC958/AC3)") },
+-        { "hdmi-stereo",            N_("Digital Stereo (HDMI)") }
++        { "hdmi-stereo",            N_("Digital Stereo (HDMI)") },
++        { "hdmi-surround-51",       N_("Digital Surround 5.1 (HDMI)") }
+     };
+ 
+     pa_assert(m);
+Index: pulseaudio-1.1/src/pulsecore/sink.c
+===================================================================
+--- pulseaudio-1.1.orig/src/pulsecore/sink.c	2012-01-19 14:47:38.520456678 +0100
++++ pulseaudio-1.1/src/pulsecore/sink.c	2012-01-19 14:49:34.972454951 +0100
+@@ -3196,7 +3196,7 @@
+ 
+     if ((s = pa_proplist_gets(p, PA_PROP_DEVICE_FORM_FACTOR)))
+         if (pa_streq(s, "internal"))
+-            d = _("Internal Audio");
++            d = _("Built-in audio");
+ 
+     if (!d)
+         if ((s = pa_proplist_gets(p, PA_PROP_DEVICE_CLASS)))

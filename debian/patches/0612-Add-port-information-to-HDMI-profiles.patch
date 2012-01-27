@@ -1,22 +1,22 @@
-From 1ece570277f3db6f4c8c6c6f145de6b5d60809ef Mon Sep 17 00:00:00 2001
+From b50241814857f9fa349c4a0cb9d0a56b37c1d76c Mon Sep 17 00:00:00 2001
 From: David Henningsson <david.henningsson@canonical.com>
-Date: Mon, 5 Sep 2011 16:24:24 +0200
-Subject: [PATCH] HDMI: Add jack detection for HDMI, as well as probing all
- four PCM devices (Nvidia/Intel)
+Date: Tue, 10 Jan 2012 10:50:34 +0100
+Subject: [PATCH 1/4] Add port information to HDMI profiles
 
-The jack detection is depending on information from kernel, which is not yet upstream:
-http://kernel.ubuntu.com/git?p=ubuntu/ubuntu-oneiric.git;a=commit;h=fe2d089edfadd33bc9133f471fec39c4f8f7caf7
+For Nvidia and Intel, support probing of up to four HDMI devices.
+Also add port information to all HDMI profiles.
 
 Signed-off-by: David Henningsson <david.henningsson@canonical.com>
 ---
  src/Makefile.am                                    |    7 +-
- src/modules/alsa/mixer/paths/hdmi-output-0.conf    |    5 +
- src/modules/alsa/mixer/paths/hdmi-output-1.conf    |    5 +
- src/modules/alsa/mixer/paths/hdmi-output-2.conf    |    5 +
- src/modules/alsa/mixer/paths/hdmi-output-3.conf    |    5 +
+ src/modules/alsa/mixer/paths/hdmi-output-0.conf    |    6 +
+ src/modules/alsa/mixer/paths/hdmi-output-1.conf    |    6 +
+ src/modules/alsa/mixer/paths/hdmi-output-2.conf    |    6 +
+ src/modules/alsa/mixer/paths/hdmi-output-3.conf    |    6 +
  .../alsa/mixer/profile-sets/90-pulseaudio.rules    |    4 +
+ src/modules/alsa/mixer/profile-sets/default.conf   |    1 +
  .../alsa/mixer/profile-sets/extra-hdmi.conf        |  158 ++++++++++++++++++++
- 7 files changed, 188 insertions(+), 1 deletions(-)
+ 8 files changed, 193 insertions(+), 1 deletions(-)
  create mode 100644 src/modules/alsa/mixer/paths/hdmi-output-0.conf
  create mode 100644 src/modules/alsa/mixer/paths/hdmi-output-1.conf
  create mode 100644 src/modules/alsa/mixer/paths/hdmi-output-2.conf
@@ -24,10 +24,10 @@ Signed-off-by: David Henningsson <david.henningsson@canonical.com>
  create mode 100644 src/modules/alsa/mixer/profile-sets/extra-hdmi.conf
 
 diff --git a/src/Makefile.am b/src/Makefile.am
-index ce5ba5c..a9bd336 100644
+index 7e5506d..4260060 100644
 --- a/src/Makefile.am
 +++ b/src/Makefile.am
-@@ -1065,6 +1065,7 @@ modlibexec_LTLIBRARIES += \
+@@ -1069,6 +1069,7 @@ modlibexec_LTLIBRARIES += \
  
  dist_alsaprofilesets_DATA = \
  		modules/alsa/mixer/profile-sets/default.conf \
@@ -35,7 +35,7 @@ index ce5ba5c..a9bd336 100644
  		modules/alsa/mixer/profile-sets/maudio-fasttrack-pro.conf \
  		modules/alsa/mixer/profile-sets/native-instruments-audio4dj.conf \
  		modules/alsa/mixer/profile-sets/native-instruments-audio8dj.conf \
-@@ -1101,7 +1102,11 @@ dist_alsapaths_DATA = \
+@@ -1106,7 +1107,11 @@ dist_alsapaths_DATA = \
  		modules/alsa/mixer/paths/analog-output-headphones-2.conf \
  		modules/alsa/mixer/paths/analog-output-lfe-on-mono.conf \
  		modules/alsa/mixer/paths/analog-output-mono.conf \
@@ -50,64 +50,80 @@ index ce5ba5c..a9bd336 100644
  
 diff --git a/src/modules/alsa/mixer/paths/hdmi-output-0.conf b/src/modules/alsa/mixer/paths/hdmi-output-0.conf
 new file mode 100644
-index 0000000..a3b8340
+index 0000000..46ee4fd
 --- /dev/null
 +++ b/src/modules/alsa/mixer/paths/hdmi-output-0.conf
-@@ -0,0 +1,5 @@
+@@ -0,0 +1,6 @@
 +[General]
-+name = HDMI
-+[Jack_InputDevice]
-+name =,pcm=3
-+code = VideoOut
++description = HDMI / DisplayPort
++priority = 59
++
++[Jack HDMI/DP,pcm=3]
++required-any = any
 diff --git a/src/modules/alsa/mixer/paths/hdmi-output-1.conf b/src/modules/alsa/mixer/paths/hdmi-output-1.conf
 new file mode 100644
-index 0000000..7ddc71d
+index 0000000..da8fcb4
 --- /dev/null
 +++ b/src/modules/alsa/mixer/paths/hdmi-output-1.conf
-@@ -0,0 +1,5 @@
+@@ -0,0 +1,6 @@
 +[General]
-+name = HDMI 2
-+[Jack_InputDevice]
-+name =,pcm=7
-+code = VideoOut
++description = HDMI / DisplayPort 2
++priority = 58
++
++[Jack HDMI/DP,pcm=7]
++required-any = any
 diff --git a/src/modules/alsa/mixer/paths/hdmi-output-2.conf b/src/modules/alsa/mixer/paths/hdmi-output-2.conf
 new file mode 100644
-index 0000000..eee6129
+index 0000000..5fcddc6
 --- /dev/null
 +++ b/src/modules/alsa/mixer/paths/hdmi-output-2.conf
-@@ -0,0 +1,5 @@
+@@ -0,0 +1,6 @@
 +[General]
-+name = HDMI 3
-+[Jack_InputDevice]
-+name =,pcm=8
-+code = VideoOut
++description = HDMI / DisplayPort 3
++priority = 57
++
++[Jack HDMI/DP,pcm=8]
++required-any = any
 diff --git a/src/modules/alsa/mixer/paths/hdmi-output-3.conf b/src/modules/alsa/mixer/paths/hdmi-output-3.conf
 new file mode 100644
-index 0000000..eea8eac
+index 0000000..8200787
 --- /dev/null
 +++ b/src/modules/alsa/mixer/paths/hdmi-output-3.conf
-@@ -0,0 +1,5 @@
+@@ -0,0 +1,6 @@
 +[General]
-+name = HDMI 4
-+[Jack_InputDevice]
-+name =,pcm=9
-+code = VideoOut
++description = HDMI / DisplayPort 4
++priority = 56
++
++[Jack HDMI/DP,pcm=9]
++required-any = any
 diff --git a/src/modules/alsa/mixer/profile-sets/90-pulseaudio.rules b/src/modules/alsa/mixer/profile-sets/90-pulseaudio.rules
-index 0329340..c20f8eb 100644
+index 65864f7..45a146b 100644
 --- a/src/modules/alsa/mixer/profile-sets/90-pulseaudio.rules
 +++ b/src/modules/alsa/mixer/profile-sets/90-pulseaudio.rules
-@@ -28,4 +28,8 @@ SUBSYSTEMS=="usb", ATTRS{idVendor}=="17cc", ATTRS{idProduct}=="1011", ENV{PULSE_
- SUBSYSTEMS=="usb", ATTRS{idVendor}=="17cc", ATTRS{idProduct}=="1021", ENV{PULSE_PROFILE_SET}="native-instruments-traktor-audio10.conf"
+@@ -29,4 +29,8 @@ SUBSYSTEMS=="usb", ATTRS{idVendor}=="17cc", ATTRS{idProduct}=="1021", ENV{PULSE_
  SUBSYSTEMS=="usb", ATTRS{idVendor}=="0763", ATTRS{idProduct}=="2012", ENV{PULSE_PROFILE_SET}="maudio-fasttrack-pro.conf"
+ SUBSYSTEMS=="usb", ATTRS{idVendor}=="045e", ATTRS{idProduct}=="02bb", ENV{PULSE_PROFILE_SET}="kinect-audio.conf"
  
 +# NVidia and Intel often have more than one HDMI codec/port on the same card, and we gotta catch 'em all!
 +ATTRS{vendor}=="0x10de", ENV{PULSE_PROFILE_SET}="extra-hdmi.conf"
 +ATTRS{vendor}=="0x8086", ENV{PULSE_PROFILE_SET}="extra-hdmi.conf"
 +
  LABEL="pulseaudio_end"
+diff --git a/src/modules/alsa/mixer/profile-sets/default.conf b/src/modules/alsa/mixer/profile-sets/default.conf
+index 283edfb..b7c91e8 100644
+--- a/src/modules/alsa/mixer/profile-sets/default.conf
++++ b/src/modules/alsa/mixer/profile-sets/default.conf
+@@ -172,6 +172,7 @@ device-strings = hdmi:%f
+ channel-map = left,right
+ priority = 4
+ direction = output
++paths-output = hdmi-output-0
+ 
+ ; An example for defining multiple-sink profiles
+ #[Profile output:analog-stereo+output:iec958-stereo+input:analog-stereo]
 diff --git a/src/modules/alsa/mixer/profile-sets/extra-hdmi.conf b/src/modules/alsa/mixer/profile-sets/extra-hdmi.conf
 new file mode 100644
-index 0000000..12d707e
+index 0000000..d0bff6a
 --- /dev/null
 +++ b/src/modules/alsa/mixer/profile-sets/extra-hdmi.conf
 @@ -0,0 +1,158 @@
@@ -223,7 +239,7 @@ index 0000000..12d707e
 +direction = output
 +
 +[Mapping hdmi-stereo-extra1]
-+description = Digital Stereo (HDMI) nr 2
++description = Digital Stereo (HDMI)
 +device-strings = hdmi:%f,1
 +paths-output = hdmi-output-1
 +channel-map = left,right
@@ -231,7 +247,7 @@ index 0000000..12d707e
 +direction = output
 +
 +[Mapping hdmi-surround-extra1]
-+description = Digital Surround 5.1 (HDMI) nr 2
++description = Digital Surround 5.1 (HDMI)
 +device-strings = hdmi:%f,1
 +paths-output = hdmi-output-1
 +channel-map = front-left,front-right,rear-left,rear-right,front-center,lfe
@@ -239,7 +255,7 @@ index 0000000..12d707e
 +direction = output
 +
 +[Mapping hdmi-stereo-extra2]
-+description = Digital Stereo (HDMI) nr 3
++description = Digital Stereo (HDMI)
 +device-strings = hdmi:%f,2
 +paths-output = hdmi-output-2
 +channel-map = left,right
@@ -247,7 +263,7 @@ index 0000000..12d707e
 +direction = output
 +
 +[Mapping hdmi-surround-extra2]
-+description = Digital Surround 5.1 (HDMI) nr 3
++description = Digital Surround 5.1 (HDMI)
 +device-strings = hdmi:%f,2
 +paths-output = hdmi-output-2
 +channel-map = front-left,front-right,rear-left,rear-right,front-center,lfe
@@ -255,7 +271,7 @@ index 0000000..12d707e
 +direction = output
 +
 +[Mapping hdmi-stereo-extra3]
-+description = Digital Stereo (HDMI) nr 4
++description = Digital Stereo (HDMI)
 +device-strings = hdmi:%f,3
 +paths-output = hdmi-output-3
 +channel-map = left,right
@@ -263,12 +279,12 @@ index 0000000..12d707e
 +direction = output
 +
 +[Mapping hdmi-surround-extra3]
-+description = Digital Surround 5.1 (HDMI) nr 4
++description = Digital Surround 5.1 (HDMI)
 +device-strings = hdmi:%f,3
 +paths-output = hdmi-output-3
 +channel-map = front-left,front-right,rear-left,rear-right,front-center,lfe
 +priority = 1
 +direction = output
 -- 
-1.7.5.4
+1.7.8.3
 

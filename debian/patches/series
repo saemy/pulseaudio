@@ -10,20 +10,28 @@
 0016-nodisplay-autostart.patch
 0017-Hack-around-a-bug-in-the-core-causing-volumes-not-to.patch
 
-# Jack detection patches
+# Taken from upstream git
+0101-alsa-Ignore-the-virtual-thinkpad-acpi-card.patch
+0102-alsa-mixer-When-selecting-an-input-turn-off-boosts-o.patch
+
+# Jack detection patches (upstreamed)
+0600-ship-PROTOCOL-file.patch
 0601-Introduce-available-concept-for-ports-and-communicat.patch
 0602-Turn-device-ports-into-reference-counted-objects.patch
-0603-Cards-now-has-ports-directly.patch
-0604-Fire-a-hook-when-port-available-status-is-changed.patch
+0603-Cards-now-has-ports-directly-and-device-port-has-lis.patch
+0604-Notify-port-available-status-changes-and-update-prot.patch
 0605-cli-Show-card-ports-and-jack-detection-status.patch
-0606-Make-ports-point-to-profiles-and-make-alsa-profile-s.patch
-0607-Add-possibility-to-configure-connection-to-jack-inpu.patch
-0608-alsa-jack-input-device-implementation.patch
-0609-Jack-detection-Make-alsa-path-set-have-paths-in-a-ha.patch
-0610-Make-sure-sink-source-allocates-ports-from-the-same-.patch
-0611-Add-is_input-and-is_output-to-device_port-to-simplif.patch
-0612-Add-a-new-module-switch-on-port-available-that-acts-.patch
-0613-Load-switch-on-port-available-module-by-default.patch
-0614-HDMI-Add-jack-detection-for-HDMI-as-well-as-probing-.patch
-0615-lp845468.patch
-0616-lp852902.patch
+0606-alsa-add-card-ports-and-path-probe-cache.patch
+0607-Fixup-a-few-things-in-the-new-path-probing.patch
+0608-pactl-Show-port-availability.patch
+0609-device-port-Add-a-property-list-to-ports.patch
+
+# Jack detection patches (not yet upstream)
+0610-Jack-detection-kcontrol-implementation.patch
+0611-Expose-port-info-per-card-to-clients.-Update-protoco.patch
+0612-Add-port-information-to-HDMI-profiles.patch
+0613-Add-a-new-module-switch-on-port-available-that-acts-.patch
+0614-Load-switch-on-port-available-module-by-default.patch
+0615-alsa-mixer-Make-sure-unsupported-paths-are-removed-a.patch 
+
+better-well-known-descriptions.patch

@@ -1,3 +1,19 @@
+pulseaudio (1:1.1-0ubuntu5) precise; urgency=low
+ 
+  * Redo jack detection patches, so that they use the new jack detection
+    interface and the upstream code whenever possible.
+  * New patch better-well-known-descriptions.patch:
+    - Simplify port names. This patch is to be committed upstream shortly
+  * New patches from upstream git:
+    - 0101-alsa-Ignore-the-virtual-thinkpad-acpi-card.patch:
+      Ignore the dummy thinkpad-acpi soundcard (as it cannot playback or
+      record sound anyway)
+    - 0102-alsa-mixer-When-selecting-an-input-turn-off-boosts-o.patch:
+      alsa-mixer: When selecting an input, turn off boosts of
+      other inputs
+
+ -- David Henningsson <david.henningsson@canonical.com>  Fri, 27 Jan 2012 13:56:46 +0100
+
 pulseaudio (1:1.1-0ubuntu4) precise; urgency=low
 
   [ Daniel T Chen ]
