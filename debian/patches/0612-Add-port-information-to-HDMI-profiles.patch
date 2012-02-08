@@ -1,7 +1,7 @@
-From b50241814857f9fa349c4a0cb9d0a56b37c1d76c Mon Sep 17 00:00:00 2001
+From 34de70fd21296d455ccb77daceca039afc2a20bd Mon Sep 17 00:00:00 2001
 From: David Henningsson <david.henningsson@canonical.com>
 Date: Tue, 10 Jan 2012 10:50:34 +0100
-Subject: [PATCH 1/4] Add port information to HDMI profiles
+Subject: [PATCH 2/7] Add port information to HDMI profiles
 
 For Nvidia and Intel, support probing of up to four HDMI devices.
 Also add port information to all HDMI profiles.
@@ -13,21 +13,21 @@ Signed-off-by: David Henningsson <david.henningsson@canonical.com>
  src/modules/alsa/mixer/paths/hdmi-output-1.conf    |    6 +
  src/modules/alsa/mixer/paths/hdmi-output-2.conf    |    6 +
  src/modules/alsa/mixer/paths/hdmi-output-3.conf    |    6 +
- .../alsa/mixer/profile-sets/90-pulseaudio.rules    |    4 +
+ .../alsa/mixer/profile-sets/90-pulseaudio.rules    |   22 ++-
  src/modules/alsa/mixer/profile-sets/default.conf   |    1 +
  .../alsa/mixer/profile-sets/extra-hdmi.conf        |  158 ++++++++++++++++++++
- 8 files changed, 193 insertions(+), 1 deletions(-)
+ 8 files changed, 203 insertions(+), 9 deletions(-)
  create mode 100644 src/modules/alsa/mixer/paths/hdmi-output-0.conf
  create mode 100644 src/modules/alsa/mixer/paths/hdmi-output-1.conf
  create mode 100644 src/modules/alsa/mixer/paths/hdmi-output-2.conf
  create mode 100644 src/modules/alsa/mixer/paths/hdmi-output-3.conf
  create mode 100644 src/modules/alsa/mixer/profile-sets/extra-hdmi.conf
 
-diff --git a/src/Makefile.am b/src/Makefile.am
-index 7e5506d..4260060 100644
---- a/src/Makefile.am
-+++ b/src/Makefile.am
-@@ -1069,6 +1069,7 @@ modlibexec_LTLIBRARIES += \
+Index: pulseaudio-1.1/src/Makefile.am
+===================================================================
+--- pulseaudio-1.1.orig/src/Makefile.am	2012-02-07 09:12:03.000000000 +0100
++++ pulseaudio-1.1/src/Makefile.am	2012-02-07 09:13:48.732136646 +0100
+@@ -1069,6 +1069,7 @@
  
  dist_alsaprofilesets_DATA = \
  		modules/alsa/mixer/profile-sets/default.conf \
@@ -35,7 +35,7 @@ index 7e5506d..4260060 100644
  		modules/alsa/mixer/profile-sets/maudio-fasttrack-pro.conf \
  		modules/alsa/mixer/profile-sets/native-instruments-audio4dj.conf \
  		modules/alsa/mixer/profile-sets/native-instruments-audio8dj.conf \
-@@ -1106,7 +1107,11 @@ dist_alsapaths_DATA = \
+@@ -1106,7 +1107,11 @@
  		modules/alsa/mixer/paths/analog-output-headphones-2.conf \
  		modules/alsa/mixer/paths/analog-output-lfe-on-mono.conf \
  		modules/alsa/mixer/paths/analog-output-mono.conf \
@@ -48,11 +48,10 @@ index 7e5506d..4260060 100644
  
  endif
  
-diff --git a/src/modules/alsa/mixer/paths/hdmi-output-0.conf b/src/modules/alsa/mixer/paths/hdmi-output-0.conf
-new file mode 100644
-index 0000000..46ee4fd
---- /dev/null
-+++ b/src/modules/alsa/mixer/paths/hdmi-output-0.conf
+Index: pulseaudio-1.1/src/modules/alsa/mixer/paths/hdmi-output-0.conf
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ pulseaudio-1.1/src/modules/alsa/mixer/paths/hdmi-output-0.conf	2012-02-07 09:13:48.732136646 +0100
 @@ -0,0 +1,6 @@
 +[General]
 +description = HDMI / DisplayPort
@@ -60,11 +59,10 @@ index 0000000..46ee4fd
 +
 +[Jack HDMI/DP,pcm=3]
 +required-any = any
-diff --git a/src/modules/alsa/mixer/paths/hdmi-output-1.conf b/src/modules/alsa/mixer/paths/hdmi-output-1.conf
-new file mode 100644
-index 0000000..da8fcb4
---- /dev/null
-+++ b/src/modules/alsa/mixer/paths/hdmi-output-1.conf
+Index: pulseaudio-1.1/src/modules/alsa/mixer/paths/hdmi-output-1.conf
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ pulseaudio-1.1/src/modules/alsa/mixer/paths/hdmi-output-1.conf	2012-02-07 09:13:48.732136646 +0100
 @@ -0,0 +1,6 @@
 +[General]
 +description = HDMI / DisplayPort 2
@@ -72,11 +70,10 @@ index 0000000..da8fcb4
 +
 +[Jack HDMI/DP,pcm=7]
 +required-any = any
-diff --git a/src/modules/alsa/mixer/paths/hdmi-output-2.conf b/src/modules/alsa/mixer/paths/hdmi-output-2.conf
-new file mode 100644
-index 0000000..5fcddc6
---- /dev/null
-+++ b/src/modules/alsa/mixer/paths/hdmi-output-2.conf
+Index: pulseaudio-1.1/src/modules/alsa/mixer/paths/hdmi-output-2.conf
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ pulseaudio-1.1/src/modules/alsa/mixer/paths/hdmi-output-2.conf	2012-02-07 09:13:48.732136646 +0100
 @@ -0,0 +1,6 @@
 +[General]
 +description = HDMI / DisplayPort 3
@@ -84,11 +81,10 @@ index 0000000..5fcddc6
 +
 +[Jack HDMI/DP,pcm=8]
 +required-any = any
-diff --git a/src/modules/alsa/mixer/paths/hdmi-output-3.conf b/src/modules/alsa/mixer/paths/hdmi-output-3.conf
-new file mode 100644
-index 0000000..8200787
---- /dev/null
-+++ b/src/modules/alsa/mixer/paths/hdmi-output-3.conf
+Index: pulseaudio-1.1/src/modules/alsa/mixer/paths/hdmi-output-3.conf
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ pulseaudio-1.1/src/modules/alsa/mixer/paths/hdmi-output-3.conf	2012-02-07 09:13:48.732136646 +0100
 @@ -0,0 +1,6 @@
 +[General]
 +description = HDMI / DisplayPort 4
@@ -96,24 +92,46 @@ index 0000000..8200787
 +
 +[Jack HDMI/DP,pcm=9]
 +required-any = any
-diff --git a/src/modules/alsa/mixer/profile-sets/90-pulseaudio.rules b/src/modules/alsa/mixer/profile-sets/90-pulseaudio.rules
-index 65864f7..45a146b 100644
---- a/src/modules/alsa/mixer/profile-sets/90-pulseaudio.rules
-+++ b/src/modules/alsa/mixer/profile-sets/90-pulseaudio.rules
-@@ -29,4 +29,8 @@ SUBSYSTEMS=="usb", ATTRS{idVendor}=="17cc", ATTRS{idProduct}=="1021", ENV{PULSE_
- SUBSYSTEMS=="usb", ATTRS{idVendor}=="0763", ATTRS{idProduct}=="2012", ENV{PULSE_PROFILE_SET}="maudio-fasttrack-pro.conf"
- SUBSYSTEMS=="usb", ATTRS{idVendor}=="045e", ATTRS{idProduct}=="02bb", ENV{PULSE_PROFILE_SET}="kinect-audio.conf"
- 
-+# NVidia and Intel often have more than one HDMI codec/port on the same card, and we gotta catch 'em all!
+Index: pulseaudio-1.1/src/modules/alsa/mixer/profile-sets/90-pulseaudio.rules
+===================================================================
+--- pulseaudio-1.1.orig/src/modules/alsa/mixer/profile-sets/90-pulseaudio.rules	2012-02-07 09:12:03.000000000 +0100
++++ pulseaudio-1.1/src/modules/alsa/mixer/profile-sets/90-pulseaudio.rules	2012-02-07 09:16:16.676128830 +0100
+@@ -19,15 +19,22 @@
+ SUBSYSTEM!="sound", GOTO="pulseaudio_end"
+ ACTION!="change", GOTO="pulseaudio_end"
+ KERNEL!="card*", GOTO="pulseaudio_end"
++SUBSYSTEMS=="usb", GOTO="pulseaudio_check_usb"
++
++# NVidia and Intel HDAs often have more than one HDMI codec/port on the same card
 +ATTRS{vendor}=="0x10de", ENV{PULSE_PROFILE_SET}="extra-hdmi.conf"
 +ATTRS{vendor}=="0x8086", ENV{PULSE_PROFILE_SET}="extra-hdmi.conf"
+ 
+ SUBSYSTEMS=="platform", DRIVERS=="thinkpad_acpi", ENV{PULSE_IGNORE}="1"
+-SUBSYSTEMS=="usb", ATTRS{idVendor}=="17cc", ATTRS{idProduct}=="1978", ENV{PULSE_PROFILE_SET}="native-instruments-audio8dj.conf"
+-SUBSYSTEMS=="usb", ATTRS{idVendor}=="17cc", ATTRS{idProduct}=="0839", ENV{PULSE_PROFILE_SET}="native-instruments-audio4dj.conf"
+-SUBSYSTEMS=="usb", ATTRS{idVendor}=="17cc", ATTRS{idProduct}=="baff", ENV{PULSE_PROFILE_SET}="native-instruments-traktorkontrol-s4.conf"
+-SUBSYSTEMS=="usb", ATTRS{idVendor}=="17cc", ATTRS{idProduct}=="4711", ENV{PULSE_PROFILE_SET}="native-instruments-korecontroller.conf"
+-SUBSYSTEMS=="usb", ATTRS{idVendor}=="17cc", ATTRS{idProduct}=="1011", ENV{PULSE_PROFILE_SET}="native-instruments-traktor-audio6.conf"
+-SUBSYSTEMS=="usb", ATTRS{idVendor}=="17cc", ATTRS{idProduct}=="1021", ENV{PULSE_PROFILE_SET}="native-instruments-traktor-audio10.conf"
+-SUBSYSTEMS=="usb", ATTRS{idVendor}=="0763", ATTRS{idProduct}=="2012", ENV{PULSE_PROFILE_SET}="maudio-fasttrack-pro.conf"
+-SUBSYSTEMS=="usb", ATTRS{idVendor}=="045e", ATTRS{idProduct}=="02bb", ENV{PULSE_PROFILE_SET}="kinect-audio.conf"
 +
++LABEL="pulseaudio_check_usb"
++ATTRS{idVendor}=="17cc", ATTRS{idProduct}=="1978", ENV{PULSE_PROFILE_SET}="native-instruments-audio8dj.conf"
++ATTRS{idVendor}=="17cc", ATTRS{idProduct}=="0839", ENV{PULSE_PROFILE_SET}="native-instruments-audio4dj.conf"
++ATTRS{idVendor}=="17cc", ATTRS{idProduct}=="baff", ENV{PULSE_PROFILE_SET}="native-instruments-traktorkontrol-s4.conf"
++ATTRS{idVendor}=="17cc", ATTRS{idProduct}=="4711", ENV{PULSE_PROFILE_SET}="native-instruments-korecontroller.conf"
++ATTRS{idVendor}=="17cc", ATTRS{idProduct}=="1011", ENV{PULSE_PROFILE_SET}="native-instruments-traktor-audio6.conf"
++ATTRS{idVendor}=="17cc", ATTRS{idProduct}=="1021", ENV{PULSE_PROFILE_SET}="native-instruments-traktor-audio10.conf"
++ATTRS{idVendor}=="0763", ATTRS{idProduct}=="2012", ENV{PULSE_PROFILE_SET}="maudio-fasttrack-pro.conf"
++ATTRS{idVendor}=="045e", ATTRS{idProduct}=="02bb", ENV{PULSE_PROFILE_SET}="kinect-audio.conf"
+ 
  LABEL="pulseaudio_end"
-diff --git a/src/modules/alsa/mixer/profile-sets/default.conf b/src/modules/alsa/mixer/profile-sets/default.conf
-index 283edfb..b7c91e8 100644
---- a/src/modules/alsa/mixer/profile-sets/default.conf
-+++ b/src/modules/alsa/mixer/profile-sets/default.conf
-@@ -172,6 +172,7 @@ device-strings = hdmi:%f
+Index: pulseaudio-1.1/src/modules/alsa/mixer/profile-sets/default.conf
+===================================================================
+--- pulseaudio-1.1.orig/src/modules/alsa/mixer/profile-sets/default.conf	2011-10-20 14:54:16.000000000 +0200
++++ pulseaudio-1.1/src/modules/alsa/mixer/profile-sets/default.conf	2012-02-07 09:13:48.732136646 +0100
+@@ -172,6 +172,7 @@
  channel-map = left,right
  priority = 4
  direction = output
@@ -121,11 +139,10 @@ index 283edfb..b7c91e8 100644
  
  ; An example for defining multiple-sink profiles
  #[Profile output:analog-stereo+output:iec958-stereo+input:analog-stereo]
-diff --git a/src/modules/alsa/mixer/profile-sets/extra-hdmi.conf b/src/modules/alsa/mixer/profile-sets/extra-hdmi.conf
-new file mode 100644
-index 0000000..d0bff6a
---- /dev/null
-+++ b/src/modules/alsa/mixer/profile-sets/extra-hdmi.conf
+Index: pulseaudio-1.1/src/modules/alsa/mixer/profile-sets/extra-hdmi.conf
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ pulseaudio-1.1/src/modules/alsa/mixer/profile-sets/extra-hdmi.conf	2012-02-07 09:13:48.736136647 +0100
 @@ -0,0 +1,158 @@
 +# This file is part of PulseAudio.
 +#
@@ -285,6 +302,3 @@ index 0000000..d0bff6a
 +channel-map = front-left,front-right,rear-left,rear-right,front-center,lfe
 +priority = 1
 +direction = output
--- 
-1.7.8.3
-

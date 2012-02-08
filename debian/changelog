@@ -1,3 +1,32 @@
+pulseaudio (1:1.1-0ubuntu6) precise; urgency=low
+
+  [ David Henningsson ]
+  * 0103-alsa-mixer-Allow-speaker-port-to-control-Front-Speak.patch:
+    - Control "Front Speaker" and a few more. From upstream git. (LP: #551441)
+  * 0105-loopback-Fix-crashes.patch:
+    - Fix some crashes on shutting down the loopback module, from upstream git.
+  * 0104-alsa-Improve-well-known-descriptions-for-ports.patch:
+    - Replace with upstream version.
+  * 0018-module-tunnel-source-fixup-create_record_stream.patch:
+    - Fix protocol error in module-tunnel-source (LP: #923661)
+  * Fixup HDMI patch to make sure it does not affect M-audio fasttrack Pro
+    (LP: #926911)
+  * Add two more jack detection patches to make it work better with the 
+    upcoming UI changes
+
+  [ Martin-Éric Racine ]
+  * Use --disallow-exit when running in system mode, as recommended
+    by PulseAudio log file (LP: #922848)  
+
+  [ Luke Yelavich ]
+  * Move the main pulse ALSA configuration file, pulse.conf to
+    /usr/share/alsa/conf.d, available in ALSA 1.0.25.
+  * Disable the dbus-protocol by default, as there have been recent reports
+    of crashes and race conditions, and upstream no longer finds the code
+    trustworthy.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Wed, 08 Feb 2012 15:58:41 +1100
+
 pulseaudio (1:1.1-0ubuntu5) precise; urgency=low
  
   * Redo jack detection patches, so that they use the new jack detection

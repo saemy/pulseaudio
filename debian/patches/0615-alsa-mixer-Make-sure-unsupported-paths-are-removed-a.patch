@@ -1,19 +1,20 @@
-From c8cca4b02d7db7cf48c4606427440a222a221b78 Mon Sep 17 00:00:00 2001
+From 43a705ae1894267258318404c497e5cbcea9fe78 Mon Sep 17 00:00:00 2001
 From: David Henningsson <david.henningsson@canonical.com>
-Date: Thu, 19 Jan 2012 09:54:00 +0100
-Subject: [PATCH 4/4] alsa-mixer: Make sure unsupported paths are removed
+Date: Thu, 19 Jan 2012 10:30:31 +0100
+Subject: [PATCH 8/8] alsa-mixer: Make sure unsupported paths are removed
  after probing
 
+Signed-off-by: David Henningsson <david.henningsson@canonical.com>
 ---
  src/modules/alsa/alsa-mixer.c |   20 ++++++++++++++++++++
  1 files changed, 20 insertions(+), 0 deletions(-)
 
 diff --git a/src/modules/alsa/alsa-mixer.c b/src/modules/alsa/alsa-mixer.c
-index 3673ca7..a49cb05 100644
+index 703aaf8..2aa708d 100644
 --- a/src/modules/alsa/alsa-mixer.c
 +++ b/src/modules/alsa/alsa-mixer.c
-@@ -4202,6 +4202,23 @@ fail:
-     return NULL;
+@@ -4224,6 +4224,23 @@ static snd_pcm_t* mapping_open_pcm(pa_alsa_mapping *m,
+                               &try_buffer_size, 0, NULL, NULL, TRUE);
  }
  
 +static void paths_drop_unsupported(pa_hashmap* h) {
@@ -36,7 +37,7 @@ index 3673ca7..a49cb05 100644
  void pa_alsa_profile_set_probe(
          pa_alsa_profile_set *ps,
          const char *dev_id,
-@@ -4383,6 +4400,9 @@ probe_paths:
+@@ -4319,6 +4336,9 @@ void pa_alsa_profile_set_probe(
              mapping_free(m);
          }
  
