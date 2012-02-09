@@ -1,3 +1,10 @@
+pulseaudio (1:1.1-0ubuntu7) precise; urgency=low
+
+  * Move the pulse.conf ALSA config file to the correct location, alsa.conf.d
+    not conf.d, thanks to Pete Graner for teh heads up.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Thu, 09 Feb 2012 08:22:04 +1100
+
 pulseaudio (1:1.1-0ubuntu6) precise; urgency=low
 
   [ David Henningsson ]

@@ -19,8 +19,8 @@ common-install-arch::
 	find $(DEB_DESTDIR) -name "*.la" -delete
 	mkdir -p $(CURDIR)/debian/tmp/usr/share/lintian
 	cp -a $(CURDIR)/debian/overrides $(CURDIR)/debian/tmp/usr/share/lintian
-	mkdir -p $(CURDIR)/debian/tmp/usr/share/alsa/conf.d
-	cp -a $(CURDIR)/debian/pulse.conf $(CURDIR)/debian/tmp/usr/share/alsa/conf.d
+	mkdir -p $(CURDIR)/debian/tmp/usr/share/alsa/alsa.conf.d
+	cp -a $(CURDIR)/debian/pulse.conf $(CURDIR)/debian/tmp/usr/share/alsa/alsa.conf.d
 	cp -a $(CURDIR)/debian/pulse-alsa.conf $(CURDIR)/debian/tmp/usr/share/alsa
 	install -D -m755 $(CURDIR)/debian/01PulseAudio $(CURDIR)/debian/tmp/usr/lib/pm-utils/sleep.d/01PulseAudio
 	install -d $(CURDIR)/debian/tmp/usr/share/apport/package-hooks
