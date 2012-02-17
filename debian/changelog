@@ -1,3 +1,11 @@
+pulseaudio (1:1.1-0ubuntu9) precise; urgency=low
+
+  * debian/pulseaudio.init: Don't tell the user pulseaudio daemon isn't
+    starting when in per-user mode.  This is the most common case in Ubuntu
+    and causing needless distracting text on the screen. (LP: #656426)
+
+ -- Mario Limonciello <Mario_Limonciello@Dell.com>  Fri, 17 Feb 2012 16:32:52 -0600
+
 pulseaudio (1:1.1-0ubuntu8) precise; urgency=low
 
   [ David Henningsson ]
