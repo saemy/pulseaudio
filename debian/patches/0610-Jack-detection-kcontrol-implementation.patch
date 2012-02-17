@@ -1,7 +1,7 @@
-From 7872359c8ad11d02bd94ecd84a71a8c8b26017e7 Mon Sep 17 00:00:00 2001
+From 905a8f405cd86e2ddd39e1ec827373048e4fa3ed Mon Sep 17 00:00:00 2001
 From: David Henningsson <david.henningsson@canonical.com>
 Date: Tue, 15 Nov 2011 15:04:46 +0100
-Subject: [PATCH 1/6] Jack detection kcontrol implementation
+Subject: [PATCH 1/9] Jack detection kcontrol implementation
 
 Allows to bind a path to one or more jacks as exposed as kernel
 controls. The name of the section should match the alsa jack name,
@@ -20,9 +20,9 @@ Signed-off-by: David Henningsson <david.henningsson@canonical.com>
  .../alsa/mixer/paths/analog-input-linein.conf      |    3 +
  src/modules/alsa/mixer/paths/analog-input-mic.conf |    3 +
  .../alsa/mixer/paths/analog-input-rear-mic.conf    |    3 +
- .../alsa/mixer/paths/analog-output-headphones.conf |    3 +
+ .../alsa/mixer/paths/analog-output-headphones.conf |    5 +-
  src/modules/alsa/module-alsa-card.c                |  101 ++++++++-
- 13 files changed, 435 insertions(+), 97 deletions(-)
+ 13 files changed, 436 insertions(+), 98 deletions(-)
 
 diff --git a/src/modules/alsa/alsa-mixer.c b/src/modules/alsa/alsa-mixer.c
 index eccf103..681a601 100644
@@ -830,7 +830,7 @@ index 4046106..1d9c473 100644
  required-any = any
  switch = select
 diff --git a/src/modules/alsa/mixer/paths/analog-output-headphones.conf b/src/modules/alsa/mixer/paths/analog-output-headphones.conf
-index 7f95f0a..dc73a87 100644
+index 7f95f0a..2860f28 100644
 --- a/src/modules/alsa/mixer/paths/analog-output-headphones.conf
 +++ b/src/modules/alsa/mixer/paths/analog-output-headphones.conf
 @@ -22,6 +22,9 @@
@@ -843,6 +843,15 @@ index 7f95f0a..dc73a87 100644
  [Element Hardware Master]
  switch = mute
  volume = merge
+@@ -39,7 +42,7 @@ switch = off
+ volume = off
+ 
+ [Element Headphone]
+-required = any
++required-any = any
+ switch = mute
+ volume = merge
+ override-map.1 = all
 diff --git a/src/modules/alsa/module-alsa-card.c b/src/modules/alsa/module-alsa-card.c
 index 6e3aeda..ff50e93 100644
 --- a/src/modules/alsa/module-alsa-card.c
@@ -1005,5 +1014,5 @@ index 6e3aeda..ff50e93 100644
          pa_sink *s;
  
 -- 
-1.7.8.3
+1.7.9
 

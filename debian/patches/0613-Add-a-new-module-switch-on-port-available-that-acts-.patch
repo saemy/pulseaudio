@@ -1,13 +1,13 @@
-From c03b5dc144cb491ccaf4596cc39d759006137b52 Mon Sep 17 00:00:00 2001
+From 1f4e7121bbc577f275faf008800da820e12b7004 Mon Sep 17 00:00:00 2001
 From: David Henningsson <david.henningsson@canonical.com>
 Date: Mon, 5 Sep 2011 14:20:48 +0200
-Subject: [PATCH 613/614] Add a new module switch-on-port-available that acts
- on port changes
+Subject: [PATCH 2/6] Add a new module switch-on-port-available that acts on
+ port changes
 
 ---
  src/Makefile.am                               |    6 +
- src/modules/module-switch-on-port-available.c |  199 +++++++++++++++++++++++++
- 2 files changed, 205 insertions(+), 0 deletions(-)
+ src/modules/module-switch-on-port-available.c |  217 +++++++++++++++++++++++++
+ 2 files changed, 223 insertions(+), 0 deletions(-)
  create mode 100644 src/modules/module-switch-on-port-available.c
 
 diff --git a/src/Makefile.am b/src/Makefile.am
@@ -43,10 +43,10 @@ index 4260060..9fa7ea8 100644
  module_filter_apply_la_LIBADD = $(MODULE_LIBADD)
 diff --git a/src/modules/module-switch-on-port-available.c b/src/modules/module-switch-on-port-available.c
 new file mode 100644
-index 0000000..5b4a518
+index 0000000..8ee3192
 --- /dev/null
 +++ b/src/modules/module-switch-on-port-available.c
-@@ -0,0 +1,199 @@
+@@ -0,0 +1,217 @@
 +/***
 +  This file is part of PulseAudio.
 +
@@ -221,6 +221,22 @@ index 0000000..5b4a518
 +    return PA_HOOK_OK;
 +}
 +
++static void handle_all_unavailable(pa_core *core) {
++    pa_card *card;
++    uint32_t state;
++
++    PA_IDXSET_FOREACH(card, core->cards, state) {
++        pa_device_port *port;
++        void *state2;
++        if (!card->ports)
++            continue;
++        PA_HASHMAP_FOREACH(port, card->ports, state2) {
++            if (port->available == PA_PORT_AVAILABLE_NO)
++                port_available_hook_callback(core, port, NULL);
++        }
++    }
++}
++
 +int pa__init(pa_module*m) {
 +    struct userdata *u;
 +
@@ -229,6 +245,8 @@ index 0000000..5b4a518
 +    m->userdata = u = pa_xnew(struct userdata, 1);
 +
 +    u->callback_slot = pa_hook_connect(&m->core->hooks[PA_CORE_HOOK_PORT_AVAILABLE_CHANGED], PA_HOOK_LATE, (pa_hook_cb_t) port_available_hook_callback, u);
++
++    handle_all_unavailable(m->core);
 +
 +    return 0;
 +}
@@ -247,5 +265,5 @@ index 0000000..5b4a518
 +    pa_xfree(u);
 +}
 -- 
-1.7.7.3
+1.7.9
 

@@ -11,6 +11,7 @@
 0017-Hack-around-a-bug-in-the-core-causing-volumes-not-to.patch
 0018-module-tunnel-source-fixup-create_record_stream.patch
 0019-disable-dbus-protocol.patch
+0020-Fix-Darth-Vader-panning-bug.patch
 
 # Taken from upstream git
 0101-alsa-Ignore-the-virtual-thinkpad-acpi-card.patch
@@ -40,3 +41,4 @@
 0614-Load-switch-on-port-available-module-by-default.patch
 0616-alsa-mixer-Make-speaker-get-available-no-when-headph.patch 
 0617-Handle-multiple-jacks-in-a-port.patch 
+0618-alsa-mixer-Don-t-use-dangling-pointers-as-port-hashm.patch

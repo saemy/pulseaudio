@@ -1,3 +1,19 @@
+pulseaudio (1:1.1-0ubuntu8) precise; urgency=low
+
+  [ David Henningsson ]
+  * Make sure we switch away from unavailable ports at 
+    startup (LP: #928914)
+  * 0020-Fix-Darth-Vader-panning-bug.patch: 
+    Fix distorted sound when panned hard left (or right). (LP: #928757)
+  * 0618-alsa-mixer-Don-t-use-dangling-pointers-as-port-hashm.patch:
+    Fix inability to set port when options were used (LP: #932804)
+  * Minimize margins for deferred volumes, as a workaround for volume 
+    changes being dropped on port change.
+  * 0610-Jack-detection-kcontrol-implementation.patch:
+    Fix a bug in the headphone path
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Fri, 17 Feb 2012 07:28:23 +1100
+
 pulseaudio (1:1.1-0ubuntu7) precise; urgency=low
 
   * Move the pulse.conf ALSA config file to the correct location, alsa.conf.d

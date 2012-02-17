@@ -82,6 +82,7 @@ debian/stamp-post-patches:
 	sed -i -e 's/; \(resample-method =\).*/\1 $(RESAMPLE_METHOD)/' \
 	       -e 's/; \(default-fragments =\).*/\1 $(DEFAULT_FRAGMENTS)/' \
 	       -e 's/; \(default-fragment-size-msec =\).*/\1 $(DEFAULT_FRAGMENT_SIZE_MSEC)/' \
+	       -e 's/; deferred-volume-safety-margin-usec = 8000/deferred-volume-safety-margin-usec = 1/' \
 	       -e 's/; flat-volumes = yes/flat-volumes = no/' \
 	       $(CURDIR)/src/daemon/daemon.conf.in
 	touch debian/stamp-post-patches
