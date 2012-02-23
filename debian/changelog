@@ -1,3 +1,10 @@
+pulseaudio (1:1.1-0ubuntu10) precise; urgency=low
+
+  * debian/pulse-alsa.conf: Update syntax, as this file was throwing
+    errors when apps used the alsa pulse plugin.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Thu, 23 Feb 2012 14:58:36 +1100
+
 pulseaudio (1:1.1-0ubuntu9) precise; urgency=low
 
   * debian/pulseaudio.init: Don't tell the user pulseaudio daemon isn't
