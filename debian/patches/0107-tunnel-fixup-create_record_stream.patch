@@ -1,7 +1,7 @@
-From 87fe9cfbbc3db7df9d33f64216642994fdd59719 Mon Sep 17 00:00:00 2001
+From 811235d14c511cea1884fb967a81cfb395afbf08 Mon Sep 17 00:00:00 2001
 From: David Henningsson <david.henningsson@canonical.com>
-Date: Mon, 30 Jan 2012 11:44:53 +0100
-Subject: [PATCH] module-tunnel-source: fixup create_record_stream
+Date: Mon, 30 Jan 2012 16:47:54 +0100
+Subject: [PATCH] tunnel: fixup create_record_stream
 
 The tunnel source has been broken since protocol v22 (PA 1.0),
 and connecting fails with a protocol error. Fix.
@@ -113,5 +113,5 @@ index a667e21..0916717 100644
  
      pa_pstream_send_tagstruct(u->pstream, reply);
 -- 
-1.7.8.3
+1.7.9
 

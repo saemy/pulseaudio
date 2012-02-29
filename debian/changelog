@@ -1,3 +1,11 @@
+pulseaudio (1:1.1-0ubuntu11) precise; urgency=low
+
+  * Cherry-pick a few crash-related patches from upstream git
+  * 0616-alsa-mixer-Make-speaker-get-available-no-when-headph.patch:
+    Don't remove paths if the state(un)plugged of the jack differs (LP: 933825)  
+
+ -- David Henningsson <david.henningsson@canonical.com>  Wed, 29 Feb 2012 11:03:32 +0100
+
 pulseaudio (1:1.1-0ubuntu10) precise; urgency=low
 
   * debian/pulse-alsa.conf: Update syntax, as this file was throwing

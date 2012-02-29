@@ -9,9 +9,7 @@
 0010-lp453966-handle-digmic-pt2.patch
 0016-nodisplay-autostart.patch
 0017-Hack-around-a-bug-in-the-core-causing-volumes-not-to.patch
-0018-module-tunnel-source-fixup-create_record_stream.patch
 0019-disable-dbus-protocol.patch
-0020-Fix-Darth-Vader-panning-bug.patch
 
 # Taken from upstream git
 0101-alsa-Ignore-the-virtual-thinkpad-acpi-card.patch
@@ -19,6 +17,10 @@
 0103-alsa-mixer-Allow-speaker-port-to-control-Front-Speak.patch
 0104-alsa-Improve-well-known-descriptions-for-ports.patch
 0105-loopback-Fix-crashes.patch
+0106-pulse-Fix-old-bug-in-stream_free.patch
+0107-tunnel-fixup-create_record_stream.patch
+0108-sample-util-Fix-Darth-Vader-panning-bug.patch
+0109-loopback-Fix-crash-when-moving-sink-input-fails.patch
 
 # Jack detection patches (upstreamed)
 0600-ship-PROTOCOL-file.patch
@@ -32,6 +34,7 @@
 0608-pactl-Show-port-availability.patch
 0609-device-port-Add-a-property-list-to-ports.patch
 0615-alsa-mixer-Make-sure-unsupported-paths-are-removed-a.patch 
+0618-alsa-mixer-Don-t-use-dangling-pointers-as-port-hashm.patch
 
 # Jack detection patches (not yet upstream)
 0610-Jack-detection-kcontrol-implementation.patch
@@ -41,4 +44,4 @@
 0614-Load-switch-on-port-available-module-by-default.patch
 0616-alsa-mixer-Make-speaker-get-available-no-when-headph.patch 
 0617-Handle-multiple-jacks-in-a-port.patch 
-0618-alsa-mixer-Don-t-use-dangling-pointers-as-port-hashm.patch
+

@@ -1,7 +1,7 @@
-From 8017f222db6ea1b017eae320f49d2286bd98a7fb Mon Sep 17 00:00:00 2001
+From 2ce7d38005a82c56cbc1ad2af70afabe9def9e0d Mon Sep 17 00:00:00 2001
 From: David Henningsson <david.henningsson@canonical.com>
-Date: Thu, 9 Feb 2012 15:50:30 +0100
-Subject: [PATCH] Fix "Darth Vader" panning bug
+Date: Thu, 9 Feb 2012 15:59:20 +0100
+Subject: [PATCH] sample-util: Fix "Darth Vader" panning bug
 
 For muted channels, we forgot to increment a pointer, so if one
 channel was muted but not the other, sound became distorted in a
