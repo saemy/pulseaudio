@@ -1,3 +1,15 @@
+pulseaudio (1:1.1-0ubuntu12) precise; urgency=low
+
+  [ Luke Yelavich ]
+  * debian/control: Demote pulseaudio-esound-compat to suggests (LP: #930703)
+
+  [ David Henningsson ]
+  * 0110-flist-Avoid-the-ABA-problem.patch:
+    Fix occasional crashes in pa_memblock_free, pa_memblock_ref and drop_block
+    (LP: #924416)
+
+ -- David Henningsson <david.henningsson@canonical.com>  Fri, 09 Mar 2012 00:08:42 +0100
+
 pulseaudio (1:1.1-0ubuntu11) precise; urgency=low
 
   * Cherry-pick a few crash-related patches from upstream git

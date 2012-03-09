@@ -21,6 +21,7 @@
 0107-tunnel-fixup-create_record_stream.patch
 0108-sample-util-Fix-Darth-Vader-panning-bug.patch
 0109-loopback-Fix-crash-when-moving-sink-input-fails.patch
+0110-flist-Avoid-the-ABA-problem.patch
 
 # Jack detection patches (upstreamed)
 0600-ship-PROTOCOL-file.patch
