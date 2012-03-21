@@ -1,3 +1,20 @@
+pulseaudio (1:1.1-0ubuntu13) precise; urgency=low
+
+  * 0020-daemon-Initialize-dbus-to-use-thread-safe-mode-by-de.patch:
+    Make sure dbus is thread safe to avoid crashes in pa_make_realtime 
+    (LP: #937933)
+  * 0111-protocol-native-Protect-against-clients-trying-to-se.patch:
+    Don't crash if clients try to set a NULL port (LP: #951273)
+  * 0021-Fix-input-device-for-M-audio-fasttrack-pro.patch:
+    Probe two different input devices (LP: #569932)
+  * 0112-module-loopback-Never-call-adjust_rates-after-teardo.patch:
+    Don't crash on shutdown in module-loopback (LP: #946400)
+  * 0619-module-switch-on-port-available-Do-not-switch-profil.patch:
+    Prevent switching to HDMI profiles from analog profiles, as a result
+    of discussion on the pulseaudio-discuss and ubuntu-audio-dev mailinglist.
+
+ -- David Henningsson <david.henningsson@canonical.com>  Wed, 21 Mar 2012 10:47:33 +0100
+
 pulseaudio (1:1.1-0ubuntu12) precise; urgency=low
 
   [ Luke Yelavich ]

@@ -10,6 +10,8 @@
 0016-nodisplay-autostart.patch
 0017-Hack-around-a-bug-in-the-core-causing-volumes-not-to.patch
 0019-disable-dbus-protocol.patch
+0020-daemon-Initialize-dbus-to-use-thread-safe-mode-by-de.patch
+0021-Fix-input-device-for-M-audio-fasttrack-pro.patch 
 
 # Taken from upstream git
 0101-alsa-Ignore-the-virtual-thinkpad-acpi-card.patch
@@ -22,6 +24,8 @@
 0108-sample-util-Fix-Darth-Vader-panning-bug.patch
 0109-loopback-Fix-crash-when-moving-sink-input-fails.patch
 0110-flist-Avoid-the-ABA-problem.patch
+0111-protocol-native-Protect-against-clients-trying-to-se.patch
+0112-module-loopback-Never-call-adjust_rates-after-teardo.patch
 
 # Jack detection patches (upstreamed)
 0600-ship-PROTOCOL-file.patch
@@ -36,8 +40,6 @@
 0609-device-port-Add-a-property-list-to-ports.patch
 0615-alsa-mixer-Make-sure-unsupported-paths-are-removed-a.patch 
 0618-alsa-mixer-Don-t-use-dangling-pointers-as-port-hashm.patch
-
-# Jack detection patches (not yet upstream)
 0610-Jack-detection-kcontrol-implementation.patch
 0611-Expose-port-info-per-card-to-clients.-Update-protoco.patch
 0612-Add-port-information-to-HDMI-profiles.patch
@@ -45,4 +47,5 @@
 0614-Load-switch-on-port-available-module-by-default.patch
 0616-alsa-mixer-Make-speaker-get-available-no-when-headph.patch 
 0617-Handle-multiple-jacks-in-a-port.patch 
+0619-module-switch-on-port-available-Do-not-switch-profil.patch
 

@@ -1,36 +1,42 @@
-From 1f4e7121bbc577f275faf008800da820e12b7004 Mon Sep 17 00:00:00 2001
+From d1ce4c0aea23af9d3007cb91e3a5c76ff67bc7cc Mon Sep 17 00:00:00 2001
 From: David Henningsson <david.henningsson@canonical.com>
-Date: Mon, 5 Sep 2011 14:20:48 +0200
-Subject: [PATCH 2/6] Add a new module switch-on-port-available that acts on
+Date: Thu, 23 Feb 2012 07:17:04 +0100
+Subject: [PATCH 01/17] Add a new module switch-on-port-available that acts on
  port changes
 
+This module tries to switch to a port when availability changes to
+"YES", and tries to switch away when availability changes to "NO".
+
+Once there is a priority list infrastructure in place and ready,
+this functionality might be redundant, but this will do as an
+interim solution.
 ---
  src/Makefile.am                               |    6 +
- src/modules/module-switch-on-port-available.c |  217 +++++++++++++++++++++++++
- 2 files changed, 223 insertions(+), 0 deletions(-)
+ src/modules/module-switch-on-port-available.c |  233 +++++++++++++++++++++++++
+ 2 files changed, 239 insertions(+), 0 deletions(-)
  create mode 100644 src/modules/module-switch-on-port-available.c
 
 diff --git a/src/Makefile.am b/src/Makefile.am
-index 4260060..9fa7ea8 100644
+index f232151..b07c60a 100644
 --- a/src/Makefile.am
 +++ b/src/Makefile.am
-@@ -1002,6 +1002,7 @@ modlibexec_LTLIBRARIES += \
- 		module-virtual-sink.la \
+@@ -1013,6 +1013,7 @@ modlibexec_LTLIBRARIES += \
  		module-virtual-source.la \
+ 		module-virtual-surround-sink.la \
  		module-switch-on-connect.la \
 +		module-switch-on-port-available.la \
  		module-filter-apply.la \
  		module-filter-heuristics.la
  
-@@ -1301,6 +1302,7 @@ SYMDEF_FILES = \
- 		module-virtual-sink-symdef.h \
+@@ -1319,6 +1320,7 @@ SYMDEF_FILES = \
  		module-virtual-source-symdef.h \
+ 		module-virtual-surround-sink-symdef.h \
  		module-switch-on-connect-symdef.h \
 +		module-switch-on-port-available-symdef.h \
  		module-filter-apply-symdef.h \
  		module-filter-heuristics-symdef.h
  
-@@ -1456,6 +1458,10 @@ module_switch_on_connect_la_SOURCES = modules/module-switch-on-connect.c
+@@ -1485,6 +1487,10 @@ module_switch_on_connect_la_SOURCES = modules/module-switch-on-connect.c
  module_switch_on_connect_la_LDFLAGS = $(MODULE_LDFLAGS)
  module_switch_on_connect_la_LIBADD = $(MODULE_LIBADD)
  
@@ -43,10 +49,10 @@ index 4260060..9fa7ea8 100644
  module_filter_apply_la_LIBADD = $(MODULE_LIBADD)
 diff --git a/src/modules/module-switch-on-port-available.c b/src/modules/module-switch-on-port-available.c
 new file mode 100644
-index 0000000..8ee3192
+index 0000000..9149b6d
 --- /dev/null
 +++ b/src/modules/module-switch-on-port-available.c
-@@ -0,0 +1,217 @@
+@@ -0,0 +1,233 @@
 +/***
 +  This file is part of PulseAudio.
 +
@@ -81,7 +87,7 @@ index 0000000..8ee3192
 +
 +struct userdata {
 +     pa_hook_slot *callback_slot;
-+ };
++};
 +
 +static pa_device_port* find_best_port(pa_hashmap *ports) {
 +    void *state;
@@ -94,6 +100,7 @@ index 0000000..8ee3192
 +            result = port;
 +        }
 +    }
++
 +    return result;
 +}
 +
@@ -102,23 +109,29 @@ index 0000000..8ee3192
 +    void *state;
 +
 +    pa_log_debug("Finding best profile");
++
 +    if (port->profiles)
 +        PA_HASHMAP_FOREACH(profile, port->profiles, state) {
 +            if (best_profile && best_profile->priority >= profile->priority)
 +                continue;
++
 +            /* We make a best effort to keep other direction unchanged */
 +            if (card->active_profile && !port->is_input) {
 +                if (card->active_profile->n_sources != profile->n_sources)
 +                    continue;
++
 +                if (card->active_profile->max_source_channels != profile->max_source_channels)
 +                    continue;
 +            }
++
 +            if (card->active_profile && !port->is_output) {
 +                if (card->active_profile->n_sinks != profile->n_sinks)
 +                    continue;
++
 +                if (card->active_profile->max_sink_channels != profile->max_sink_channels)
 +                    continue;
 +            }
++
 +            best_profile = profile;
 +        }
 +
@@ -126,10 +139,12 @@ index 0000000..8ee3192
 +        pa_log_debug("No suitable profile found");
 +        return FALSE;
 +    }
++
 +    if (pa_card_set_profile(card, best_profile->name, FALSE) != 0) {
 +        pa_log_debug("Could not set profile %s", best_profile->name);
 +        return FALSE;
 +    }
++
 +    return TRUE;
 +}
 +
@@ -161,6 +176,7 @@ index 0000000..8ee3192
 +    pa_bool_t is_active_profile, is_active_port;
 +
 +    pa_log_debug("finding port %s", port->name);
++
 +    PA_IDXSET_FOREACH(card, c->cards, state)
 +        if (card->ports && port == pa_hashmap_get(card->ports, port->name))
 +            break;
@@ -182,10 +198,13 @@ index 0000000..8ee3192
 +    if (port->available == PA_PORT_AVAILABLE_YES) {
 +        if (is_active_port)
 +            return PA_HOOK_OK;
++
 +        if (!is_active_profile) {
 +            if (!try_to_switch_profile(card, port))
 +                return PA_HOOK_OK;
++
 +            pa_assert(card->active_profile == pa_hashmap_get(port->profiles, card->active_profile->name));
++
 +            /* Now that profile has changed, our sink and source pointers must be updated */
 +            find_sink_and_source(card, port, &sink, &source);
 +        }
@@ -198,8 +217,8 @@ index 0000000..8ee3192
 +
 +    if (port->available == PA_PORT_AVAILABLE_NO) {
 +        if (sink) {
-+            pa_device_port *p2 = NULL;
-+            p2 = find_best_port(sink->ports);
++            pa_device_port *p2 = find_best_port(sink->ports);
++
 +            if (p2 && p2->available != PA_PORT_AVAILABLE_NO)
 +                pa_sink_set_port(sink, p2->name, FALSE);
 +            else {
@@ -208,8 +227,8 @@ index 0000000..8ee3192
 +        }
 +
 +        if (source) {
-+            pa_device_port *p2 = NULL;
-+            p2 = find_best_port(source->ports);
++            pa_device_port *p2 = find_best_port(source->ports);
++
 +            if (p2 && p2->available != PA_PORT_AVAILABLE_NO)
 +                pa_source_set_port(source, p2->name, FALSE);
 +            else {
@@ -228,8 +247,10 @@ index 0000000..8ee3192
 +    PA_IDXSET_FOREACH(card, core->cards, state) {
 +        pa_device_port *port;
 +        void *state2;
++
 +        if (!card->ports)
 +            continue;
++
 +        PA_HASHMAP_FOREACH(port, card->ports, state2) {
 +            if (port->available == PA_PORT_AVAILABLE_NO)
 +                port_available_hook_callback(core, port, NULL);
@@ -244,7 +265,8 @@ index 0000000..8ee3192
 +
 +    m->userdata = u = pa_xnew(struct userdata, 1);
 +
-+    u->callback_slot = pa_hook_connect(&m->core->hooks[PA_CORE_HOOK_PORT_AVAILABLE_CHANGED], PA_HOOK_LATE, (pa_hook_cb_t) port_available_hook_callback, u);
++    u->callback_slot = pa_hook_connect(&m->core->hooks[PA_CORE_HOOK_PORT_AVAILABLE_CHANGED],
++                                       PA_HOOK_LATE, (pa_hook_cb_t) port_available_hook_callback, u);
 +
 +    handle_all_unavailable(m->core);
 +
@@ -265,5 +287,5 @@ index 0000000..8ee3192
 +    pa_xfree(u);
 +}
 -- 
-1.7.9
+1.7.9.1
 
