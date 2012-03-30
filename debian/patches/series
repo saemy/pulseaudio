@@ -28,6 +28,11 @@
 0112-module-loopback-Never-call-adjust_rates-after-teardo.patch
 
 # Jack detection patches (upstreamed)
+0120-stream-Fix-sample-spec-initialisation-for-extended-A.patch
+0121-module-jack-sink-source-Set-fixed-latency-correctly-.patch
+0122-sink-input-source-output-Prevent-filter-sink-source-.patch
+0123-padsp-Fix-a-double-free-bug.patch
+0124-device-manager-Fix-a-memory-leak.patch
 0600-ship-PROTOCOL-file.patch
 0601-Introduce-available-concept-for-ports-and-communicat.patch
 0602-Turn-device-ports-into-reference-counted-objects.patch
@@ -49,3 +54,4 @@
 0617-Handle-multiple-jacks-in-a-port.patch 
 0619-module-switch-on-port-available-Do-not-switch-profil.patch
 
+0620-alsa-mixer-Show-HDMI-ports-for-older-Nvidia-cards.patch

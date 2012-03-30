@@ -1,3 +1,10 @@
+pulseaudio (1:1.1-0ubuntu14) precise; urgency=low
+
+  * 012*.patch: Cherry-pick bugfix patches from upstream git
+  * 0620-alsa-mixer-Show-HDMI-ports-for-older-Nvidia-cards.patch (LP: #961286)
+
+ -- David Henningsson <david.henningsson@canonical.com>  Fri, 30 Mar 2012 09:47:17 +0200
+
 pulseaudio (1:1.1-0ubuntu13) precise; urgency=low
 
   * 0020-daemon-Initialize-dbus-to-use-thread-safe-mode-by-de.patch:
