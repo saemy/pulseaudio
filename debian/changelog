@@ -1,3 +1,17 @@
+pulseaudio (1:1.1-0ubuntu15) precise; urgency=low
+
+  * 0125-alsa-sink-source-Really-set-volumes-on-port-change.patch:
+    Fix volume not being correctly set on port change. With this fixed
+    we can also drop
+    0017-Hack-around-a-bug-in-the-core-causing-volumes-not-to.patch.
+  * 0022-allow-analog-input-path-for-no-volume.patch:
+    Allow inputs with no volume controls to still have ports. The lack of
+    ports caused a problem for the new sound settings UI (LP: #978109)
+  * 0126-alsa-sink-source-Make-sure-volumes-are-synchronised-.patch:
+    Fix volumes not synchronised in guest session (LP: #915035)
+
+ -- David Henningsson <david.henningsson@canonical.com>  Thu, 12 Apr 2012 00:24:20 +0200
+
 pulseaudio (1:1.1-0ubuntu14) precise; urgency=low
 
   * 012*.patch: Cherry-pick bugfix patches from upstream git
