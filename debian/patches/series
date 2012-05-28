@@ -56,3 +56,4 @@
 0617-Handle-multiple-jacks-in-a-port.patch 
 0619-module-switch-on-port-available-Do-not-switch-profil.patch
 0620-alsa-mixer-Show-HDMI-ports-for-older-Nvidia-cards.patch
+0621-Add-special-profiles-for-some-laptops-missing-speake.patch

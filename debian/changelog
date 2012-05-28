@@ -1,3 +1,14 @@
+pulseaudio (1:1.1-0ubuntu16) quantal; urgency=low
+
+  [ Luke Yelavich ]
+  * debian/control: Update Vcs-Bzr field for quantal.
+
+  [ David Henningsson ]
+  * 0621-Add-special-profiles-for-some-laptops-missing-speake.patch:
+    Add missing speaker/internal mic ports for some laptops (LP #946232)
+
+ -- David Henningsson <david.henningsson@canonical.com>  Mon, 28 May 2012 11:14:08 +0200
+
 pulseaudio (1:1.1-0ubuntu15) precise; urgency=low
 
   * 0125-alsa-sink-source-Really-set-volumes-on-port-change.patch:
