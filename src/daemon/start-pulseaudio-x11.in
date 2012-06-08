@@ -19,11 +19,10 @@
 
 set -e
 
-@PA_BINARY@ --start "$@"
-
 if [ x"$DISPLAY" != x ] ; then
 
     @PACTL_BINARY@ load-module module-x11-publish "display=$DISPLAY" > /dev/null
+    @PACTL_BINARY@ load-module module-x11-bell "display=$DISPLAY" "sample=bell.ogg" > /dev/null
     @PACTL_BINARY@ load-module module-x11-cork-request "display=$DISPLAY" > /dev/null
 
     if [ x"$SESSION_MANAGER" != x ] ; then

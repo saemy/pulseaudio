@@ -1,0 +1,11 @@
+0002-In-KDE-only-start-pulseaudio-from-the-KDE-specific-d.patch
+0002-add-padsp-wrapper-check.patch
+0003-esd-honour-system-pulseaudio.patch
+0005-dont-load-cork-music-on-phone.patch
+0006-load-module-x11-bell.patch
+0007-handle-Master-Front.patch
+0008-delay-gnome-autostart.patch
+0010-lp453966-handle-digmic-pt2.patch
+0016-nodisplay-autostart.patch
+0019-disable-dbus-protocol.patch
+0621-Add-special-profiles-for-some-laptops-missing-speake.patch

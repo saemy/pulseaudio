@@ -1,3 +1,28 @@
+pulseaudio (1:2.0-0ubuntu1) quantal; urgency=low
+
+  [ Luke Yelavich ]
+  * New upstream release.
+  * Drop all patches which are now upstream, including jack detection.
+  * Refreshed patches:
+    - 0002-add-padsp-wrapper-check.patch
+    - 0005-dont-load-cork-music-on-phone.patch
+  * debian/pulseaudio.install: Point to module-role-cork.so
+  * debian/rules: pulse-1.1 -> pulse-2.0
+
+  [ Pali Rohár ]
+  * Convert System V pulseaudio init script to upstart
+
+  [ Luke Yelavich ]
+  * debian/libpulse0.install, debian/libpulsedsp.install:
+    - Point to new location of libpulsecommon.
+  * Ship new modules:
+    - switch-on-port-available.so
+    - virtual-surround-sink.so
+  * Ship new manpages.
+  * Switch to package version 3.0 quilt.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Fri, 08 Jun 2012 15:51:39 +1000
+
 pulseaudio (1:1.1-0ubuntu16) quantal; urgency=low
 
   [ Luke Yelavich ]
