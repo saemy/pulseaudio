@@ -36,9 +36,7 @@ pre-start script
 	install -d -m755 -o pulse -g pulse /run/pulse
 end script
 
-script
-	exec /usr/bin/pulseaudio --system --daemonize --high-priority --log-target=syslog --disallow-exit --disallow-module-loading=$DISALLOW_MODULE_LOADING $PULSEAUDIO_ARGS
-end script
+exec /usr/bin/pulseaudio --system --daemonize --high-priority --log-target=syslog --disallow-exit --disallow-module-loading=$DISALLOW_MODULE_LOADING $PULSEAUDIO_ARGS
 
 post-start script
 	if [ -e /var/run/pulse/.esd_auth ]; then
