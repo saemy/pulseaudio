@@ -21,7 +21,14 @@ ACTION!="change", GOTO="pulseaudio_end"
 KERNEL!="card*", GOTO="pulseaudio_end"
 SUBSYSTEMS=="usb", GOTO="pulseaudio_check_usb"
 
+SUBSYSTEMS=="platform", DRIVERS=="thinkpad_acpi", ENV{PULSE_IGNORE}="1"
+
+# NVidia and Intel HDAs often have more than one HDMI codec/port on the same card
+ATTRS{vendor}=="0x10de", ENV{PULSE_PROFILE_SET}="extra-hdmi.conf"
+ATTRS{vendor}=="0x8086", ENV{PULSE_PROFILE_SET}="extra-hdmi.conf"
+
 # Force enable speaker and internal mic for some laptops
+# This should only be necessary for kernels 3.3, 3.4 and 3.5 (as they are lacking the phantom jack kctls).
 # Acer AOA150
 ATTRS{subsystem_vendor}=="0x1025", ATTRS{subsystem_device}=="0x015b", ENV{PULSE_PROFILE_SET}="force-speaker-and-int-mic.conf"
 # Acer Aspire 1810TZ
@@ -67,11 +74,6 @@ ATTRS{subsystem_vendor}=="0x1462", ATTRS{subsystem_device}=="0x1053", ENV{PULSE_
 # Lenovo 3000 Y410
 ATTRS{subsystem_vendor}=="0x17aa", ATTRS{subsystem_device}=="0x384e", ENV{PULSE_PROFILE_SET}="force-speaker.conf"
 
-SUBSYSTEMS=="platform", DRIVERS=="thinkpad_acpi", ENV{PULSE_IGNORE}="1"
-
-# NVidia and Intel HDAs often have more than one HDMI codec/port on the same card
-ATTRS{vendor}=="0x10de", ENV{PULSE_PROFILE_SET}="extra-hdmi.conf"
-ATTRS{vendor}=="0x8086", ENV{PULSE_PROFILE_SET}="extra-hdmi.conf"
 GOTO="pulseaudio_end"
 
 LABEL="pulseaudio_check_usb"

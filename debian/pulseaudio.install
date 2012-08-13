@@ -81,5 +81,4 @@ lib/udev/rules.d/90-pulseaudio.rules
 usr/share/locale
 usr/share/pulseaudio
 usr/lib/*/libpulsecore-*.so usr/lib
-usr/lib/pm-utils/sleep.d/01PulseAudio
 usr/share/man/man5/default.pa.5

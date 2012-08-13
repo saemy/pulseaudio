@@ -22,7 +22,6 @@ common-install-arch::
 	mkdir -p $(CURDIR)/debian/tmp/usr/share/alsa/alsa.conf.d
 	cp -a $(CURDIR)/debian/pulse.conf $(CURDIR)/debian/tmp/usr/share/alsa/alsa.conf.d
 	cp -a $(CURDIR)/debian/pulse-alsa.conf $(CURDIR)/debian/tmp/usr/share/alsa
-	install -D -m755 $(CURDIR)/debian/01PulseAudio $(CURDIR)/debian/tmp/usr/lib/pm-utils/sleep.d/01PulseAudio
 	install -d $(CURDIR)/debian/tmp/usr/share/apport/package-hooks
 	cp $(CURDIR)/debian/apport-hook.py $(CURDIR)/debian/tmp/usr/share/apport/package-hooks/source_pulseaudio.py
 
@@ -59,8 +58,8 @@ DEB_OPT_FLAG = -O3
 LDFLAGS += -Wl,--no-as-needed
 DEB_CONFIGURE_EXTRA_FLAGS = --enable-x11 --disable-hal \
 	--libdir=\$${prefix}/lib/$(DEB_HOST_MULTIARCH) \
-	--with-module-dir=\$${prefix}/lib/pulse-2.0/modules
-DEB_DH_MAKESHLIBS_ARGS_ALL = --exclude=usr/lib/pulse-2.0/modules
+	--with-module-dir=\$${prefix}/lib/pulse-2.1/modules
+DEB_DH_MAKESHLIBS_ARGS_ALL = --exclude=usr/lib/pulse-2.1/modules
 DEB_DH_INSTALL_ARGS = --sourcedir=$(CURDIR)/debian/tmp
 DEB_UPDATE_RCD_PARAMS = start 50 2 3 4 5 . stop 15 1 .
 
