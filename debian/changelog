@@ -1,3 +1,11 @@
+pulseaudio (1:2.1-0ubuntu3) quantal; urgency=low
+
+  [ David Henningsson ]
+  * 0100-resampler-Fix-volume-on-downmix-to-mono.patch:
+    Fix clipped audio on downmix to mono (LP: #416190)
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Tue, 11 Sep 2012 09:24:29 +1000
+
 pulseaudio (1:2.1-0ubuntu2) quantal; urgency=low
 
   * Merge changes that were accidentally squashed from 2.0-0ubuntu2.

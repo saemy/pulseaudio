@@ -9,3 +9,4 @@
 0010-lp453966-handle-digmic-pt2.patch
 0016-nodisplay-autostart.patch
 0019-disable-dbus-protocol.patch
+0100-resampler-Fix-volume-on-downmix-to-mono.patch
