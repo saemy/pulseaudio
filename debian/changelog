@@ -1,3 +1,13 @@
+pulseaudio (1:2.1-0ubuntu4) quantal-proposed; urgency=low
+
+  * 0101-alsa-mixer-Remove-analog-output-lfe-on-mono.patch:
+    Fix muted audio on startup in Virtualbox VM (LP: #1016969) 
+  * 0020-stream-Return-error-in-case-a-client-peeks-to-early.patch:
+    Fix clients crashing when asking for data, but there is no data
+    to hand out (LP: #1058200) 
+
+ -- David Henningsson <david.henningsson@canonical.com>  Thu, 04 Oct 2012 14:43:27 +0200
+
 pulseaudio (1:2.1-0ubuntu3) quantal; urgency=low
 
   [ David Henningsson ]

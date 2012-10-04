@@ -9,4 +9,6 @@
 0010-lp453966-handle-digmic-pt2.patch
 0016-nodisplay-autostart.patch
 0019-disable-dbus-protocol.patch
+0020-stream-Return-error-in-case-a-client-peeks-to-early.patch
 0100-resampler-Fix-volume-on-downmix-to-mono.patch
+0101-alsa-mixer-Remove-analog-output-lfe-on-mono.patch

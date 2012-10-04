@@ -1599,8 +1599,6 @@ int pa_stream_peek(pa_stream *s, const void **data, size_t *length) {
             return 0;
         }
 
-        PA_CHECK_VALIDITY(s->context, s->peek_memchunk.memblock != NULL, PA_ERR_NODATA);
-
         s->peek_data = pa_memblock_acquire(s->peek_memchunk.memblock);
     }
 
