@@ -230,11 +230,12 @@ enum entry_method_handler_index {
     ENTRY_METHOD_HANDLER_MAX
 };
 
-static pa_dbus_arg_info add_entry_args[] = { { "name",   "s",     "in" },
-                                             { "device", "s",     "in" },
-                                             { "volume", "a(uu)", "in" },
-                                             { "mute",   "b",     "in" },
-                                             { "entry",  "o",     "out" } };
+static pa_dbus_arg_info add_entry_args[] = { { "name",              "s",     "in" },
+                                             { "device",            "s",     "in" },
+                                             { "volume",            "a(uu)", "in" },
+                                             { "mute",              "b",     "in" },
+                                             { "apply_immediately", "b",     "in" },
+                                             { "entry",             "o",     "out" } };
 static pa_dbus_arg_info get_entry_by_name_args[] = { { "name", "s", "in" }, { "entry", "o", "out" } };
 
 static pa_dbus_method_handler method_handlers[METHOD_HANDLER_MAX] = {
@@ -1201,7 +1202,7 @@ static void trigger_save(struct userdata *u) {
     pa_native_connection *c;
     uint32_t idx;
 
-    for (c = pa_idxset_first(u->subscribed, &idx); c; c = pa_idxset_next(u->subscribed, &idx)) {
+    PA_IDXSET_FOREACH(c, u->subscribed, idx) {
         pa_tagstruct *t;
 
         t = pa_tagstruct_new(NULL, 0);

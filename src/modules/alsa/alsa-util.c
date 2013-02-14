@@ -46,10 +46,6 @@
 #include "alsa-util.h"
 #include "alsa-mixer.h"
 
-#ifdef HAVE_HAL
-#include "hal-util.h"
-#endif
-
 #ifdef HAVE_UDEV
 #include "udev-util.h"
 #endif
@@ -631,7 +627,7 @@ snd_pcm_t *pa_alsa_open_by_device_id_mapping(
             tsched_size,
             use_mmap,
             use_tsched,
-            TRUE);
+            pa_channel_map_valid(&m->channel_map) /* Query the channel count if we don't know what we want */);
 
     if (!pcm_handle)
         return NULL;
@@ -915,10 +911,6 @@ void pa_alsa_init_proplist_card(pa_core *c, pa_proplist *p, int card) {
 #ifdef HAVE_UDEV
     pa_udev_get_info(card, p);
 #endif
-
-#ifdef HAVE_HAL
-    pa_hal_get_info(c, p, card);
-#endif
 }
 
 void pa_alsa_init_proplist_pcm_info(pa_core *c, pa_proplist *p, snd_pcm_info_t *pcm_info) {
@@ -1149,10 +1141,11 @@ snd_pcm_sframes_t pa_alsa_safe_avail(snd_pcm_t *pcm, size_t hwbuf_size, const pa
     return n;
 }
 
-int pa_alsa_safe_delay(snd_pcm_t *pcm, snd_pcm_sframes_t *delay, size_t hwbuf_size, const pa_sample_spec *ss, pa_bool_t capture) {
+int pa_alsa_safe_delay(snd_pcm_t *pcm, snd_pcm_status_t *status, snd_pcm_sframes_t *delay, size_t hwbuf_size, const pa_sample_spec *ss,
+                       pa_bool_t capture) {
     ssize_t k;
     size_t abs_k;
-    int r;
+    int err;
     snd_pcm_sframes_t avail = 0;
 
     pa_assert(pcm);
@@ -1162,10 +1155,16 @@ int pa_alsa_safe_delay(snd_pcm_t *pcm, snd_pcm_sframes_t *delay, size_t hwbuf_si
 
     /* Some ALSA driver expose weird bugs, let's inform the user about
      * what is going on. We're going to get both the avail and delay values so
-     * that we can compare and check them for capture */
+     * that we can compare and check them for capture.
+     * This is done with snd_pcm_status() which provides
+     * avail, delay and timestamp values in a single kernel call to improve
+     * timer-based scheduling */
 
-    if ((r = snd_pcm_avail_delay(pcm, &avail, delay)) < 0)
-        return r;
+    if ((err = snd_pcm_status(pcm, status)) < 0)
+        return err;
+
+    avail = snd_pcm_status_get_avail(status);
+    *delay = snd_pcm_status_get_delay(status);
 
     k = (ssize_t) *delay * (ssize_t) pa_frame_size(ss);
 
@@ -1327,7 +1326,7 @@ char *pa_alsa_get_reserve_name(const char *device) {
     return pa_sprintf_malloc("Audio%i", i);
 }
 
-unsigned int *pa_alsa_get_supported_rates(snd_pcm_t *pcm) {
+unsigned int *pa_alsa_get_supported_rates(snd_pcm_t *pcm, unsigned int fallback_rate) {
     static unsigned int all_rates[] = { 8000, 11025, 12000,
                                         16000, 22050, 24000,
                                         32000, 44100, 48000,
@@ -1353,17 +1352,27 @@ unsigned int *pa_alsa_get_supported_rates(snd_pcm_t *pcm) {
         }
     }
 
-    if (n == 0)
-        return NULL;
+    if (n > 0) {
+        rates = pa_xnew(unsigned int, n + 1);
 
-    rates = pa_xnew(unsigned int, n + 1);
+        for (i = 0, j = 0; i < PA_ELEMENTSOF(all_rates); i++) {
+            if (supported[i])
+                rates[j++] = all_rates[i];
+        }
 
-    for (i = 0, j = 0; i < PA_ELEMENTSOF(all_rates); i++) {
-        if (supported[i])
-            rates[j++] = all_rates[i];
+        rates[j] = 0;
+    } else {
+        rates = pa_xnew(unsigned int, 2);
+
+        rates[0] = fallback_rate;
+        if ((ret = snd_pcm_hw_params_set_rate_near(pcm, hwparams, &rates[0], NULL)) < 0) {
+            pa_log_debug("snd_pcm_hw_params_set_rate_near() failed: %s", pa_alsa_strerror(ret));
+            pa_xfree(rates);
+            return NULL;
+        }
+
+        rates[1] = 0;
     }
-
-    rates[j] = 0;
 
     return rates;
 }

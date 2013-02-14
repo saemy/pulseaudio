@@ -213,9 +213,8 @@ static void thread_func(void *userdata) {
     for (;;) {
         int ret;
 
-        if (PA_SINK_IS_OPENED(u->sink->thread_info.state))
-            if (u->sink->thread_info.rewind_requested)
-                pa_sink_process_rewind(u->sink, 0);
+        if (PA_UNLIKELY(u->sink->thread_info.rewind_requested))
+            pa_sink_process_rewind(u->sink, 0);
 
         if (u->rtpoll_item) {
             struct pollfd *pollfd;
@@ -623,7 +622,7 @@ int pa__init(pa_module*m) {
 
     /* Prepare the initial request */
     u->write_data = pa_xmalloc(u->write_length = ESD_KEY_LEN + sizeof(int32_t));
-    if (pa_authkey_load_auto(pa_modargs_get_value(ma, "cookie", ".esd_auth"), u->write_data, ESD_KEY_LEN) < 0) {
+    if (pa_authkey_load_auto(pa_modargs_get_value(ma, "cookie", ".esd_auth"), TRUE, u->write_data, ESD_KEY_LEN) < 0) {
         pa_log("Failed to load cookie");
         goto fail;
     }

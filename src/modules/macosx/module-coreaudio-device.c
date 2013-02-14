@@ -22,6 +22,7 @@
 /* TODO:
     - implement hardware volume controls
     - handle audio device stream format changes (will require changes to the core)
+    - add an "off" mode that removes all sinks and sources
 */
 
 #ifdef HAVE_CONFIG_H
@@ -43,6 +44,7 @@
 #include <pulsecore/strbuf.h>
 #include <pulsecore/thread.h>
 #include <pulsecore/thread-mq.h>
+#include <pulsecore/i18n.h>
 
 #include <CoreAudio/CoreAudio.h>
 #include <CoreAudio/CoreAudioTypes.h>
@@ -124,6 +126,10 @@ struct coreaudio_source {
 
     PA_LLIST_FIELDS(coreaudio_source);
 };
+
+static int card_set_profile(pa_card *c, pa_card_profile *new_profile) {
+    return 0;
+}
 
 static OSStatus io_render_proc (AudioDeviceID          device,
                                 const AudioTimeStamp  *now,
@@ -274,9 +280,6 @@ static int sink_process_msg(pa_msgobject *o, int code, void *data, int64_t offse
                 pa_assert(sink);
 
                 if (PA_SINK_IS_OPENED(sink->pa_sink->thread_info.state)) {
-                    if (sink->pa_sink->thread_info.rewind_requested)
-                        pa_sink_process_rewind(sink->pa_sink, 0);
-
                     audio_chunk.memblock = pa_memblock_new_fixed(u->module->core->mempool, buf->mData, buf->mDataByteSize, FALSE);
                     audio_chunk.length = buf->mDataByteSize;
                     audio_chunk.index = 0;
@@ -658,7 +661,13 @@ static void thread_func(void *userdata) {
     pa_thread_mq_install(&u->thread_mq);
 
     for (;;) {
+        coreaudio_sink *ca_sink;
         int ret;
+
+        PA_LLIST_FOREACH(ca_sink, u->sinks) {
+            if (PA_UNLIKELY(ca_sink->pa_sink->thread_info.rewind_requested))
+                pa_sink_process_rewind(ca_sink->pa_sink, 0);
+        }
 
         ret = pa_rtpoll_run(u->rtpoll, TRUE);
 
@@ -686,6 +695,7 @@ int pa__init(pa_module *m) {
     pa_modargs *ma = NULL;
     char tmp[64];
     pa_card_new_data card_new_data;
+    pa_card_profile *p;
     coreaudio_sink *ca_sink;
     coreaudio_source *ca_source;
     AudioObjectPropertyAddress property_address;
@@ -733,6 +743,10 @@ int pa__init(pa_module *m) {
     if (!err)
         u->vendor_name = pa_xstrdup(tmp);
 
+    /* add on profile */
+    p = pa_card_profile_new("on", _("On"), 0);
+    pa_hashmap_put(card_new_data.profiles, p->name, p);
+
     /* create the card object */
     u->card = pa_card_new(m->core, &card_new_data);
     if (!u->card) {
@@ -742,6 +756,7 @@ int pa__init(pa_module *m) {
 
     pa_card_new_data_done(&card_new_data);
     u->card->userdata = u;
+    u->card->set_profile = card_set_profile;
 
     u->rtpoll = pa_rtpoll_new();
     pa_thread_mq_init(&u->thread_mq, m->core->mainloop, u->rtpoll);

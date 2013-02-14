@@ -180,12 +180,11 @@ static void thread_func(void *userdata) {
 
         pollfd = pa_rtpoll_item_get_pollfd(u->rtpoll_item, NULL);
 
+        if (PA_UNLIKELY(u->sink->thread_info.rewind_requested))
+            pa_sink_process_rewind(u->sink, 0);
+
         /* Render some data and write it to the fifo */
         if (PA_SINK_IS_OPENED(u->sink->thread_info.state)) {
-
-            if (u->sink->thread_info.rewind_requested)
-                pa_sink_process_rewind(u->sink, 0);
-
             if (pollfd->revents) {
                 if (process_render(u) < 0)
                     goto fail;
@@ -221,7 +220,7 @@ finish:
     pa_log_debug("Thread shutting down");
 }
 
-int pa__init(pa_module*m) {
+int pa__init(pa_module *m) {
     struct userdata *u;
     struct stat st;
     pa_sample_spec ss;
@@ -255,7 +254,10 @@ int pa__init(pa_module*m) {
 
     u->filename = pa_runtime_path(pa_modargs_get_value(ma, "file", DEFAULT_FILE_NAME));
 
-    mkfifo(u->filename, 0666);
+    if (mkfifo(u->filename, 0666) < 0) {
+        pa_log("mkfifo('%s'): %s", u->filename, pa_cstrerror(errno));
+        goto fail;
+    }
     if ((u->fd = pa_open_cloexec(u->filename, O_RDWR, 0)) < 0) {
         pa_log("open('%s'): %s", u->filename, pa_cstrerror(errno));
         goto fail;
@@ -338,7 +340,7 @@ int pa__get_n_used(pa_module *m) {
     return pa_sink_linked_by(u->sink);
 }
 
-void pa__done(pa_module*m) {
+void pa__done(pa_module *m) {
     struct userdata *u;
 
     pa_assert(m);
