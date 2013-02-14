@@ -27,10 +27,6 @@ case "$1" in
     if ! getent group pulse-access >/dev/null; then
       addgroup --quiet --system pulse-access
     fi
-
-    if dpkg --compare-versions "$2" lt-nl "0.9.14-0ubuntu9"; then
-	update-rc.d -f pulseaudio remove
-    fi
   ;;
   abort-upgrade|abort-remove|abort-deconfigure)
   ;;

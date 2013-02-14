@@ -371,10 +371,15 @@ int pa_sink_input_new(
 
         pa_log_info("Trying to change sample rate");
         if (pa_sink_update_rate(data->sink, data->sample_spec.rate, pa_sink_input_new_data_is_passthrough(data)) == TRUE)
-            pa_log_info("Rate changed to %u Hz",
-                        data->sink->sample_spec.rate);
-        else
-            pa_log_info("Resampling enabled to %u Hz", data->sink->sample_spec.rate);
+            pa_log_info("Rate changed to %u Hz", data->sink->sample_spec.rate);
+    }
+
+    if (pa_sink_input_new_data_is_passthrough(data) &&
+        !pa_sample_spec_equal(&data->sample_spec, &data->sink->sample_spec)) {
+        /* rate update failed, or other parts of sample spec didn't match */
+
+        pa_log_debug("Could not update sink sample spec to match passthrough stream");
+        return -PA_ERR_NOTSUPPORTED;
     }
 
     /* Due to the fixing of the sample spec the volume might not match anymore */
@@ -783,6 +788,7 @@ void pa_sink_input_peek(pa_sink_input *i, size_t slength /* in sink frames */, p
     pa_bool_t volume_is_norm;
     size_t block_size_max_sink, block_size_max_sink_input;
     size_t ilength;
+    size_t ilength_full;
 
     pa_sink_input_assert_ref(i);
     pa_sink_input_assert_io_context(i);
@@ -816,6 +822,10 @@ void pa_sink_input_peek(pa_sink_input *i, size_t slength /* in sink frames */, p
     } else
         ilength = slength;
 
+    /* Length corresponding to slength (without limiting to
+     * block_size_max_sink_input). */
+    ilength_full = ilength;
+
     if (ilength > block_size_max_sink_input)
         ilength = block_size_max_sink_input;
 
@@ -843,7 +853,7 @@ void pa_sink_input_peek(pa_sink_input *i, size_t slength /* in sink frames */, p
             pa_memblockq_seek(i->thread_info.render_memblockq, (int64_t) slength, PA_SEEK_RELATIVE, TRUE);
             i->thread_info.playing_for = 0;
             if (i->thread_info.underrun_for != (uint64_t) -1)
-                i->thread_info.underrun_for += ilength;
+                i->thread_info.underrun_for += ilength_full;
             break;
         }
 
@@ -989,7 +999,7 @@ void pa_sink_input_process_rewind(pa_sink_input *i, size_t nbytes /* in sink sam
     if (i->thread_info.rewrite_nbytes == (size_t) -1) {
 
         /* We were asked to drop all buffered data, and rerequest new
-         * data from implementor the next time push() is called */
+         * data from implementor the next time peek() is called */
 
         pa_memblockq_flush_write(i->thread_info.render_memblockq, TRUE);
 
@@ -1657,11 +1667,7 @@ int pa_sink_input_finish_move(pa_sink_input *i, pa_sink *dest, pa_bool_t save) {
 
         pa_log_info("Trying to change sample rate");
         if (pa_sink_update_rate(dest, i->sample_spec.rate, pa_sink_input_is_passthrough(i)) == TRUE)
-            pa_log_info("Rate changed to %u Hz",
-                        dest->sample_spec.rate);
-        else
-            pa_log_info("Resampling enabled to %u Hz",
-                        dest->sample_spec.rate);
+            pa_log_info("Rate changed to %u Hz", dest->sample_spec.rate);
     }
 
     if (i->moving)
@@ -1958,13 +1964,13 @@ void pa_sink_input_request_rewind(
     }
 
     i->thread_info.rewrite_flush =
-        i->thread_info.rewrite_flush ||
-        (flush && i->thread_info.rewrite_nbytes != 0);
+        i->thread_info.rewrite_flush || flush;
 
     i->thread_info.dont_rewind_render =
         i->thread_info.dont_rewind_render ||
         dont_rewind_render;
 
+    /* nbytes is -1 if some earlier rewind request had rewrite == false. */
     if (nbytes != (size_t) -1) {
 
         /* Transform to sink domain */

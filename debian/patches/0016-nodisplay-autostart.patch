@@ -3,12 +3,12 @@ Author: Michael Terry <michael.terry@canonical.com>
 Bug-Ubuntu: https://launchpad.net/bugs/803917
 Forwarded: not-needed
 
-Index: pulseaudio/src/daemon/pulseaudio.desktop.in
+Index: pulseaudio-2.99.2/src/daemon/pulseaudio.desktop.in
 ===================================================================
---- pulseaudio.orig/src/daemon/pulseaudio.desktop.in	2011-07-01 12:54:23.961825964 +0100
-+++ pulseaudio/src/daemon/pulseaudio.desktop.in	2011-07-01 12:54:53.437826276 +0100
-@@ -10,3 +10,4 @@
+--- pulseaudio-2.99.2.orig/src/daemon/pulseaudio.desktop.in	2012-09-26 13:27:01.000000000 +0200
++++ pulseaudio-2.99.2/src/daemon/pulseaudio.desktop.in	2012-11-21 13:59:44.145043728 +0100
+@@ -9,3 +9,4 @@
  Categories=
  GenericName=
- X-GNOME-Autostart-Delay=8
+ X-GNOME-Autostart-Phase=Initialization
 +NoDisplay=true

@@ -466,6 +466,7 @@ typedef struct pa_card_port_info {
     uint32_t n_profiles;                /**< Number of entries in profile array */
     pa_card_profile_info** profiles;    /**< Array of pointers to available profiles, or NULL. Array is terminated by an entry set to NULL. */
     pa_proplist *proplist;              /**< Property list */
+    int64_t latency_offset;             /**< Latency offset of the port that gets added to the sink/source latency when the port is active. \since 3.0 */
 } pa_card_port_info;
 
 /** Stores information about cards. Please note that this structure
@@ -502,6 +503,9 @@ pa_operation* pa_context_set_card_profile_by_index(pa_context *c, uint32_t idx, 
 /** Change the profile of a card. \since 0.9.15 */
 pa_operation* pa_context_set_card_profile_by_name(pa_context *c, const char*name, const char*profile, pa_context_success_cb_t cb, void *userdata);
 
+/** Set the latency offset of a port. \since 3.0 */
+pa_operation* pa_context_set_port_latency_offset(pa_context *c, const char *card_name, const char *port_name, int64_t offset, pa_context_success_cb_t cb, void *userdata);
+
 /** @} */
 
 /** @{ \name Sink Inputs */
@@ -518,8 +522,8 @@ typedef struct pa_sink_input_info {
     pa_sample_spec sample_spec;          /**< The sample specification of the sink input. */
     pa_channel_map channel_map;          /**< Channel map */
     pa_cvolume volume;                   /**< The volume of this sink input. */
-    pa_usec_t buffer_usec;               /**< Latency due to buffering in sink input, see pa_latency_info for details. */
-    pa_usec_t sink_usec;                 /**< Latency of the sink device, see pa_latency_info for details. */
+    pa_usec_t buffer_usec;               /**< Latency due to buffering in sink input, see pa_timing_info for details. */
+    pa_usec_t sink_usec;                 /**< Latency of the sink device, see pa_timing_info for details. */
     const char *resample_method;         /**< The resampling method used by this sink input. */
     const char *driver;                  /**< Driver name */
     int mute;                            /**< Stream muted \since 0.9.7 */
@@ -569,8 +573,8 @@ typedef struct pa_source_output_info {
     uint32_t source;                     /**< Index of the connected source */
     pa_sample_spec sample_spec;          /**< The sample specification of the source output */
     pa_channel_map channel_map;          /**< Channel map */
-    pa_usec_t buffer_usec;               /**< Latency due to buffering in the source output, see pa_latency_info for details. */
-    pa_usec_t source_usec;               /**< Latency of the source device, see pa_latency_info for details. */
+    pa_usec_t buffer_usec;               /**< Latency due to buffering in the source output, see pa_timing_info for details. */
+    pa_usec_t source_usec;               /**< Latency of the source device, see pa_timing_info for details. */
     const char *resample_method;         /**< The resampling method used by this source output. */
     const char *driver;                  /**< Driver name */
     pa_proplist *proplist;               /**< Property list \since 0.9.11 */

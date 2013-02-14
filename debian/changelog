@@ -1,3 +1,52 @@
+pulseaudio (1:3.0-0ubuntu1) raring; urgency=low
+
+  [ Luke Yelavich ]
+  * debian/control: Update Vcs-Bzr field for raring
+  * Bump upstream version and rules/shlib files to 3.0.
+
+  [ David Henningsson ]
+  * New upstream release (3.0)
+  * 0100-resampler-Fix-volume-on-downmix-to-mono.patch,
+    0101-alsa-mixer-Remove-analog-output-lfe-on-mono.patch,
+    0010-lp453966-handle-digmic-pt2.patch:
+    Dropped, applied upstream
+  * 0002-In-KDE-only-start-pulseaudio-from-the-KDE-specific-d.patch:
+    Dropped, Debian dropped it and we got it from there
+  * 0002-add-padsp-wrapper-check.patch:
+    Dropped, makes no sense now that OSS is disabled in the kernel
+  * 0008-delay-gnome-autostart.patch:
+    Dropped per Martin Pitt's recommendation (incompatible upstream change)
+  * 0101-alsa-mixer-Fix-the-analog-output-speaker-always-path.patch,
+    0102-Call-change_cb-only-when-there-s-an-actual-change.patch,
+    0103-Initialize-monitor-s-busy-status-to-false-if-we-own-.patch:
+    Added from upstream stable-3.x tree
+  * Other patches refreshed
+  * debian/control: PulseAudio binary package is no longer 
+    "Multi-Arch: foreign" (LP: #1078543)
+  * debian/control, pulseaudio-module-bluetooth.install:
+    Update for new bluetooth dependency (libsbc)
+  * debian/watch: Change to .xz by default (because Debian does)
+  * debian/pulseaudio.init: Don't claim to support reload (Debian BTS: #690736)
+  * debian/rules, debian/pulseaudio.manpages: Fix installation of default.pa
+    (Debian BTS: #690416)
+  * debian/rules: disable hal compat module
+  * debian/pulse-alsa.conf, debian/README.Debian,
+    debian/pulseaudio-esound-compat.links, debian/pulseaudio.init,
+    debian/pulseaudio.install: Sync with Debian.
+  * debian/manpages/esdcompat.1: Remove, already upstream.
+  * debian/control: Sync build-dependencies with debian, in particular,
+    - add fftw3 development library
+  * debian/control: Cosmetic changes (sync with Debian)
+  * debian/pulseaudio.postinst: Remove ancient upgrade stuff - we won't support
+    direct upgrades from 8.04 to 13.04+ anyway
+
+  [ Luke Yelavich ]
+  * 0104-alsa-ucm-Fallback-to-stereo-duplex.patch: Added from upstrea git
+    stable tree to fix ucm related issues.
+  * Disable use of UCM in PulseAudio for now.
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Thu, 14 Feb 2013 12:05:20 +1100
+
 pulseaudio (1:2.1-0ubuntu4) quantal-proposed; urgency=low
 
   * 0101-alsa-mixer-Remove-analog-output-lfe-on-mono.patch:

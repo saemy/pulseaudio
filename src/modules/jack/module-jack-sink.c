@@ -133,7 +133,7 @@ static int sink_process_msg(pa_msgobject *o, int code, void *data, int64_t offse
 
                 pa_sink_render_full(u->sink, nbytes, &chunk);
 
-                p = (uint8_t*) pa_memblock_acquire(chunk.memblock) + chunk.index;
+                p = pa_memblock_acquire_chunk(&chunk);
                 pa_deinterleave(p, u->buffer, u->channels, sizeof(float), (unsigned) offset);
                 pa_memblock_release(chunk.memblock);
 
@@ -229,9 +229,8 @@ static void thread_func(void *userdata) {
     for (;;) {
         int ret;
 
-        if (PA_SINK_IS_OPENED(u->sink->thread_info.state))
-            if (u->sink->thread_info.rewind_requested)
-                pa_sink_process_rewind(u->sink, 0);
+        if (PA_UNLIKELY(u->sink->thread_info.rewind_requested))
+            pa_sink_process_rewind(u->sink, 0);
 
         if ((ret = pa_rtpoll_run(u->rtpoll, TRUE)) < 0)
             goto fail;

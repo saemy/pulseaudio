@@ -151,7 +151,7 @@ static void trigger_save(struct userdata *u, pa_device_type_t type, uint32_t sin
     uint32_t idx;
 
     if (sink_idx != PA_INVALID_INDEX) {
-        for (c = pa_idxset_first(u->subscribed, &idx); c; c = pa_idxset_next(u->subscribed, &idx)) {
+        PA_IDXSET_FOREACH(c, u->subscribed, idx) {
             pa_tagstruct *t;
 
             t = pa_tagstruct_new(NULL, 0);
@@ -779,12 +779,13 @@ static pa_hook_result_t sink_fixate_hook_callback(pa_core *c, pa_sink_new_data *
 
             if (!new_data->volume_is_set) {
                 pa_cvolume v;
+                char buf[PA_CVOLUME_SNPRINT_MAX];
 
                 pa_log_info("Restoring volume for sink %s.", new_data->name);
-
                 v = e->volume;
                 pa_cvolume_remap(&v, &e->channel_map, &new_data->channel_map);
                 pa_sink_new_data_set_volume(new_data, &v);
+                pa_log_info("Restored volume: %s", pa_cvolume_snprint(buf, PA_CVOLUME_SNPRINT_MAX, &new_data->volume));
 
                 new_data->save_volume = TRUE;
             } else
@@ -823,14 +824,15 @@ static pa_hook_result_t sink_port_hook_callback(pa_core *c, pa_sink *sink, struc
     if ((e = perportentry_read(u, name, (sink->active_port ? sink->active_port->name : NULL)))) {
 
         if (u->restore_volume && e->volume_valid) {
-
             pa_cvolume v;
+            char buf[PA_CVOLUME_SNPRINT_MAX];
 
             pa_log_info("Restoring volume for sink %s.", sink->name);
-
             v = e->volume;
             pa_cvolume_remap(&v, &e->channel_map, &sink->channel_map);
             pa_sink_set_volume(sink, &v, TRUE, FALSE);
+            pa_log_info("Restored volume: %s", pa_cvolume_snprint(buf, PA_CVOLUME_SNPRINT_MAX, &sink->reference_volume));
+
             sink->save_volume = TRUE;
         }
 
@@ -920,12 +922,13 @@ static pa_hook_result_t source_fixate_hook_callback(pa_core *c, pa_source_new_da
 
             if (!new_data->volume_is_set) {
                 pa_cvolume v;
+                char buf[PA_CVOLUME_SNPRINT_MAX];
 
                 pa_log_info("Restoring volume for source %s.", new_data->name);
-
                 v = e->volume;
                 pa_cvolume_remap(&v, &e->channel_map, &new_data->channel_map);
                 pa_source_new_data_set_volume(new_data, &v);
+                pa_log_info("Restored volume: %s", pa_cvolume_snprint(buf, PA_CVOLUME_SNPRINT_MAX, &new_data->volume));
 
                 new_data->save_volume = TRUE;
             } else
@@ -964,14 +967,15 @@ static pa_hook_result_t source_port_hook_callback(pa_core *c, pa_source *source,
     if ((e = perportentry_read(u, name, (source->active_port ? source->active_port->name : NULL)))) {
 
         if (u->restore_volume && e->volume_valid) {
-
             pa_cvolume v;
+            char buf[PA_CVOLUME_SNPRINT_MAX];
 
             pa_log_info("Restoring volume for source %s.", source->name);
-
             v = e->volume;
             pa_cvolume_remap(&v, &e->channel_map, &source->channel_map);
             pa_source_set_volume(source, &v, TRUE, FALSE);
+            pa_log_info("Restored volume: %s", pa_cvolume_snprint(buf, PA_CVOLUME_SNPRINT_MAX, &source->reference_volume));
+
             source->save_volume = TRUE;
         }
 
@@ -1275,10 +1279,10 @@ int pa__init(pa_module*m) {
     pa_log_info("Successfully opened database file '%s'.", fname);
     pa_xfree(fname);
 
-    for (sink = pa_idxset_first(m->core->sinks, &idx); sink; sink = pa_idxset_next(m->core->sinks, &idx))
+    PA_IDXSET_FOREACH(sink, m->core->sinks, idx)
         subscribe_callback(m->core, PA_SUBSCRIPTION_EVENT_SINK|PA_SUBSCRIPTION_EVENT_NEW, sink->index, u);
 
-    for (source = pa_idxset_first(m->core->sources, &idx); source; source = pa_idxset_next(m->core->sources, &idx))
+    PA_IDXSET_FOREACH(source, m->core->sources, idx)
         subscribe_callback(m->core, PA_SUBSCRIPTION_EVENT_SOURCE|PA_SUBSCRIPTION_EVENT_NEW, source->index, u);
 
     pa_modargs_free(ma);

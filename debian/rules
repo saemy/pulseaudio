@@ -3,7 +3,6 @@
 include /usr/share/cdbs/1/rules/debhelper.mk
 include /usr/share/cdbs/1/class/autotools.mk
 include /usr/share/cdbs/1/rules/utils.mk
-include /usr/share/cdbs/1/rules/patchsys-quilt.mk
 include /usr/share/cdbs/1/rules/autoreconf.mk
 
 common-build-arch::
@@ -20,13 +19,12 @@ common-install-arch::
 	mkdir -p $(CURDIR)/debian/tmp/usr/share/lintian
 	cp -a $(CURDIR)/debian/overrides $(CURDIR)/debian/tmp/usr/share/lintian
 	mkdir -p $(CURDIR)/debian/tmp/usr/share/alsa/alsa.conf.d
-	cp -a $(CURDIR)/debian/pulse.conf $(CURDIR)/debian/tmp/usr/share/alsa/alsa.conf.d
+	cp -a $(CURDIR)/debian/pulse.conf \
+		$(CURDIR)/debian/tmp/usr/share/alsa/alsa.conf.d
 	cp -a $(CURDIR)/debian/pulse-alsa.conf $(CURDIR)/debian/tmp/usr/share/alsa
+	dh_installman -ppulseaudio --language=C debian/tmp/usr/share/man/man5/default.pa.5
 	install -d $(CURDIR)/debian/tmp/usr/share/apport/package-hooks
 	cp $(CURDIR)/debian/apport-hook.py $(CURDIR)/debian/tmp/usr/share/apport/package-hooks/source_pulseaudio.py
-
-pulseaudio-install-arch::
-	dh_installman --language=C debian/tmp/usr/share/man/man5/default.pa.5
 
 common-binary-post-install-arch:: list-missing
 
@@ -56,23 +54,17 @@ update-patch-series:
 
 DEB_OPT_FLAG = -O3
 LDFLAGS += -Wl,--no-as-needed
-DEB_CONFIGURE_EXTRA_FLAGS = --enable-x11 --disable-hal \
+DEB_CONFIGURE_EXTRA_FLAGS = --enable-x11 --disable-hal-compat \
 	--libdir=\$${prefix}/lib/$(DEB_HOST_MULTIARCH) \
-	--with-module-dir=\$${prefix}/lib/pulse-2.1/modules
-DEB_DH_MAKESHLIBS_ARGS_ALL = --exclude=usr/lib/pulse-2.1/modules
+	--with-module-dir=\$${prefix}/lib/pulse-3.0/modules
+DEB_DH_MAKESHLIBS_ARGS_ALL = --exclude=usr/lib/pulse-3.0/modules
 DEB_DH_INSTALL_ARGS = --sourcedir=$(CURDIR)/debian/tmp
 DEB_UPDATE_RCD_PARAMS = start 50 2 3 4 5 . stop 15 1 .
 
 # Dynamically patch default configuration file
-ifeq ($(DEB_HOST_ARCH),armel)
-RESAMPLE_METHOD := speex-fixed-1
-DEFAULT_FRAGMENTS := 2
-DEFAULT_FRAGMENT_SIZE_MSEC := 10
-else
 RESAMPLE_METHOD := speex-float-1
 DEFAULT_FRAGMENTS := 8
 DEFAULT_FRAGMENT_SIZE_MSEC := 10
-endif
 
 post-patches:: debian/stamp-post-patches
 

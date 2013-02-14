@@ -340,9 +340,6 @@ int pa_source_output_new(
     pa_assert(pa_sample_spec_valid(&data->sample_spec));
     pa_assert(pa_channel_map_valid(&data->channel_map));
 
-    /* Due to the fixing of the sample spec the volume might not match anymore */
-    pa_cvolume_remap(&data->volume, &original_cm, &data->channel_map);
-
     if (!(data->flags & PA_SOURCE_OUTPUT_VARIABLE_RATE) &&
         !pa_sample_spec_equal(&data->sample_spec, &data->source->sample_spec)){
         /* try to change source rate. This is done before the FIXATE hook since
@@ -350,11 +347,19 @@ int pa_source_output_new(
 
         pa_log_info("Trying to change sample rate");
         if (pa_source_update_rate(data->source, data->sample_spec.rate, pa_source_output_new_data_is_passthrough(data)) == TRUE)
-            pa_log_info("Rate changed to %u Hz",
-                        data->source->sample_spec.rate);
-        else
-            pa_log_info("Resampling enabled to %u Hz", data->source->sample_spec.rate);
+            pa_log_info("Rate changed to %u Hz", data->source->sample_spec.rate);
     }
+
+    if (pa_source_output_new_data_is_passthrough(data) &&
+        !pa_sample_spec_equal(&data->sample_spec, &data->source->sample_spec)) {
+        /* rate update failed, or other parts of sample spec didn't match */
+
+        pa_log_debug("Could not update source sample spec to match passthrough stream");
+        return -PA_ERR_NOTSUPPORTED;
+    }
+
+    /* Due to the fixing of the sample spec the volume might not match anymore */
+    pa_cvolume_remap(&data->volume, &original_cm, &data->channel_map);
 
     if (data->resample_method == PA_RESAMPLER_INVALID)
         data->resample_method = core->resample_method;
@@ -1124,7 +1129,7 @@ void pa_source_output_set_name(pa_source_output *o, const char *name) {
 
     old = pa_proplist_gets(o->proplist, PA_PROP_MEDIA_NAME);
 
-    if (old && name && !strcmp(old, name))
+    if (old && name && pa_streq(old, name))
         return;
 
     if (name)
@@ -1425,11 +1430,7 @@ int pa_source_output_finish_move(pa_source_output *o, pa_source *dest, pa_bool_t
 
         pa_log_info("Trying to change sample rate");
         if (pa_source_update_rate(dest, o->sample_spec.rate, pa_source_output_is_passthrough(o)) == TRUE)
-            pa_log_info("Rate changed to %u Hz",
-                        dest->sample_spec.rate);
-        else
-            pa_log_info("Resampling enabled to %u Hz",
-                        dest->sample_spec.rate);
+            pa_log_info("Rate changed to %u Hz", dest->sample_spec.rate);
     }
 
     if (o->moving)

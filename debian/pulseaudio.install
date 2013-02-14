@@ -28,6 +28,7 @@ usr/lib/pulse-*/modules/module-combine.so
 usr/lib/pulse-*/modules/module-default-device-restore.so
 usr/lib/pulse-*/modules/module-detect.so
 usr/lib/pulse-*/modules/module-esound-sink.so
+usr/lib/pulse-*/modules/module-equalizer-sink.so
 usr/lib/pulse-*/modules/module-http-protocol-tcp.so
 usr/lib/pulse-*/modules/module-http-protocol-unix.so
 usr/lib/pulse-*/modules/module-intended-roles.so
@@ -39,7 +40,6 @@ usr/lib/pulse-*/modules/module-native-protocol-tcp.so
 usr/lib/pulse-*/modules/module-native-protocol-unix.so
 usr/lib/pulse-*/modules/module-udev-detect.so
 usr/lib/pulse-*/modules/module-loopback.so
-usr/share/alsa
 usr/share/apport
 usr/share/lintian/overrides/pulseaudio
 usr/lib/pulse-*/modules/module-null-sink.so
@@ -81,4 +81,5 @@ lib/udev/rules.d/90-pulseaudio.rules
 usr/share/locale
 usr/share/pulseaudio
 usr/lib/*/libpulsecore-*.so usr/lib
+usr/share/alsa
 usr/share/man/man5/default.pa.5
