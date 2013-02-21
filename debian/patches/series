@@ -14,3 +14,5 @@
 0103-Initialize-monitor-s-busy-status-to-false-if-we-own-.patch
 0104-alsa-ucm-Fallback-to-stereo-duplex.patch
 0105-udev-Add-use_ucm-module-argument.patch
+0106-reserve-Move-get_name_owner-to-the-public-rd_device-.patch
+0107-reserve-Fix-leaking-NameLost-signals-after-release-a.patch

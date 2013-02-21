@@ -1,3 +1,12 @@
+pulseaudio (1:3.0-0ubuntu3) raring; urgency=low
+
+  * 0106-reserve-Move-get_name_owner-to-the-public-rd_device-.patch,
+    0107-reserve-Fix-leaking-NameLost-signals-after-release-a.patch:
+    Fix sound suddenly stops working, seems particularly frequent with VLC
+    (LP: #1129990, LP: #1127872)
+
+ -- David Henningsson <david.henningsson@canonical.com>  Thu, 21 Feb 2013 10:55:16 +0100
+
 pulseaudio (1:3.0-0ubuntu2) raring; urgency=low
 
   * Update libpulse0 symbols

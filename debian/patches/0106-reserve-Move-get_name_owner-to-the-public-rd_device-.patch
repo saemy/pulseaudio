@@ -1,0 +1,189 @@
+From 88a7b31ca7d1ec38b68e7bfd99e2e53afe96cfcf Mon Sep 17 00:00:00 2001
+From: Mikel Astiz <mikel.astiz@bmw-carit.de>
+Date: Wed, 30 Jan 2013 09:30:30 +0100
+Subject: [PATCH 106/107] reserve: Move get_name_owner() to the public
+ rd_device API
+
+The function is interesting for both rd_device and rd_monitor so make
+it part of the rd_device public API to avoid duplicated code.
+
+The decision to move the function to reserve.c is motivated by the fact
+that other projects (i.e. jack) use reserve.c only. Therefore, adding a
+reserve->reserve-monitor dependency should be avoided.
+---
+ src/modules/reserve-monitor.c | 59 ++-----------------------------------------
+ src/modules/reserve.c         | 56 ++++++++++++++++++++++++++++++++++++++++
+ src/modules/reserve.h         |  9 +++++++
+ 3 files changed, 67 insertions(+), 57 deletions(-)
+
+diff --git a/src/modules/reserve-monitor.c b/src/modules/reserve-monitor.c
+index 4aa4a2b..70de870 100644
+--- a/src/modules/reserve-monitor.c
++++ b/src/modules/reserve-monitor.c
+@@ -32,6 +32,7 @@
+ #include <assert.h>
+ 
+ #include "reserve-monitor.h"
++#include "reserve.h"
+ 
+ struct rm_monitor {
+ 	int ref;
+@@ -120,62 +121,6 @@ invalid:
+ 	return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+ }
+ 
+-static int get_name_owner(
+-	DBusConnection *connection,
+-	const char *name,
+-	char **name_owner,
+-	DBusError *error) {
+-
+-	DBusMessage *msg, *reply;
+-	int r;
+-
+-	*name_owner = NULL;
+-
+-	if (!(msg = dbus_message_new_method_call(DBUS_SERVICE_DBUS, DBUS_PATH_DBUS, DBUS_INTERFACE_DBUS, "GetNameOwner"))) {
+-		r = -ENOMEM;
+-		goto fail;
+-	}
+-
+-	if (!dbus_message_append_args(msg, DBUS_TYPE_STRING, &name, DBUS_TYPE_INVALID)) {
+-		r = -ENOMEM;
+-		goto fail;
+-	}
+-
+-	reply = dbus_connection_send_with_reply_and_block(connection, msg, DBUS_TIMEOUT_USE_DEFAULT, error);
+-	dbus_message_unref(msg);
+-	msg = NULL;
+-
+-	if (reply) {
+-		if (!dbus_message_get_args(reply, error, DBUS_TYPE_STRING, name_owner, DBUS_TYPE_INVALID)) {
+-			dbus_message_unref(reply);
+-			r = -EIO;
+-			goto fail;
+-		}
+-
+-		*name_owner = strdup(*name_owner);
+-		dbus_message_unref(reply);
+-
+-		if (!*name_owner) {
+-			r = -ENOMEM;
+-			goto fail;
+-		}
+-
+-	} else if (dbus_error_has_name(error, "org.freedesktop.DBus.Error.NameHasNoOwner"))
+-		dbus_error_free(error);
+-	else {
+-		r = -EIO;
+-		goto fail;
+-	}
+-
+-	return 0;
+-
+-fail:
+-	if (msg)
+-		dbus_message_unref(msg);
+-
+-	return r;
+-}
+-
+ int rm_watch(
+ 	rm_monitor **_m,
+ 	DBusConnection *connection,
+@@ -243,7 +188,7 @@ int rm_watch(
+ 
+ 	m->matching = 1;
+ 
+-	if ((r = get_name_owner(m->connection, m->service_name, &name_owner, error)) < 0)
++	if ((r = rd_dbus_get_name_owner(m->connection, m->service_name, &name_owner, error)) < 0)
+ 		goto fail;
+ 
+ 	m->busy = get_busy(m->connection, name_owner);
+diff --git a/src/modules/reserve.c b/src/modules/reserve.c
+index b4c168c..bbb6773 100644
+--- a/src/modules/reserve.c
++++ b/src/modules/reserve.c
+@@ -606,3 +606,59 @@ void* rd_get_userdata(rd_device *d) {
+ 
+ 	return d->userdata;
+ }
++
++int rd_dbus_get_name_owner(
++	DBusConnection *connection,
++	const char *name,
++	char **name_owner,
++	DBusError *error) {
++
++	DBusMessage *msg, *reply;
++	int r;
++
++	*name_owner = NULL;
++
++	if (!(msg = dbus_message_new_method_call(DBUS_SERVICE_DBUS, DBUS_PATH_DBUS, DBUS_INTERFACE_DBUS, "GetNameOwner"))) {
++		r = -ENOMEM;
++		goto fail;
++	}
++
++	if (!dbus_message_append_args(msg, DBUS_TYPE_STRING, &name, DBUS_TYPE_INVALID)) {
++		r = -ENOMEM;
++		goto fail;
++	}
++
++	reply = dbus_connection_send_with_reply_and_block(connection, msg, DBUS_TIMEOUT_USE_DEFAULT, error);
++	dbus_message_unref(msg);
++	msg = NULL;
++
++	if (reply) {
++		if (!dbus_message_get_args(reply, error, DBUS_TYPE_STRING, name_owner, DBUS_TYPE_INVALID)) {
++			dbus_message_unref(reply);
++			r = -EIO;
++			goto fail;
++		}
++
++		*name_owner = strdup(*name_owner);
++		dbus_message_unref(reply);
++
++		if (!*name_owner) {
++			r = -ENOMEM;
++			goto fail;
++		}
++
++	} else if (dbus_error_has_name(error, "org.freedesktop.DBus.Error.NameHasNoOwner"))
++		dbus_error_free(error);
++	else {
++		r = -EIO;
++		goto fail;
++	}
++
++	return 0;
++
++fail:
++	if (msg)
++		dbus_message_unref(msg);
++
++	return r;
++}
+diff --git a/src/modules/reserve.h b/src/modules/reserve.h
+index bc50870..6527bd7 100644
+--- a/src/modules/reserve.h
++++ b/src/modules/reserve.h
+@@ -72,6 +72,15 @@ void rd_set_userdata(rd_device *d, void *userdata);
+  * userdata was set. */
+ void* rd_get_userdata(rd_device *d);
+ 
++/* Helper function to get the unique connection name owning a given
++ * name. Returns 0 on success, a negative errno style return value on
++ * error. */
++int rd_dbus_get_name_owner(
++	DBusConnection *connection,
++	const char *name,
++	char **name_owner,
++	DBusError *error);
++
+ #ifdef __cplusplus
+ }
+ #endif
+-- 
+1.8.1.2
+
