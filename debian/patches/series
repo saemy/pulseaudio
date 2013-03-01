@@ -16,3 +16,6 @@
 0105-udev-Add-use_ucm-module-argument.patch
 0106-reserve-Move-get_name_owner-to-the-public-rd_device-.patch
 0107-reserve-Fix-leaking-NameLost-signals-after-release-a.patch
+0108-module-jackdbus-detect-channel-config.patch
+0109-module-jackdbus-detect-channel-config-fix.patch
+0110-module-jackdbus-detect-channel-config-default.patch
