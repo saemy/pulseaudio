@@ -1,3 +1,9 @@
+pulseaudio (1:3.0-0ubuntu4b1) raring; urgency=low
+
+  * No-change rebuild against libudev1
+
+ -- Martin Pitt <martin.pitt@ubuntu.com>  Wed, 13 Mar 2013 07:02:09 +0000
+
 pulseaudio (1:3.0-0ubuntu4) raring; urgency=low
 
   [ Kaj Ailomaa ]
