@@ -22,7 +22,6 @@
   USA.
 ***/
 
-char *pa_pid_file_name(void);
 int pa_pid_file_create(const char *procname);
 int pa_pid_file_remove(void);
 int pa_pid_file_check_running(pid_t *pid, const char *procname);

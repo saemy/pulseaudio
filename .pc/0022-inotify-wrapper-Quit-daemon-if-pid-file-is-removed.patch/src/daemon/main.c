@@ -74,7 +74,6 @@
 #include <pulsecore/core-rtclock.h>
 #include <pulsecore/core-scache.h>
 #include <pulsecore/core.h>
-#include <pulsecore/inotify-wrapper.h>
 #include <pulsecore/module.h>
 #include <pulsecore/cli-command.h>
 #include <pulsecore/log.h>
@@ -359,15 +358,6 @@ static char *check_configured_address(void) {
     return default_server;
 }
 
-static bool valid_pid_file = false;
-static void pid_file_deleted(void *userdata)
-{
-    pa_core *c = userdata;
-    pa_log_info("Our pid file has been deleted (probably due to session logout), quitting...");
-    valid_pid_file = false;
-    pa_core_exit(c, true, 0);
-}
-
 #ifdef HAVE_DBUS
 static pa_dbus_connection *register_dbus_name(pa_core *c, DBusBusType bus, const char* name) {
     DBusError error;
@@ -410,6 +400,7 @@ int main(int argc, char *argv[]) {
     char *s;
     char *configured_address;
     int r = 0, retval = 1, d = 0;
+    pa_bool_t valid_pid_file = FALSE;
     pa_bool_t ltdl_init = FALSE;
     int passed_fd = -1;
     const char *e;
@@ -421,7 +412,6 @@ int main(int argc, char *argv[]) {
     pa_time_event *win32_timer;
     struct timeval win32_tv;
 #endif
-    pa_inotify *pid_monitor = NULL;
     int autospawn_fd = -1;
     pa_bool_t autospawn_locked = FALSE;
 #ifdef HAVE_DBUS
@@ -992,7 +982,7 @@ int main(int argc, char *argv[]) {
             goto finish;
         }
 
-        valid_pid_file = true;
+        valid_pid_file = TRUE;
     }
 
     pa_disable_sigpipe();
@@ -1021,9 +1011,6 @@ int main(int argc, char *argv[]) {
         pa_log(_("pa_core_new() failed."));
         goto finish;
     }
-
-    if (valid_pid_file)
-        pid_monitor = pa_inotify_start(pa_pid_file_name(), c, pid_file_deleted, c);
 
     c->default_sample_spec = conf->default_sample_spec;
     c->alternate_sample_rate = conf->alternate_sample_rate;
@@ -1171,9 +1158,6 @@ finish:
     if (mainloop && win32_timer)
         pa_mainloop_get_api(mainloop)->time_free(win32_timer);
 #endif
-
-    if (pid_monitor)
-        pa_inotify_stop(pid_monitor);
 
     if (c) {
         /* Ensure all the modules/samples are unloaded when the core is still ref'ed,

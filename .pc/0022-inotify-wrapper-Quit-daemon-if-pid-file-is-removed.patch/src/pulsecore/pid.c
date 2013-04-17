@@ -183,11 +183,6 @@ static int proc_name_ours(pid_t pid, const char *procname) {
 
 }
 
-char *pa_pid_file_name()
-{
-    return pa_runtime_path("pid");
-}
-
 /* Create a new PID file for the current process. */
 int pa_pid_file_create(const char *procname) {
     int fd = -1;

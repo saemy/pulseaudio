@@ -7,6 +7,7 @@
 0019-disable-dbus-protocol.patch
 0020-stream-Return-error-in-case-a-client-peeks-to-early.patch
 0021-disable-ucm.patch
+0022-inotify-wrapper-Quit-daemon-if-pid-file-is-removed.patch
 
 # From upstream
 0101-alsa-mixer-Fix-the-analog-output-speaker-always-path.patch
@@ -19,3 +20,4 @@
 0108-module-jackdbus-detect-channel-config.patch
 0109-module-jackdbus-detect-channel-config-fix.patch
 0110-module-jackdbus-detect-channel-config-default.patch
+

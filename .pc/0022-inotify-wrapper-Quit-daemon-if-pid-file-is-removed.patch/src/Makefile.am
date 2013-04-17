@@ -840,7 +840,6 @@ libpulsecore_@PA_MAJORMINOR@_la_SOURCES = \
 		pulsecore/fdsem.c pulsecore/fdsem.h \
 		pulsecore/g711.c pulsecore/g711.h \
 		pulsecore/hook-list.c pulsecore/hook-list.h \
-		pulsecore/inotify-wrapper.c pulsecore/inotify-wrapper.h \
 		pulsecore/ltdl-helper.c pulsecore/ltdl-helper.h \
 		pulsecore/modargs.c pulsecore/modargs.h \
 		pulsecore/modinfo.c pulsecore/modinfo.h \
