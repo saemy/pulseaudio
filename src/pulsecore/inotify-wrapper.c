@@ -28,10 +28,20 @@ static void inotify_cb(
         pa_io_event_flags_t events,
         void *userdata) {
 
+    struct {
+        struct inotify_event event;
+        char name[NAME_MAX+1];
+    } buf;
+
     pa_inotify *i = userdata;
     int pid_fd;
 
     pa_assert(i);
+
+    if (pa_read(fd, &buf, sizeof(buf), NULL) < (int) sizeof(buf.event))
+        pa_log_warn("inotify did not read a full event.");
+    else
+        pa_log_debug("inotify callback, event mask: 0x%x", (int) buf.event.mask);
 
     pid_fd = pa_open_cloexec(i->filename, O_RDONLY
 #ifdef O_NOFOLLOW
@@ -66,7 +76,7 @@ pa_inotify *pa_inotify_start(const char *filename, void *userdata, pa_inotify_cb
         return NULL;
     }
 
-    if (inotify_add_watch(i->fd, filename, IN_ATTRIB|IN_CLOSE_WRITE|IN_DELETE_SELF|IN_MOVE_SELF) < 0) {
+    if (inotify_add_watch(i->fd, filename, IN_DELETE_SELF|IN_MOVE_SELF) < 0) {
         pa_log("inotify_add_watch() failed: %s", pa_cstrerror(errno));
         pa_inotify_stop(i);
         return NULL;

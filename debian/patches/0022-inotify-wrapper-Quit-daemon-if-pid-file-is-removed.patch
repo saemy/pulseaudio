@@ -1,4 +1,4 @@
-From a0695829bdc0e76ef35dd6c3ce00141b6e7863af Mon Sep 17 00:00:00 2001
+From afd823b21c544eb4764d9e38f2f15e5a4f50ab7a Mon Sep 17 00:00:00 2001
 From: David Henningsson <david.henningsson@canonical.com>
 Date: Wed, 17 Apr 2013 16:07:32 +0200
 Subject: [PATCH] inotify-wrapper: Quit daemon if pid file is removed
@@ -16,19 +16,19 @@ Buglink: https://bugs.launchpad.net/bugs/1167192
 Signed-off-by: David Henningsson <david.henningsson@canonical.com>
 ---
  src/Makefile.am                 |    1 +
- src/daemon/main.c               |   20 ++++++++-
- src/pulsecore/inotify-wrapper.c |   93 +++++++++++++++++++++++++++++++++++++++
- src/pulsecore/inotify-wrapper.h |   13 ++++++
- src/pulsecore/pid.c             |    5 +++
+ src/daemon/main.c               |   20 +++++++-
+ src/pulsecore/inotify-wrapper.c |  103 +++++++++++++++++++++++++++++++++++++++
+ src/pulsecore/inotify-wrapper.h |   13 +++++
+ src/pulsecore/pid.c             |    5 ++
  src/pulsecore/pid.h             |    1 +
- 6 files changed, 131 insertions(+), 2 deletions(-)
+ 6 files changed, 141 insertions(+), 2 deletions(-)
  create mode 100644 src/pulsecore/inotify-wrapper.c
  create mode 100644 src/pulsecore/inotify-wrapper.h
 
 Index: pulseaudio-3.0/src/Makefile.am
 ===================================================================
---- pulseaudio-3.0.orig/src/Makefile.am	2013-04-17 17:30:30.912840834 +0200
-+++ pulseaudio-3.0/src/Makefile.am	2013-04-17 17:30:30.900840834 +0200
+--- pulseaudio-3.0.orig/src/Makefile.am	2013-04-18 13:25:39.017144501 +0200
++++ pulseaudio-3.0/src/Makefile.am	2013-04-18 13:25:39.009144501 +0200
 @@ -840,6 +840,7 @@
  		pulsecore/fdsem.c pulsecore/fdsem.h \
  		pulsecore/g711.c pulsecore/g711.h \
@@ -39,8 +39,8 @@ Index: pulseaudio-3.0/src/Makefile.am
  		pulsecore/modinfo.c pulsecore/modinfo.h \
 Index: pulseaudio-3.0/src/daemon/main.c
 ===================================================================
---- pulseaudio-3.0.orig/src/daemon/main.c	2013-04-17 17:30:30.912840834 +0200
-+++ pulseaudio-3.0/src/daemon/main.c	2013-04-17 17:30:30.904840834 +0200
+--- pulseaudio-3.0.orig/src/daemon/main.c	2013-04-18 13:25:39.017144501 +0200
++++ pulseaudio-3.0/src/daemon/main.c	2013-04-18 13:25:39.009144501 +0200
 @@ -74,6 +74,7 @@
  #include <pulsecore/core-rtclock.h>
  #include <pulsecore/core-scache.h>
@@ -113,8 +113,8 @@ Index: pulseaudio-3.0/src/daemon/main.c
 Index: pulseaudio-3.0/src/pulsecore/inotify-wrapper.c
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ pulseaudio-3.0/src/pulsecore/inotify-wrapper.c	2013-04-17 17:30:30.904840834 +0200
-@@ -0,0 +1,93 @@
++++ pulseaudio-3.0/src/pulsecore/inotify-wrapper.c	2013-04-18 13:25:39.009144501 +0200
+@@ -0,0 +1,103 @@
 +#ifdef HAVE_CONFIG_H
 +#include <config.h>
 +#endif
@@ -145,10 +145,20 @@ Index: pulseaudio-3.0/src/pulsecore/inotify-wrapper.c
 +        pa_io_event_flags_t events,
 +        void *userdata) {
 +
++    struct {
++        struct inotify_event event;
++        char name[NAME_MAX+1];
++    } buf;
++
 +    pa_inotify *i = userdata;
 +    int pid_fd;
 +
 +    pa_assert(i);
++
++    if (pa_read(fd, &buf, sizeof(buf), NULL) < (int) sizeof(buf.event))
++        pa_log_warn("inotify did not read a full event.");
++    else
++        pa_log_debug("inotify callback, event mask: 0x%x", (int) buf.event.mask);
 +
 +    pid_fd = pa_open_cloexec(i->filename, O_RDONLY
 +#ifdef O_NOFOLLOW
@@ -183,7 +193,7 @@ Index: pulseaudio-3.0/src/pulsecore/inotify-wrapper.c
 +        return NULL;
 +    }
 +
-+    if (inotify_add_watch(i->fd, filename, IN_ATTRIB|IN_CLOSE_WRITE|IN_DELETE_SELF|IN_MOVE_SELF) < 0) {
++    if (inotify_add_watch(i->fd, filename, IN_DELETE_SELF|IN_MOVE_SELF) < 0) {
 +        pa_log("inotify_add_watch() failed: %s", pa_cstrerror(errno));
 +        pa_inotify_stop(i);
 +        return NULL;
@@ -211,7 +221,7 @@ Index: pulseaudio-3.0/src/pulsecore/inotify-wrapper.c
 Index: pulseaudio-3.0/src/pulsecore/inotify-wrapper.h
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ pulseaudio-3.0/src/pulsecore/inotify-wrapper.h	2013-04-17 17:30:30.904840834 +0200
++++ pulseaudio-3.0/src/pulsecore/inotify-wrapper.h	2013-04-18 13:25:39.013144501 +0200
 @@ -0,0 +1,13 @@
 +#ifndef fooinotifywrapperhfoo
 +#define fooinotifywrapperhfoo
@@ -228,8 +238,8 @@ Index: pulseaudio-3.0/src/pulsecore/inotify-wrapper.h
 +#endif
 Index: pulseaudio-3.0/src/pulsecore/pid.c
 ===================================================================
---- pulseaudio-3.0.orig/src/pulsecore/pid.c	2013-04-17 17:30:30.912840834 +0200
-+++ pulseaudio-3.0/src/pulsecore/pid.c	2013-04-17 17:30:30.908840834 +0200
+--- pulseaudio-3.0.orig/src/pulsecore/pid.c	2013-04-18 13:25:39.017144501 +0200
++++ pulseaudio-3.0/src/pulsecore/pid.c	2013-04-18 13:25:39.013144501 +0200
 @@ -183,6 +183,11 @@
  
  }
@@ -244,8 +254,8 @@ Index: pulseaudio-3.0/src/pulsecore/pid.c
      int fd = -1;
 Index: pulseaudio-3.0/src/pulsecore/pid.h
 ===================================================================
---- pulseaudio-3.0.orig/src/pulsecore/pid.h	2013-04-17 17:30:30.912840834 +0200
-+++ pulseaudio-3.0/src/pulsecore/pid.h	2013-04-17 17:30:30.908840834 +0200
+--- pulseaudio-3.0.orig/src/pulsecore/pid.h	2013-04-18 13:25:39.017144501 +0200
++++ pulseaudio-3.0/src/pulsecore/pid.h	2013-04-18 13:25:39.013144501 +0200
 @@ -22,6 +22,7 @@
    USA.
  ***/
