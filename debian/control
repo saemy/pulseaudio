@@ -33,6 +33,8 @@ Build-Depends: debhelper (>= 8.1.3),
     libssl-dev,
     libtdb-dev,
     libudev-dev (>= 143) [linux-any],
+    libsystemd-daemon-dev [linux-any],
+    libsystemd-login-dev [linux-any],
     libwrap0-dev,
     libx11-xcb-dev,
     libxcb1-dev (>= 1.6),
@@ -46,7 +48,7 @@ Homepage: http://www.pulseaudio.org
 Package: pulseaudio
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, adduser,
-  lsb-base (>= 3.2-13), consolekit,
+  lsb-base (>= 3.2-13), libpam-systemd,
   udev (>= 143) [linux-any],
   libasound2-plugins [linux-any], libpulse0 (= ${binary:Version})
 Conflicts: libltdl3 (<< 1.5.24-1), pulseaudio-module-udev (<< ${binary:Version}),

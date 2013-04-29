@@ -31,6 +31,7 @@
 #include <sys/types.h>
 
 #include <systemd/sd-login.h>
+#include <systemd/sd-daemon.h>
 
 #include <pulse/xmalloc.h>
 
@@ -169,8 +170,8 @@ int pa__init(pa_module *m) {
 
     pa_assert(m);
 
-    /* If we are not actually running logind become a NOP */
-    if (access("/run/systemd/seats/", F_OK) < 0)
+    /* If we are not actually booting with systemd become a NOP */
+    if (sd_booted() <= 0)
         return 0;
 
     ma = pa_modargs_new(m->argument, valid_modargs);

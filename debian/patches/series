@@ -20,4 +20,4 @@
 0108-module-jackdbus-detect-channel-config.patch
 0109-module-jackdbus-detect-channel-config-fix.patch
 0110-module-jackdbus-detect-channel-config-default.patch
-
+0111-logind-check.patch 
