@@ -8,6 +8,7 @@
 0020-stream-Return-error-in-case-a-client-peeks-to-early.patch
 0021-disable-ucm.patch
 0022-inotify-wrapper-Quit-daemon-if-pid-file-is-removed.patch
+0023-fixing_snd_mixer_poll_descriptors_count_when_zero.patch
 
 # From upstream
 0101-alsa-mixer-Fix-the-analog-output-speaker-always-path.patch

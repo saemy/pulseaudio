@@ -1,3 +1,11 @@
+pulseaudio (1:3.0-0ubuntu8) saucy; urgency=low
+
+  * debian/patches/0023-fixing_snd_mixer_poll_descriptors_count_when_zero.patch:
+    - Avoid abort when poll descriptor is 0, such as when using it with the
+      audioflinger bridge, like done in ubuntu touch (LP: #1092377)
+
+ -- Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>  Mon, 10 Jun 2013 17:54:18 -0300
+
 pulseaudio (1:3.0-0ubuntu7) saucy; urgency=low
 
   [ Martin Pitt ]
