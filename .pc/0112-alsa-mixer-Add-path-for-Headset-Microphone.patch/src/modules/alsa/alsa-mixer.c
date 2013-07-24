@@ -2339,7 +2339,6 @@ static int path_verify(pa_alsa_path *p) {
         { "analog-input-microphone-rear",     N_("Rear Microphone") },
         { "analog-input-microphone-dock",     N_("Dock Microphone") },
         { "analog-input-microphone-internal", N_("Internal Microphone") },
-        { "analog-input-microphone-headset",  N_("Headset Microphone") },
         { "analog-input-linein",        N_("Line In") },
         { "analog-input-radio",         N_("Radio") },
         { "analog-input-video",         N_("Video") },

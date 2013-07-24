@@ -1,3 +1,11 @@
+pulseaudio (1:3.0-0ubuntu9) saucy; urgency=low
+
+  * debian/patches/0112-*, 0113-*: Add better support for machines with
+    "Headphone Mic" and "Headset Mic" jacks, used in some newer hardware
+    (LP: #1169143)
+
+ -- David Henningsson <david.henningsson@canonical.com>  Wed, 24 Jul 2013 10:06:39 +0200
+
 pulseaudio (1:3.0-0ubuntu8) saucy; urgency=low
 
   * debian/patches/0023-fixing_snd_mixer_poll_descriptors_count_when_zero.patch:

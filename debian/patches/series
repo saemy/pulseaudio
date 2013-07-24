@@ -22,3 +22,5 @@
 0109-module-jackdbus-detect-channel-config-fix.patch
 0110-module-jackdbus-detect-channel-config-default.patch
 0111-logind-check.patch 
+0112-alsa-mixer-Add-path-for-Headset-Microphone.patch
+0113-alsa-mixer-Switch-to-Headphone-when-Headphone-mic-ja.patch

@@ -1177,7 +1177,6 @@ dist_alsapaths_DATA = \
 		modules/alsa/mixer/paths/analog-input-dock-mic.conf \
 		modules/alsa/mixer/paths/analog-input-front-mic.conf \
 		modules/alsa/mixer/paths/analog-input-headphone-mic.conf \
-		modules/alsa/mixer/paths/analog-input-headset-mic.conf \
 		modules/alsa/mixer/paths/analog-input-internal-mic.conf \
 		modules/alsa/mixer/paths/analog-input-internal-mic-always.conf \
 		modules/alsa/mixer/paths/analog-input-rear-mic.conf \
