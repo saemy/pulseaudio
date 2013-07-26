@@ -25,22 +25,22 @@ Signed-off-by: David Henningsson <david.henningsson@canonical.com>
  create mode 100644 src/pulsecore/inotify-wrapper.c
  create mode 100644 src/pulsecore/inotify-wrapper.h
 
-Index: pulseaudio-3.0/src/Makefile.am
+Index: pulseaudio-3.99.1/src/Makefile.am
 ===================================================================
---- pulseaudio-3.0.orig/src/Makefile.am	2013-04-18 13:25:39.017144501 +0200
-+++ pulseaudio-3.0/src/Makefile.am	2013-04-18 13:25:39.009144501 +0200
-@@ -840,6 +840,7 @@
+--- pulseaudio-3.99.1.orig/src/Makefile.am	2013-04-25 15:52:10.471412650 +1000
++++ pulseaudio-3.99.1/src/Makefile.am	2013-04-25 15:52:10.415412651 +1000
+@@ -865,6 +865,7 @@
+ 		pulsecore/core.c pulsecore/core.h \
  		pulsecore/fdsem.c pulsecore/fdsem.h \
- 		pulsecore/g711.c pulsecore/g711.h \
  		pulsecore/hook-list.c pulsecore/hook-list.h \
 +		pulsecore/inotify-wrapper.c pulsecore/inotify-wrapper.h \
  		pulsecore/ltdl-helper.c pulsecore/ltdl-helper.h \
  		pulsecore/modargs.c pulsecore/modargs.h \
  		pulsecore/modinfo.c pulsecore/modinfo.h \
-Index: pulseaudio-3.0/src/daemon/main.c
+Index: pulseaudio-3.99.1/src/daemon/main.c
 ===================================================================
---- pulseaudio-3.0.orig/src/daemon/main.c	2013-04-18 13:25:39.017144501 +0200
-+++ pulseaudio-3.0/src/daemon/main.c	2013-04-18 13:25:39.009144501 +0200
+--- pulseaudio-3.99.1.orig/src/daemon/main.c	2013-04-25 15:52:10.471412650 +1000
++++ pulseaudio-3.99.1/src/daemon/main.c	2013-04-25 15:52:10.415412651 +1000
 @@ -74,6 +74,7 @@
  #include <pulsecore/core-rtclock.h>
  #include <pulsecore/core-scache.h>
@@ -49,7 +49,7 @@ Index: pulseaudio-3.0/src/daemon/main.c
  #include <pulsecore/module.h>
  #include <pulsecore/cli-command.h>
  #include <pulsecore/log.h>
-@@ -358,6 +359,15 @@
+@@ -360,6 +361,15 @@
      return default_server;
  }
  
@@ -65,7 +65,7 @@ Index: pulseaudio-3.0/src/daemon/main.c
  #ifdef HAVE_DBUS
  static pa_dbus_connection *register_dbus_name(pa_core *c, DBusBusType bus, const char* name) {
      DBusError error;
-@@ -400,7 +410,6 @@
+@@ -402,7 +412,6 @@
      char *s;
      char *configured_address;
      int r = 0, retval = 1, d = 0;
@@ -73,7 +73,7 @@ Index: pulseaudio-3.0/src/daemon/main.c
      pa_bool_t ltdl_init = FALSE;
      int passed_fd = -1;
      const char *e;
-@@ -412,6 +421,7 @@
+@@ -414,6 +423,7 @@
      pa_time_event *win32_timer;
      struct timeval win32_tv;
  #endif
@@ -81,7 +81,7 @@ Index: pulseaudio-3.0/src/daemon/main.c
      int autospawn_fd = -1;
      pa_bool_t autospawn_locked = FALSE;
  #ifdef HAVE_DBUS
-@@ -982,7 +992,7 @@
+@@ -984,7 +994,7 @@
              goto finish;
          }
  
@@ -90,7 +90,7 @@ Index: pulseaudio-3.0/src/daemon/main.c
      }
  
      pa_disable_sigpipe();
-@@ -1012,6 +1022,9 @@
+@@ -1014,6 +1024,9 @@
          goto finish;
      }
  
@@ -100,7 +100,7 @@ Index: pulseaudio-3.0/src/daemon/main.c
      c->default_sample_spec = conf->default_sample_spec;
      c->alternate_sample_rate = conf->alternate_sample_rate;
      c->default_channel_map = conf->default_channel_map;
-@@ -1159,6 +1172,9 @@
+@@ -1161,6 +1174,9 @@
          pa_mainloop_get_api(mainloop)->time_free(win32_timer);
  #endif
  
@@ -110,10 +110,10 @@ Index: pulseaudio-3.0/src/daemon/main.c
      if (c) {
          /* Ensure all the modules/samples are unloaded when the core is still ref'ed,
           * as unlink callback hooks in modules may need the core to be ref'ed */
-Index: pulseaudio-3.0/src/pulsecore/inotify-wrapper.c
+Index: pulseaudio-3.99.1/src/pulsecore/inotify-wrapper.c
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ pulseaudio-3.0/src/pulsecore/inotify-wrapper.c	2013-04-18 13:25:39.009144501 +0200
++++ pulseaudio-3.99.1/src/pulsecore/inotify-wrapper.c	2013-04-25 15:52:10.451412650 +1000
 @@ -0,0 +1,103 @@
 +#ifdef HAVE_CONFIG_H
 +#include <config.h>
@@ -218,10 +218,10 @@ Index: pulseaudio-3.0/src/pulsecore/inotify-wrapper.c
 +        pa_core_unref(i->core);
 +    pa_xfree(i);
 +}
-Index: pulseaudio-3.0/src/pulsecore/inotify-wrapper.h
+Index: pulseaudio-3.99.1/src/pulsecore/inotify-wrapper.h
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ pulseaudio-3.0/src/pulsecore/inotify-wrapper.h	2013-04-18 13:25:39.013144501 +0200
++++ pulseaudio-3.99.1/src/pulsecore/inotify-wrapper.h	2013-04-25 15:52:10.471412650 +1000
 @@ -0,0 +1,13 @@
 +#ifndef fooinotifywrapperhfoo
 +#define fooinotifywrapperhfoo
@@ -236,10 +236,10 @@ Index: pulseaudio-3.0/src/pulsecore/inotify-wrapper.h
 +void pa_inotify_stop(pa_inotify *i);
 +
 +#endif
-Index: pulseaudio-3.0/src/pulsecore/pid.c
+Index: pulseaudio-3.99.1/src/pulsecore/pid.c
 ===================================================================
---- pulseaudio-3.0.orig/src/pulsecore/pid.c	2013-04-18 13:25:39.017144501 +0200
-+++ pulseaudio-3.0/src/pulsecore/pid.c	2013-04-18 13:25:39.013144501 +0200
+--- pulseaudio-3.99.1.orig/src/pulsecore/pid.c	2013-04-25 15:52:10.471412650 +1000
++++ pulseaudio-3.99.1/src/pulsecore/pid.c	2013-04-25 15:52:10.471412650 +1000
 @@ -183,6 +183,11 @@
  
  }
@@ -252,10 +252,10 @@ Index: pulseaudio-3.0/src/pulsecore/pid.c
  /* Create a new PID file for the current process. */
  int pa_pid_file_create(const char *procname) {
      int fd = -1;
-Index: pulseaudio-3.0/src/pulsecore/pid.h
+Index: pulseaudio-3.99.1/src/pulsecore/pid.h
 ===================================================================
---- pulseaudio-3.0.orig/src/pulsecore/pid.h	2013-04-18 13:25:39.017144501 +0200
-+++ pulseaudio-3.0/src/pulsecore/pid.h	2013-04-18 13:25:39.013144501 +0200
+--- pulseaudio-3.99.1.orig/src/pulsecore/pid.h	2013-04-25 15:52:10.471412650 +1000
++++ pulseaudio-3.99.1/src/pulsecore/pid.h	2013-04-25 15:52:10.471412650 +1000
 @@ -22,6 +22,7 @@
    USA.
  ***/

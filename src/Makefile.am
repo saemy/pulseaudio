@@ -41,13 +41,16 @@ endif
 #     Compiler/linker flags       #
 ###################################
 
-AM_CFLAGS = \
+AM_CPPFLAGS = \
 	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/src/modules \
 	-I$(top_builddir)/src/modules \
-	$(PTHREAD_CFLAGS) \
 	-DPA_ALSA_PATHS_DIR=\"$(alsapathsdir)\" \
 	-DPA_ALSA_PROFILE_SETS_DIR=\"$(alsaprofilesetsdir)\"
+AM_CFLAGS = \
+	$(PTHREAD_CFLAGS) \
+	-DPA_SRCDIR=\"$(abs_srcdir)\" \
+	-DPA_BUILDDIR=\"$(abs_builddir)\"
 AM_CXXFLAGS = $(AM_CFLAGS)
 SERVER_CFLAGS = -D__INCLUDED_FROM_PULSE_AUDIO
 
@@ -231,7 +234,6 @@ TESTS_default = \
 		utf8-test \
 		format-test \
 		get-binary-name-test \
-		ipacl-test \
 		hook-list-test \
 		memblock-test \
 		asyncq-test \
@@ -245,9 +247,12 @@ TESTS_default = \
 		mix-test \
 		proplist-test \
 		cpu-test \
-		lock-autospawn-test
+		lock-autospawn-test \
+		mult-s16-test \
+		mix-special-test
 
 TESTS_norun = \
+		ipacl-test \
 		mcalign-test \
 		pacat-simple \
 		parec-simple \
@@ -287,7 +292,7 @@ TESTS_default += \
 		mainloop-test-glib
 endif
 
-if HAVE_GTK20
+if HAVE_GTK30
 TESTS_norun += \
 		gtk-test
 endif
@@ -295,6 +300,8 @@ endif
 if HAVE_ALSA
 TESTS_norun += \
 		alsa-time-test
+TESTS_default += \
+		alsa-mixer-path-test
 endif
 
 if HAVE_TESTS
@@ -503,6 +510,16 @@ cpu_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINOR@.la libpulse.la libpuls
 cpu_test_CFLAGS = $(AM_CFLAGS) $(LIBCHECK_CFLAGS)
 cpu_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS) $(LIBCHECK_LIBS)
 
+mult_s16_test_SOURCES = tests/mult-s16-test.c
+mult_s16_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINOR@.la libpulse.la libpulsecommon-@PA_MAJORMINOR@.la
+mult_s16_test_CFLAGS = $(AM_CFLAGS) $(LIBCHECK_CFLAGS)
+mult_s16_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS) $(LIBCHECK_LIBS)
+
+mix_special_test_SOURCES = tests/mix-special-test.c
+mix_special_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINOR@.la libpulse.la libpulsecommon-@PA_MAJORMINOR@.la
+mix_special_test_CFLAGS = $(AM_CFLAGS) $(LIBCHECK_CFLAGS)
+mix_special_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS) $(LIBCHECK_LIBS)
+
 rtstutter_SOURCES = tests/rtstutter.c
 rtstutter_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINOR@.la libpulse.la libpulsecommon-@PA_MAJORMINOR@.la
 rtstutter_CFLAGS = $(AM_CFLAGS)
@@ -524,14 +541,19 @@ sigbus_test_CFLAGS = $(AM_CFLAGS) $(LIBCHECK_CFLAGS)
 sigbus_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS) $(LIBCHECK_LIBS)
 
 gtk_test_SOURCES = tests/gtk-test.c
-gtk_test_LDADD = $(AM_LDADD) $(GTK20_LIBS) libpulse-mainloop-glib.la libpulse.la
-gtk_test_CFLAGS = $(AM_CFLAGS) $(GTK20_CFLAGS)
+gtk_test_LDADD = $(AM_LDADD) $(GTK30_LIBS) libpulse-mainloop-glib.la libpulse.la
+gtk_test_CFLAGS = $(AM_CFLAGS) $(GTK30_CFLAGS)
 gtk_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
 
 alsa_time_test_SOURCES = tests/alsa-time-test.c
 alsa_time_test_LDADD = $(AM_LDADD) $(ASOUNDLIB_LIBS)
 alsa_time_test_CFLAGS = $(AM_CFLAGS) $(ASOUNDLIB_CFLAGS)
 alsa_time_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS)
+
+alsa_mixer_path_test_SOURCES = tests/alsa-mixer-path-test.c
+alsa_mixer_path_test_CFLAGS = $(AM_CFLAGS) $(LIBCHECK_CFLAGS) $(ASOUNDLIB_CFLAGS)
+alsa_mixer_path_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINOR@.la libpulse.la libpulsecommon-@PA_MAJORMINOR@.la libalsa-util.la
+alsa_mixer_path_test_LDFLAGS = $(AM_LDFLAGS) $(BINLDFLAGS) $(LIBCHECK_LIBS)
 
 usergroup_test_SOURCES = tests/usergroup-test.c
 usergroup_test_LDADD = $(AM_LDADD) libpulsecore-@PA_MAJORMINOR@.la libpulse.la libpulsecommon-@PA_MAJORMINOR@.la
@@ -586,6 +608,7 @@ libpulsecommon_@PA_MAJORMINOR@_la_SOURCES = \
 		pulsecore/dynarray.c pulsecore/dynarray.h \
 		pulsecore/endianmacros.h \
 		pulsecore/flist.c pulsecore/flist.h \
+		pulsecore/g711.c pulsecore/g711.h \
 		pulsecore/hashmap.c pulsecore/hashmap.h \
 		pulsecore/i18n.c pulsecore/i18n.h \
 		pulsecore/idxset.c pulsecore/idxset.h \
@@ -617,6 +640,7 @@ libpulsecommon_@PA_MAJORMINOR@_la_SOURCES = \
 		pulsecore/queue.c pulsecore/queue.h \
 		pulsecore/random.c pulsecore/random.h \
 		pulsecore/refcnt.h \
+		pulsecore/sample-util.c pulsecore/sample-util.h \
 		pulsecore/shm.c pulsecore/shm.h \
 		pulsecore/bitset.c pulsecore/bitset.h \
 		pulsecore/socket-client.c pulsecore/socket-client.h \
@@ -624,6 +648,8 @@ libpulsecommon_@PA_MAJORMINOR@_la_SOURCES = \
 		pulsecore/socket-util.c pulsecore/socket-util.h \
 		pulsecore/strbuf.c pulsecore/strbuf.h \
 		pulsecore/strlist.c pulsecore/strlist.h \
+		pulsecore/svolume_c.c pulsecore/svolume_arm.c \
+		pulsecore/svolume_mmx.c pulsecore/svolume_sse.c \
 		pulsecore/tagstruct.c pulsecore/tagstruct.h \
 		pulsecore/time-smoother.c pulsecore/time-smoother.h \
 		pulsecore/tokenizer.c pulsecore/tokenizer.h \
@@ -650,7 +676,7 @@ libpulsecommon_@PA_MAJORMINOR@_la_LDFLAGS += $(X11_LIBS)
 endif
 
 # proplist-util.h uses these header files, but not the library itself!
-libpulsecommon_@PA_MAJORMINOR@_la_CFLAGS += $(GLIB20_CFLAGS) $(GTK20_CFLAGS)
+libpulsecommon_@PA_MAJORMINOR@_la_CFLAGS += $(GLIB20_CFLAGS) $(GTK30_CFLAGS)
 
 ## Please note that libpulsecommon implicitly also depends on<
 ## libpulse! i.e. we have a cyclic dependancy here. Which is intended
@@ -838,7 +864,6 @@ libpulsecore_@PA_MAJORMINOR@_la_SOURCES = \
 		pulsecore/core-subscribe.c pulsecore/core-subscribe.h \
 		pulsecore/core.c pulsecore/core.h \
 		pulsecore/fdsem.c pulsecore/fdsem.h \
-		pulsecore/g711.c pulsecore/g711.h \
 		pulsecore/hook-list.c pulsecore/hook-list.h \
 		pulsecore/inotify-wrapper.c pulsecore/inotify-wrapper.h \
 		pulsecore/ltdl-helper.c pulsecore/ltdl-helper.h \
@@ -854,13 +879,11 @@ libpulsecore_@PA_MAJORMINOR@_la_SOURCES = \
 		pulsecore/remap_mmx.c pulsecore/remap_sse.c \
 		pulsecore/resampler.c pulsecore/resampler.h \
 		pulsecore/rtpoll.c pulsecore/rtpoll.h \
-		pulsecore/sample-util.c pulsecore/sample-util.h \
+		pulsecore/mix.c pulsecore/mix.h \
 		pulsecore/cpu.h \
 		pulsecore/cpu-arm.c pulsecore/cpu-arm.h \
 		pulsecore/cpu-x86.c pulsecore/cpu-x86.h \
 		pulsecore/cpu-orc.c pulsecore/cpu-orc.h \
-		pulsecore/svolume_c.c pulsecore/svolume_arm.c \
-		pulsecore/svolume_mmx.c pulsecore/svolume_sse.c \
 		pulsecore/sconv-s16be.c pulsecore/sconv-s16be.h \
 		pulsecore/sconv-s16le.c pulsecore/sconv-s16le.h \
 		pulsecore/sconv_sse.c \
@@ -883,10 +906,12 @@ libpulsecore_@PA_MAJORMINOR@_la_LDFLAGS = $(AM_LDFLAGS) -avoid-version
 libpulsecore_@PA_MAJORMINOR@_la_LIBADD = $(AM_LIBADD) $(LIBLTDL) $(LIBSAMPLERATE_LIBS) $(LIBSPEEX_LIBS) $(LIBSNDFILE_LIBS) $(WINSOCK_LIBS) $(LTLIBICONV) libpulsecommon-@PA_MAJORMINOR@.la libpulse.la libpulsecore-foreign.la
 
 if HAVE_NEON
-noinst_LTLIBRARIES += libpulsecore_sconv_neon.la
+noinst_LTLIBRARIES += libpulsecore_sconv_neon.la libpulsecore_mix_neon.la
 libpulsecore_sconv_neon_la_SOURCES = pulsecore/sconv_neon.c
 libpulsecore_sconv_neon_la_CFLAGS = $(AM_CFLAGS) $(NEON_CFLAGS)
-libpulsecore_@PA_MAJORMINOR@_la_LIBADD += libpulsecore_sconv_neon.la
+libpulsecore_mix_neon_la_SOURCES = pulsecore/mix_neon.c
+libpulsecore_mix_neon_la_CFLAGS = $(AM_CFLAGS) $(NEON_CFLAGS)
+libpulsecore_@PA_MAJORMINOR@_la_LIBADD += libpulsecore_sconv_neon.la libpulsecore_mix_neon.la
 endif
 
 if HAVE_ORC
@@ -1060,6 +1085,7 @@ modlibexec_LTLIBRARIES += \
 		module-combine.la \
 		module-combine-sink.la \
 		module-remap-sink.la \
+		module-remap-source.la \
 		module-ladspa-sink.la \
 		module-tunnel-sink.la \
 		module-tunnel-source.la \
@@ -1073,7 +1099,8 @@ modlibexec_LTLIBRARIES += \
 		module-switch-on-connect.la \
 		module-switch-on-port-available.la \
 		module-filter-apply.la \
-		module-filter-heuristics.la
+		module-filter-heuristics.la \
+		module-role-ducking.la
 
 if HAVE_ESOUND
 modlibexec_LTLIBRARIES += \
@@ -1325,6 +1352,7 @@ SYMDEF_FILES = \
 		module-combine-symdef.h \
 		module-combine-sink-symdef.h \
 		module-remap-sink-symdef.h \
+		module-remap-source-symdef.h \
 		module-ladspa-sink-symdef.h \
 		module-equalizer-sink-symdef.h \
 		module-match-symdef.h \
@@ -1382,6 +1410,7 @@ SYMDEF_FILES = \
 		module-raop-discover-symdef.h \
 		module-gconf-symdef.h \
 		module-position-event-sounds-symdef.h \
+		module-role-ducking-symdef.h \
 		module-augment-properties-symdef.h \
 		module-role-cork-symdef.h \
 		module-console-kit-symdef.h \
@@ -1574,8 +1603,12 @@ module_remap_sink_la_SOURCES = modules/module-remap-sink.c
 module_remap_sink_la_LDFLAGS = $(MODULE_LDFLAGS)
 module_remap_sink_la_LIBADD = $(MODULE_LIBADD)
 
+module_remap_source_la_SOURCES = modules/module-remap-source.c
+module_remap_source_la_LDFLAGS = $(MODULE_LDFLAGS)
+module_remap_source_la_LIBADD = $(MODULE_LIBADD)
+
 module_ladspa_sink_la_SOURCES = modules/module-ladspa-sink.c modules/ladspa.h
-module_ladspa_sink_la_CFLAGS = -DLADSPA_PATH=\"$(libdir)/ladspa:/usr/local/lib/ladspa:/usr/lib/ladspa:/usr/local/lib64/ladspa:/usr/lib64/ladspa\" $(AM_CFLAGS)
+module_ladspa_sink_la_CFLAGS = -DLADSPA_PATH=\"$(libdir)/ladspa:/usr/local/lib/ladspa:/usr/lib/ladspa:/usr/local/lib64/ladspa:/usr/lib64/ladspa\" $(AM_CFLAGS) $(SERVER_CFLAGS)
 module_ladspa_sink_la_LDFLAGS = $(MODULE_LDFLAGS)
 module_ladspa_sink_la_LIBADD = $(MODULE_LIBADD) $(LIBLTDL)
 
@@ -1778,6 +1811,12 @@ module_position_event_sounds_la_SOURCES = modules/module-position-event-sounds.c
 module_position_event_sounds_la_LDFLAGS = $(MODULE_LDFLAGS)
 module_position_event_sounds_la_LIBADD = $(MODULE_LIBADD)
 module_position_event_sounds_la_CFLAGS = $(AM_CFLAGS)
+
+# Ducking effect based on stream roles
+module_role_ducking_la_SOURCES = modules/module-role-ducking.c
+module_role_ducking_la_LDFLAGS = $(MODULE_LDFLAGS)
+module_role_ducking_la_LIBADD = $(MODULE_LIBADD)
+module_role_ducking_la_CFLAGS = $(AM_CFLAGS)
 
 # Augment properties from XDG .desktop files
 module_augment_properties_la_SOURCES = modules/module-augment-properties.c

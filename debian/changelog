@@ -1,10 +1,32 @@
+pulseaudio (1:4.0-0ubuntu1) saucy; urgency=low
+
+  [ Luke Yelavich ]
+  * New upstream test release
+  * Drop all patches originally taken from upstream
+  * 0022-inotify-wrapper-Quit-daemon-if-pid-file-is-removed.patch: Refreshed
+  * Update symbols files
+  * Update shlibs
+  * Add/update lintian overrides from Debian package
+
+  [ David Henningsson ]
+  * 0019-disable-dbus-protocol.patch: Dropped, bug fixed upstream
+  * 0007-handle-Master-Front.patch: Dropped. "Master Front" does not exist as
+    of Linux 3.9 
+  * Drop references to pulseaudio-module-udev, pulseaudio-rygel-media-server and
+    pulseaudio-module-hal. We didn't have them in 12.04 and we don't support
+    upgrades bypassing 12.04.
+  * Ship new module-remap-source module and bash completion 
+  * Add an build/run autopkgtest for libpulse-dev
+
+ -- Luke Yelavich <themuso@ubuntu.com>  Fri, 26 Jul 2013 11:02:06 +1000
+
 pulseaudio (1:3.0-0ubuntu9) saucy; urgency=low
 
   * debian/patches/0112-*, 0113-*: Add better support for machines with
     "Headphone Mic" and "Headset Mic" jacks, used in some newer hardware
     (LP: #1169143)
 
- -- David Henningsson <david.henningsson@canonical.com>  Wed, 24 Jul 2013 10:06:39 +0200
+ -- David Henningsson <david.henningsson@canonical.com>  Wed, 24 Jul 2013 09:43:55 +0200
 
 pulseaudio (1:3.0-0ubuntu8) saucy; urgency=low
 
