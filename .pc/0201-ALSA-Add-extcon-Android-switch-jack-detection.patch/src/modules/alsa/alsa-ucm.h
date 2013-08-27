@@ -102,7 +102,6 @@ void pa_alsa_ucm_add_ports_combination(
         pa_card_profile *cp,
         pa_core *core);
 int pa_alsa_ucm_set_port(pa_alsa_ucm_mapping_context *context, pa_device_port *port, bool is_sink);
-int pa_alsa_ucm_port_contains(const char *port_name, const char *dev_name, bool is_sink);
 
 void pa_alsa_ucm_free(pa_alsa_ucm_config *ucm);
 void pa_alsa_ucm_mapping_context_free(pa_alsa_ucm_mapping_context *context);

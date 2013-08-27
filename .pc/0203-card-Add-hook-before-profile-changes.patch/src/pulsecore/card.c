@@ -272,8 +272,6 @@ int pa_card_set_profile(pa_card *c, const char *name, pa_bool_t save) {
         return 0;
     }
 
-    pa_hook_fire(&c->core->hooks[PA_CORE_HOOK_CARD_PROFILE_CHANGING], profile);
-
     if ((r = c->set_profile(c, profile)) < 0)
         return r;
 

@@ -1175,10 +1175,6 @@ modlibexec_LTLIBRARIES += \
 		module-alsa-source.la \
 		module-alsa-card.la
 
-if HAVE_ANDROID
-modlibexec_LTLIBRARIES += module-android-audio-hal.la
-endif
-
 dist_alsaprofilesets_DATA = \
 		modules/alsa/mixer/profile-sets/default.conf \
 		modules/alsa/mixer/profile-sets/extra-hdmi.conf \
@@ -1382,7 +1378,6 @@ SYMDEF_FILES = \
 		module-alsa-sink-symdef.h \
 		module-alsa-source-symdef.h \
 		module-alsa-card-symdef.h \
-		module-android-audio-hal-symdef.h \
 		module-coreaudio-detect-symdef.h \
 		module-coreaudio-device-symdef.h \
 		module-solaris-symdef.h \
@@ -1710,7 +1705,6 @@ module_coreaudio_device_la_LIBADD = $(MODULE_LIBADD)
 libalsa_util_la_SOURCES = \
 		modules/alsa/alsa-util.c modules/alsa/alsa-util.h \
 		modules/alsa/alsa-ucm.c modules/alsa/alsa-ucm.h \
-		modules/alsa/alsa-extcon.c modules/alsa/alsa-extcon.h \
 		modules/alsa/alsa-mixer.c modules/alsa/alsa-mixer.h \
 		modules/alsa/alsa-sink.c modules/alsa/alsa-sink.h \
 		modules/alsa/alsa-source.c modules/alsa/alsa-source.h \
@@ -1729,13 +1723,6 @@ if HAVE_DBUS
 libalsa_util_la_SOURCES += modules/reserve.h modules/reserve.c modules/reserve-monitor.h modules/reserve-monitor.c
 libalsa_util_la_LIBADD += $(DBUS_LIBS)
 libalsa_util_la_CFLAGS += $(DBUS_CFLAGS)
-endif
-
-if HAVE_ANDROID
-module_android_audio_hal_la_SOURCES = modules/alsa/module-android-audio-hal.c
-module_android_audio_hal_la_LDFLAGS = $(MODULE_LDFLAGS)
-module_android_audio_hal_la_LIBADD = $(MODULE_LIBADD) $(ASOUNDLIB_LIBS) libalsa-util.la -lhardware
-module_android_audio_hal_la_CFLAGS = $(AM_CFLAGS) $(ASOUNDLIB_CFLAGS)
 endif
 
 module_alsa_sink_la_SOURCES = modules/alsa/module-alsa-sink.c

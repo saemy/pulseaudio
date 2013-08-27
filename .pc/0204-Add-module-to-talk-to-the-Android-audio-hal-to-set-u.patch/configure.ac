@@ -783,21 +783,6 @@ AC_SUBST(HAVE_ALSA)
 AM_CONDITIONAL([HAVE_ALSA], [test "x$HAVE_ALSA" = x1])
 AS_IF([test "x$HAVE_ALSA" = "x1"], AC_DEFINE([HAVE_ALSA], 1, [Have ALSA?]))
 
-#### Android audio HAL support (optional) ####
-
-AC_ARG_ENABLE([android],
-    AS_HELP_STRING([--disable-android],[Disable optional Android audio HAL support]))
-
-AS_IF([test "x$enable_android" != "xno"],
-    [AC_CHECK_HEADERS([android/hardware/audio.h], HAVE_ANDROID=1, HAVE_ANDROID=0)],
-    HAVE_ANDROID=0)
-
-AS_IF([test "x$enable_android" = "xyes" && test "x$HAVE_ANDROID" = "x0"],
-    [AC_MSG_ERROR([*** Android audio HAL support not found])])
-
-AM_CONDITIONAL([HAVE_ANDROID], [test "x$HAVE_ANDROID" = "x1"])
-AS_IF([test "x$HAVE_ANDROID" = "x1"], AC_DEFINE([HAVE_ANDROID], 1, [Have Android audio HAL?]))
-
 #### EsounD support (optional) ####
 
 AC_ARG_ENABLE([esound],
@@ -1417,7 +1402,6 @@ AS_IF([test "x$HAVE_X11" = "x1"], ENABLE_X11=yes, ENABLE_X11=no)
 AS_IF([test "x$HAVE_OSS_OUTPUT" = "x1"], ENABLE_OSS_OUTPUT=yes, ENABLE_OSS_OUTPUT=no)
 AS_IF([test "x$HAVE_OSS_WRAPPER" = "x1"], ENABLE_OSS_WRAPPER=yes, ENABLE_OSS_WRAPPER=no)
 AS_IF([test "x$HAVE_ALSA" = "x1"], ENABLE_ALSA=yes, ENABLE_ALSA=no)
-AS_IF([test "x$HAVE_ANDROID" = "x1"], ENABLE_ANDROID=yes, ENABLE_ANDROID=no)
 AS_IF([test "x$HAVE_COREAUDIO" = "x1"], ENABLE_COREAUDIO=yes, ENABLE_COREAUDIO=no)
 AS_IF([test "x$HAVE_SOLARIS" = "x1"], ENABLE_SOLARIS=yes, ENABLE_SOLARIS=no)
 AS_IF([test "x$HAVE_WAVEOUT" = "x1"], ENABLE_WAVEOUT=yes, ENABLE_WAVEOUT=no)
@@ -1471,7 +1455,6 @@ echo "
     Enable OSS Wrapper:            ${ENABLE_OSS_WRAPPER}
     Enable EsounD:                 ${ENABLE_ESOUND}
     Enable Alsa:                   ${ENABLE_ALSA}
-    Enable Android audio HAL:      ${ENABLE_ANDROID}
     Enable CoreAudio:              ${ENABLE_COREAUDIO}
     Enable Solaris:                ${ENABLE_SOLARIS}
     Enable WaveOut:                ${ENABLE_WAVEOUT}

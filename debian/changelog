@@ -1,3 +1,11 @@
+pulseaudio (1:4.0-0ubuntu2) saucy; urgency=low
+
+  * patches/020*, control, pulseaudio.install.armhf:
+    Add patches for Ubuntu Touch, make us detect Android jacks,
+    and talk to the Audio HAL for voice calls
+
+ -- David Henningsson <david.henningsson@canonical.com>  Tue, 27 Aug 2013 10:53:46 +0200
+
 pulseaudio (1:4.0-0ubuntu1) saucy; urgency=low
 
   [ Luke Yelavich ]

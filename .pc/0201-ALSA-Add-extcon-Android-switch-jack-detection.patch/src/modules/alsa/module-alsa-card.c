@@ -38,7 +38,6 @@
 
 #include "alsa-util.h"
 #include "alsa-ucm.h"
-#include "alsa-extcon.h"
 #include "alsa-sink.h"
 #include "alsa-source.h"
 #include "module-alsa-card-symdef.h"
@@ -115,7 +114,6 @@ struct userdata {
     snd_hctl_t *hctl_handle;
     pa_hashmap *jacks;
     pa_alsa_fdlist *mixer_fdl;
-    pa_alsa_extcon *extcon;
 
     pa_card *card;
 
@@ -754,7 +752,6 @@ int pa__init(pa_module *m) {
     u->card->set_profile = card_set_profile;
 
     init_jacks(u);
-    u->extcon = pa_alsa_extcon_new(m->core, u->card);
     init_profile(u);
     init_eld_ctls(u);
 
@@ -820,8 +817,6 @@ void pa__done(pa_module*m) {
     if (u->source_output_unlink_hook_slot)
         pa_hook_slot_free(u->source_output_unlink_hook_slot);
 
-    if (u->extcon)
-        pa_alsa_extcon_free(u->extcon);
     if (u->mixer_fdl)
         pa_alsa_fdlist_free(u->mixer_fdl);
     if (u->mixer_handle)
