@@ -1,3 +1,10 @@
+pulseaudio (1:4.0-0ubuntu3) saucy; urgency=low
+
+  * Ubuntu Phone: Enable setting volume in voice calls
+    Fix speaker phone mode on Nexus 4
+
+ -- David Henningsson <david.henningsson@canonical.com>  Tue, 10 Sep 2013 12:32:10 -0400
+
 pulseaudio (1:4.0-0ubuntu2+build1) saucy; urgency=low
 
   * No-change rebuild (updated android-platform-headers)

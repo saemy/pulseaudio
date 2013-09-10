@@ -102,6 +102,7 @@ static void print_err(int err, const char *func)
 static void set_stream_device(struct audio_stream *stream, int device)
 {
     char *s;
+    int err;
 
     if (!stream->set_parameters) {
         pa_log_warn("no set_parameters callback");
@@ -110,7 +111,9 @@ static void set_stream_device(struct audio_stream *stream, int device)
 
     s = pa_sprintf_malloc("routing=%d;", device);
     pa_log_debug("Calling set_parameters with '%s'", s);
-    print_err(stream->set_parameters(stream, s), "set_parameters");
+
+    err = stream->set_parameters(stream, s);
+    print_err(err < 0 ? err : 0, "set_parameters");
 
     pa_xfree(s);
 }
@@ -154,10 +157,22 @@ static void start_voice_call(pa_android_audio_hal *hal)
     if (hal->istream)
         set_stream_device(&hal->istream->common, hal->idevice);
 
+}
+
+static void set_voice_call_volume(pa_android_audio_hal *hal, double v)
+{
     if (!hal->dev->set_voice_volume)
         pa_log_warn("no set_voice_volume callback");
     else
-        print_err(hal->dev->set_voice_volume(hal->dev, 1.0f), "set_voice_volume");
+        print_err(hal->dev->set_voice_volume(hal->dev, v), "set_voice_volume");
+}
+
+static void set_voice_mic_mute(pa_android_audio_hal *hal, bool mute)
+{
+    if (!hal->dev->set_mic_mute)
+        pa_log_warn("no set_mic_mute callback");
+    else
+        print_err(hal->dev->set_mic_mute(hal->dev, mute), "set_mic_mute");
 }
 
 static void stop_voice_call(pa_android_audio_hal *hal)
@@ -198,10 +213,10 @@ static void stop_voice_call(pa_android_audio_hal *hal)
 
 static void update_devices(pa_android_audio_hal *hal)
 {
-    if (hal->ostream)
-        set_stream_device(&hal->ostream->common, hal->odevice);
     if (hal->istream)
         set_stream_device(&hal->istream->common, hal->idevice);
+    if (hal->ostream)
+        set_stream_device(&hal->ostream->common, hal->odevice);
 }
 
 static void pa_android_audio_hal_free(pa_android_audio_hal *hal)
@@ -243,6 +258,8 @@ struct userdata {
     int savedidev, savedodev;
 };
 
+static struct userdata* userdata_instance = NULL; /* We need this for the volume callback */
+
 static bool get_devices_for_card(struct userdata *u, pa_card *card)
 {
     pa_sink *sink;
@@ -278,7 +295,7 @@ static bool get_devices_for_card(struct userdata *u, pa_card *card)
 
         pa_log_debug("Current input port: %s", n);
         if (pa_alsa_ucm_port_contains(n, SND_USE_CASE_DEV_HANDSET, false))
-            idev |= AUDIO_DEVICE_IN_BUILTIN_MIC;
+            idev |= (odev & AUDIO_DEVICE_OUT_SPEAKER) ? AUDIO_DEVICE_IN_BACK_MIC : AUDIO_DEVICE_IN_BUILTIN_MIC;
         if (pa_alsa_ucm_port_contains(n, SND_USE_CASE_DEV_HEADSET, false))
             idev |= AUDIO_DEVICE_IN_WIRED_HEADSET;
     }
@@ -297,6 +314,48 @@ static bool get_devices_for_card(struct userdata *u, pa_card *card)
     return hasports;
 }
 
+static void sink_set_volume_cb(pa_sink *s)
+{
+    struct userdata *u = userdata_instance;
+    pa_volume_t v = pa_cvolume_avg(&s->real_volume);
+    double d = (double) v / (double) PA_VOLUME_NORM; /* pa_sw_volume_to_linear(v); */
+    pa_log_debug("Setting voice volume for sink '%s' to %f", s->name, d);
+    if (u->hal)
+        set_voice_call_volume(u->hal, d);
+}
+
+static void source_set_mute_cb(pa_source *s)
+{
+    struct userdata *u = userdata_instance;
+    pa_log_debug("Setting voice mic mute for source '%s' to %d", s->name, (int) s->muted);
+    if (u->hal)
+       set_voice_mic_mute(u->hal, s->muted);
+}
+
+static void teardown_voice_call(struct userdata *u, pa_card *card)
+{
+    /* remove volume hook */
+    {
+        uint32_t state;
+        pa_sink *sink;
+        pa_source *source;
+
+        PA_IDXSET_FOREACH(sink, card->sinks, state) {
+/*            pa_log_error("Debug: sink %s, flags %d, set_volume %p", sink->name, sink->flags, sink->set_volume); */
+            if (sink->set_volume == sink_set_volume_cb)
+                sink->set_volume = NULL;
+        }
+
+        PA_IDXSET_FOREACH(source, card->sources, state) {
+/*            pa_log_error("Debug: sink %s, flags %d, set_volume %p", sink->name, sink->flags, sink->set_volume); */
+            if (source->set_mute == source_set_mute_cb)
+                source->set_mute = NULL;
+        }
+    }
+
+    stop_voice_call(u->hal);
+}
+
 static bool setup_voice_call(struct userdata *u, pa_card *card)
 {
     if (!u->hal) {
@@ -307,6 +366,28 @@ static bool setup_voice_call(struct userdata *u, pa_card *card)
 
     get_devices_for_card(u, card);
     start_voice_call(u->hal);
+
+    /* setup volume hook */
+    {
+        uint32_t state;
+        pa_sink *sink;
+        pa_source *source;
+
+        PA_IDXSET_FOREACH(sink, card->sinks, state) {
+/*            pa_log_debug("Debug: sink %s, flags %d, set_volume %p", sink->name, sink->flags, sink->set_volume); */
+            if (!sink->set_volume)
+                sink->set_volume = sink_set_volume_cb;
+            sink_set_volume_cb(sink);
+        }
+
+        PA_IDXSET_FOREACH(source, card->sources, state) {
+            if (!source->set_mute)
+                source->set_mute = source_set_mute_cb;
+            source_set_mute_cb(source);
+        }
+
+    }
+
     return true;
 }
 
@@ -343,10 +424,7 @@ static pa_hook_result_t card_profile_before_hook_callback(pa_core *c, pa_card_pr
         return PA_HOOK_OK;
 
     if (u->hal && !profile_in_voice_call(profile)) {
-        stop_voice_call(u->hal);
-/* This causes the N4 HAL to crash on 2nd call. :-( */
-/*        pa_android_audio_hal_free(u->hal);
-        u->hal = NULL; */
+        teardown_voice_call(u, profile->card);
     }
 
     get_devices_for_card(u, profile->card); /* Save for later usage */
@@ -371,6 +449,9 @@ int pa__init(pa_module*m) {
     uint32_t state;
 
     struct userdata *u = pa_xnew0(struct userdata, 1);
+
+    pa_assert(userdata_instance == NULL);
+    userdata_instance = u;
 
     u->card_profile_before_slot = pa_hook_connect(&m->core->hooks[PA_CORE_HOOK_CARD_PROFILE_CHANGING],
         PA_HOOK_LATE+30, (pa_hook_cb_t) card_profile_before_hook_callback, u);
@@ -415,6 +496,9 @@ void pa__done(pa_module*m) {
 
     if (u->hal)
         pa_android_audio_hal_free(u->hal);
+
+    if (u == userdata_instance)
+        userdata_instance = NULL;
 
     pa_xfree(u);
 }
