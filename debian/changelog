@@ -1,3 +1,10 @@
+pulseaudio (1:4.0-0ubuntu4) saucy; urgency=low
+
+  * debian/patches/Disable-tsched-for-Nexus-10.patch
+    Add a workaround patch for Nexus 10 and only apply it on armhf
+
+ -- David Henningsson <david.henningsson@canonical.com>  Thu, 12 Sep 2013 17:07:21 -0400
+
 pulseaudio (1:4.0-0ubuntu3) saucy; urgency=low
 
   * Ubuntu Phone: Enable setting volume in voice calls
