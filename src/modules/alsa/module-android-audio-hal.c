@@ -341,12 +341,22 @@ static void teardown_voice_call(struct userdata *u, pa_card *card)
         pa_source *source;
 
         PA_IDXSET_FOREACH(sink, card->sinks, state) {
+            pa_sink_state_t s = pa_sink_get_state(sink);
+            if (s == PA_SINK_RUNNING || s == PA_SINK_IDLE) {
+                pa_log_debug("Suspending sink %s (tearing down voice call)", sink->name);
+                pa_sink_suspend(sink, true, PA_SUSPEND_SESSION);
+            }
 /*            pa_log_error("Debug: sink %s, flags %d, set_volume %p", sink->name, sink->flags, sink->set_volume); */
             if (sink->set_volume == sink_set_volume_cb)
                 sink->set_volume = NULL;
         }
 
         PA_IDXSET_FOREACH(source, card->sources, state) {
+            pa_source_state_t s = pa_source_get_state(source);
+            if (s == PA_SOURCE_RUNNING || s == PA_SOURCE_IDLE) {
+                pa_log_debug("Suspending source %s (tearing down voice call)", source->name);
+                pa_source_suspend(source, true, PA_SUSPEND_SESSION);
+            }
 /*            pa_log_error("Debug: sink %s, flags %d, set_volume %p", sink->name, sink->flags, sink->set_volume); */
             if (source->set_mute == source_set_mute_cb)
                 source->set_mute = NULL;

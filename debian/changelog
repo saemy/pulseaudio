@@ -1,3 +1,11 @@
+pulseaudio (1:4.0-0ubuntu5) saucy; urgency=low
+
+  [ David Henningsson ]
+  * Ubuntu phone: Suspend sinks/sources before tearing down voice calls
+    (LP: #1226298)
+
+ -- Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>  Wed, 25 Sep 2013 13:06:49 -0300
+
 pulseaudio (1:4.0-0ubuntu4) saucy; urgency=low
 
   * debian/patches/Disable-tsched-for-Nexus-10.patch
