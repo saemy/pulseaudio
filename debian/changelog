@@ -1,3 +1,15 @@
+pulseaudio (1:4.0-0ubuntu6) saucy; urgency=low
+
+  * Three crash fixes from upstream:
+    0102-combine-Fix-crash-in-output-freeing.patch:
+    - Fix crash in module-combine-sink (LP: #1228759)
+    0103-resampler-Fix-peaks-resampler-s-channel-handling.patch:
+    - Fix crash in peak resampler (LP: #1212019)
+    0104-default-system.pa-Do-not-load-module-dbus-protocol.patch:
+    - module-dbus-protocol is still crashy, unfortunately (LP: #1213369)
+
+ -- David Henningsson <david.henningsson@canonical.com>  Mon, 30 Sep 2013 15:59:20 +0200
+
 pulseaudio (1:4.0-0ubuntu5) saucy; urgency=low
 
   [ David Henningsson ]

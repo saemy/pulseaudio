@@ -12,6 +12,9 @@
 0101-alsa-ucm-Make-combination-ports-have-lower-priority.patch
 
 # Ubuntu touch stuff
+0102-combine-Fix-crash-in-output-freeing.patch
+0103-resampler-Fix-peaks-resampler-s-channel-handling.patch
+0104-default-system.pa-Do-not-load-module-dbus-protocol.patch
 0201-ALSA-Add-extcon-Android-switch-jack-detection.patch
 0202-dont-probe-ucm.patch
 0203-card-Add-hook-before-profile-changes.patch
