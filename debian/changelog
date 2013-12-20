@@ -1,3 +1,11 @@
+pulseaudio (1:4.0-0ubuntu7) trusty; urgency=low
+
+  * 0204-Add-module-to-talk-to-the-Android-audio-hal-to-set-u.patch:
+    - Refresh patch to use libhardware's pkg-config instead of looking for
+      audio.h
+
+ -- Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>  Fri, 20 Dec 2013 04:08:09 -0200
+
 pulseaudio (1:4.0-0ubuntu6) saucy; urgency=low
 
   * Three crash fixes from upstream:
@@ -8,7 +16,7 @@ pulseaudio (1:4.0-0ubuntu6) saucy; urgency=low
     0104-default-system.pa-Do-not-load-module-dbus-protocol.patch:
     - module-dbus-protocol is still crashy, unfortunately (LP: #1213369)
 
- -- David Henningsson <david.henningsson@canonical.com>  Mon, 30 Sep 2013 15:59:20 +0200
+ -- David Henningsson <david.henningsson@canonical.com>  Mon, 30 Sep 2013 15:11:42 +0200
 
 pulseaudio (1:4.0-0ubuntu5) saucy; urgency=low
 

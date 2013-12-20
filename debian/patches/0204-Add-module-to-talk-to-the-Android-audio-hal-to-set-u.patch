@@ -14,8 +14,8 @@ Subject: [PATCH] Add module to talk to the Android audio hal to set up voice
 
 Index: pulseaudio-4.0/configure.ac
 ===================================================================
---- pulseaudio-4.0.orig/configure.ac	2013-09-24 16:05:50.300875383 +0200
-+++ pulseaudio-4.0/configure.ac	2013-09-24 16:05:50.288875384 +0200
+--- pulseaudio-4.0.orig/configure.ac	2013-06-03 15:43:40.000000000 -0300
++++ pulseaudio-4.0/configure.ac	2013-12-20 03:29:28.516611974 -0200
 @@ -783,6 +783,21 @@
  AM_CONDITIONAL([HAVE_ALSA], [test "x$HAVE_ALSA" = x1])
  AS_IF([test "x$HAVE_ALSA" = "x1"], AC_DEFINE([HAVE_ALSA], 1, [Have ALSA?]))
@@ -26,7 +26,7 @@ Index: pulseaudio-4.0/configure.ac
 +    AS_HELP_STRING([--disable-android],[Disable optional Android audio HAL support]))
 +
 +AS_IF([test "x$enable_android" != "xno"],
-+    [AC_CHECK_HEADERS([android/hardware/audio.h], HAVE_ANDROID=1, HAVE_ANDROID=0)],
++    [PKG_CHECK_MODULES(LIBHARDWARE, [ libhardware ], HAVE_ANDROID=1, HAVE_ANDROID=0)],
 +    HAVE_ANDROID=0)
 +
 +AS_IF([test "x$enable_android" = "xyes" && test "x$HAVE_ANDROID" = "x0"],
@@ -56,8 +56,8 @@ Index: pulseaudio-4.0/configure.ac
      Enable WaveOut:                ${ENABLE_WAVEOUT}
 Index: pulseaudio-4.0/src/Makefile.am
 ===================================================================
---- pulseaudio-4.0.orig/src/Makefile.am	2013-09-24 16:05:50.300875383 +0200
-+++ pulseaudio-4.0/src/Makefile.am	2013-09-24 16:05:50.292875384 +0200
+--- pulseaudio-4.0.orig/src/Makefile.am	2013-12-17 13:58:08.000000000 -0200
++++ pulseaudio-4.0/src/Makefile.am	2013-12-20 03:29:26.112611891 -0200
 @@ -1175,6 +1175,10 @@
  		module-alsa-source.la \
  		module-alsa-card.la
@@ -84,8 +84,8 @@ Index: pulseaudio-4.0/src/Makefile.am
 +if HAVE_ANDROID
 +module_android_audio_hal_la_SOURCES = modules/alsa/module-android-audio-hal.c
 +module_android_audio_hal_la_LDFLAGS = $(MODULE_LDFLAGS)
-+module_android_audio_hal_la_LIBADD = $(MODULE_LIBADD) $(ASOUNDLIB_LIBS) libalsa-util.la -lhardware
-+module_android_audio_hal_la_CFLAGS = $(AM_CFLAGS) $(ASOUNDLIB_CFLAGS)
++module_android_audio_hal_la_LIBADD = $(MODULE_LIBADD) $(ASOUNDLIB_LIBS) $(LIBHARDWARE_LIBS) libalsa-util.la
++module_android_audio_hal_la_CFLAGS = $(AM_CFLAGS) $(ASOUNDLIB_CFLAGS) $(LIBHARDWARE_CFLAGS)
 +endif
 +
  module_alsa_sink_la_SOURCES = modules/alsa/module-alsa-sink.c
@@ -93,8 +93,8 @@ Index: pulseaudio-4.0/src/Makefile.am
  module_alsa_sink_la_LIBADD = $(MODULE_LIBADD) $(ASOUNDLIB_LIBS) libalsa-util.la
 Index: pulseaudio-4.0/src/daemon/default.pa.in
 ===================================================================
---- pulseaudio-4.0.orig/src/daemon/default.pa.in	2013-09-24 16:05:50.300875383 +0200
-+++ pulseaudio-4.0/src/daemon/default.pa.in	2013-09-24 16:05:50.292875384 +0200
+--- pulseaudio-4.0.orig/src/daemon/default.pa.in	2013-12-17 13:58:08.000000000 -0200
++++ pulseaudio-4.0/src/daemon/default.pa.in	2013-12-17 13:58:08.000000000 -0200
 @@ -78,6 +78,10 @@
  load-module module-detect
  .endif
@@ -109,7 +109,7 @@ Index: pulseaudio-4.0/src/daemon/default.pa.in
 Index: pulseaudio-4.0/src/modules/alsa/module-android-audio-hal.c
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ pulseaudio-4.0/src/modules/alsa/module-android-audio-hal.c	2013-09-24 16:07:12.884872440 +0200
++++ pulseaudio-4.0/src/modules/alsa/module-android-audio-hal.c	2013-12-17 13:58:08.000000000 -0200
 @@ -0,0 +1,514 @@
 +/***
 +  This file is part of PulseAudio.

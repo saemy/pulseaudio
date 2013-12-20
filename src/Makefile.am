@@ -1734,8 +1734,8 @@ endif
 if HAVE_ANDROID
 module_android_audio_hal_la_SOURCES = modules/alsa/module-android-audio-hal.c
 module_android_audio_hal_la_LDFLAGS = $(MODULE_LDFLAGS)
-module_android_audio_hal_la_LIBADD = $(MODULE_LIBADD) $(ASOUNDLIB_LIBS) libalsa-util.la -lhardware
-module_android_audio_hal_la_CFLAGS = $(AM_CFLAGS) $(ASOUNDLIB_CFLAGS)
+module_android_audio_hal_la_LIBADD = $(MODULE_LIBADD) $(ASOUNDLIB_LIBS) $(LIBHARDWARE_LIBS) libalsa-util.la
+module_android_audio_hal_la_CFLAGS = $(AM_CFLAGS) $(ASOUNDLIB_CFLAGS) $(LIBHARDWARE_CFLAGS)
 endif
 
 module_alsa_sink_la_SOURCES = modules/alsa/module-alsa-sink.c

@@ -789,7 +789,7 @@ AC_ARG_ENABLE([android],
     AS_HELP_STRING([--disable-android],[Disable optional Android audio HAL support]))
 
 AS_IF([test "x$enable_android" != "xno"],
-    [AC_CHECK_HEADERS([android/hardware/audio.h], HAVE_ANDROID=1, HAVE_ANDROID=0)],
+    [PKG_CHECK_MODULES(LIBHARDWARE, [ libhardware ], HAVE_ANDROID=1, HAVE_ANDROID=0)],
     HAVE_ANDROID=0)
 
 AS_IF([test "x$enable_android" = "xyes" && test "x$HAVE_ANDROID" = "x0"],
