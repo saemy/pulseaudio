@@ -1,3 +1,10 @@
+pulseaudio (1:4.0-0ubuntu8) trusty; urgency=medium
+
+  * 0201-ALSA-Add-extcon-Android-switch-jack-detection.patch:
+    - Only getting udev events from the switch subsystem (LP: #1284410)
+
+ -- Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>  Mon, 24 Feb 2014 23:43:50 -0300
+
 pulseaudio (1:4.0-0ubuntu7) trusty; urgency=low
 
   * 0204-Add-module-to-talk-to-the-Android-audio-hal-to-set-u.patch:

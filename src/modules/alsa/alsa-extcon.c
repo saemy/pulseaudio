@@ -215,12 +215,12 @@ static bool init_udev(pa_alsa_extcon *u, pa_core *core) {
         pa_log("udev_monitor_new_from_netlink failed.");
         return false;
     }
-/*
+
     if (udev_monitor_filter_add_match_subsystem_devtype(u->udev.monitor, EXTCON_NAME, NULL) < 0) {
         pa_log("udev_monitor_filter_add_match_subsystem_devtype failed.");
         return false;
     }
-*/
+
     if (udev_monitor_enable_receiving(u->udev.monitor) < 0) {
         pa_log("udev_monitor_enable_receiving failed.");
         return false;
