@@ -19,4 +19,4 @@
 0202-dont-probe-ucm.patch
 0203-card-Add-hook-before-profile-changes.patch
 0204-Add-module-to-talk-to-the-Android-audio-hal-to-set-u.patch
-
+0205-suspend-on-idle-ensure-we-still-time-out-if-a-stream-remains-corked.patch

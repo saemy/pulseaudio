@@ -1,3 +1,11 @@
+pulseaudio (1:4.0-0ubuntu9) trusty; urgency=medium
+
+  * 0205-suspend-on-idle-ensure-we-still-time-out-if-a-stream-remains-corked.patch:
+    - Properly suspending sink/source if the stream started corked and remains
+      corked (LP: #1284415)
+
+ -- Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>  Tue, 25 Feb 2014 16:37:26 -0300
+
 pulseaudio (1:4.0-0ubuntu8) trusty; urgency=medium
 
   * 0201-ALSA-Add-extcon-Android-switch-jack-detection.patch:
