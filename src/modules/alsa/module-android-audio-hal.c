@@ -180,7 +180,13 @@ static void stop_voice_call(pa_android_audio_hal *hal)
     pa_assert(hal);
     pa_assert(hal->dev);
 
+    if (!hal->dev->set_mode)
+        pa_log_warn("no set_mode callback");
+    else
+        print_err(hal->dev->set_mode(hal->dev, AUDIO_MODE_NORMAL), "set_mode");
+
     if (hal->ostream) {
+        set_stream_device(&hal->ostream->common, hal->odevice);
         if (!hal->dev->close_output_stream)
             pa_log_warn("no close_output_stream callback");
         else {
@@ -191,6 +197,7 @@ static void stop_voice_call(pa_android_audio_hal *hal)
     }
 
     if (hal->istream) {
+        set_stream_device(&hal->istream->common, hal->idevice);
         if (!hal->dev->close_input_stream)
             pa_log_warn("no close_input_stream callback");
         else {
@@ -204,11 +211,6 @@ static void stop_voice_call(pa_android_audio_hal *hal)
         pa_log_debug("Setting mode to normal through set_parameters (Nexus 4 workaround)");
         print_err(hal->dev->set_parameters(hal->dev, "CALL_KEY=0;"), "device set_parameters");
     }
-
-    if (!hal->dev->set_mode)
-        pa_log_warn("no set_mode callback");
-    else
-        print_err(hal->dev->set_mode(hal->dev, AUDIO_MODE_NORMAL), "set_mode");
 }
 
 static void update_devices(pa_android_audio_hal *hal)

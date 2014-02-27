@@ -15,7 +15,7 @@ Subject: [PATCH] Add module to talk to the Android audio hal to set up voice
 Index: pulseaudio-4.0/configure.ac
 ===================================================================
 --- pulseaudio-4.0.orig/configure.ac	2013-06-03 15:43:40.000000000 -0300
-+++ pulseaudio-4.0/configure.ac	2013-12-20 03:29:28.516611974 -0200
++++ pulseaudio-4.0/configure.ac	2014-02-28 02:41:17.000000000 -0300
 @@ -783,6 +783,21 @@
  AM_CONDITIONAL([HAVE_ALSA], [test "x$HAVE_ALSA" = x1])
  AS_IF([test "x$HAVE_ALSA" = "x1"], AC_DEFINE([HAVE_ALSA], 1, [Have ALSA?]))
@@ -56,8 +56,8 @@ Index: pulseaudio-4.0/configure.ac
      Enable WaveOut:                ${ENABLE_WAVEOUT}
 Index: pulseaudio-4.0/src/Makefile.am
 ===================================================================
---- pulseaudio-4.0.orig/src/Makefile.am	2013-12-17 13:58:08.000000000 -0200
-+++ pulseaudio-4.0/src/Makefile.am	2013-12-20 03:29:26.112611891 -0200
+--- pulseaudio-4.0.orig/src/Makefile.am	2014-02-28 02:41:17.000000000 -0300
++++ pulseaudio-4.0/src/Makefile.am	2014-02-28 02:41:17.000000000 -0300
 @@ -1175,6 +1175,10 @@
  		module-alsa-source.la \
  		module-alsa-card.la
@@ -93,8 +93,8 @@ Index: pulseaudio-4.0/src/Makefile.am
  module_alsa_sink_la_LIBADD = $(MODULE_LIBADD) $(ASOUNDLIB_LIBS) libalsa-util.la
 Index: pulseaudio-4.0/src/daemon/default.pa.in
 ===================================================================
---- pulseaudio-4.0.orig/src/daemon/default.pa.in	2013-12-17 13:58:08.000000000 -0200
-+++ pulseaudio-4.0/src/daemon/default.pa.in	2013-12-17 13:58:08.000000000 -0200
+--- pulseaudio-4.0.orig/src/daemon/default.pa.in	2014-02-28 02:41:17.000000000 -0300
++++ pulseaudio-4.0/src/daemon/default.pa.in	2014-02-28 02:41:17.000000000 -0300
 @@ -78,6 +78,10 @@
  load-module module-detect
  .endif
@@ -109,8 +109,8 @@ Index: pulseaudio-4.0/src/daemon/default.pa.in
 Index: pulseaudio-4.0/src/modules/alsa/module-android-audio-hal.c
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ pulseaudio-4.0/src/modules/alsa/module-android-audio-hal.c	2013-12-17 13:58:08.000000000 -0200
-@@ -0,0 +1,514 @@
++++ pulseaudio-4.0/src/modules/alsa/module-android-audio-hal.c	2014-02-28 02:43:26.214672632 -0300
+@@ -0,0 +1,516 @@
 +/***
 +  This file is part of PulseAudio.
 +
@@ -293,7 +293,13 @@ Index: pulseaudio-4.0/src/modules/alsa/module-android-audio-hal.c
 +    pa_assert(hal);
 +    pa_assert(hal->dev);
 +
++    if (!hal->dev->set_mode)
++        pa_log_warn("no set_mode callback");
++    else
++        print_err(hal->dev->set_mode(hal->dev, AUDIO_MODE_NORMAL), "set_mode");
++
 +    if (hal->ostream) {
++        set_stream_device(&hal->ostream->common, hal->odevice);
 +        if (!hal->dev->close_output_stream)
 +            pa_log_warn("no close_output_stream callback");
 +        else {
@@ -304,6 +310,7 @@ Index: pulseaudio-4.0/src/modules/alsa/module-android-audio-hal.c
 +    }
 +
 +    if (hal->istream) {
++        set_stream_device(&hal->istream->common, hal->idevice);
 +        if (!hal->dev->close_input_stream)
 +            pa_log_warn("no close_input_stream callback");
 +        else {
@@ -317,11 +324,6 @@ Index: pulseaudio-4.0/src/modules/alsa/module-android-audio-hal.c
 +        pa_log_debug("Setting mode to normal through set_parameters (Nexus 4 workaround)");
 +        print_err(hal->dev->set_parameters(hal->dev, "CALL_KEY=0;"), "device set_parameters");
 +    }
-+
-+    if (!hal->dev->set_mode)
-+        pa_log_warn("no set_mode callback");
-+    else
-+        print_err(hal->dev->set_mode(hal->dev, AUDIO_MODE_NORMAL), "set_mode");
 +}
 +
 +static void update_devices(pa_android_audio_hal *hal)
