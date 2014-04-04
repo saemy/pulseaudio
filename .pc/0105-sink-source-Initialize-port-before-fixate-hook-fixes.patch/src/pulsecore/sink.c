@@ -236,12 +236,6 @@ pa_sink* pa_sink_new(
     pa_device_init_icon(data->proplist, TRUE);
     pa_device_init_intended_roles(data->proplist);
 
-    if (!data->active_port) {
-        pa_device_port *p = pa_device_port_find_best(data->ports);
-        if (p)
-            pa_sink_new_data_set_port(data, p->name);
-    }
-
     if (pa_hook_fire(&core->hooks[PA_CORE_HOOK_SINK_FIXATE], data) < 0) {
         pa_xfree(s);
         pa_namereg_unregister(core, name);
