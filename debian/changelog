@@ -1,3 +1,10 @@
+pulseaudio (1:4.0-0ubuntu12) utopic; urgency=high
+
+  * No change rebuild against new dh_installinit, to call update-rc.d at
+    postinst.
+
+ -- Dimitri John Ledkov <xnox@ubuntu.com>  Wed, 28 May 2014 10:41:54 +0100
+
 pulseaudio (1:4.0-0ubuntu11) trusty; urgency=medium
 
   * 0105-sink-source-Initialize-port-before-fixate-hook-fixes.patch:
