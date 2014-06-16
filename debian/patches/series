@@ -22,3 +22,4 @@
 0203-card-Add-hook-before-profile-changes.patch
 0204-Add-module-to-talk-to-the-Android-audio-hal-to-set-u.patch
 0205-suspend-on-idle-ensure-we-still-time-out-if-a-stream-remains-corked.patch
+0206-enable-module-switch-on-connect-ubuntu-touch.patch

@@ -1,3 +1,10 @@
+pulseaudio (1:4.0-0ubuntu13) utopic; urgency=medium
+
+  * 0206-enable-module-switch-on-connect-ubuntu-touch.patch:
+    - Enable module switch-on-connect by default on Ubuntu Touch
+
+ -- Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>  Mon, 16 Jun 2014 21:45:19 -0300
+
 pulseaudio (1:4.0-0ubuntu12) utopic; urgency=high
 
   * No change rebuild against new dh_installinit, to call update-rc.d at
