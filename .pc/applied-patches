@@ -11,9 +11,8 @@
 0104-default-system.pa-Do-not-load-module-dbus-protocol.patch
 0105-sink-source-Initialize-port-before-fixate-hook-fixes.patch
 0106-module-switch-on-port-available-Don-t-switch-profile.patch
-0201-ALSA-Add-extcon-Android-switch-jack-detection.patch
 0202-dont-probe-ucm.patch
 0203-card-Add-hook-before-profile-changes.patch
-0204-Add-module-to-talk-to-the-Android-audio-hal-to-set-u.patch
 0205-suspend-on-idle-ensure-we-still-time-out-if-a-stream-remains-corked.patch
-0206-enable-module-switch-on-connect-ubuntu-touch.patch
+0206-module-bluetooth-discover-adding-module-option-profi.patch
+0207-Enable-pulseaudio-droid.patch

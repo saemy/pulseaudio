@@ -1,3 +1,18 @@
+pulseaudio (1:4.0-0ubuntu14) utopic; urgency=medium
+
+  * Removing 0201-ALSA-Add-extcon-Android-switch-jack-detection.patch,
+    0204-Add-module-to-talk-to-the-Android-audio-hal-to-set-u.patch and
+    Disable-tsched-for-Nexus-10.patch code migrated to the pulse droid module
+  * Removing 0206-enable-module-switch-on-connect-ubuntu-touch.patch, as touch
+    as its own script file now
+  * 0206-module-bluetooth-discover-adding-module-option-profi.patch:
+    - Adding module option 'profile' in module-bluetooth-discover
+  * 0207-Enable-pulseaudio-droid.patch:
+    - Adding pulseaudio-droid element (used by Ubuntu Touch)
+  * debian/control: adding pulseaudio-module-droid
+
+ -- Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>  Mon, 23 Jun 2014 03:23:51 -0300
+
 pulseaudio (1:4.0-0ubuntu13) utopic; urgency=medium
 
   * 0206-enable-module-switch-on-connect-ubuntu-touch.patch:

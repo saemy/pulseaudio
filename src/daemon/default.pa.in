@@ -78,10 +78,6 @@ load-module module-udev-detect
 load-module module-detect
 .endif
 
-.ifexists module-android-audio-hal@PA_SOEXT@
-load-module module-android-audio-hal
-.endif
-
 ### Automatically connect sink and source if JACK server is present
 .ifexists module-jackdbus-detect@PA_SOEXT@
 .nofail
@@ -192,12 +188,6 @@ ifelse(@HAVE_X11@, 1, [dnl
 #.fail
 #.endif
 ])dnl
-
-### Specific changes and modules when running Ubuntu Touch
-### TODO: find a better way to handle ubuntu touch specific changes
-.ifexists /usr/bin/ubuntu-touch-session
-load-module module-switch-on-connect
-.endif
 
 ### Make some devices default
 #set-default-sink output

@@ -783,20 +783,20 @@ AC_SUBST(HAVE_ALSA)
 AM_CONDITIONAL([HAVE_ALSA], [test "x$HAVE_ALSA" = x1])
 AS_IF([test "x$HAVE_ALSA" = "x1"], AC_DEFINE([HAVE_ALSA], 1, [Have ALSA?]))
 
-#### Android audio HAL support (optional) ####
+#### Android Audio HAL support (optional) ####
 
-AC_ARG_ENABLE([android],
-    AS_HELP_STRING([--disable-android],[Disable optional Android audio HAL support]))
+AC_ARG_ENABLE([android-hal],
+    AS_HELP_STRING([--disable-android-hal],[Disable optional droid module (Android Audio HAL support)]))
 
-AS_IF([test "x$enable_android" != "xno"],
+AS_IF([test "x$enable_android_hal" != "xno"],
     [PKG_CHECK_MODULES(LIBHARDWARE, [ libhardware ], HAVE_ANDROID=1, HAVE_ANDROID=0)],
     HAVE_ANDROID=0)
 
-AS_IF([test "x$enable_android" = "xyes" && test "x$HAVE_ANDROID" = "x0"],
-    [AC_MSG_ERROR([*** Android audio HAL support not found])])
+AS_IF([test "x$enable_android_hal" = "xyes" && test "x$HAVE_ANDROID" = "x0"],
+    [AC_MSG_ERROR([*** libhardware not found])])
 
 AM_CONDITIONAL([HAVE_ANDROID], [test "x$HAVE_ANDROID" = "x1"])
-AS_IF([test "x$HAVE_ANDROID" = "x1"], AC_DEFINE([HAVE_ANDROID], 1, [Have Android audio HAL?]))
+AS_IF([test "x$HAVE_ANDROID" = "x1"], AC_DEFINE([HAVE_ANDROID], 1, [Have Android Audio HAL?]))
 
 #### EsounD support (optional) ####
 
@@ -1471,7 +1471,7 @@ echo "
     Enable OSS Wrapper:            ${ENABLE_OSS_WRAPPER}
     Enable EsounD:                 ${ENABLE_ESOUND}
     Enable Alsa:                   ${ENABLE_ALSA}
-    Enable Android audio HAL:      ${ENABLE_ANDROID}
+    Enable Android Audio HAL:      ${ENABLE_ANDROID}
     Enable CoreAudio:              ${ENABLE_COREAUDIO}
     Enable Solaris:                ${ENABLE_SOLARIS}
     Enable WaveOut:                ${ENABLE_WAVEOUT}

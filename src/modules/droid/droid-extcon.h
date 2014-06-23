@@ -1,10 +1,11 @@
-#ifndef fooalsaextconhfoo
-#define fooalsaextconhfoo
+#ifndef foodroidextconhfoo
+#define foodroidextconhfoo
 
 /***
   This file is part of PulseAudio.
 
-  Copyright 2013 David Henningsson, Canonical Ltd.
+  Copyright (C) 2013 Canonical Ltd.
+  Contact: David Henningsson
 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
@@ -22,12 +23,10 @@
   USA.
 ***/
 
-/* TODO: Handle !HAVE_UDEV and !HAVE_UCM */
+typedef struct pa_droid_extcon pa_droid_extcon;
 
-typedef struct pa_alsa_extcon pa_alsa_extcon;
+pa_droid_extcon *pa_droid_extcon_new(pa_core *, pa_card *);
 
-pa_alsa_extcon *pa_alsa_extcon_new(pa_core *, pa_card *);
-
-void pa_alsa_extcon_free(pa_alsa_extcon *);
+void pa_droid_extcon_free(pa_droid_extcon *);
 
 #endif

@@ -730,7 +730,7 @@ static void ucm_add_port_combination(
     }
 }
 
-int pa_alsa_ucm_port_contains(const char *port_name, const char *dev_name, bool is_sink) {
+static int ucm_port_contains(const char *port_name, const char *dev_name, bool is_sink) {
     int ret = 0;
     const char *r;
     const char *state = NULL;
@@ -984,7 +984,7 @@ int pa_alsa_ucm_set_port(pa_alsa_ucm_mapping_context *context, pa_device_port *p
     PA_IDXSET_FOREACH(dev, context->ucm_devices, idx) {
         const char *dev_name = pa_proplist_gets(dev->proplist, PA_ALSA_PROP_UCM_NAME);
 
-        if (pa_alsa_ucm_port_contains(port->name, dev_name, is_sink))
+        if (ucm_port_contains(port->name, dev_name, is_sink))
             enable_devs[enable_num++] = dev_name;
         else {
             pa_log_debug("Disable ucm device %s", dev_name);

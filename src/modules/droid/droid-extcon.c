@@ -1,7 +1,9 @@
 /***
   This file is part of PulseAudio.
 
-  Copyright 2013 David Henningsson, Canonical Ltd.
+  Copyright (C) 2013 Canonical Ltd.
+  Contact: David Henningsson
+           Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>
 
   PulseAudio is free software; you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published
@@ -28,19 +30,10 @@
 #include <pulsecore/i18n.h>
 #include <libudev.h>
 
-#include "alsa-util.h"
-#include "alsa-extcon.h"
-
-/* IFDEF HAVE_UCM ? */
-#include <use-case.h>
-#include "alsa-ucm.h"
-/* ENDIF */
+#include "droid-extcon.h"
 
 /* For android */
 #define EXTCON_NAME "switch"
-/* For extcon */
-/* #define EXTCON_NAME "extcon" */
-
 
 /* TODO: Backport stuff to 4.0, remove before upstreaming */
 #ifndef PA_PORT_AVAILABLE_YES
@@ -50,9 +43,9 @@
 #define pa_port_available_t pa_available_t
 #endif
 
-static pa_port_available_t hp_avail(int state)
+static pa_port_available_t hponly_avail(int state)
 {
-    return ((state & 3) != 0) ? PA_PORT_AVAILABLE_YES : PA_PORT_AVAILABLE_NO;
+    return (state & 2) ? PA_PORT_AVAILABLE_YES : PA_PORT_AVAILABLE_NO;
 }
 
 static pa_port_available_t hsmic_avail(int state)
@@ -60,21 +53,21 @@ static pa_port_available_t hsmic_avail(int state)
     return (state & 1) ? PA_PORT_AVAILABLE_YES : PA_PORT_AVAILABLE_NO;
 }
 
-struct android_switch {
+struct droid_switch {
     char *name;
     uint32_t current_value;
 };
 
-static void android_switch_free(struct android_switch *as) {
+static void droid_switch_free(struct droid_switch *as) {
     if (!as)
         return;
     pa_xfree(as->name);
     pa_xfree(as);
 }
 
-static struct android_switch *android_switch_new(const char *name) {
+static struct droid_switch *droid_switch_new(const char *name) {
 
-    struct android_switch *as = NULL;
+    struct droid_switch *as = NULL;
     char *filename = pa_sprintf_malloc("/sys/class/%s/%s/state", EXTCON_NAME, name);
     char *state = pa_read_line_from_file(filename);
 
@@ -85,15 +78,16 @@ static struct android_switch *android_switch_new(const char *name) {
     }
     pa_xfree(filename);
 
-    as = pa_xnew0(struct android_switch, 1);
+    as = pa_xnew0(struct droid_switch, 1);
     as->name = pa_xstrdup(name);
 
     if (pa_atou(state, &as->current_value) < 0) {
         pa_log_warn("Switch '%s' has invalid value '%s'", name, state);
         pa_xfree(state);
-        android_switch_free(as);
+        droid_switch_free(as);
         return NULL;
     }
+    pa_log_debug("Switch '%s' opened with value '%s'", name, state);
 
     return as;
 }
@@ -104,13 +98,13 @@ struct udev_data {
     pa_io_event *event;
 };
 
-struct pa_alsa_extcon {
+struct pa_droid_extcon {
     pa_card *card;
-    struct android_switch *h2w;
+    struct droid_switch *h2w;
     struct udev_data udev;
 };
 
-static struct android_switch *find_matching_switch(pa_alsa_extcon *u,
+static struct droid_switch *find_matching_switch(pa_droid_extcon *u,
                                                    const char *devpath) {
 
     if (pa_streq(devpath, "/devices/virtual/" EXTCON_NAME "/h2w"))
@@ -118,7 +112,7 @@ static struct android_switch *find_matching_switch(pa_alsa_extcon *u,
     return NULL;
 }
 
-static void notify_ports(pa_alsa_extcon *u, struct android_switch *as) {
+static void notify_ports(pa_droid_extcon *u, struct droid_switch *as) {
 
     pa_device_port *p;
     void *state;
@@ -129,21 +123,14 @@ static void notify_ports(pa_alsa_extcon *u, struct android_switch *as) {
 
     PA_HASHMAP_FOREACH(p, u->card->ports, state) {
         if (p->is_output) {
-            if (!strcmp(p->name, "analog-output-headphones"))
-                 pa_device_port_set_available(p, hp_avail(as->current_value));
-/* IFDEF HAVE_UCM ? */
-            else if (pa_alsa_ucm_port_contains(p->name, SND_USE_CASE_DEV_HEADSET, true) ||
-                     pa_alsa_ucm_port_contains(p->name, SND_USE_CASE_DEV_HEADPHONES, true))
-                pa_device_port_set_available(p, hp_avail(as->current_value));
-/* ENDIF */
+            if (!strcmp(p->name, "output-wired_headset"))
+                pa_device_port_set_available(p, hsmic_avail(as->current_value));
+            if (!strcmp(p->name, "output-wired_headphone"))
+                pa_device_port_set_available(p, hponly_avail(as->current_value));
         }
         if (p->is_input) {
-            if (!strcmp(p->name, "analog-input-headset-mic"))
+            if (!strcmp(p->name, "input-wired_headset"))
                 pa_device_port_set_available(p, hsmic_avail(as->current_value));
-/* IFDEF HAVE_UCM ? */
-            else if (pa_alsa_ucm_port_contains(p->name, SND_USE_CASE_DEV_HEADSET, false))
-                pa_device_port_set_available(p, hsmic_avail(as->current_value));
-/* ENDIF */
         }
     }
 }
@@ -151,10 +138,10 @@ static void notify_ports(pa_alsa_extcon *u, struct android_switch *as) {
 static void udev_cb(pa_mainloop_api *a, pa_io_event *e, int fd,
                     pa_io_event_flags_t events, void *userdata) {
 
-    pa_alsa_extcon *u = userdata;
+    pa_droid_extcon *u = userdata;
     struct udev_device *d = udev_monitor_receive_device(u->udev.monitor);
     struct udev_list_entry *entry;
-    struct android_switch *as;
+    struct droid_switch *as;
     const char *devpath, *state;
 
     if (!d) {
@@ -200,7 +187,7 @@ out:
     udev_device_unref(d);
 }
 
-static bool init_udev(pa_alsa_extcon *u, pa_core *core) {
+static bool init_udev(pa_droid_extcon *u, pa_core *core) {
 
     int fd;
 
@@ -238,15 +225,15 @@ static bool init_udev(pa_alsa_extcon *u, pa_core *core) {
     return true;
 }
 
-pa_alsa_extcon *pa_alsa_extcon_new(pa_core *core, pa_card *card) {
+pa_droid_extcon *pa_droid_extcon_new(pa_core *core, pa_card *card) {
 
-    pa_alsa_extcon *u = pa_xnew0(pa_alsa_extcon, 1);
+    pa_droid_extcon *u = pa_xnew0(pa_droid_extcon, 1);
 
     pa_assert(core);
     pa_assert(card);
-    /* pa_log_error("pa_alsa_extcon_new start 2"); */
+
     u->card = card;
-    u->h2w = android_switch_new("h2w");
+    u->h2w = droid_switch_new("h2w");
     if (!u->h2w)
         goto fail;
 
@@ -254,16 +241,15 @@ pa_alsa_extcon *pa_alsa_extcon_new(pa_core *core, pa_card *card) {
         goto fail;
 
     notify_ports(u, u->h2w);
-    /* pa_log_error("pa_alsa_extcon_new finish"); */
+
     return u;
 
 fail:
-    pa_alsa_extcon_free(u);
-    /* pa_log_error("pa_alsa_extcon_new fail"); */
+    pa_droid_extcon_free(u);
     return NULL;
 }
 
-void pa_alsa_extcon_free(pa_alsa_extcon *u) {
+void pa_droid_extcon_free(pa_droid_extcon *u) {
 
     pa_assert(u);
 
@@ -277,7 +263,7 @@ void pa_alsa_extcon_free(pa_alsa_extcon *u) {
         udev_unref(u->udev.udev);
 
     if (u->h2w)
-        android_switch_free(u->h2w);
+        droid_switch_free(u->h2w);
 
     pa_xfree(u);
 }
