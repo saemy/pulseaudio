@@ -1,0 +1,29 @@
+From 264e2d7c27d0f690b67e4cacf7b19dfeb7eeeca0 Mon Sep 17 00:00:00 2001
+From: Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>
+Date: Fri, 27 Jun 2014 16:36:48 -0300
+Subject: [PATCH] daemon-conf.c: changing default rlimit_rttime value to 200 ms
+
+Since rtkit v11, the top limit for rttime is 200 ms (previously it
+was wrongly limited to 2 seconds).
+
+Signed-off-by: Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>
+---
+ src/daemon/daemon-conf.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/daemon/daemon-conf.c b/src/daemon/daemon-conf.c
+index d0e177c..b7a85aa 100644
+--- a/src/daemon/daemon-conf.c
++++ b/src/daemon/daemon-conf.c
+@@ -139,7 +139,7 @@ static const pa_daemon_conf default_conf = {
+    ,.rlimit_rtprio = { .value = 9, .is_set = TRUE }    /* One below JACK's default for the server */
+ #endif
+ #ifdef RLIMIT_RTTIME
+-   ,.rlimit_rttime = { .value = PA_USEC_PER_SEC, .is_set = TRUE }
++   ,.rlimit_rttime = { .value = 200*PA_USEC_PER_MSEC, .is_set = TRUE } /* rtkit's limit is 200 ms */
+ #endif
+ #endif
+ };
+-- 
+2.0.0
+

@@ -7,6 +7,7 @@
 # 0021-disable-ucm.patch
 0022-inotify-wrapper-Quit-daemon-if-pid-file-is-removed.patch
 0023-fixing_snd_mixer_poll_descriptors_count_when_zero.patch
+0024-daemon-conf.c-changing-default-rlimit_rttime-value-t.patch
 
 # From upstream
 0101-alsa-ucm-Make-combination-ports-have-lower-priority.patch

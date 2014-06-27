@@ -1,3 +1,10 @@
+pulseaudio (1:4.0-0ubuntu15) utopic; urgency=medium
+
+  * 0024-daemon-conf.c-changing-default-rlimit_rttime-value-t.patch:
+    - Changing default rlimit_rttime value as rtkit's limit is now 200ms
+
+ -- Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>  Fri, 27 Jun 2014 16:57:48 -0300
+
 pulseaudio (1:4.0-0ubuntu14) utopic; urgency=medium
 
   * Removing 0201-ALSA-Add-extcon-Android-switch-jack-detection.patch,
