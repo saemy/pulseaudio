@@ -1,3 +1,13 @@
+pulseaudio (1:4.0-0ubuntu16) utopic; urgency=medium
+
+  * 0207-Enable-pulseaudio-droid.patch:
+    - Skipping SPEAKER_DRC_ENABLED_TAG as it's not yet supported (available on
+      hammerhead)
+    - Adding missing flags (AUDIO_OUTPUT_FLAG_COMPRESS_OFFLOAD and
+      AUDIO_OUTPUT_FLAG_NON_BLOCKING)
+
+ -- Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>  Sat, 28 Jun 2014 01:16:55 -0300
+
 pulseaudio (1:4.0-0ubuntu15) utopic; urgency=medium
 
   * 0024-daemon-conf.c-changing-default-rlimit_rttime-value-t.patch:

@@ -2708,10 +2708,10 @@ index 0000000..a791565
 +#endif
 diff --git a/src/modules/droid/droid-util-42.h b/src/modules/droid/droid-util-42.h
 new file mode 100644
-index 0000000..c4a628f
+index 0000000..3f1759b
 --- /dev/null
 +++ b/src/modules/droid/droid-util-42.h
-@@ -0,0 +1,284 @@
+@@ -0,0 +1,286 @@
 +/*
 + * Copyright (C) 2013 Jolla Ltd.
 + *
@@ -2911,6 +2911,8 @@ index 0000000..c4a628f
 +    STRING_ENTRY(AUDIO_OUTPUT_FLAG_PRIMARY),
 +    STRING_ENTRY(AUDIO_OUTPUT_FLAG_FAST),
 +    STRING_ENTRY(AUDIO_OUTPUT_FLAG_DEEP_BUFFER),
++    STRING_ENTRY(AUDIO_OUTPUT_FLAG_COMPRESS_OFFLOAD),
++    STRING_ENTRY(AUDIO_OUTPUT_FLAG_NON_BLOCKING),
 +    { 0, NULL }
 +};
 +
@@ -2998,10 +3000,10 @@ index 0000000..c4a628f
 +#endif
 diff --git a/src/modules/droid/droid-util.c b/src/modules/droid/droid-util.c
 new file mode 100644
-index 0000000..073c594
+index 0000000..fcf26c8
 --- /dev/null
 +++ b/src/modules/droid/droid-util.c
-@@ -0,0 +1,1173 @@
+@@ -0,0 +1,1176 @@
 +/*
 + * Copyright (C) 2013 Jolla Ltd.
 + *
@@ -3494,7 +3496,10 @@ index 0000000..073c594
 +                success = parse_devices(val, true, &config->global_config.default_output_device);
 +            else if (pa_streq(v, ATTACHED_INPUT_DEVICES_TAG))
 +                success = parse_devices(val, false, &config->global_config.attached_input_devices);
-+            else {
++            else if (pa_streq(v, SPEAKER_DRC_ENABLED_TAG)) {
++                pa_log(__FILE__ ": speaker drc is not yet supported, skipping", filename);
++                success = true;
++            } else {
 +                pa_log(__FILE__ ": [%s:%u] failed to parse line - unknown config entry %s", filename, n, v);
 +                success = false;
 +            }
