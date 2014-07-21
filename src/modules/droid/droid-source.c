@@ -394,6 +394,7 @@ pa_source *pa_droid_source_new(pa_module *m,
     bool namereg_fail = false;
     pa_droid_config_audio *config = NULL; /* Only used when source is created without card */
     uint32_t source_buffer = 0;
+    char audio_source[32];
     int ret;
 
     audio_format_t hal_audio_format = 0;
@@ -542,6 +543,10 @@ pa_source *pa_droid_source_new(pa_module *m,
             config_in.format,
             u->buffer_size);
 
+    /* Setting audio source to MIC by default */
+    pa_snprintf(audio_source, sizeof(audio_source), "%s=%u", AUDIO_PARAMETER_STREAM_INPUT_SOURCE, AUDIO_SOURCE_MIC);
+    u->stream->common.set_parameters(&u->stream->common, audio_source);
+    pa_log_debug("Setting audio source to AUDIO_SOURCE_MIC by default");
 
     pa_source_new_data_init(&data);
     data.driver = driver;

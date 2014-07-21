@@ -23,3 +23,5 @@
 0205-suspend-on-idle-ensure-we-still-time-out-if-a-stream-remains-corked.patch
 0206-module-bluetooth-discover-adding-module-option-profi.patch
 0207-Enable-pulseaudio-droid.patch
+0208-module-bluetooth-device-Allow-leaving-transport-runn.patch
+0209-module-switch-on-connect-adding-parameter-to-allow-s.patch

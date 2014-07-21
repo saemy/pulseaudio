@@ -1,3 +1,17 @@
+pulseaudio (1:4.0-0ubuntu17) utopic; urgency=medium
+
+  * 0207-Enable-pulseaudio-droid.patch:
+    - droid-sink: enabling transport property on sco.fakesink
+    - droid-source: setting up default audio source
+  * 0208-module-bluetooth-device-Allow-leaving-transport-runn.patch:
+    - module-bluetooth-device: Allow leaving transport running while sink and
+      source source are suspended.
+  * 0209-module-switch-on-connect-adding-parameter-to-allow-s.patch:
+    - module-switch-on-connect: adding parameter to allow skipping abstract
+      devices
+
+ -- Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>  Mon, 21 Jul 2014 19:00:21 -0300
+
 pulseaudio (1:4.0-0ubuntu16) utopic; urgency=medium
 
   * 0207-Enable-pulseaudio-droid.patch:

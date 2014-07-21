@@ -41,11 +41,8 @@ PA_MODULE_AUTHOR("Michael Terry");
 PA_MODULE_DESCRIPTION("When a sink/source is added, switch to it");
 PA_MODULE_VERSION(PACKAGE_VERSION);
 PA_MODULE_LOAD_ONCE(TRUE);
-PA_MODULE_USAGE(
-        "skip_abstract=<yes or no>");
 
 static const char* const valid_modargs[] = {
-    "skip_abstract",
     NULL,
 };
 
@@ -53,15 +50,13 @@ struct userdata {
     pa_hook_slot
         *sink_put_slot,
         *source_put_slot;
-    pa_bool_t skip_abstract;
 };
 
 static pa_hook_result_t sink_put_hook_callback(pa_core *c, pa_sink *sink, void* userdata) {
     pa_sink_input *i;
     uint32_t idx;
     pa_sink *def;
-    const char *s, *class;
-    struct userdata *u = userdata;
+    const char *s;
 
     pa_assert(c);
     pa_assert(sink);
@@ -75,12 +70,6 @@ static pa_hook_result_t sink_put_hook_callback(pa_core *c, pa_sink *sink, void* 
         if (pa_streq(s, "pci"))
             return PA_HOOK_OK;
         else if (pa_streq(s, "isa"))
-            return PA_HOOK_OK;
-    }
-
-    /* Check if we want or to skip abstract devices (e.g. null) */
-    if ((class = pa_proplist_gets(sink->proplist, PA_PROP_DEVICE_CLASS))) {
-        if (pa_streq(class, "abstract") && (u->skip_abstract))
             return PA_HOOK_OK;
     }
 
@@ -116,8 +105,7 @@ static pa_hook_result_t source_put_hook_callback(pa_core *c, pa_source *source, 
     pa_source_output *o;
     uint32_t idx;
     pa_source *def;
-    const char *s, *class;
-    struct userdata *u = userdata;
+    const char *s;
 
     pa_assert(c);
     pa_assert(source);
@@ -135,12 +123,6 @@ static pa_hook_result_t source_put_hook_callback(pa_core *c, pa_source *source, 
         if (pa_streq(s, "pci"))
             return PA_HOOK_OK;
         else if (pa_streq(s, "isa"))
-            return PA_HOOK_OK;
-    }
-
-    /* Check if we want or to skip abstract devices (e.g. null) */
-    if ((class = pa_proplist_gets(source->proplist, PA_PROP_DEVICE_CLASS))) {
-        if (pa_streq(class, "abstract") && (u->skip_abstract))
             return PA_HOOK_OK;
     }
 
@@ -184,11 +166,6 @@ int pa__init(pa_module*m) {
     }
 
     m->userdata = u = pa_xnew(struct userdata, 1);
-
-    if (pa_modargs_get_value_boolean(ma, "skip_abstract", &u->skip_abstract) < 0) {
-        pa_log_error("skip_abstract= expects a boolean argument, assuming FALSE by default");
-        u->skip_abstract = FALSE;
-    }
 
     /* A little bit later than module-rescue-streams... */
     u->sink_put_slot = pa_hook_connect(&m->core->hooks[PA_CORE_HOOK_SINK_PUT], PA_HOOK_LATE+30, (pa_hook_cb_t) sink_put_hook_callback, u);
