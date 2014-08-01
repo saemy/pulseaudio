@@ -1,3 +1,10 @@
+pulseaudio (1:4.0-0ubuntu18) utopic; urgency=medium
+
+  * 0207-Enable-pulseaudio-droid.patch:
+    - Fixing default priority for sink/source ports
+
+ -- Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>  Fri, 01 Aug 2014 01:18:38 -0300
+
 pulseaudio (1:4.0-0ubuntu17) utopic; urgency=medium
 
   * 0207-Enable-pulseaudio-droid.patch:

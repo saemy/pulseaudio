@@ -750,6 +750,9 @@ static pa_droid_port *create_o_port(pa_droid_mapping *am, uint32_t device, const
     if (am->profile_set->config->global_config.default_output_device & device)
         p->priority += DEFAULT_PRIORITY;
 
+    if (check_port_availability(p->name))
+        p->priority += (DEFAULT_PRIORITY * 3);
+
     return p;
 }
 
@@ -854,8 +857,15 @@ static void add_i_ports(pa_droid_mapping *am) {
                 p->priority = DEFAULT_PRIORITY;
                 p->device = cur_device;
 
-                if (am->profile_set->config->global_config.attached_input_devices & cur_device)
+                if (am->profile_set->config->global_config.attached_input_devices & cur_device & ~AUDIO_DEVICE_BIT_IN)
                     p->priority += DEFAULT_PRIORITY;
+
+                /* Make builtin mic the default input device */
+                if (cur_device == AUDIO_DEVICE_IN_BUILTIN_MIC)
+                    p->priority += DEFAULT_PRIORITY;
+
+                if (check_port_availability(p->name))
+                    p->priority += (DEFAULT_PRIORITY * 3);
 
                 pa_hashmap_put(am->profile_set->all_ports, p->name, p);
             } else

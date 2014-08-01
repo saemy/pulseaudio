@@ -3065,10 +3065,10 @@ index 0000000..3f1759b
 +#endif
 diff --git a/src/modules/droid/droid-util.c b/src/modules/droid/droid-util.c
 new file mode 100644
-index 0000000..fcf26c8
+index 0000000..185bd23
 --- /dev/null
 +++ b/src/modules/droid/droid-util.c
-@@ -0,0 +1,1176 @@
+@@ -0,0 +1,1186 @@
 +/*
 + * Copyright (C) 2013 Jolla Ltd.
 + *
@@ -3821,6 +3821,9 @@ index 0000000..fcf26c8
 +    if (am->profile_set->config->global_config.default_output_device & device)
 +        p->priority += DEFAULT_PRIORITY;
 +
++    if (check_port_availability(p->name))
++        p->priority += (DEFAULT_PRIORITY * 3);
++
 +    return p;
 +}
 +
@@ -3925,8 +3928,15 @@ index 0000000..fcf26c8
 +                p->priority = DEFAULT_PRIORITY;
 +                p->device = cur_device;
 +
-+                if (am->profile_set->config->global_config.attached_input_devices & cur_device)
++                if (am->profile_set->config->global_config.attached_input_devices & cur_device & ~AUDIO_DEVICE_BIT_IN)
 +                    p->priority += DEFAULT_PRIORITY;
++
++                /* Make builtin mic the default input device */
++                if (cur_device == AUDIO_DEVICE_IN_BUILTIN_MIC)
++                    p->priority += DEFAULT_PRIORITY;
++
++                if (check_port_availability(p->name))
++                    p->priority += (DEFAULT_PRIORITY * 3);
 +
 +                pa_hashmap_put(am->profile_set->all_ports, p->name, p);
 +            } else
