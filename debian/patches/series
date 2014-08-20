@@ -25,3 +25,5 @@
 0207-Enable-pulseaudio-droid.patch
 0208-module-bluetooth-device-Allow-leaving-transport-runn.patch
 0209-module-switch-on-connect-adding-parameter-to-allow-s.patch
+0210-module-device-restore-adding-property-to-skip.patch
+0211-fix-volume-max-boot.patch

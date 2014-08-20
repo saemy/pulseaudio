@@ -444,10 +444,10 @@ index 0000000..7cb7ad2
 +#endif
 diff --git a/src/modules/droid/droid-sink.c b/src/modules/droid/droid-sink.c
 new file mode 100644
-index 0000000..68e3cef
+index 0000000..597f108
 --- /dev/null
 +++ b/src/modules/droid/droid-sink.c
-@@ -0,0 +1,1245 @@
+@@ -0,0 +1,1300 @@
 +/*
 + * Copyright (C) 2013 Jolla Ltd.
 + *
@@ -535,6 +535,7 @@ index 0000000..68e3cef
 +
 +    bool use_hw_volume;
 +    bool use_voice_volume;
++    bool voice_volume_call_mode;
 +    char *voice_property_key;
 +    char *voice_property_value;
 +    pa_sink_input *voice_control_sink_input;
@@ -575,12 +576,16 @@ index 0000000..68e3cef
 +#define DEFAULT_VOICE_CONTROL_PROPERTY_KEY      "media.role"
 +#define DEFAULT_VOICE_CONTROL_PROPERTY_VALUE    "phone"
 +
++/* While the HAL interface supports until 0, android just use up to ~0.05
++ * Lower values can crash the modem or cause mixer issues */
++#define VOICE_VOLUME_MIN_VALUE                  0.05
++
 +/* Name of the fake sco sink used for HSP (used to set transport property) */
 +#define DEFAULT_SCO_FAKE_SINK "sink.fake.sco"
 +#define HSP_PREVENT_SUSPEND_STR "bluetooth.hsp.prevent.suspend.transport"
 +
 +static void userdata_free(struct userdata *u);
-+static void set_voice_volume(struct userdata *u, pa_sink_input *i);
++static void set_voice_volume_from_input(struct userdata *u, pa_sink_input *i);
 +
 +static void set_primary_devices(struct userdata *u, audio_devices_t devices) {
 +    pa_assert(u);
@@ -1012,8 +1017,40 @@ index 0000000..68e3cef
 +    }
 +}
 +
++/* Called from main context when set from input and from IO when set from sink volume. */
++static void set_voice_volume(struct userdata *u, pa_cvolume vol) {
++    float val;
++
++    pa_assert(u);
++
++    val = pa_sw_volume_to_linear(pa_cvolume_avg(&vol));
++
++    /* Make sure our lower value is still HAL compatible */
++    if (val < VOICE_VOLUME_MIN_VALUE) {
++        val = VOICE_VOLUME_MIN_VALUE;
++        pa_log_debug("Forcing minimal voice volume to %f", val);
++    }
++
++    pa_log_debug("Set voice volume %f", val);
++
++    pa_droid_hw_module_lock(u->hw_module);
++    if (u->hw_module->device->set_voice_volume(u->hw_module->device, val) < 0)
++        pa_log_warn("Failed to set voice volume.");
++    pa_droid_hw_module_unlock(u->hw_module);
++}
++
++static void sink_set_voice_volume_cb(pa_sink *s) {
++    struct userdata *u = s->userdata;
++    pa_cvolume r;
++
++    /* Shift up by the base volume */
++    pa_sw_cvolume_divide_scalar(&r, &s->real_volume, s->base_volume);
++
++    set_voice_volume(u, r);
++}
++
 +/* Called from main thread */
-+static void set_voice_volume(struct userdata *u, pa_sink_input *i) {
++static void set_voice_volume_from_input(struct userdata *u, pa_sink_input *i) {
 +    pa_cvolume vol;
 +    float val;
 +
@@ -1023,13 +1060,7 @@ index 0000000..68e3cef
 +
 +    pa_sink_input_get_volume(i, &vol, true);
 +
-+    val = pa_sw_volume_to_linear(pa_cvolume_avg(&vol));
-+    pa_log_debug("Set voice volume %f", val);
-+
-+    pa_droid_hw_module_lock(u->hw_module);
-+    if (u->hw_module->device->set_voice_volume(u->hw_module->device, val) < 0)
-+        pa_log_warn("Failed to set voice volume.");
-+    pa_droid_hw_module_unlock(u->hw_module);
++    set_voice_volume(u, vol);
 +}
 +
 +static void update_volumes(struct userdata *u) {
@@ -1109,12 +1140,12 @@ index 0000000..68e3cef
 +    if (t == (PA_SUBSCRIPTION_EVENT_SINK_INPUT | PA_SUBSCRIPTION_EVENT_NEW)) {
 +        if (!u->voice_control_sink_input && (i = find_volume_control_sink_input(u))) {
 +            u->voice_control_sink_input = i;
-+            set_voice_volume(u, i);
++            set_voice_volume_from_input(u, i);
 +        }
 +    }
 +    else if (t == (PA_SUBSCRIPTION_EVENT_SINK_INPUT | PA_SUBSCRIPTION_EVENT_CHANGE)) {
 +        if (u->voice_control_sink_input == i)
-+            set_voice_volume(u, i);
++            set_voice_volume_from_input(u, i);
 +    }
 +    else if (t == (PA_SUBSCRIPTION_EVENT_SINK_INPUT | PA_SUBSCRIPTION_EVENT_REMOVE)) {
 +        if (u->voice_control_sink_input == i)
@@ -1142,24 +1173,41 @@ index 0000000..68e3cef
 +
 +    if (u->use_voice_volume) {
 +        pa_log_debug("Using voice volume control for %s", u->sink->name);
-+        pa_sink_set_set_volume_callback(u->sink, NULL);
 +
-+        /* Susbcription tracking voice call volume control sink-input is set up when
-+         * voice volume control is enabled. In case volume control sink-input has already
-+         * connected to the sink, check for the sink-input here as well. */
++        if (u->voice_volume_call_mode) {
++            /* In this case we want the sink volume to directly map into the voice volume */
++            pa_log_debug("Sink volume is now controlling the voice volume for %s", u->sink->name);
 +
-+        if (!u->sink_input_subscription)
-+            u->sink_input_subscription = pa_subscription_new(u->core,
-+                                                             PA_SUBSCRIPTION_MASK_SINK_INPUT,
-+                                                             (pa_subscription_cb_t) sink_input_subscription_cb,
-+                                                             u);
++            /* First disable module-device-restore, as we don't want to save the voice volume
++             * as the default sink volume when restoring to the default mode */
++            pa_proplist_sets(u->sink->proplist, MODULE_DEVICE_RESTORE_SKIP_PROPERTY, "true");
 +
-+        if ((i = find_volume_control_sink_input(u))) {
-+            u->voice_control_sink_input = i;
-+            set_voice_volume(u, i);
++            /* Then map normal sink volume changes to voice call volume changes */
++            pa_sink_set_set_volume_callback(u->sink, sink_set_voice_volume_cb);
++        } else {
++            pa_sink_set_set_volume_callback(u->sink, NULL);
++
++            /* Susbcription tracking voice call volume control sink-input is set up when
++             * voice volume control is enabled. In case volume control sink-input has already
++             * connected to the sink, check for the sink-input here as well. */
++
++            if (!u->sink_input_subscription)
++                u->sink_input_subscription = pa_subscription_new(u->core,
++                                                                 PA_SUBSCRIPTION_MASK_SINK_INPUT,
++                                                                 (pa_subscription_cb_t) sink_input_subscription_cb,
++                                                                 u);
++
++            if ((i = find_volume_control_sink_input(u))) {
++                u->voice_control_sink_input = i;
++                set_voice_volume_from_input(u, i);
++            }
++        }
++    } else {
++        if (u->voice_volume_call_mode) {
++            /* Enable module-device-restore again now that we're back to !voicecall mode */
++            pa_proplist_unset(u->sink->proplist, MODULE_DEVICE_RESTORE_SKIP_PROPERTY);
 +        }
 +
-+    } else {
 +        if (u->sink_input_subscription) {
 +            pa_subscription_free(u->sink_input_subscription);
 +            u->sink_input_subscription = NULL;
@@ -1324,6 +1372,7 @@ index 0000000..68e3cef
 +
 +    struct userdata *u = NULL;
 +    bool deferred_volume = false;
++    bool voice_volume_call_mode = false;
 +    char *thread_name = NULL;
 +    pa_sink_new_data data;
 +    const char *module_id = NULL;
@@ -1389,6 +1438,11 @@ index 0000000..68e3cef
 +        goto fail;
 +    }
 +
++    if (pa_modargs_get_value_boolean(ma, "voice_volume_call_mode", &voice_volume_call_mode) < 0) {
++        pa_log("Failed to parse voice_volume_call_mode. Needs to be a boolean argument.");
++        goto fail;
++    }
++
 +    u = pa_xnew0(struct userdata, 1);
 +    u->core = m->core;
 +    u->module = m;
@@ -1397,6 +1451,7 @@ index 0000000..68e3cef
 +    u->rtpoll = pa_rtpoll_new();
 +    pa_thread_mq_init(&u->thread_mq, m->core->mainloop, u->rtpoll);
 +    u->parameters = pa_hashmap_new(pa_idxset_string_hash_func, pa_idxset_string_compare_func);
++    u->voice_volume_call_mode = voice_volume_call_mode;
 +    u->voice_property_key   = pa_xstrdup(pa_modargs_get_value(ma, "voice_property_key", DEFAULT_VOICE_CONTROL_PROPERTY_KEY));
 +    u->voice_property_value = pa_xstrdup(pa_modargs_get_value(ma, "voice_property_value", DEFAULT_VOICE_CONTROL_PROPERTY_VALUE));
 +    u->sco_fake_sink = pa_sco_fake_sink_discover(u->core, pa_modargs_get_value(ma, "sco_fake_sink", DEFAULT_SCO_FAKE_SINK));
@@ -4257,10 +4312,10 @@ index 0000000..185bd23
 +}
 diff --git a/src/modules/droid/droid-util.h b/src/modules/droid/droid-util.h
 new file mode 100644
-index 0000000..fc0ca70
+index 0000000..16f6503
 --- /dev/null
 +++ b/src/modules/droid/droid-util.h
-@@ -0,0 +1,253 @@
+@@ -0,0 +1,256 @@
 +#ifndef foodroidutilfoo
 +#define foodroidutilfoo
 +
@@ -4302,6 +4357,9 @@ index 0000000..fc0ca70
 +
 +/* Alternative module ID */
 +#define AUDIO_HARDWARE_MODULE_ID2 "libaudio"
++
++/* From module-device-restore */
++#define MODULE_DEVICE_RESTORE_SKIP_PROPERTY "module-device-restore.skip"
 +
 +typedef struct pa_droid_hw_module pa_droid_hw_module;
 +typedef struct pa_droid_card_data pa_droid_card_data;
@@ -4516,10 +4574,10 @@ index 0000000..fc0ca70
 +#endif
 diff --git a/src/modules/droid/module-droid-card.c b/src/modules/droid/module-droid-card.c
 new file mode 100644
-index 0000000..82a04ce
+index 0000000..8a5eec5
 --- /dev/null
 +++ b/src/modules/droid/module-droid-card.c
-@@ -0,0 +1,632 @@
+@@ -0,0 +1,634 @@
 +/*
 + * Copyright (C) 2013 Jolla Ltd.
 + *
@@ -4606,6 +4664,7 @@ index 0000000..82a04ce
 +        "voice_source_routing=<route source ports during voice call, default false> "
 +        "deferred_volume=<synchronize software and hardware volume changes to avoid momentary jumps?> "
 +        "config=<location for droid audio configuration> "
++        "voice_volume_call_mode=<sink volume controls voice volume during call mode, default false>"
 +        "voice_property_key=<proplist key searched for sink-input that should control voice call volume> "
 +        "voice_property_value=<proplist value for the key for voice control sink-input>"
 +);
@@ -4626,6 +4685,7 @@ index 0000000..82a04ce
 +    "mute_routing_before",
 +    "mute_routing_after",
 +    "config",
++    "voice_volume_call_mode",
 +    "voice_property_key",
 +    "voice_property_value",
 +    NULL,
@@ -5154,10 +5214,10 @@ index 0000000..82a04ce
 +}
 diff --git a/src/modules/droid/module-droid-sink.c b/src/modules/droid/module-droid-sink.c
 new file mode 100644
-index 0000000..720749c
+index 0000000..1576e05
 --- /dev/null
 +++ b/src/modules/droid/module-droid-sink.c
-@@ -0,0 +1,101 @@
+@@ -0,0 +1,102 @@
 +/*
 + * Copyright (C) 2013 Jolla Ltd.
 + *
@@ -5219,6 +5279,7 @@ index 0000000..720749c
 +    "mute_routing_after",
 +    "sink_buffer",
 +    "deferred_volume",
++    "voice_volume_call_mode",
 +    "voice_property_key",
 +    "voice_property_value",
 +    "sco_fake_sink",

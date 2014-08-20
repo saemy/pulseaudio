@@ -85,6 +85,7 @@ struct userdata {
 
     bool use_hw_volume;
     bool use_voice_volume;
+    bool voice_volume_call_mode;
     char *voice_property_key;
     char *voice_property_value;
     pa_sink_input *voice_control_sink_input;
@@ -125,12 +126,16 @@ typedef struct droid_parameter_mapping {
 #define DEFAULT_VOICE_CONTROL_PROPERTY_KEY      "media.role"
 #define DEFAULT_VOICE_CONTROL_PROPERTY_VALUE    "phone"
 
+/* While the HAL interface supports until 0, android just use up to ~0.05
+ * Lower values can crash the modem or cause mixer issues */
+#define VOICE_VOLUME_MIN_VALUE                  0.05
+
 /* Name of the fake sco sink used for HSP (used to set transport property) */
 #define DEFAULT_SCO_FAKE_SINK "sink.fake.sco"
 #define HSP_PREVENT_SUSPEND_STR "bluetooth.hsp.prevent.suspend.transport"
 
 static void userdata_free(struct userdata *u);
-static void set_voice_volume(struct userdata *u, pa_sink_input *i);
+static void set_voice_volume_from_input(struct userdata *u, pa_sink_input *i);
 
 static void set_primary_devices(struct userdata *u, audio_devices_t devices) {
     pa_assert(u);
@@ -562,8 +567,40 @@ static void sink_set_volume_cb(pa_sink *s) {
     }
 }
 
+/* Called from main context when set from input and from IO when set from sink volume. */
+static void set_voice_volume(struct userdata *u, pa_cvolume vol) {
+    float val;
+
+    pa_assert(u);
+
+    val = pa_sw_volume_to_linear(pa_cvolume_avg(&vol));
+
+    /* Make sure our lower value is still HAL compatible */
+    if (val < VOICE_VOLUME_MIN_VALUE) {
+        val = VOICE_VOLUME_MIN_VALUE;
+        pa_log_debug("Forcing minimal voice volume to %f", val);
+    }
+
+    pa_log_debug("Set voice volume %f", val);
+
+    pa_droid_hw_module_lock(u->hw_module);
+    if (u->hw_module->device->set_voice_volume(u->hw_module->device, val) < 0)
+        pa_log_warn("Failed to set voice volume.");
+    pa_droid_hw_module_unlock(u->hw_module);
+}
+
+static void sink_set_voice_volume_cb(pa_sink *s) {
+    struct userdata *u = s->userdata;
+    pa_cvolume r;
+
+    /* Shift up by the base volume */
+    pa_sw_cvolume_divide_scalar(&r, &s->real_volume, s->base_volume);
+
+    set_voice_volume(u, r);
+}
+
 /* Called from main thread */
-static void set_voice_volume(struct userdata *u, pa_sink_input *i) {
+static void set_voice_volume_from_input(struct userdata *u, pa_sink_input *i) {
     pa_cvolume vol;
     float val;
 
@@ -573,13 +610,7 @@ static void set_voice_volume(struct userdata *u, pa_sink_input *i) {
 
     pa_sink_input_get_volume(i, &vol, true);
 
-    val = pa_sw_volume_to_linear(pa_cvolume_avg(&vol));
-    pa_log_debug("Set voice volume %f", val);
-
-    pa_droid_hw_module_lock(u->hw_module);
-    if (u->hw_module->device->set_voice_volume(u->hw_module->device, val) < 0)
-        pa_log_warn("Failed to set voice volume.");
-    pa_droid_hw_module_unlock(u->hw_module);
+    set_voice_volume(u, vol);
 }
 
 static void update_volumes(struct userdata *u) {
@@ -659,12 +690,12 @@ static void sink_input_subscription_cb(pa_core *c, pa_subscription_event_type_t 
     if (t == (PA_SUBSCRIPTION_EVENT_SINK_INPUT | PA_SUBSCRIPTION_EVENT_NEW)) {
         if (!u->voice_control_sink_input && (i = find_volume_control_sink_input(u))) {
             u->voice_control_sink_input = i;
-            set_voice_volume(u, i);
+            set_voice_volume_from_input(u, i);
         }
     }
     else if (t == (PA_SUBSCRIPTION_EVENT_SINK_INPUT | PA_SUBSCRIPTION_EVENT_CHANGE)) {
         if (u->voice_control_sink_input == i)
-            set_voice_volume(u, i);
+            set_voice_volume_from_input(u, i);
     }
     else if (t == (PA_SUBSCRIPTION_EVENT_SINK_INPUT | PA_SUBSCRIPTION_EVENT_REMOVE)) {
         if (u->voice_control_sink_input == i)
@@ -692,24 +723,41 @@ void pa_droid_sink_set_voice_control(pa_sink* sink, bool enable) {
 
     if (u->use_voice_volume) {
         pa_log_debug("Using voice volume control for %s", u->sink->name);
-        pa_sink_set_set_volume_callback(u->sink, NULL);
 
-        /* Susbcription tracking voice call volume control sink-input is set up when
-         * voice volume control is enabled. In case volume control sink-input has already
-         * connected to the sink, check for the sink-input here as well. */
+        if (u->voice_volume_call_mode) {
+            /* In this case we want the sink volume to directly map into the voice volume */
+            pa_log_debug("Sink volume is now controlling the voice volume for %s", u->sink->name);
 
-        if (!u->sink_input_subscription)
-            u->sink_input_subscription = pa_subscription_new(u->core,
-                                                             PA_SUBSCRIPTION_MASK_SINK_INPUT,
-                                                             (pa_subscription_cb_t) sink_input_subscription_cb,
-                                                             u);
+            /* First disable module-device-restore, as we don't want to save the voice volume
+             * as the default sink volume when restoring to the default mode */
+            pa_proplist_sets(u->sink->proplist, MODULE_DEVICE_RESTORE_SKIP_PROPERTY, "true");
 
-        if ((i = find_volume_control_sink_input(u))) {
-            u->voice_control_sink_input = i;
-            set_voice_volume(u, i);
+            /* Then map normal sink volume changes to voice call volume changes */
+            pa_sink_set_set_volume_callback(u->sink, sink_set_voice_volume_cb);
+        } else {
+            pa_sink_set_set_volume_callback(u->sink, NULL);
+
+            /* Susbcription tracking voice call volume control sink-input is set up when
+             * voice volume control is enabled. In case volume control sink-input has already
+             * connected to the sink, check for the sink-input here as well. */
+
+            if (!u->sink_input_subscription)
+                u->sink_input_subscription = pa_subscription_new(u->core,
+                                                                 PA_SUBSCRIPTION_MASK_SINK_INPUT,
+                                                                 (pa_subscription_cb_t) sink_input_subscription_cb,
+                                                                 u);
+
+            if ((i = find_volume_control_sink_input(u))) {
+                u->voice_control_sink_input = i;
+                set_voice_volume_from_input(u, i);
+            }
+        }
+    } else {
+        if (u->voice_volume_call_mode) {
+            /* Enable module-device-restore again now that we're back to !voicecall mode */
+            pa_proplist_unset(u->sink->proplist, MODULE_DEVICE_RESTORE_SKIP_PROPERTY);
         }
 
-    } else {
         if (u->sink_input_subscription) {
             pa_subscription_free(u->sink_input_subscription);
             u->sink_input_subscription = NULL;
@@ -874,6 +922,7 @@ pa_sink *pa_droid_sink_new(pa_module *m,
 
     struct userdata *u = NULL;
     bool deferred_volume = false;
+    bool voice_volume_call_mode = false;
     char *thread_name = NULL;
     pa_sink_new_data data;
     const char *module_id = NULL;
@@ -939,6 +988,11 @@ pa_sink *pa_droid_sink_new(pa_module *m,
         goto fail;
     }
 
+    if (pa_modargs_get_value_boolean(ma, "voice_volume_call_mode", &voice_volume_call_mode) < 0) {
+        pa_log("Failed to parse voice_volume_call_mode. Needs to be a boolean argument.");
+        goto fail;
+    }
+
     u = pa_xnew0(struct userdata, 1);
     u->core = m->core;
     u->module = m;
@@ -947,6 +1001,7 @@ pa_sink *pa_droid_sink_new(pa_module *m,
     u->rtpoll = pa_rtpoll_new();
     pa_thread_mq_init(&u->thread_mq, m->core->mainloop, u->rtpoll);
     u->parameters = pa_hashmap_new(pa_idxset_string_hash_func, pa_idxset_string_compare_func);
+    u->voice_volume_call_mode = voice_volume_call_mode;
     u->voice_property_key   = pa_xstrdup(pa_modargs_get_value(ma, "voice_property_key", DEFAULT_VOICE_CONTROL_PROPERTY_KEY));
     u->voice_property_value = pa_xstrdup(pa_modargs_get_value(ma, "voice_property_value", DEFAULT_VOICE_CONTROL_PROPERTY_VALUE));
     u->sco_fake_sink = pa_sco_fake_sink_discover(u->core, pa_modargs_get_value(ma, "sco_fake_sink", DEFAULT_SCO_FAKE_SINK));

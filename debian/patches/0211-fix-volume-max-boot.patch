@@ -1,0 +1,22 @@
+From: David Henningsson <david.henningsson@canonical.com>
+Date: Tue, 19 Aug 2013 14:21:13 +0200
+Subject: sink: fix initial sink volume when hw control is not available
+
+Buglink: https://bugs.launchpad.net/bugs/598308
+
+Index: pulseaudio-4.0/src/pulsecore/sink.c
+===================================================================
+--- pulseaudio-4.0.orig/src/pulsecore/sink.c
++++ pulseaudio-4.0/src/pulsecore/sink.c
+@@ -617,8 +617,10 @@ void pa_sink_put(pa_sink* s) {
+      * the sink implementor to set this flag as needed.
+      *
+      * Note: This flag can also change over the life time of the sink. */
+-    if (!(s->flags & PA_SINK_HW_VOLUME_CTRL) && !(s->flags & PA_SINK_SHARE_VOLUME_WITH_MASTER))
++    if (!(s->flags & PA_SINK_HW_VOLUME_CTRL) && !(s->flags & PA_SINK_SHARE_VOLUME_WITH_MASTER)) {
+         pa_sink_enable_decibel_volume(s, TRUE);
++        s->soft_volume = s->real_volume;
++    }
+ 
+     /* If the sink implementor support DB volumes by itself, we should always
+      * try and enable flat volumes too */

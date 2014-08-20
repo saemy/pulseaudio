@@ -1,3 +1,15 @@
+pulseaudio (1:4.0-0ubuntu19) utopic; urgency=medium
+
+  * 0210-module-device-restore-adding-property-to-skip.patch:
+    - Adding property to skip device store/restore per sink/source
+  * 0211-fix-volume-max-boot.patch:
+    - Fix initial volume for sink (LP: #598308)
+  * 0207-Enable-pulseaudio-droid.patch:
+    - Adding support to track voice call volume when switching to the
+      voicecall mode
+
+ -- Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>  Wed, 20 Aug 2014 15:15:16 -0300
+
 pulseaudio (1:4.0-0ubuntu18) utopic; urgency=medium
 
   * 0207-Enable-pulseaudio-droid.patch:

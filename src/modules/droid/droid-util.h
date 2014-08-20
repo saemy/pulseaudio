@@ -40,6 +40,9 @@
 /* Alternative module ID */
 #define AUDIO_HARDWARE_MODULE_ID2 "libaudio"
 
+/* From module-device-restore */
+#define MODULE_DEVICE_RESTORE_SKIP_PROPERTY "module-device-restore.skip"
+
 typedef struct pa_droid_hw_module pa_droid_hw_module;
 typedef struct pa_droid_card_data pa_droid_card_data;
 typedef void (*common_set_parameters_cb_t)(pa_droid_card_data *card_data, const char *str);
