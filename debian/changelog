@@ -1,3 +1,15 @@
+pulseaudio (1:4.0-0ubuntu20) utopic; urgency=medium
+
+  * debian/pulseaudio.install:
+    - Installing missing module-role-ducking
+  * 0107-sink-source-Fix-restore-of-volume-on-devices-without.patch:
+    - Updated version of 0211-fix-volume-max-boot.patch, that was merged
+      upstream
+  * 0207-Enable-pulseaudio-droid.patch:
+    - Adding option to create voice virtual stream when voicecall is active
+
+ -- Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>  Thu, 04 Sep 2014 01:07:26 -0300
+
 pulseaudio (1:4.0-0ubuntu19) utopic; urgency=medium
 
   * 0210-module-device-restore-adding-property-to-skip.patch:

@@ -1,0 +1,52 @@
+From 5dba418160223e90746235f495bab5b79d74e97b Mon Sep 17 00:00:00 2001
+From: David Henningsson <david.henningsson@canonical.com>
+Date: Tue, 26 Aug 2014 13:44:02 +0200
+Subject: [PATCH] sink/source: Fix restore of volume on devices without hw
+ volume
+
+Module-device-restore sets reference_volume, but soft_volume remains at
+zero dB, so if a device only has soft_volume (i e no hw volume controls),
+its volume was not restored correctly.
+
+Reported-by: Richardo Salveti de Araujo <ricardo.salveti@canonical.com>
+Signed-off-by: David Henningsson <david.henningsson@canonical.com>
+---
+ src/pulsecore/sink.c   | 4 +++-
+ src/pulsecore/source.c | 4 +++-
+ 2 files changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/src/pulsecore/sink.c b/src/pulsecore/sink.c
+index 274fe83..a8a865b 100644
+--- a/src/pulsecore/sink.c
++++ b/src/pulsecore/sink.c
+@@ -613,8 +613,10 @@ void pa_sink_put(pa_sink* s) {
+      * the sink implementor to set this flag as needed.
+      *
+      * Note: This flag can also change over the life time of the sink. */
+-    if (!(s->flags & PA_SINK_HW_VOLUME_CTRL) && !(s->flags & PA_SINK_SHARE_VOLUME_WITH_MASTER))
++    if (!(s->flags & PA_SINK_HW_VOLUME_CTRL) && !(s->flags & PA_SINK_SHARE_VOLUME_WITH_MASTER)) {
+         pa_sink_enable_decibel_volume(s, TRUE);
++        s->soft_volume = s->reference_volume;
++    }
+ 
+     /* If the sink implementor support DB volumes by itself, we should always
+      * try and enable flat volumes too */
+diff --git a/src/pulsecore/source.c b/src/pulsecore/source.c
+index aabe7ad..6d32666 100644
+--- a/src/pulsecore/source.c
++++ b/src/pulsecore/source.c
+@@ -564,8 +564,10 @@ void pa_source_put(pa_source *s) {
+      * the source implementor to set this flag as needed.
+      *
+      * Note: This flag can also change over the life time of the source. */
+-    if (!(s->flags & PA_SOURCE_HW_VOLUME_CTRL) && !(s->flags & PA_SOURCE_SHARE_VOLUME_WITH_MASTER))
++    if (!(s->flags & PA_SOURCE_HW_VOLUME_CTRL) && !(s->flags & PA_SOURCE_SHARE_VOLUME_WITH_MASTER)) {
+         pa_source_enable_decibel_volume(s, TRUE);
++        s->soft_volume = s->reference_volume;
++    }
+ 
+     /* If the source implementor support DB volumes by itself, we should always
+      * try and enable flat volumes too */
+-- 
+2.1.0
+

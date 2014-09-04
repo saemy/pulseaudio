@@ -84,9 +84,10 @@ PA_MODULE_USAGE(
         "voice_source_routing=<route source ports during voice call, default false> "
         "deferred_volume=<synchronize software and hardware volume changes to avoid momentary jumps?> "
         "config=<location for droid audio configuration> "
-        "voice_volume_call_mode=<sink volume controls voice volume during call mode, default false>"
+        "voice_volume_call_mode=<sink volume controls voice volume during call mode, default false> "
         "voice_property_key=<proplist key searched for sink-input that should control voice call volume> "
-        "voice_property_value=<proplist value for the key for voice control sink-input>"
+        "voice_property_value=<proplist value for the key for voice control sink-input> "
+        "voice_virtual_stream=<true/false> create virtual stream for voice call volume control (default false)"
 );
 
 static const char* const valid_modargs[] = {
@@ -108,6 +109,7 @@ static const char* const valid_modargs[] = {
     "voice_volume_call_mode",
     "voice_property_key",
     "voice_property_value",
+    "voice_virtual_stream",
     NULL,
 };
 

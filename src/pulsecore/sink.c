@@ -619,7 +619,7 @@ void pa_sink_put(pa_sink* s) {
      * Note: This flag can also change over the life time of the sink. */
     if (!(s->flags & PA_SINK_HW_VOLUME_CTRL) && !(s->flags & PA_SINK_SHARE_VOLUME_WITH_MASTER)) {
         pa_sink_enable_decibel_volume(s, TRUE);
-        s->soft_volume = s->real_volume;
+        s->soft_volume = s->reference_volume;
     }
 
     /* If the sink implementor support DB volumes by itself, we should always

@@ -62,6 +62,7 @@ static const char* const valid_modargs[] = {
     "voice_volume_call_mode",
     "voice_property_key",
     "voice_property_value",
+    "voice_virtual_stream",
     "sco_fake_sink",
     NULL,
 };
