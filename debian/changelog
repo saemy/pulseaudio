@@ -1,3 +1,13 @@
+pulseaudio (1:4.0-0ubuntu21) utopic; urgency=medium
+
+  * 0211-module-stream-restore-use-entry_write-when-filling-u.patch:
+    - Fixing use case for fallback_table, so we can provide default values
+      for stream restore
+  * 0212-libpulse.vapi-adding-missing-fields-for-sink_input-s.patch:
+    - Adding missing fields for sink_input/source_output structs
+
+ -- Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>  Wed, 01 Oct 2014 12:37:54 -0300
+
 pulseaudio (1:4.0-0ubuntu20) utopic; urgency=medium
 
   * debian/pulseaudio.install:

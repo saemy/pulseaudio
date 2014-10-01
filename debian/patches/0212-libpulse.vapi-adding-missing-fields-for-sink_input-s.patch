@@ -1,0 +1,40 @@
+From 5c0bea7f5a0a649d86262d9dc8d81b69ad614cb4 Mon Sep 17 00:00:00 2001
+From: Ricardo Salveti de Araujo <rsalveti@rsalveti.net>
+Date: Wed, 17 Sep 2014 01:07:58 -0300
+Subject: [PATCH] libpulse.vapi: adding missing fields for
+ sink_input/source_output info struct
+
+Signed-off-by: Ricardo Salveti de Araujo <rsalveti@rsalveti.net>
+---
+ vala/libpulse.vapi | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/vala/libpulse.vapi b/vala/libpulse.vapi
+index 59375e1..fa68658 100644
+--- a/vala/libpulse.vapi
++++ b/vala/libpulse.vapi
+@@ -1373,6 +1373,9 @@ namespace PulseAudio {
+                 public string driver;
+                 public int mute;
+                 public Proplist proplist;
++                public int corked;
++                public int has_volume;
++                public int volume_writable;
+         }
+ 
+         [CCode (cname="pa_source_output_info", has_type_id=false)]
+@@ -1389,6 +1392,11 @@ namespace PulseAudio {
+                 public string resample_method;
+                 public string driver;
+                 public Proplist proplist;
++                public int corked;
++                public CVolume volume;
++                public int mute;
++                public int has_volume;
++                public int volume_writable;
+         }
+ 
+         [CCode (cname="pa_stat_info", has_type_id=false)]
+-- 
+2.1.0
+

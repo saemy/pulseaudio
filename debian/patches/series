@@ -27,3 +27,5 @@
 0208-module-bluetooth-device-Allow-leaving-transport-runn.patch
 0209-module-switch-on-connect-adding-parameter-to-allow-s.patch
 0210-module-device-restore-adding-property-to-skip.patch
+0211-module-stream-restore-use-entry_write-when-filling-u.patch
+0212-libpulse.vapi-adding-missing-fields-for-sink_input-s.patch
