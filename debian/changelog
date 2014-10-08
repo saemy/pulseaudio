@@ -1,3 +1,15 @@
+pulseaudio (1:4.0-0ubuntu22) utopic; urgency=medium
+
+  * 0211-module-stream-restore-use-entry_write-when-filling-u.patch =>
+    0108-module-stream-restore-use-entry_write-when-filling-u.patch:
+    - Renaming as it was accepted upstream
+  * 0212-libpulse.vapi-adding-missing-fields-for-sink_input-s.patch:
+    - Patch sent upstream, adding link to the thread
+  * 0207-Enable-pulseaudio-droid.patch:
+    - Fixing route when adding/removing devices (LP: #1363083)
+
+ -- Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>  Wed, 08 Oct 2014 02:01:14 -0300
+
 pulseaudio (1:4.0-0ubuntu21) utopic; urgency=medium
 
   * 0211-module-stream-restore-use-entry_write-when-filling-u.patch:

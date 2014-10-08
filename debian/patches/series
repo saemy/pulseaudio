@@ -17,6 +17,7 @@
 0105-sink-source-Initialize-port-before-fixate-hook-fixes.patch
 0106-module-switch-on-port-available-Don-t-switch-profile.patch
 0107-sink-source-Fix-restore-of-volume-on-devices-without.patch
+0108-module-stream-restore-use-entry_write-when-filling-u.patch
 
 # Ubuntu touch stuff
 0202-dont-probe-ucm.patch
@@ -27,5 +28,4 @@
 0208-module-bluetooth-device-Allow-leaving-transport-runn.patch
 0209-module-switch-on-connect-adding-parameter-to-allow-s.patch
 0210-module-device-restore-adding-property-to-skip.patch
-0211-module-stream-restore-use-entry_write-when-filling-u.patch
 0212-libpulse.vapi-adding-missing-fields-for-sink_input-s.patch
