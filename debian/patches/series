@@ -29,3 +29,6 @@
 0209-module-switch-on-connect-adding-parameter-to-allow-s.patch
 0210-module-device-restore-adding-property-to-skip.patch
 0212-libpulse.vapi-adding-missing-fields-for-sink_input-s.patch
+
+# PACC adjustments
+0300-install_pulsecore_headers.patch

@@ -8,7 +8,7 @@ pulseaudio (1:4.0-0ubuntu22) utopic; urgency=medium
   * 0207-Enable-pulseaudio-droid.patch:
     - Fixing route when adding/removing devices (LP: #1363083)
 
- -- Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>  Wed, 08 Oct 2014 02:01:14 -0300
+ -- Sämy Zehnder <saemy.zehnder@gorrion.ch>  Wed, 08 Oct 2014 02:01:14 -0300
 
 pulseaudio (1:4.0-0ubuntu21) utopic; urgency=medium
 
